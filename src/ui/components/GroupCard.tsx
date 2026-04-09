@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import type { GroupEntity, NavigatorGroupView } from '../../domain/navigation/types';
+import type { NavigatorGroupView } from '../../domain/navigation/types';
 import { SheetList } from './SheetList';
 
 interface GroupCardProps {
@@ -9,6 +8,17 @@ interface GroupCardProps {
   onToggleCollapsed: (groupId: string) => void;
   onOpenGroupMenu: (args: { target: HTMLElement; groupId: string; groupName: string }) => void;
   onOpenSheetMenu: (args: { target: HTMLElement; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
+}
+
+function FolderIcon() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" className="group-folder-icon">
+      <path
+        d="M2.5 4.2C2.5 3.5 3 3 3.7 3H6.4L7.4 4H12.3C13 4 13.5 4.5 13.5 5.2V11.3C13.5 12 13 12.5 12.3 12.5H3.7C3 12.5 2.5 12 2.5 11.3V4.2Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
 }
 
 export function GroupCard({ group, onToggleCollapsed, onOpenGroupMenu, onOpenSheetMenu, ...rest }: GroupCardProps) {
@@ -26,8 +36,13 @@ export function GroupCard({ group, onToggleCollapsed, onOpenGroupMenu, onOpenShe
     >
       <header className="group-header">
         <button className="group-toggle" type="button" onClick={() => onToggleCollapsed(group.groupId)}>
-          <span className="group-title">{group.name}</span>
-          <small>{group.worksheets.length} sheet{group.worksheets.length === 1 ? '' : 's'}</small>
+          <span className="group-leading" aria-hidden="true">
+            <FolderIcon />
+          </span>
+          <span className="group-copy">
+            <span className="group-title">{group.name}</span>
+            <small>{group.worksheets.length} sheet{group.worksheets.length === 1 ? '' : 's'}</small>
+          </span>
         </button>
       </header>
 

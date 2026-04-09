@@ -260,6 +260,61 @@ button {
   padding: 0;
 }
 
+.sheet-pin-button,
+.sheet-indent-slot,
+.group-leading {
+  width: 20px;
+  min-width: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sheet-pin-button {
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--excel-muted);
+  opacity: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transition: opacity 160ms ease;
+}
+
+.sheet-row:hover .sheet-pin-button,
+.sheet-row:focus-within .sheet-pin-button {
+  opacity: 0.45;
+}
+
+.sheet-row .sheet-pin-button:hover,
+.sheet-row .sheet-pin-button:focus-visible {
+  opacity: 0.75;
+}
+
+.sheet-row .sheet-pin-button.sheet-pin-button-active {
+  opacity: 1;
+}
+
+.sheet-row .sheet-pin-button.sheet-pin-button-active:hover {
+  opacity: 0.85;
+}
+
+.sheet-pin-icon,
+.group-folder-icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+.sheet-pin-icon-active {
+  color: var(--excel-body-fg);
+}
+
+.group-folder-icon {
+  color: var(--excel-muted);
+}
+
 /* ==========================================================================
    7. Lists and row styling
    The navigator should feel closer to a tab strip than to a dashboard.
@@ -289,6 +344,10 @@ button {
 .sheet-row {
   display: grid;
   gap: 2px;
+}
+
+.sheet-row-grouped {
+  margin-left: 20px;
 }
 
 .sheet-row::before,
@@ -327,9 +386,10 @@ button {
 .toolbar-button:focus-visible,
 .primary-button:focus-visible,
 .sheet-link:focus-visible,
-.group-toggle:focus-visible {
+.group-toggle:focus-visible,
+.sheet-pin-button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--excel-focus-ring);
+  box-shadow: none;
 }
 
 .group-card {
@@ -406,10 +466,22 @@ button {
   color: var(--excel-body-fg);
 }
 
-.group-toggle,
 .sheet-link {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.group-copy {
   display: grid;
   gap: 2px;
+  min-width: 0;
 }
 
 .sheet-link small,
@@ -523,7 +595,6 @@ button {
   padding-left: 10px;
 }
 
-.group-card .sheet-row,
 .group-card .search-result {
   margin-left: 12px;
 }
