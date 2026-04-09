@@ -26,6 +26,7 @@
 body {
   margin: 0;
   background: var(--excel-body-bg);
+  overflow: hidden;
 }
 
 button,
@@ -40,7 +41,8 @@ select {
    ========================================================================== */
 .taskpane-shell {
   min-height: 100vh;
-  padding: 8px 10px 10px;
+  padding: 10px 12px 12px;
+  overflow: hidden;
 }
 
 .taskpane-header,
@@ -76,7 +78,7 @@ select {
 
 .taskpane-content {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   margin-top: 0;
 }
 
@@ -100,7 +102,18 @@ select {
 }
 
 .search-field {
-  display: block;
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--excel-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--excel-control-bg) 94%, var(--excel-body-bg));
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
 }
 
 /* ==========================================================================
@@ -127,6 +140,35 @@ select {
 .rename-form input::placeholder {
   color: var(--excel-muted);
   opacity: 1;
+}
+
+.search-field input {
+  border: none;
+  padding: 0;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.search-icon {
+  color: var(--excel-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-icon-svg {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+
+.search-field:focus-within {
+  border-color: color-mix(in srgb, var(--excel-border) 45%, var(--excel-body-fg));
+  background: color-mix(in srgb, var(--excel-control-bg) 98%, var(--excel-body-bg));
 }
 
 /* ==========================================================================
@@ -193,26 +235,35 @@ select {
 .group-list,
 .section-body {
   display: grid;
-  gap: 1px;
+  gap: 3px;
 }
 
 .sheet-row,
 .search-result,
 .group-header {
-  padding: 6px 4px;
-  border-radius: 0;
+  padding: 7px 10px;
+  border-radius: 7px;
   background: transparent;
   border: none;
-  border-bottom: 1px solid var(--excel-border);
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .sheet-row {
   display: grid;
-  gap: 4px;
+  gap: 2px;
 }
 
 .sheet-row-active {
-  background: color-mix(in srgb, var(--excel-control-bg) 88%, var(--excel-body-bg));
+  background: color-mix(in srgb, var(--excel-control-bg) 84%, var(--excel-body-bg));
+  box-shadow: none;
+}
+
+.sheet-row:hover,
+.group-header:hover,
+.search-result:hover {
+  background: color-mix(in srgb, var(--excel-control-bg) 76%, var(--excel-body-bg));
 }
 
 .group-card {
@@ -226,6 +277,7 @@ select {
    ========================================================================== */
 .hidden-section {
   opacity: 0.78;
+  margin-top: 6px;
 }
 
 .hidden-row {
@@ -255,17 +307,15 @@ select {
 
 .section-header {
   align-items: center;
-  padding: 6px 0 3px;
+  padding: 4px 2px;
   margin-bottom: 0;
   border-bottom: none;
 }
 
 .section-header h2 {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 400;
   line-height: 1;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   color: var(--excel-muted);
 }
 
@@ -274,19 +324,18 @@ select {
 }
 
 .section-action:hover,
-.toolbar-button:hover,
 .ghost-button:hover,
 .chip-button:hover,
 .sheet-link:hover,
 .search-result:hover,
 .group-toggle:hover {
-  background: #f3f2f1;
+  background: transparent;
 }
 
 .sheet-title,
 .group-title {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--excel-body-fg);
 }
 
@@ -296,10 +345,20 @@ select {
   gap: 2px;
 }
 
+.sheet-link small,
+.group-toggle small,
+.search-result small,
+.hidden-row small,
+.empty-state {
+  font-size: 11px;
+  font-weight: 400;
+}
+
 .search-result {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  font-size: 13px;
 }
 
 .compact-header {
@@ -361,5 +420,55 @@ select {
 
 .primary-tabs {
   display: grid;
-  gap: 1px;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.sheet-link,
+.group-toggle,
+.search-result,
+.toolbar-button {
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.sheet-link:hover,
+.group-toggle:hover,
+.search-result:hover {
+  background: transparent;
+}
+
+.inline-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inline-chevron {
+  color: var(--excel-muted);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.group-header {
+  padding-left: 10px;
+}
+
+.group-card .sheet-row,
+.group-card .search-result {
+  margin-left: 12px;
+}
+
+.primary-tabs .sheet-row,
+.primary-tabs .search-result {
+  margin-left: 0;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }

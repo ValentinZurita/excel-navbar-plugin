@@ -32,18 +32,6 @@ export function SheetRow({
           <span className="sheet-title">{worksheet.name}</span>
           {worksheet.groupId ? <small>Grouped</small> : worksheet.isPinned ? <small>Pinned</small> : null}
         </button>
-        <button
-          className="toolbar-button"
-          type="button"
-          onClick={(event) =>
-            onOpenContextMenu({
-              target: event.currentTarget,
-              worksheet,
-            })
-          }
-        >
-          •••
-        </button>
       </div>
     </article>
   );

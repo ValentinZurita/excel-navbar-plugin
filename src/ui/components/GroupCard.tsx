@@ -29,19 +29,6 @@ export function GroupCard({ group, onToggleCollapsed, onOpenGroupMenu, onOpenShe
           <span className="group-title">{group.name}</span>
           <small>{group.worksheets.length} sheet{group.worksheets.length === 1 ? '' : 's'}</small>
         </button>
-        <button
-          className="toolbar-button"
-          type="button"
-          onClick={(event) =>
-            onOpenGroupMenu({
-              target: event.currentTarget,
-              groupId: group.groupId,
-              groupName: group.name,
-            })
-          }
-        >
-          •••
-        </button>
       </header>
 
       {!group.isCollapsed ? (

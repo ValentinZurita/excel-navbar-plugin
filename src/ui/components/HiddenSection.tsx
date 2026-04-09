@@ -11,10 +11,10 @@ export function HiddenSection({ isCollapsed, worksheets, onToggle, onUnhide }: H
   return (
     <section className="section-card hidden-section">
       <header className="section-header section-header-clickable" onClick={onToggle}>
-        <div>
+        <div className="inline-header">
           <h2>Hidden sheets</h2>
+          <span className="inline-chevron">{isCollapsed ? '▸' : '▾'}</span>
         </div>
-        <span className="toolbar-button">{isCollapsed ? '▸' : '▾'}</span>
       </header>
 
       {!isCollapsed ? (
