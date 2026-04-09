@@ -293,11 +293,12 @@ button {
 }
 
 .sheet-row .sheet-pin-button.sheet-pin-button-active {
-  opacity: 1;
+  opacity: 0.45;
 }
 
-.sheet-row .sheet-pin-button.sheet-pin-button-active:hover {
-  opacity: 0.85;
+.sheet-row .sheet-pin-button.sheet-pin-button-active:hover,
+.sheet-row .sheet-pin-button.sheet-pin-button-active:focus-visible {
+  opacity: 0.75;
 }
 
 .sheet-pin-icon,
@@ -308,7 +309,7 @@ button {
 }
 
 .sheet-pin-icon-active {
-  color: var(--excel-body-fg);
+  color: var(--excel-muted);
 }
 
 .group-folder-icon {

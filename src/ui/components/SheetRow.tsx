@@ -17,7 +17,7 @@ function PinIcon({ pinned }: { pinned: boolean }) {
       viewBox="0 0 24 24"
       aria-hidden="true"
       className={`sheet-pin-icon ${pinned ? 'sheet-pin-icon-active' : ''}`}
-      fill={pinned ? 'currentColor' : 'none'}
+      fill="none"
       stroke="currentColor"
     >
       <path
