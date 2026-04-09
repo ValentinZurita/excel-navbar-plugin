@@ -4,6 +4,8 @@ import { GroupCard } from './GroupCard';
 interface GroupSectionProps {
   groups: NavigatorGroupView[];
   activeWorksheetId: string | null;
+  contextMenuOpenId?: string;
+  groupMenuOpenId?: string;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onToggleCollapsed: (groupId: string) => void;
   onOpenGroupMenu: (args: { target: HTMLElement; groupId: string; groupName: string }) => void;

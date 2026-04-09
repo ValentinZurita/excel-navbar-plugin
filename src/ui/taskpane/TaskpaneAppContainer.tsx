@@ -86,6 +86,7 @@ export function TaskpaneAppContainer() {
           <SheetList
             worksheets={controller.navigatorView.pinned}
             activeWorksheetId={controller.state.activeWorksheetId}
+            contextMenuOpenId={sheetMenu?.worksheet?.worksheetId}
             onActivate={controller.activateWorksheet}
             onTogglePin={(worksheetId) => controller.unpinWorksheet(worksheetId)}
             onOpenContextMenu={({ target, worksheet }) => {
@@ -102,6 +103,7 @@ export function TaskpaneAppContainer() {
             <SheetList
               worksheets={controller.navigatorView.ungrouped}
               activeWorksheetId={controller.state.activeWorksheetId}
+              contextMenuOpenId={sheetMenu?.worksheet?.worksheetId}
               onActivate={controller.activateWorksheet}
               onTogglePin={(worksheetId) => controller.pinWorksheet(worksheetId)}
               onOpenContextMenu={({ target, worksheet }) => {
@@ -118,6 +120,8 @@ export function TaskpaneAppContainer() {
           <GroupSection
             groups={controller.navigatorView.groups}
             activeWorksheetId={controller.state.activeWorksheetId}
+            contextMenuOpenId={sheetMenu?.worksheet?.worksheetId}
+            groupMenuOpenId={groupMenu?.groupId}
             onActivate={controller.activateWorksheet}
             onToggleCollapsed={controller.toggleGroupCollapsed}
             onOpenGroupMenu={({ target, groupId, groupName }) => {

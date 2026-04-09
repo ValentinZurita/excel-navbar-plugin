@@ -3,6 +3,7 @@ import type { WorksheetEntity } from '../../domain/navigation/types';
 interface SheetRowProps {
   worksheet: WorksheetEntity;
   isActive: boolean;
+  isContextMenuOpen?: boolean;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onTogglePin?: (worksheetId: string) => void;
   onOpenContextMenu: (args: {
@@ -37,6 +38,7 @@ function PinIcon({ pinned }: { pinned: boolean }) {
 export function SheetRow({
   worksheet,
   isActive,
+  isContextMenuOpen,
   onActivate,
   onTogglePin,
   onOpenContextMenu,
@@ -45,7 +47,7 @@ export function SheetRow({
 
   return (
     <article
-      className={`sheet-row ${isActive ? 'sheet-row-active' : ''} ${worksheet.groupId ? 'sheet-row-grouped' : 'sheet-row-standalone'}`}
+      className={`sheet-row ${isActive ? 'sheet-row-active' : ''} ${isContextMenuOpen ? 'sheet-row-context-open' : ''} ${worksheet.groupId ? 'sheet-row-grouped' : 'sheet-row-standalone'}`}
       onContextMenu={(event) => {
         event.preventDefault();
         onOpenContextMenu({

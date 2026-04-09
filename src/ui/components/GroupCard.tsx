@@ -4,6 +4,8 @@ import { SheetList } from './SheetList';
 interface GroupCardProps {
   group: NavigatorGroupView;
   activeWorksheetId: string | null;
+  contextMenuOpenId?: string;
+  groupMenuOpenId?: string;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onToggleCollapsed: (groupId: string) => void;
   onOpenGroupMenu: (args: { target: HTMLElement; groupId: string; groupName: string }) => void;
@@ -34,7 +36,7 @@ export function GroupCard({ group, onToggleCollapsed, onOpenGroupMenu, onOpenShe
         });
       }}
     >
-      <header className="group-header">
+      <header className={`group-header ${group.groupId === rest.groupMenuOpenId ? 'group-header-context-open' : ''}`}>
         <button className="group-toggle" type="button" onClick={() => onToggleCollapsed(group.groupId)}>
           <span className="group-leading" aria-hidden="true">
             <FolderIcon />
@@ -50,6 +52,7 @@ export function GroupCard({ group, onToggleCollapsed, onOpenGroupMenu, onOpenShe
         <SheetList
           worksheets={group.worksheets}
           activeWorksheetId={rest.activeWorksheetId}
+          contextMenuOpenId={rest.contextMenuOpenId}
           onActivate={rest.onActivate}
           onOpenContextMenu={onOpenSheetMenu}
         />
