@@ -14,7 +14,8 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
       </span>
       <input
         type="text"
-        placeholder="Search"
+        placeholder=""
+        aria-label="Search worksheets"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         spellCheck={false}

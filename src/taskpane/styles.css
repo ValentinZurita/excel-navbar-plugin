@@ -12,6 +12,11 @@
   --excel-control-fg: #201f1e;
   --excel-border: #e1dfdd;
   --excel-muted: #605e5c;
+  --excel-accent: #107c41;
+  --excel-hover: color-mix(in srgb, var(--excel-control-bg) 82%, var(--excel-body-bg));
+  --excel-pressed: color-mix(in srgb, var(--excel-control-bg) 72%, var(--excel-body-bg));
+  --excel-surface-raised: color-mix(in srgb, var(--excel-control-bg) 96%, var(--excel-body-bg));
+  --excel-focus-ring: color-mix(in srgb, var(--excel-muted) 18%, transparent);
   background: var(--excel-body-bg);
   color: var(--excel-body-fg);
 }
@@ -21,6 +26,14 @@
    ========================================================================== */
 * {
   box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -33,6 +46,10 @@ button,
 input,
 select {
   font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ==========================================================================
@@ -78,7 +95,7 @@ select {
 
 .taskpane-content {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   margin-top: 0;
 }
 
@@ -106,14 +123,19 @@ select {
   grid-template-columns: 16px 1fr;
   align-items: center;
   gap: 8px;
-  min-height: 34px;
+  min-height: 36px;
+  margin-bottom: 4px;
   padding: 0 10px;
-  border: 1px solid var(--excel-border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--excel-control-bg) 94%, var(--excel-body-bg));
+  border: 1px solid color-mix(in srgb, var(--excel-border) 88%, transparent);
+  border-radius: 6px;
+  background: var(--excel-surface-raised);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 1px 2px rgba(0, 0, 0, 0.04);
   transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 /* ==========================================================================
@@ -126,7 +148,7 @@ select {
 .sheet-actions select {
   width: 100%;
   border: 1px solid var(--excel-border);
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 7px 10px;
   background: var(--excel-control-bg);
   color: var(--excel-body-fg);
@@ -158,6 +180,7 @@ select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: color 160ms ease;
 }
 
 .search-icon-svg {
@@ -166,9 +189,17 @@ select {
   display: block;
 }
 
+.search-field:hover,
 .search-field:focus-within {
-  border-color: color-mix(in srgb, var(--excel-border) 45%, var(--excel-body-fg));
   background: color-mix(in srgb, var(--excel-control-bg) 98%, var(--excel-body-bg));
+  border-color: color-mix(in srgb, var(--excel-border) 78%, var(--excel-muted));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.52),
+    0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.search-field:focus-within .search-icon {
+  color: var(--excel-muted);
 }
 
 /* ==========================================================================
@@ -182,14 +213,16 @@ select {
 .chip-button,
 .sheet-link,
 .search-result,
-.group-toggle {
+.group-toggle,
+.context-menu-item,
+.section-header-clickable {
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
 .primary-button {
-  background: #107c41;
+  background: var(--excel-accent);
   color: white;
   padding: 8px 12px;
 }
@@ -235,19 +268,22 @@ select {
 .group-list,
 .section-body {
   display: grid;
-  gap: 3px;
+  gap: 4px;
 }
 
 .sheet-row,
 .search-result,
 .group-header {
-  padding: 7px 10px;
-  border-radius: 7px;
+  position: relative;
+  padding: 8px 10px;
+  border-radius: 4px;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   transition:
-    background-color 120ms ease,
-    box-shadow 120ms ease;
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 160ms ease;
 }
 
 .sheet-row {
@@ -255,20 +291,50 @@ select {
   gap: 2px;
 }
 
-.sheet-row-active {
-  background: color-mix(in srgb, var(--excel-control-bg) 84%, var(--excel-body-bg));
+.sheet-row::before,
+.group-header::before,
+.search-result::before,
+.context-menu-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.sheet-row::before,
+.group-header::before,
+.search-result::before {
   box-shadow: none;
 }
 
+.sheet-row-active,
 .sheet-row:hover,
 .group-header:hover,
 .search-result:hover {
-  background: color-mix(in srgb, var(--excel-control-bg) 76%, var(--excel-body-bg));
+  background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.search-result:focus-visible,
+.context-menu-item:focus-visible,
+.chip-button:focus-visible,
+.ghost-button:focus-visible,
+.toolbar-button:focus-visible,
+.primary-button:focus-visible,
+.sheet-link:focus-visible,
+.group-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--excel-focus-ring);
 }
 
 .group-card {
   display: grid;
-  gap: 0;
+  gap: 2px;
 }
 
 /* ==========================================================================
@@ -276,7 +342,7 @@ select {
    Hidden sheets and error banners are intentionally lower priority.
    ========================================================================== */
 .hidden-section {
-  opacity: 0.78;
+  opacity: 0.82;
   margin-top: 6px;
 }
 
@@ -289,7 +355,7 @@ select {
 .error-banner {
   margin-top: 8px;
   padding: 10px 12px;
-  border-radius: 6px;
+  border-radius: 4px;
   background: #fde7e9;
   color: #a4262c;
   border: 1px solid #f1c6cb;
@@ -303,6 +369,7 @@ select {
 .section-copy {
   display: grid;
   gap: 2px;
+  min-width: 0;
 }
 
 .section-header {
@@ -370,11 +437,6 @@ select {
   padding: 4px 2px 2px;
 }
 
-.header-copy,
-.section-copy {
-  min-width: 0;
-}
-
 /* ==========================================================================
    10. Menus and overlays
    Context menus are the primary action surface for tabs and groups.
@@ -383,8 +445,14 @@ select {
 .toolbar-button,
 .sheet-link,
 .group-toggle,
-.search-result {
-  transition: background-color 120ms ease;
+.search-result,
+.context-menu-item {
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 180ms ease,
+    transform 160ms ease;
 }
 
 .context-menu-layer {
@@ -395,48 +463,48 @@ select {
 
 .context-menu {
   position: absolute;
-  min-width: 200px;
-  background: var(--excel-control-bg);
-  border: 1px solid var(--excel-border);
-  border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
-  padding: 4px;
+  min-width: 220px;
+  background: color-mix(in srgb, var(--excel-control-bg) 98%, var(--excel-body-bg));
+  border: 1px solid color-mix(in srgb, var(--excel-border) 86%, transparent);
+  border-radius: 12px;
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.16),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 6px;
+  backdrop-filter: blur(10px);
 }
 
 .context-menu-item {
+  position: relative;
   width: 100%;
-  border: none;
   background: transparent;
   text-align: left;
   color: var(--excel-body-fg);
-  padding: 8px 10px;
+  padding: 9px 10px;
   border-radius: 4px;
-  cursor: pointer;
+}
+
+.context-menu-item::before {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--excel-control-bg) 64%, var(--excel-body-bg)), transparent 92%);
 }
 
 .context-menu-item:hover {
-  background: color-mix(in srgb, var(--excel-control-bg) 70%, var(--excel-body-bg));
+  background: color-mix(in srgb, var(--excel-control-bg) 78%, var(--excel-body-bg));
+}
+
+.context-menu-item:hover::before,
+.context-menu-item:focus-visible::before {
+  opacity: 1;
+}
+
+.context-menu-item:active {
+  background: var(--excel-pressed);
 }
 
 .primary-tabs {
   display: grid;
-  gap: 4px;
-  overflow: hidden;
-}
-
-.sheet-link,
-.group-toggle,
-.search-result,
-.toolbar-button {
-  transition:
-    background-color 120ms ease,
-    color 120ms ease;
-}
-
-.sheet-link:hover,
-.group-toggle:hover,
-.search-result:hover {
-  background: transparent;
+  gap: 6px;
+  padding-top: 2px;
 }
 
 .inline-header {
@@ -463,12 +531,4 @@ select {
 .primary-tabs .sheet-row,
 .primary-tabs .search-result {
   margin-left: 0;
-}
-
-html,
-body,
-#root {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
 }
