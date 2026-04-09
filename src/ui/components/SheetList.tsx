@@ -7,7 +7,7 @@ interface SheetListProps {
   contextMenuOpenId?: string;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onTogglePin?: (worksheetId: string) => void;
-  onOpenContextMenu: (args: { target: HTMLElement; worksheet: WorksheetEntity }) => void;
+  onOpenContextMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: WorksheetEntity }) => void;
 }
 
 export function SheetList(props: SheetListProps) {

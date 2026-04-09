@@ -8,6 +8,8 @@ interface SheetRowProps {
   onTogglePin?: (worksheetId: string) => void;
   onOpenContextMenu: (args: {
     target: HTMLElement;
+    x: number;
+    y: number;
     worksheet: WorksheetEntity;
   }) => void;
 }
@@ -52,6 +54,8 @@ export function SheetRow({
         event.preventDefault();
         onOpenContextMenu({
           target: event.currentTarget,
+          x: event.clientX,
+          y: event.clientY,
           worksheet,
         });
       }}

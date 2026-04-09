@@ -8,8 +8,8 @@ interface GroupCardProps {
   groupMenuOpenId?: string;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onToggleCollapsed: (groupId: string) => void;
-  onOpenGroupMenu: (args: { target: HTMLElement; groupId: string; groupName: string }) => void;
-  onOpenSheetMenu: (args: { target: HTMLElement; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
+  onOpenGroupMenu: (args: { target: HTMLElement; x: number; y: number; groupId: string; groupName: string }) => void;
+  onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
 }
 
 function FolderIcon() {
@@ -31,6 +31,8 @@ export function GroupCard({ group, onToggleCollapsed, onOpenGroupMenu, onOpenShe
         event.preventDefault();
         onOpenGroupMenu({
           target: event.currentTarget,
+          x: event.clientX,
+          y: event.clientY,
           groupId: group.groupId,
           groupName: group.name,
         });

@@ -8,8 +8,8 @@ interface GroupSectionProps {
   groupMenuOpenId?: string;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onToggleCollapsed: (groupId: string) => void;
-  onOpenGroupMenu: (args: { target: HTMLElement; groupId: string; groupName: string }) => void;
-  onOpenSheetMenu: (args: { target: HTMLElement; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
+  onOpenGroupMenu: (args: { target: HTMLElement; x: number; y: number; groupId: string; groupName: string }) => void;
+  onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
 }
 
 export function GroupSection(props: GroupSectionProps) {
