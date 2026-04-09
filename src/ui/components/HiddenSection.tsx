@@ -35,7 +35,6 @@ export function HiddenSection({ isCollapsed, worksheets, onToggle, onUnhide }: H
               </button>
             </article>
           ))}
-          {!worksheets.length ? <p className="empty-state">No hidden sheets</p> : null}
         </div>
       ) : null}
     </section>

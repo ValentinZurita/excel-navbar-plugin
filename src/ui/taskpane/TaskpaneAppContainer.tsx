@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useNavigationController } from '../../application/navigation/useNavigationController';
-import { EmptyState } from '../components/EmptyState';
 import { GroupSection } from '../components/GroupSection';
 import { HiddenSection } from '../components/HiddenSection';
 import { SearchBar } from '../components/SearchBar';
@@ -97,19 +96,22 @@ export function TaskpaneAppContainer() {
         </Section>
       ) : null}
 
-      <div className="primary-tabs">
-        <SheetList
-          worksheets={controller.navigatorView.ungrouped}
-          activeWorksheetId={controller.state.activeWorksheetId}
-          onActivate={controller.activateWorksheet}
-          onTogglePin={(worksheetId) => controller.pinWorksheet(worksheetId)}
-          onOpenContextMenu={({ target, worksheet }) => {
-            setGroupMenu(null);
-            setSheetMenu({ target, worksheet });
-          }}
-        />
-        {!controller.navigatorView.ungrouped.length ? <EmptyState label="No tabs" /> : null}
-      </div>
+      {controller.navigatorView.ungrouped.length ? (
+        <Section title="Sheets">
+          <div className="primary-tabs">
+            <SheetList
+              worksheets={controller.navigatorView.ungrouped}
+              activeWorksheetId={controller.state.activeWorksheetId}
+              onActivate={controller.activateWorksheet}
+              onTogglePin={(worksheetId) => controller.pinWorksheet(worksheetId)}
+              onOpenContextMenu={({ target, worksheet }) => {
+                setGroupMenu(null);
+                setSheetMenu({ target, worksheet });
+              }}
+            />
+          </div>
+        </Section>
+      ) : null}
 
       {controller.navigatorView.groups.length ? (
         <Section title="Groups">
@@ -130,12 +132,14 @@ export function TaskpaneAppContainer() {
         </Section>
       ) : null}
 
-      <HiddenSection
-        isCollapsed={controller.state.hiddenSectionCollapsed}
-        worksheets={controller.navigatorView.hidden}
-        onToggle={controller.toggleHiddenSection}
-        onUnhide={controller.unhideWorksheet}
-      />
+      {controller.navigatorView.hidden.length ? (
+        <HiddenSection
+          isCollapsed={controller.state.hiddenSectionCollapsed}
+          worksheets={controller.navigatorView.hidden}
+          onToggle={controller.toggleHiddenSection}
+          onUnhide={controller.unhideWorksheet}
+        />
+      ) : null}
 
       {menuStyle && sheetMenu ? (
         <div className="context-menu-layer" onClick={closeMenus}>
