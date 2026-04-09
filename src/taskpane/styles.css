@@ -1,0 +1,365 @@
+/* ==========================================================================
+   1. Theme tokens
+   The Office theme adapter writes these CSS variables at runtime.
+   Change color behavior here first before editing component selectors.
+   ========================================================================== */
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --excel-body-bg: #f3f2f1;
+  --excel-body-fg: #201f1e;
+  --excel-control-bg: #ffffff;
+  --excel-control-fg: #201f1e;
+  --excel-border: #e1dfdd;
+  --excel-muted: #605e5c;
+  background: var(--excel-body-bg);
+  color: var(--excel-body-fg);
+}
+
+/* ==========================================================================
+   2. Global reset and inherited control behavior
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--excel-body-bg);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+/* ==========================================================================
+   3. Shell layout
+   Main spacing and top-level flow for the task pane.
+   ========================================================================== */
+.taskpane-shell {
+  min-height: 100vh;
+  padding: 8px 10px 10px;
+}
+
+.taskpane-header,
+.section-header,
+.status-row,
+.group-header,
+.row-topline,
+.inline-form,
+.sheet-actions,
+.rename-form {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.taskpane-header h1,
+.section-header h2 {
+  margin: 0;
+}
+
+.eyebrow,
+.header-note,
+.section-header p,
+.status-row,
+.empty-state,
+.search-result small,
+.sheet-row small,
+.hidden-row small {
+  color: var(--excel-muted);
+  margin: 0;
+}
+
+.taskpane-content {
+  display: grid;
+  gap: 6px;
+  margin-top: 0;
+}
+
+/* ==========================================================================
+   4. Structural wrappers
+   Section containers stay visually flat on purpose.
+   ========================================================================== */
+.section-card,
+.search-field,
+.group-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.section-card,
+.group-card,
+.search-field {
+  padding: 0;
+}
+
+.search-field {
+  display: block;
+}
+
+/* ==========================================================================
+   5. Inputs and controls
+   The search field and all text inputs must stay readable in Excel webviews.
+   ========================================================================== */
+.search-field input,
+.inline-form input,
+.rename-form input,
+.sheet-actions select {
+  width: 100%;
+  border: 1px solid var(--excel-border);
+  border-radius: 4px;
+  padding: 7px 10px;
+  background: var(--excel-control-bg);
+  color: var(--excel-body-fg);
+  -webkit-text-fill-color: var(--excel-body-fg);
+  caret-color: var(--excel-body-fg);
+  appearance: none;
+}
+
+.search-field input::placeholder,
+.inline-form input::placeholder,
+.rename-form input::placeholder {
+  color: var(--excel-muted);
+  opacity: 1;
+}
+
+/* ==========================================================================
+   6. Interactive elements
+   Shared interaction primitives used across rows and menus.
+   ========================================================================== */
+.primary-button,
+.ghost-button,
+.toolbar-button,
+.section-action,
+.chip-button,
+.sheet-link,
+.search-result,
+.group-toggle {
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.primary-button {
+  background: #107c41;
+  color: white;
+  padding: 8px 12px;
+}
+
+.ghost-button,
+.chip-button {
+  background: transparent;
+  color: var(--excel-body-fg);
+  padding: 6px 10px;
+  border: 1px solid var(--excel-border);
+}
+
+.toolbar-button,
+.section-action {
+  background: transparent;
+  color: var(--excel-muted);
+  padding: 2px 6px;
+  border: 1px solid transparent;
+}
+
+.toolbar-button {
+  min-width: 32px;
+}
+
+.chip-button-danger {
+  color: #a4262c;
+}
+
+.sheet-link,
+.search-result,
+.group-toggle {
+  background: transparent;
+  text-align: left;
+  width: 100%;
+  padding: 0;
+}
+
+/* ==========================================================================
+   7. Lists and row styling
+   The navigator should feel closer to a tab strip than to a dashboard.
+   ========================================================================== */
+.sheet-list,
+.group-list,
+.section-body {
+  display: grid;
+  gap: 1px;
+}
+
+.sheet-row,
+.search-result,
+.group-header {
+  padding: 6px 4px;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--excel-border);
+}
+
+.sheet-row {
+  display: grid;
+  gap: 4px;
+}
+
+.sheet-row-active {
+  background: color-mix(in srgb, var(--excel-control-bg) 88%, var(--excel-body-bg));
+}
+
+.group-card {
+  display: grid;
+  gap: 0;
+}
+
+/* ==========================================================================
+   8. Secondary states
+   Hidden sheets and error banners are intentionally lower priority.
+   ========================================================================== */
+.hidden-section {
+  opacity: 0.78;
+}
+
+.hidden-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.error-banner {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fde7e9;
+  color: #a4262c;
+  border: 1px solid #f1c6cb;
+}
+
+/* ==========================================================================
+   9. Section labels and text hierarchy
+   Keep labels minimal and quiet. If a title feels redundant, remove it.
+   ========================================================================== */
+.header-copy,
+.section-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.section-header {
+  align-items: center;
+  padding: 6px 0 3px;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.section-header h2 {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--excel-muted);
+}
+
+.section-header-clickable {
+  cursor: pointer;
+}
+
+.section-action:hover,
+.toolbar-button:hover,
+.ghost-button:hover,
+.chip-button:hover,
+.sheet-link:hover,
+.search-result:hover,
+.group-toggle:hover {
+  background: #f3f2f1;
+}
+
+.sheet-title,
+.group-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--excel-body-fg);
+}
+
+.group-toggle,
+.sheet-link {
+  display: grid;
+  gap: 2px;
+}
+
+.search-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.compact-header {
+  margin-bottom: 2px;
+}
+
+.empty-state {
+  font-size: 11px;
+  padding: 4px 2px 2px;
+}
+
+.header-copy,
+.section-copy {
+  min-width: 0;
+}
+
+/* ==========================================================================
+   10. Menus and overlays
+   Context menus are the primary action surface for tabs and groups.
+   ========================================================================== */
+.section-action,
+.toolbar-button,
+.sheet-link,
+.group-toggle,
+.search-result {
+  transition: background-color 120ms ease;
+}
+
+.context-menu-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+.context-menu {
+  position: absolute;
+  min-width: 200px;
+  background: var(--excel-control-bg);
+  border: 1px solid var(--excel-border);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  padding: 4px;
+}
+
+.context-menu-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: var(--excel-body-fg);
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.context-menu-item:hover {
+  background: color-mix(in srgb, var(--excel-control-bg) 70%, var(--excel-body-bg));
+}
+
+.primary-tabs {
+  display: grid;
+  gap: 1px;
+}
