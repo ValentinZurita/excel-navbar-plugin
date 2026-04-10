@@ -29,9 +29,15 @@ interface HiddenSectionProps {
   worksheets: WorksheetEntity[];
   onToggle: () => void;
   onUnhide: (worksheetId: string) => void | Promise<void>;
+  onOpenContextMenu: (args: {
+    target: HTMLElement;
+    x: number;
+    y: number;
+    worksheet: WorksheetEntity;
+  }) => void;
 }
 
-export function HiddenSection({ isCollapsed, worksheets, onToggle, onUnhide }: HiddenSectionProps) {
+export function HiddenSection({ isCollapsed, worksheets, onToggle, onUnhide, onOpenContextMenu }: HiddenSectionProps) {
   return (
     <section className="section-card hidden-section">
       <header className="section-header section-header-clickable" onClick={onToggle}>
@@ -46,7 +52,19 @@ export function HiddenSection({ isCollapsed, worksheets, onToggle, onUnhide }: H
           {worksheets.map((worksheet) => {
             const isVeryHidden = worksheet.visibility === 'VeryHidden';
             return (
-              <article key={worksheet.worksheetId} className="sheet-row hidden-row">
+              <article
+                key={worksheet.worksheetId}
+                className="sheet-row hidden-row"
+                onContextMenu={(event) => {
+                  event.preventDefault();
+                  onOpenContextMenu({
+                    target: event.currentTarget,
+                    x: event.clientX,
+                    y: event.clientY,
+                    worksheet,
+                  });
+                }}
+              >
                 <div className="row-topline">
                   <button
                     className="sheet-unhide-button"

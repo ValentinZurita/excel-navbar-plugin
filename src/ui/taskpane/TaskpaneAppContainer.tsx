@@ -228,6 +228,10 @@ export function TaskpaneAppContainer() {
           worksheets={controller.navigatorView.hidden}
           onToggle={controller.toggleHiddenSection}
           onUnhide={controller.unhideWorksheet}
+          onOpenContextMenu={({ target, worksheet, x, y }) => {
+            setGroupMenu(null);
+            setSheetMenu({ x, y, worksheet });
+          }}
         />
       ) : null}
 
