@@ -1,5 +1,5 @@
-import type { WorksheetEntity } from '../../domain/navigation/types';
-import { SheetRow } from './SheetRow';
+import type { WorksheetEntity } from '../../../domain/navigation/types';
+import { SheetRow } from '../SheetRow';
 
 interface SheetListProps {
   worksheets: WorksheetEntity[];

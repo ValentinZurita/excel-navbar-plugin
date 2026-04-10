@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
-import type { SearchResultItem } from '../../domain/navigation/types';
-import { SearchBar } from './SearchBar';
-import { SearchResults } from './SearchResults';
+import type { SearchResultItem } from '../../../domain/navigation/types';
+import { SearchBar } from '../SearchBar';
+import { SearchResults } from '../SearchResults';
 import './SearchBox.css';
 
 interface SearchBoxProps {

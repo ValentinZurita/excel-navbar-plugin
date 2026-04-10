@@ -1,4 +1,4 @@
-import { SearchIcon } from '../icons';
+import { SearchIcon } from '../../icons';
 import './SearchBar.css';
 
 interface SearchBarProps {

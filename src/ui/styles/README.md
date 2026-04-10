@@ -14,9 +14,9 @@ This folder defines shared style layers for the taskpane UI.
 - Reusable utilities shared across multiple components (`.sheet-link`, `.search-result`, `.primary-tabs`, etc.).
 - Keep only classes that are used by at least two components.
 
-1. `src/ui/components/*.css`
+1. `src/ui/components/<Component>/...`
 
-- Component ownership styles (`Section`, `SearchBar`, `SheetRow`, `GroupCard`, `HiddenSection`, `TextPromptDialog`, `SearchBox`).
+- Component ownership styles and markup colocated in each folder (`index.tsx`, local `*.css`).
 - Prefer colocated CSS to avoid cross-feature coupling.
 
 1. `src/ui/taskpane/styles/*.css`

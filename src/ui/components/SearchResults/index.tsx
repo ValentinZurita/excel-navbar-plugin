@@ -1,5 +1,5 @@
-import type { SearchResultItem } from '../../domain/navigation/types';
-import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../icons';
+import type { SearchResultItem } from '../../../domain/navigation/types';
+import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 
 interface SearchResultsProps {
   results: SearchResultItem[];

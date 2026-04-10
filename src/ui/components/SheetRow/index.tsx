@@ -1,5 +1,5 @@
-import type { WorksheetEntity } from '../../domain/navigation/types';
-import { WorksheetPinIcon } from '../icons';
+import type { WorksheetEntity } from '../../../domain/navigation/types';
+import { WorksheetPinIcon } from '../../icons';
 import './SheetRow.css';
 
 interface SheetRowProps {

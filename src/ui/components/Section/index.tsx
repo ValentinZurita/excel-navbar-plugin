@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { ChevronDownIcon, ChevronRightIcon } from '../icons';
+import { ChevronDownIcon, ChevronRightIcon } from '../../icons';
 import './Section.css';
 
 interface SectionProps {

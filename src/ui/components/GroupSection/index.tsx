@@ -1,5 +1,5 @@
-import type { GroupEntity, NavigatorGroupView } from '../../domain/navigation/types';
-import { GroupCard } from './GroupCard';
+import type { NavigatorGroupView } from '../../../domain/navigation/types';
+import { GroupCard } from '../GroupCard';
 
 interface GroupSectionProps {
   groups: NavigatorGroupView[];

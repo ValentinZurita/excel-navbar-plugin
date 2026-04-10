@@ -1,6 +1,6 @@
-import type { NavigatorGroupView } from '../../domain/navigation/types';
-import { GroupFolderIcon } from '../icons';
-import { SheetList } from './SheetList';
+import type { NavigatorGroupView } from '../../../domain/navigation/types';
+import { GroupFolderIcon } from '../../icons';
+import { SheetList } from '../SheetList';
 import './GroupCard.css';
 
 interface GroupCardProps {
