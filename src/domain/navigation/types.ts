@@ -60,6 +60,7 @@ export interface SearchResultItem {
   worksheetId: string;
   name: string;
   visibility: WorksheetVisibility;
+  isPinned: boolean;
   groupName: string | null;
 }
 

@@ -10,7 +10,7 @@ describe('SearchResults', () => {
 
     render(
       <SearchResults
-        results={[{ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible', groupName: 'Finance' }]}
+        results={[{ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible', isPinned: false, groupName: 'Finance' }]}
         onSelect={onSelect}
       />,
     );

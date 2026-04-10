@@ -62,6 +62,7 @@ describe('buildNavigatorView', () => {
         worksheetId: 'two',
         name: 'Revenue',
         visibility: 'Visible',
+        isPinned: false,
         groupName: 'Finance',
       },
     ]);
