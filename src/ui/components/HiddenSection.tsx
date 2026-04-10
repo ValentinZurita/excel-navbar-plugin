@@ -1,6 +1,7 @@
 import type { WorksheetEntity } from '../../domain/navigation/types';
 import { ChevronDownIcon, ChevronRightIcon, EyeIcon } from '../icons';
 import './HiddenSection.css';
+import './Section.css';
 
 interface HiddenSectionProps {
   isCollapsed: boolean;

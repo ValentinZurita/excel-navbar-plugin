@@ -88,7 +88,6 @@ button {
 
 /* Shared flex layout for headers, row tops, and inline controls. */
 .taskpane-header,
-.section-header,
 .status-row,
 .group-header,
 .row-topline,
@@ -102,15 +101,13 @@ button {
 }
 
 /* Remove default margins from section and header titles. */
-.taskpane-header h1,
-.section-header h2 {
+.taskpane-header h1 {
   margin: 0;
 }
 
 /* Low-priority text styles for auxiliary copy and labels. */
 .eyebrow,
 .header-note,
-.section-header p,
 .status-row,
 .empty-state,
 .search-result small,
@@ -134,7 +131,6 @@ button {
 /* Structural wrapper resets.
    Sections, cards and the search field are visually flat containers. */
 .section-card,
-.search-field,
 .group-card {
   background: transparent;
   border: none;
@@ -143,36 +139,8 @@ button {
 }
 
 .section-card,
-.group-card,
-.search-field {
+.group-card {
   padding: 0;
-}
-
-/* Search field wrapper.
-   Defines the search input chrome and sticky top behavior. */
-.search-field {
-  display: grid;
-  grid-template-columns: 16px 1fr;
-  align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  margin-bottom: 4px;
-  padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--excel-border) 88%, transparent);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--excel-surface-raised) 80%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 1px 2px rgba(0, 0, 0, 0.04);
-  transition:
-    background-color 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease;
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
 /* ==========================================================================
@@ -181,7 +149,6 @@ button {
    ========================================================================== */
 /* Standard shared input styles for search, inline and rename fields.
    Keeps text readability consistent across hosts. */
-.search-field input,
 .inline-form input,
 .rename-form input,
 .sheet-actions select,
@@ -197,60 +164,10 @@ button {
   appearance: none;
 }
 
-.search-field input::placeholder,
 .inline-form input::placeholder,
 .rename-form input::placeholder {
   color: var(--excel-muted);
   opacity: 1;
-}
-
-.search-field input {
-  border: none;
-  padding: 8px 0;
-  background: transparent;
-  outline: none;
-  box-shadow: none;
-  min-width: 0;
-  width: 100%;
-  height: 100%;
-  font-size: 15px;
-  line-height: 1.4;
-  color: color-mix(in srgb, var(--excel-control-fg) 88%, transparent);
-  -webkit-text-fill-color: color-mix(in srgb, var(--excel-control-fg) 88%, transparent);
-  caret-color: var(--excel-control-fg);
-  display: block;
-}
-
-.search-icon-svg {
-  width: 12px;
-  height: 12px;
-  display: block;
-}
-
-
-
-
-
-:root[data-office-theme-mode='dark'] .search-field {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: color-mix(in srgb, var(--excel-body-bg) 95%, white);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 1px 1px rgba(0, 0, 0, 0.14);
-}
-
-
-
-:root[data-office-theme-mode='dark'] .search-field input {
-  background-color: transparent !important;
-  background-image: none;
-  color: rgba(255, 255, 255, 0.84);
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.84);
-  caret-color: rgba(255, 255, 255, 0.92);
-}
-
-:root[data-office-theme-mode='dark'] .search-field input::placeholder {
-  color: rgba(255, 255, 255, 0.52);
 }
 
 /* ==========================================================================
@@ -267,8 +184,7 @@ button {
 .sheet-link,
 .search-result,
 .group-toggle,
-.context-menu-item,
-.section-header-clickable {
+.context-menu-item {
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -321,8 +237,7 @@ button {
    ========================================================================== */
 /* List layout for rows, groups, and section bodies. */
 .sheet-list,
-.group-list,
-.section-body {
+.group-list {
   display: grid;
   gap: 4px;
 }
@@ -393,46 +308,6 @@ button {
   border: 1px solid #f1c6cb;
 }
 
-/* ==========================================================================
-   9. Section labels and text hierarchy
-   Keep labels minimal and quiet. If a title feels redundant, remove it.
-   ========================================================================== */
-.header-copy,
-.section-copy {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
-/* Section header spacing and alignment.
-   Keeps compact labels clean and consistent. */
-.section-header {
-  align-items: center;
-  padding: 4px 2px;
-  margin-bottom: 0;
-  border-bottom: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-/* Prevent accidental text selection on section titles and child elements. */
-.section-header h2 {
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1;
-  color: var(--excel-muted);
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-.section-header-clickable {
-  cursor: pointer;
-}
-
 .section-action:hover,
 .ghost-button:hover,
 .chip-button:hover,
@@ -474,10 +349,6 @@ button {
   font-size: 13px;
 }
 
-.compact-header {
-  margin-bottom: 2px;
-}
-
 .empty-state {
   font-size: 11px;
   padding: 4px 2px 2px;
@@ -509,18 +380,6 @@ button {
   display: grid;
   gap: 6px;
   padding-top: 2px;
-}
-
-.inline-header {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.inline-chevron {
-  color: var(--excel-muted);
-  font-size: 11px;
-  line-height: 1;
 }
 
 .primary-tabs .sheet-row,

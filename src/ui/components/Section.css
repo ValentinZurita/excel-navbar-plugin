@@ -1,0 +1,53 @@
+/* Shared section primitives used by Section and HiddenSection. */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 2px;
+  margin-bottom: 0;
+  border-bottom: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--excel-muted);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.section-header-clickable {
+  cursor: pointer;
+}
+
+.section-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.inline-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inline-chevron {
+  color: var(--excel-muted);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.section-body {
+  display: grid;
+  gap: 4px;
+}
