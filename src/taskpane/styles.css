@@ -33,10 +33,13 @@
 /* ==========================================================================
    2. Global reset and inherited control behavior
    ========================================================================== */
+/* Reset box sizing so layout measurements are predictable throughout the app. */
 * {
   box-sizing: border-box;
 }
 
+/* Keep the root viewport flush to the container width
+   and prevent horizontal overflow inside the Excel task pane. */
 html,
 body,
 #root {
@@ -45,12 +48,14 @@ body,
   overflow-x: hidden;
 }
 
+/* Base body styles for the task pane shell. */
 body {
   margin: 0;
   background: var(--excel-body-bg);
   overflow: hidden;
 }
 
+/* Custom scrollbar styling for desktop webviews. */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -81,6 +86,8 @@ button {
    3. Shell layout
    Main spacing and top-level flow for the task pane.
    ========================================================================== */
+/* Top-level shell layout for the task pane.
+   Handles vertical scrolling and main padding. */
 .taskpane-shell {
   min-height: 100vh;
   padding: 10px 12px 12px;
@@ -88,6 +95,7 @@ button {
   overflow-x: hidden;
 }
 
+/* Shared flex layout for headers, row tops, and inline controls. */
 .taskpane-header,
 .section-header,
 .status-row,
@@ -102,11 +110,13 @@ button {
   gap: 10px;
 }
 
+/* Remove default margins from section and header titles. */
 .taskpane-header h1,
 .section-header h2 {
   margin: 0;
 }
 
+/* Low-priority text styles for auxiliary copy and labels. */
 .eyebrow,
 .header-note,
 .section-header p,
@@ -119,6 +129,7 @@ button {
   margin: 0;
 }
 
+/* Main taskpane content spacing. */
 .taskpane-content {
   display: grid;
   gap: 10px;
@@ -129,6 +140,8 @@ button {
    4. Structural wrappers
    Section containers stay visually flat on purpose.
    ========================================================================== */
+/* Structural wrapper resets.
+   Sections, cards and the search field are visually flat containers. */
 .section-card,
 .search-field,
 .group-card {
@@ -144,6 +157,8 @@ button {
   padding: 0;
 }
 
+/* Search field wrapper.
+   Defines the search input chrome and sticky top behavior. */
 .search-field {
   display: grid;
   grid-template-columns: 16px 1fr;
@@ -173,6 +188,8 @@ button {
    5. Inputs and controls
    The search field and all text inputs must stay readable in Excel webviews.
    ========================================================================== */
+/* Standard shared input styles for search, inline and rename fields.
+   Keeps text readability consistent across hosts. */
 .search-field input,
 .inline-form input,
 .rename-form input,
@@ -248,6 +265,8 @@ button {
    6. Interactive elements
    Shared interaction primitives used across rows and menus.
    ========================================================================== */
+/* Shared interactive control defaults.
+   Applies button-like behavior to clickable UI elements. */
 .primary-button,
 .ghost-button,
 .toolbar-button,
@@ -293,6 +312,8 @@ button {
   color: #a4262c;
 }
 
+/* Links and row buttons fill the container and use transparent chrome.
+   This keeps click areas large while preserving the visual hierarchy. */
 .sheet-link,
 .search-result,
 .group-toggle {
@@ -386,6 +407,7 @@ button {
    7. Lists and row styling
    The navigator should feel closer to a tab strip than to a dashboard.
    ========================================================================== */
+/* List layout for rows, groups, and section bodies. */
 .sheet-list,
 .group-list,
 .section-body {
@@ -393,6 +415,8 @@ button {
   gap: 4px;
 }
 
+/* Row styling for sheets and search results.
+   Uses transparent borders and subtle transitions for hover states. */
 .sheet-row,
 .search-result,
 .group-header {
@@ -417,6 +441,8 @@ button {
   margin-left: 20px;
 }
 
+/* Invisible pseudo-elements used for consistent hover/focus effects.
+   Keeps visual states aligned with the row shape. */
 .sheet-row::before,
 .group-header::before,
 .search-result::before,
@@ -436,6 +462,8 @@ button {
   box-shadow: none;
 }
 
+/* Active, hover and open states for rows and menu items.
+   Creates a light highlight without additional shadows. */
 .sheet-row-active,
 .sheet-row:hover,
 .sheet-row-context-open,
@@ -471,6 +499,7 @@ button {
    8. Secondary states
    Hidden sheets and error banners are intentionally lower priority.
    ========================================================================== */
+/* Hidden section styling for lower-priority sheets. */
 .hidden-section {
   margin-top: 6px;
 }
@@ -479,6 +508,7 @@ button {
   padding-left: 2px;
 }
 
+/* Layout for individual hidden rows and their content. */
 .hidden-row .row-topline {
   justify-content: flex-start;
 }
@@ -496,18 +526,21 @@ button {
   flex: 1;
 }
 
+/* Hidden row title truncation so long sheet names do not wrap. */
 .hidden-row .hidden-sheet-content .sheet-title {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* Unhide button icon sizing for hidden rows. */
 .sheet-unhide-icon {
   width: 15px;
   height: 15px;
   display: block;
 }
 
+/* Error banner styling for validation and state messages. */
 .error-banner {
   margin-top: 8px;
   padding: 10px 12px;
@@ -528,6 +561,8 @@ button {
   min-width: 0;
 }
 
+/* Section header spacing and alignment.
+   Keeps compact labels clean and consistent. */
 .section-header {
   align-items: center;
   padding: 4px 2px;
@@ -555,6 +590,7 @@ button {
   background: transparent;
 }
 
+/* Primary title styles used across tabs and group headers. */
 .sheet-title,
 .group-title {
   font-size: 13px;
@@ -562,19 +598,21 @@ button {
   color: var(--excel-body-fg);
 }
 
+/* Clickable row and header wrappers. */
 .sheet-link {
   display: flex;
   align-items: center;
   min-width: 0;
 }
 
+/* Toggles for group headers and row controls. */
 .group-toggle {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Expand clickable area to the entire row/header padding */
+/* Expand the clickable surface to the full bounding box. */
 .sheet-link::after,
 .group-toggle::after {
   content: '';
@@ -598,6 +636,7 @@ button {
   font-weight: 400;
 }
 
+/* Default search result row layout within the taskpane. */
 .search-result {
   display: flex;
   align-items: center;
@@ -632,12 +671,15 @@ button {
     transform 160ms ease;
 }
 
+/* Overlay layer for context menus.
+   Captures outside clicks and positions the menu. */
 .context-menu-layer {
   position: fixed;
   inset: 0;
   z-index: 20;
 }
 
+/* Context menu panel styling and spacing. */
 .context-menu {
   position: absolute;
   width: max-content;
@@ -653,6 +695,8 @@ button {
   backdrop-filter: blur(10px);
 }
 
+/* Individual context menu items.
+   Maintains touch-friendly padding and hover states. */
 .context-menu-item {
   position: relative;
   width: 100%;
@@ -674,6 +718,7 @@ button {
   color: var(--excel-body-fg);
 }
 
+/* Icon container inside context menu items. */
 .context-menu-icon {
   width: 16px;
   min-width: 16px;

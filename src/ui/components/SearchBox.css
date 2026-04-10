@@ -1,8 +1,12 @@
+/* Container for the entire search box and dropdown.
+   Keeps the dropdown positioned relative to the search input. */
 .search-box {
   position: relative;
   width: 100%;
 }
 
+/* Wrapper for the search results overlay.
+   Positioned under the input field and stretched to the same width. */
 .search-results-wrapper {
   position: absolute;
   top: calc(100% - 5px);
@@ -13,6 +17,8 @@
   max-width: 100%;
 }
 
+/* Visual wrapper for the dropdown panel.
+   Adds background, border, rounded corners, and elevation. */
 .search-results-wrapper .search-results {
   width: 100%;
   border-radius: 6px;
@@ -22,6 +28,8 @@
   overflow: hidden;
 }
 
+/* Scrollable list inside the dropdown.
+   Hides the scrollbar while preserving scroll behavior. */
 .search-results-wrapper .sheet-list {
   max-height: 260px;
   overflow-y: auto;
@@ -34,6 +42,8 @@
   height: 0;
 }
 
+/* Each search result row.
+   Uses a two-column layout for icon + text, and resets border radius. */
 .search-results-wrapper .search-result {
   display: grid;
   grid-template-columns: 16px minmax(0, 1fr);
@@ -45,13 +55,19 @@
   font-size: 13px;
   font-weight: 400;
   transition: background-color 160ms ease, color 160ms ease;
+  border-radius: 0;
 }
 
+/* Hover/focus state for a search row.
+   Keeps the highlight full-width with no rounded corners. */
 .search-results-wrapper .search-result:hover,
 .search-results-wrapper .search-result:focus-visible {
   background: color-mix(in srgb, var(--excel-body-fg) 7%, transparent);
+  border-radius: 0;
 }
 
+/* Icon container for the left-side state icon.
+   Starts subtle and brightens on hover. */
 .search-results-wrapper .search-result-leading {
   display: inline-flex;
   align-items: center;
@@ -67,12 +83,16 @@
   opacity: 0.85;
 }
 
+/* Text container for the result copy.
+   Keeps the title and optional metadata layered cleanly. */
 .search-results-wrapper .search-result-copy {
   display: grid;
   gap: 2px;
   min-width: 0;
 }
 
+/* The sheet title text inside a result row.
+   Truncates long names without wrapping. */
 .search-results-wrapper .search-result .sheet-title {
   font-size: inherit;
   font-weight: inherit;
@@ -82,22 +102,29 @@
   text-overflow: ellipsis;
 }
 
+/* Metadata text under the title.
+   This is not currently shown but kept for future use. */
 .search-results-wrapper .search-result-meta {
   color: var(--excel-muted);
   font-size: 12px;
   line-height: 1.3;
 }
 
+/* Icon SVG size for search results.
+   Matches the row vertical height and alignment. */
 .search-results-wrapper .search-result-icon {
   width: 14px;
   height: 14px;
   display: block;
 }
 
+/* Empty state padding inside the dropdown.
+   Keeps informational copy spaced consistently. */
 .search-results-wrapper .empty-state {
   padding: 12px;
 }
 
+/* General search icon styling in the input field. */
 .search-icon {
   color: color-mix(in srgb, var(--excel-muted) 88%, transparent);
   display: inline-flex;
