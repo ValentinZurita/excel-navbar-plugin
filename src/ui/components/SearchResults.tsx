@@ -7,16 +7,6 @@ interface SearchResultsProps {
 }
 
 export function SearchResults({ results, onSelect }: SearchResultsProps) {
-  function getResultMeta(result: SearchResultItem) {
-    const parts = [
-      result.isPinned ? 'Pinned' : null,
-      result.visibility !== 'Visible' ? (result.visibility === 'Hidden' ? 'Hidden' : 'Very hidden') : null,
-      result.groupName,
-    ].filter(Boolean);
-
-    return parts.length ? parts.join(' · ') : null;
-  }
-
   function renderResultIcon(result: SearchResultItem) {
     if (result.visibility !== 'Visible') {
       return <EyeOffIcon className="search-result-icon" />;
@@ -32,21 +22,16 @@ export function SearchResults({ results, onSelect }: SearchResultsProps) {
   return (
     <section className="section-card search-results">
       <div className="sheet-list">
-        {results.map((result) => {
-          const meta = getResultMeta(result);
-
-          return (
-            <button key={result.worksheetId} className="search-result" type="button" onClick={() => onSelect(result.worksheetId)}>
-              <span className="search-result-leading" aria-hidden="true">
-                {renderResultIcon(result)}
-              </span>
-              <span className="search-result-copy">
-                <span className="sheet-title">{result.name}</span>
-                {meta ? <small className="search-result-meta">{meta}</small> : null}
-              </span>
-            </button>
-          );
-        })}
+        {results.map((result) => (
+          <button key={result.worksheetId} className="search-result" type="button" onClick={() => onSelect(result.worksheetId)}>
+            <span className="search-result-leading" aria-hidden="true">
+              {renderResultIcon(result)}
+            </span>
+            <span className="search-result-copy">
+              <span className="sheet-title">{result.name}</span>
+            </span>
+          </button>
+        ))}
         {!results.length ? <p className="empty-state">No matching sheets.</p> : null}
       </div>
     </section>

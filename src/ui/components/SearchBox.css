@@ -44,6 +44,12 @@
   text-align: left;
   font-size: 13px;
   font-weight: 400;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.search-results-wrapper .search-result:hover,
+.search-results-wrapper .search-result:focus-visible {
+  background: color-mix(in srgb, var(--excel-body-fg) 7%, transparent);
 }
 
 .search-results-wrapper .search-result-leading {
@@ -51,6 +57,14 @@
   align-items: center;
   justify-content: center;
   color: var(--excel-muted);
+  opacity: 0.6;
+  transition: color 160ms ease, opacity 160ms ease;
+}
+
+.search-results-wrapper .search-result:hover .search-result-leading,
+.search-results-wrapper .search-result:focus-visible .search-result-leading {
+  color: var(--excel-body-fg);
+  opacity: 0.85;
 }
 
 .search-results-wrapper .search-result-copy {
