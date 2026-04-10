@@ -2,8 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigationController } from '../../application/navigation/useNavigationController';
 import { GroupSection } from '../components/GroupSection';
 import { HiddenSection } from '../components/HiddenSection';
-import { SearchBar } from '../components/SearchBar';
-import { SearchResults } from '../components/SearchResults';
+import { SearchBox } from '../components/SearchBox';
 import { Section } from '../components/Section';
 import { SheetList } from '../components/SheetList';
 import { TaskpaneShell } from '../components/TaskpaneShell';
@@ -161,10 +160,12 @@ export function TaskpaneAppContainer() {
 
   return (
     <TaskpaneShell errorMessage={controller.errorMessage}>
-      <SearchBar value={controller.state.query} onChange={controller.setQuery} />
-      {controller.state.query ? (
-        <SearchResults results={controller.navigatorView.searchResults} onSelect={controller.activateWorksheet} />
-      ) : null}
+      <SearchBox
+        value={controller.state.query}
+        onChange={controller.setQuery}
+        results={controller.navigatorView.searchResults}
+        onSelect={controller.activateWorksheet}
+      />
 
       {controller.navigatorView.pinned.length ? (
         <Section title="Pinned">

@@ -11,8 +11,12 @@ export function SearchResults({ results, onSelect }: SearchResultsProps) {
       <div className="sheet-list">
         {results.map((result) => (
           <button key={result.worksheetId} className="search-result" type="button" onClick={() => onSelect(result.worksheetId)}>
-            <span>{result.name}</span>
-            {result.groupName ? <small>{result.groupName}</small> : <small>Ungrouped</small>}
+            <span className="sheet-title">{result.name}</span>
+            {(result.visibility !== 'Visible' || result.groupName) ? (
+              <small className="search-result-meta">
+                {result.visibility !== 'Visible' ? (result.visibility === 'Hidden' ? 'Hidden' : 'Very hidden') : result.groupName}
+              </small>
+            ) : null}
           </button>
         ))}
         {!results.length ? <p className="empty-state">No matching sheets.</p> : null}

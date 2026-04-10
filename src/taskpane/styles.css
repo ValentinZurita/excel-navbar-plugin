@@ -212,14 +212,6 @@ button {
   display: block;
 }
 
-.search-icon {
-  color: color-mix(in srgb, var(--excel-muted) 88%, transparent);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 160ms ease;
-}
-
 .search-icon-svg {
   width: 12px;
   height: 12px;
