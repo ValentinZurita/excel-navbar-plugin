@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import './TextPromptDialog.css';
 
 interface TextPromptDialogProps {
   isOpen: boolean;

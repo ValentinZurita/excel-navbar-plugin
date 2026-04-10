@@ -1,0 +1,106 @@
+/* Full-screen hit area used to close menus on outside click. */
+.context-menu-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+
+/* Floating menu panel anchored from right-click coordinates. */
+.context-menu {
+  position: absolute;
+  width: max-content;
+  min-width: 196px;
+  max-width: min(280px, calc(100vw - 20px));
+  background: color-mix(in srgb, var(--excel-control-bg) 98%, var(--excel-body-bg));
+  border: 1px solid color-mix(in srgb, var(--excel-border) 86%, transparent);
+  border-radius: 4px;
+  box-shadow:
+    0 18px 34px rgba(0, 0, 0, 0.16),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 5px;
+  backdrop-filter: blur(10px);
+}
+
+:root[data-office-theme-mode='dark'] .context-menu {
+  background: #18191a;
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f3f2f1;
+}
+
+/* Single action row inside the context menu. */
+.context-menu-item {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+  text-align: left;
+  color: color-mix(in srgb, var(--excel-body-fg) 80%, transparent);
+  font-size: 12px;
+  line-height: 1.2;
+  padding: 7px 10px;
+  white-space: nowrap;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 180ms ease,
+    transform 160ms ease;
+}
+
+.context-menu-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.context-menu-item:hover {
+  background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+  color: var(--excel-body-fg);
+}
+
+.context-menu-item:focus-visible {
+  outline: none;
+  box-shadow: none;
+  color: var(--excel-body-fg);
+}
+
+/* Icon slot keeps menu actions aligned regardless of label length. */
+.context-menu-icon {
+  width: 16px;
+  min-width: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--excel-muted);
+}
+
+.context-menu-item:hover .context-menu-icon,
+.context-menu-item:focus-visible .context-menu-icon {
+  color: var(--excel-body-fg);
+}
+
+.context-menu-icon-svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.context-menu-label {
+  min-width: 0;
+}
+
+.context-menu-item:active {
+  background: var(--excel-pressed);
+}
