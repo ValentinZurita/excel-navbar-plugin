@@ -119,7 +119,11 @@ export function TaskpaneAppContainer() {
             onTogglePin={(worksheetId) => controller.unpinWorksheet(worksheetId)}
             onOpenContextMenu={({ target, worksheet, x, y }) => {
               setGroupMenu(null);
-              setSheetMenu({ x, y, worksheet });
+              if (sheetMenu?.worksheet?.worksheetId === worksheet.worksheetId) {
+                setSheetMenu(null);
+              } else {
+                setSheetMenu({ x, y, worksheet });
+              }
             }}
           />
         </Section>
@@ -136,7 +140,11 @@ export function TaskpaneAppContainer() {
               onTogglePin={(worksheetId) => controller.pinWorksheet(worksheetId)}
               onOpenContextMenu={({ target, worksheet, x, y }) => {
                 setGroupMenu(null);
-                setSheetMenu({ x, y, worksheet });
+                if (sheetMenu?.worksheet?.worksheetId === worksheet.worksheetId) {
+                  setSheetMenu(null);
+                } else {
+                  setSheetMenu({ x, y, worksheet });
+                }
               }}
             />
           </div>
@@ -158,7 +166,11 @@ export function TaskpaneAppContainer() {
             }}
             onOpenSheetMenu={({ target, worksheet, x, y }) => {
               setGroupMenu(null);
-              setSheetMenu({ x, y, worksheet });
+              if (sheetMenu?.worksheet?.worksheetId === worksheet.worksheetId) {
+                setSheetMenu(null);
+              } else {
+                setSheetMenu({ x, y, worksheet });
+              }
             }}
           />
         </Section>
@@ -172,14 +184,23 @@ export function TaskpaneAppContainer() {
           onUnhide={controller.unhideWorksheet}
           onOpenContextMenu={({ target, worksheet, x, y }) => {
             setGroupMenu(null);
-            setSheetMenu({ x, y, worksheet });
+            if (sheetMenu?.worksheet?.worksheetId === worksheet.worksheetId) {
+              setSheetMenu(null);
+            } else {
+              setSheetMenu({ x, y, worksheet });
+            }
           }}
         />
       ) : null}
 
       {menuStyle && sheetMenu ? (
-        <div className="context-menu-layer" onClick={closeMenus}>
-          <div className="context-menu" style={menuStyle} onClick={(event) => event.stopPropagation()}>
+        <div className="context-menu-layer" onClick={closeMenus} onContextMenu={(event) => { event.preventDefault(); closeMenus(); }}>
+          <div
+            className="context-menu"
+            style={menuStyle}
+            onClick={(event) => event.stopPropagation()}
+            onContextMenu={(event) => event.stopPropagation()}
+          >
             <MenuItem
               icon={
                 sheetMenu.worksheet.isPinned ? (
