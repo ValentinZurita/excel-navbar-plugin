@@ -24,6 +24,7 @@ export type NavigationAction =
   | { type: 'pinWorksheet'; worksheetId: string }
   | { type: 'unpinWorksheet'; worksheetId: string }
   | { type: 'markWorksheetUnhidden'; worksheetId: string }
+  | { type: 'markWorksheetHidden'; worksheetId: string }
   | { type: 'renameWorksheetLocally'; worksheetId: string; name: string };
 
 function nextGroupColor(index: number): GroupColorToken {
@@ -300,6 +301,17 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       nextWorksheet.groupId = null;
       nextWorksheet.isPinned = nextWorksheet.lastKnownStructuralState?.kind === 'pinned';
       return nextState;
+    }
+    case 'markWorksheetHidden': {
+      const worksheet = state.worksheetsById[action.worksheetId];
+      if (!worksheet) return state;
+      return {
+        ...state,
+        worksheetsById: {
+          ...state.worksheetsById,
+          [action.worksheetId]: { ...worksheet, visibility: 'Hidden' },
+        },
+      };
     }
     case 'renameWorksheetLocally': {
       const worksheet = state.worksheetsById[action.worksheetId];
