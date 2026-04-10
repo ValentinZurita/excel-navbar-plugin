@@ -1,5 +1,6 @@
 import type { WorksheetEntity } from '../../domain/navigation/types';
 import { ChevronDownIcon, ChevronRightIcon, EyeIcon } from '../icons';
+import './HiddenSection.css';
 
 interface HiddenSectionProps {
   isCollapsed: boolean;
@@ -27,6 +28,7 @@ export function HiddenSection({ isCollapsed, worksheets, onToggle, onUnhide, onO
       </header>
 
       {!isCollapsed ? (
+        // Hidden worksheets still support context menu actions (rename, move, etc.).
         <div className="sheet-list section-body">
           {worksheets.map((worksheet) => {
             const isVeryHidden = worksheet.visibility === 'VeryHidden';

@@ -8,6 +8,7 @@ interface SectionProps {
 }
 
 export function Section({ title, defaultCollapsed = false, children }: SectionProps) {
+  // Generic collapsible block used by pinned/sheets/groups sections.
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
   return (

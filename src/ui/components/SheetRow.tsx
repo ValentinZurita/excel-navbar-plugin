@@ -1,5 +1,6 @@
 import type { WorksheetEntity } from '../../domain/navigation/types';
 import { WorksheetPinIcon } from '../icons';
+import './SheetRow.css';
 
 interface SheetRowProps {
   worksheet: WorksheetEntity;
@@ -23,6 +24,7 @@ export function SheetRow({
   onTogglePin,
   onOpenContextMenu,
 }: SheetRowProps) {
+  // Grouped rows do not expose pin action because grouping owns their position.
   const canTogglePin = worksheet.groupId === null && worksheet.visibility === 'Visible' && Boolean(onTogglePin);
 
   return (

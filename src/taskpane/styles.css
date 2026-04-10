@@ -315,86 +315,6 @@ button {
   padding: 0;
 }
 
-.sheet-pin-button,
-.sheet-unhide-button,
-.sheet-indent-slot,
-.group-leading {
-  width: 20px;
-  min-width: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sheet-pin-button,
-.sheet-unhide-button {
-  height: 20px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  color: var(--excel-muted);
-  border-radius: 0;
-  box-shadow: none;
-  transition: opacity 160ms ease;
-  position: relative;
-  z-index: 2;
-}
-
-.sheet-pin-button {
-  opacity: 0;
-}
-
-.sheet-unhide-button {
-  opacity: 0.55;
-  cursor: pointer;
-}
-
-.sheet-unhide-button:hover,
-.sheet-unhide-button:focus-visible {
-  opacity: 0.85;
-  color: var(--excel-body-fg);
-}
-
-.sheet-unhide-button:disabled {
-  opacity: 0.25;
-  cursor: not-allowed;
-}
-
-.sheet-row:hover .sheet-pin-button,
-.sheet-row:focus-within .sheet-pin-button,
-.sheet-row-context-open .sheet-pin-button {
-  opacity: 0.45;
-}
-
-.sheet-row .sheet-pin-button:hover,
-.sheet-row .sheet-pin-button:focus-visible {
-  opacity: 0.75;
-}
-
-.sheet-row .sheet-pin-button.sheet-pin-button-active {
-  opacity: 0.45;
-}
-
-.sheet-row .sheet-pin-button.sheet-pin-button-active:hover,
-.sheet-row .sheet-pin-button.sheet-pin-button-active:focus-visible {
-  opacity: 0.75;
-}
-
-.sheet-pin-icon,
-.group-folder-icon {
-  width: 15px;
-  height: 15px;
-  display: block;
-}
-
-.sheet-pin-icon-active {
-  color: var(--excel-muted);
-}
-
-.group-folder-icon {
-  color: var(--excel-muted);
-}
-
 /* ==========================================================================
    7. Lists and row styling
    The navigator should feel closer to a tab strip than to a dashboard.
@@ -409,9 +329,7 @@ button {
 
 /* Row styling for sheets and search results.
    Uses transparent borders and subtle transitions for hover states. */
-.sheet-row,
-.search-result,
-.group-header {
+.search-result {
   position: relative;
   padding: 8px 10px;
   border-radius: 4px;
@@ -424,19 +342,8 @@ button {
     transform 160ms ease;
 }
 
-.sheet-row {
-  display: grid;
-  gap: 2px;
-}
-
-.sheet-row-grouped {
-  margin-left: 20px;
-}
-
 /* Invisible pseudo-elements used for consistent hover/focus effects.
    Keeps visual states aligned with the row shape. */
-.sheet-row::before,
-.group-header::before,
 .search-result::before {
   content: '';
   position: absolute;
@@ -447,19 +354,12 @@ button {
   transition: opacity 160ms ease;
 }
 
-.sheet-row::before,
-.group-header::before,
 .search-result::before {
   box-shadow: none;
 }
 
 /* Active, hover and open states for rows and menu items.
    Creates a light highlight without additional shadows. */
-.sheet-row-active,
-.sheet-row:hover,
-.sheet-row-context-open,
-.group-header:hover,
-.group-header-context-open,
 .search-result:hover {
   background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
   border-color: transparent;
@@ -479,56 +379,10 @@ button {
   box-shadow: none;
 }
 
-.group-card {
-  display: grid;
-  gap: 2px;
-}
-
 /* ==========================================================================
    8. Secondary states
    Hidden sheets and error banners are intentionally lower priority.
    ========================================================================== */
-/* Hidden section styling for lower-priority sheets. */
-.hidden-section {
-  margin-top: 6px;
-}
-
-.hidden-section .section-header {
-  padding-left: 2px;
-}
-
-/* Layout for individual hidden rows and their content. */
-.hidden-row .row-topline {
-  justify-content: flex-start;
-}
-
-.hidden-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.hidden-row > .hidden-sheet-content {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
-}
-
-/* Hidden row title truncation so long sheet names do not wrap. */
-.hidden-row .hidden-sheet-content .sheet-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Unhide button icon sizing for hidden rows. */
-.sheet-unhide-icon {
-  width: 15px;
-  height: 15px;
-  display: block;
-}
-
 /* Error banner styling for validation and state messages. */
 .error-banner {
   margin-top: 8px;
@@ -589,8 +443,7 @@ button {
 }
 
 /* Primary title styles used across tabs and group headers. */
-.sheet-title,
-.group-title {
+.sheet-title {
   font-size: 13px;
   font-weight: 400;
   color: var(--excel-body-fg);
@@ -604,27 +457,6 @@ button {
 }
 
 /* Toggles for group headers and row controls. */
-.group-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Expand the clickable surface to the full bounding box. */
-.sheet-link::after,
-.group-toggle::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-
-.group-copy {
-  display: grid;
-  gap: 2px;
-  min-width: 0;
-}
-
 .sheet-link small,
 .group-toggle small,
 .search-result small,
@@ -689,14 +521,6 @@ button {
   color: var(--excel-muted);
   font-size: 11px;
   line-height: 1;
-}
-
-.group-header {
-  padding-left: 10px;
-}
-
-.group-card .search-result {
-  margin-left: 12px;
 }
 
 .primary-tabs .sheet-row,

@@ -1,0 +1,107 @@
+/* Sheet row container with subtle hover/active states. */
+.sheet-row {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 160ms ease;
+}
+
+.sheet-row-grouped {
+  margin-left: 20px;
+}
+
+.sheet-row::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  box-shadow: none;
+}
+
+.sheet-row-active,
+.sheet-row:hover,
+.sheet-row-context-open {
+  background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Pin button stays hidden until row interaction. */
+.sheet-pin-button,
+.sheet-indent-slot {
+  width: 20px;
+  min-width: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sheet-pin-button {
+  height: 20px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  color: var(--excel-muted);
+  box-shadow: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  position: relative;
+  z-index: 2;
+}
+
+.sheet-row:hover .sheet-pin-button,
+.sheet-row:focus-within .sheet-pin-button,
+.sheet-row-context-open .sheet-pin-button {
+  opacity: 0.45;
+}
+
+.sheet-row .sheet-pin-button:hover,
+.sheet-row .sheet-pin-button:focus-visible {
+  opacity: 0.75;
+}
+
+.sheet-row .sheet-pin-button.sheet-pin-button-active {
+  opacity: 0.45;
+}
+
+.sheet-row .sheet-pin-button.sheet-pin-button-active:hover,
+.sheet-row .sheet-pin-button.sheet-pin-button-active:focus-visible {
+  opacity: 0.75;
+}
+
+.sheet-pin-icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+.sheet-pin-icon-active {
+  color: var(--excel-muted);
+}
+
+/* Full-row clickable title action. */
+.sheet-link {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.sheet-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}

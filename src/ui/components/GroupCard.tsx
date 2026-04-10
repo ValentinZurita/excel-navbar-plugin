@@ -1,6 +1,7 @@
 import type { NavigatorGroupView } from '../../domain/navigation/types';
 import { GroupFolderIcon } from '../icons';
 import { SheetList } from './SheetList';
+import './GroupCard.css';
 
 interface GroupCardProps {
   group: NavigatorGroupView;
@@ -17,6 +18,7 @@ export function GroupCard({ group, onToggleCollapsed, onOpenGroupMenu, onOpenShe
   return (
     <section
       className="group-card"
+      // Group menu opens from the card container to include header and child rows.
       onContextMenu={(event) => {
         event.preventDefault();
         onOpenGroupMenu({

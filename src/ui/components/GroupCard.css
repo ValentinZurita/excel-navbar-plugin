@@ -1,0 +1,83 @@
+/* Group container keeps header and child rows tightly stacked. */
+.group-card {
+  display: grid;
+  gap: 2px;
+}
+
+/* Group header mirrors row behavior for hover/context states. */
+.group-header {
+  position: relative;
+  padding: 8px 10px;
+  padding-left: 10px;
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 160ms ease;
+}
+
+.group-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  box-shadow: none;
+}
+
+.group-header:hover,
+.group-header-context-open {
+  background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
+
+.group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.group-toggle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.group-leading {
+  width: 20px;
+  min-width: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.group-folder-icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  color: var(--excel-muted);
+}
+
+.group-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.group-title {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--excel-body-fg);
+}
+
+.group-card .search-result {
+  margin-left: 12px;
+}
