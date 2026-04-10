@@ -1,7 +1,8 @@
 import type { WorkbookSnapshot, WorksheetVisibility } from '../../domain/navigation/types';
 import type { WorkbookAdapter } from './WorkbookAdapter';
 
-function hasOfficeRuntime() {
+
+export function hasOfficeRuntime() {
   return typeof Office !== 'undefined' && typeof Excel !== 'undefined';
 }
 
