@@ -6,6 +6,7 @@ import { SearchBox } from '../components/SearchBox';
 import { Section } from '../components/Section';
 import { SheetList } from '../components/SheetList';
 import { TaskpaneShell } from '../components/TaskpaneShell';
+import { TextPromptDialog } from '../components/TextPromptDialog';
 import type { GroupEntity, WorksheetEntity } from '../../domain/navigation/types';
 import {
   AddGroupMenuIcon,
@@ -32,6 +33,11 @@ interface GroupMenuState {
   groupName: string;
 }
 
+type TextPromptState =
+  | { kind: 'create-group'; initialValue: string }
+  | { kind: 'rename-sheet'; worksheetId: string; initialValue: string }
+  | { kind: 'rename-group'; groupId: string; initialValue: string };
+
 function MenuItem({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
   return (
     <button type="button" className="context-menu-item" onClick={onClick}>
@@ -45,6 +51,7 @@ export function TaskpaneAppContainer() {
   const controller = useNavigationController();
   const [sheetMenu, setSheetMenu] = useState<SheetMenuState | null>(null);
   const [groupMenu, setGroupMenu] = useState<GroupMenuState | null>(null);
+  const [textPrompt, setTextPrompt] = useState<TextPromptState | null>(null);
 
   const availableGroupOptions = useMemo(
     () =>
@@ -71,12 +78,13 @@ export function TaskpaneAppContainer() {
     setGroupMenu(null);
   }
 
-  function createGroupFromMenu() {
-    const name = window.prompt('Group name');
-    if (!name?.trim()) {
-      return;
-    }
-    controller.createGroup(name.trim());
+  function closeTextPrompt() {
+    setTextPrompt(null);
+  }
+
+  function openCreateGroupPrompt() {
+    closeMenus();
+    setTextPrompt({ kind: 'create-group', initialValue: '' });
   }
 
   async function activateWorksheetFromSearch(worksheetId: string) {
@@ -84,21 +92,64 @@ export function TaskpaneAppContainer() {
     controller.setQuery('');
   }
 
-  function renameWorksheetFromMenu(worksheetId: string, currentName: string) {
-    const nextName = window.prompt('Rename sheet', currentName);
-    if (!nextName?.trim()) {
-      return;
-    }
-    void controller.renameWorksheet(worksheetId, nextName.trim());
+  function openRenameWorksheetPrompt(worksheetId: string, currentName: string) {
+    closeMenus();
+    setTextPrompt({ kind: 'rename-sheet', worksheetId, initialValue: currentName });
   }
 
-  function renameGroupFromMenu(groupId: string, currentName: string) {
-    const nextName = window.prompt('Rename group', currentName);
-    if (!nextName?.trim()) {
+  function openRenameGroupPrompt(groupId: string, currentName: string) {
+    closeMenus();
+    setTextPrompt({ kind: 'rename-group', groupId, initialValue: currentName });
+  }
+
+  async function submitTextPrompt(nextValue: string) {
+    if (!textPrompt) {
       return;
     }
-    controller.renameGroup(groupId, nextName.trim());
+
+    const value = nextValue.trim();
+    if (!value) {
+      return;
+    }
+
+    const promptState = textPrompt;
+    setTextPrompt(null);
+
+    if (promptState.kind === 'create-group') {
+      controller.createGroup(value);
+      return;
+    }
+
+    if (promptState.kind === 'rename-group') {
+      controller.renameGroup(promptState.groupId, value);
+      return;
+    }
+
+    await controller.renameWorksheet(promptState.worksheetId, value);
   }
+
+  const textPromptConfig = textPrompt
+    ? textPrompt.kind === 'create-group'
+      ? {
+          title: 'New group',
+          description: 'Create a manual group for related sheets.',
+          placeholder: 'Finance',
+          submitLabel: 'Create group',
+        }
+      : textPrompt.kind === 'rename-sheet'
+        ? {
+            title: 'Rename sheet',
+            description: 'Choose a clear worksheet name.',
+            placeholder: 'Revenue',
+            submitLabel: 'Save name',
+          }
+        : {
+            title: 'Rename group',
+            description: 'Keep the group label short and scannable.',
+            placeholder: 'Operations',
+            submitLabel: 'Save name',
+          }
+    : null;
 
   return (
     <TaskpaneShell errorMessage={controller.errorMessage}>
@@ -241,8 +292,7 @@ export function TaskpaneAppContainer() {
               icon={<RenameMenuIcon className="context-menu-icon-svg" />}
               label="Rename"
               onClick={() => {
-                renameWorksheetFromMenu(sheetMenu.worksheet.worksheetId, sheetMenu.worksheet.name);
-                closeMenus();
+                openRenameWorksheetPrompt(sheetMenu.worksheet.worksheetId, sheetMenu.worksheet.name);
               }}
             />
             {availableGroupOptions.map((group: GroupEntity) => (
@@ -270,8 +320,7 @@ export function TaskpaneAppContainer() {
               icon={<AddGroupMenuIcon className="context-menu-icon-svg" />}
               label="New group"
               onClick={() => {
-                createGroupFromMenu();
-                closeMenus();
+                openCreateGroupPrompt();
               }}
             />
           </div>
@@ -285,8 +334,7 @@ export function TaskpaneAppContainer() {
               icon={<RenameMenuIcon className="context-menu-icon-svg" />}
               label="Rename group"
               onClick={() => {
-                renameGroupFromMenu(groupMenu.groupId, groupMenu.groupName);
-                closeMenus();
+                openRenameGroupPrompt(groupMenu.groupId, groupMenu.groupName);
               }}
             />
             <MenuItem
@@ -303,13 +351,23 @@ export function TaskpaneAppContainer() {
               icon={<AddGroupMenuIcon className="context-menu-icon-svg" />}
               label="New group"
               onClick={() => {
-                createGroupFromMenu();
-                closeMenus();
+                openCreateGroupPrompt();
               }}
             />
           </div>
         </div>
       ) : null}
+
+      <TextPromptDialog
+        isOpen={Boolean(textPrompt && textPromptConfig)}
+        title={textPromptConfig?.title ?? ''}
+        description={textPromptConfig?.description}
+        initialValue={textPrompt?.initialValue ?? ''}
+        placeholder={textPromptConfig?.placeholder}
+        submitLabel={textPromptConfig?.submitLabel ?? 'Save'}
+        onCancel={closeTextPrompt}
+        onSubmit={submitTextPrompt}
+      />
     </TaskpaneShell>
   );
 }

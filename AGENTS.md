@@ -14,6 +14,15 @@ Build and maintain an Excel worksheet navigator that feels calm, native-adjacent
 - Put Office.js access in adapters/services, not in components.
 - Treat UX quality and Excel alignment as core functionality, not later polish.
 
+## Design non-negotiables
+- Respect `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/docs/design/visual-baseline.md` as the approved visual baseline.
+- Extend the current design direction; do not reset it, dilute it, or introduce conflicting visual language.
+- Keep worksheet names as the primary visual target. Controls and metadata must stay secondary.
+- Prefer calm, native-adjacent Excel UI over generic web-app patterns.
+- Avoid decorative cards, loud shadows, promotional headers, and persistent controls that compete with navigation.
+- Prefer contextual actions and shared tokens/selectors over ad-hoc component styling.
+- If a visual change increases noise or feels less Excel-aligned, stop and rethink it before implementation.
+
 ## Commit policy
 - Prefer small conventional commits.
 - One concern per commit.

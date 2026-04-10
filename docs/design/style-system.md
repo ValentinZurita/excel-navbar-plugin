@@ -10,6 +10,8 @@ The goal is simple:
 
 This product should feel like a natural worksheet navigator, not a mini web app inside Excel.
 
+For the approved phase baseline and long-term visual direction, also read `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/docs/design/visual-baseline.md`.
+
 ## Source of Truth
 
 ### Theme tokens

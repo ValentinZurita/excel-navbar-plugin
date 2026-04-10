@@ -29,6 +29,7 @@ export function SearchResults({ results, onSelect }: SearchResultsProps) {
             </span>
             <span className="search-result-copy">
               <span className="sheet-title">{result.name}</span>
+              {result.groupName ? <small className="search-result-meta">{result.groupName}</small> : null}
             </span>
           </button>
         ))}

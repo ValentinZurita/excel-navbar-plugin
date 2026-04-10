@@ -193,7 +193,8 @@ button {
 .search-field input,
 .inline-form input,
 .rename-form input,
-.sheet-actions select {
+.sheet-actions select,
+.prompt-dialog-input {
   width: 100%;
   border: 1px solid var(--excel-border);
   border-radius: 6px;
@@ -686,6 +687,68 @@ button {
   position: fixed;
   inset: 0;
   z-index: 20;
+}
+
+.prompt-dialog-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--excel-body-bg) 72%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.prompt-dialog {
+  width: min(100%, 320px);
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--excel-control-bg) 96%, var(--excel-body-bg));
+  border: 1px solid color-mix(in srgb, var(--excel-border) 88%, transparent);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.16),
+    0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.prompt-dialog-header,
+.prompt-dialog-form,
+.prompt-dialog-field {
+  display: grid;
+  gap: 8px;
+}
+
+.prompt-dialog-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--excel-body-fg);
+}
+
+.prompt-dialog-description,
+.prompt-dialog-label {
+  margin: 0;
+  font-size: 12px;
+  color: var(--excel-muted);
+}
+
+.prompt-dialog-input {
+  min-width: 0;
+}
+
+.prompt-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Context menu panel styling and spacing. */
