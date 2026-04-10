@@ -99,6 +99,10 @@ export function useNavigationController() {
       await adapter.unhideWorksheet(worksheetId);
       dispatch({ type: 'markWorksheetUnhidden', worksheetId });
     },
+    async hideWorksheet(worksheetId: string) {
+      await adapter.hideWorksheet(worksheetId);
+      dispatch({ type: 'markWorksheetHidden', worksheetId });
+    },
     reload: load,
   }), [dispatch, load]);
 

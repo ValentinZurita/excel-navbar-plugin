@@ -90,4 +90,22 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
       await context.sync();
     });
   }
+
+  async hideWorksheet(worksheetId: string): Promise<void> {
+    if (!hasOfficeRuntime()) {
+      return;
+    }
+
+    await Excel.run(async (context) => {
+      const worksheets = context.workbook.worksheets;
+      worksheets.load('items/id,items/visibility');
+      await context.sync();
+      const worksheet = worksheets.items.find((candidate) => candidate.id === worksheetId);
+      if (!worksheet || worksheet.visibility === 'VeryHidden') {
+        return;
+      }
+      worksheet.visibility = 'Hidden';
+      await context.sync();
+    });
+  }
 }
