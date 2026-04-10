@@ -79,6 +79,11 @@ export function TaskpaneAppContainer() {
     controller.createGroup(name.trim());
   }
 
+  async function activateWorksheetFromSearch(worksheetId: string) {
+    await controller.activateWorksheet(worksheetId);
+    controller.setQuery('');
+  }
+
   function renameWorksheetFromMenu(worksheetId: string, currentName: string) {
     const nextName = window.prompt('Rename sheet', currentName);
     if (!nextName?.trim()) {
@@ -101,7 +106,7 @@ export function TaskpaneAppContainer() {
         value={controller.state.query}
         onChange={controller.setQuery}
         results={controller.navigatorView.searchResults}
-        onSelect={controller.activateWorksheet}
+        onSelect={activateWorksheetFromSearch}
       />
 
       {controller.navigatorView.pinned.length ? (
