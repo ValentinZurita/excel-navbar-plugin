@@ -487,17 +487,33 @@ button {
   padding-left: 2px;
 }
 
+.hidden-row .row-topline {
+  justify-content: flex-start;
+}
+
 .hidden-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
 }
 
-.hidden-row > div {
+.hidden-row > .hidden-sheet-content {
   display: grid;
   gap: 2px;
   min-width: 0;
+  flex: 1;
+}
+
+.hidden-row .hidden-sheet-content .sheet-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sheet-unhide-icon {
+  width: 15px;
+  height: 15px;
+  display: block;
 }
 
 .error-banner {
