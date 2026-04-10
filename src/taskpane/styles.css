@@ -570,11 +570,13 @@ button {
   border-bottom: none;
 }
 
+/* Prevent accidental text selection on section titles. */
 .section-header h2 {
   font-size: 12px;
   font-weight: 400;
   line-height: 1;
   color: var(--excel-muted);
+  user-select: none;
 }
 
 .section-header-clickable {
