@@ -14,11 +14,41 @@
     const nextState = navigationReducer(state, { type: 'markWorksheetHidden', worksheetId: 'one' });
     expect(nextState.worksheetsById.one.visibility).toBe('Hidden');
   });
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createDefaultNavigationState } from '../../src/domain/navigation/defaultState';
 import { navigationReducer } from '../../src/domain/navigation/reducer';
 
 describe('navigationReducer', () => {
+  it('creates a group with the source worksheet already inside it', () => {
+    const state = createDefaultNavigationState();
+    state.worksheetsById = {
+      one: {
+        worksheetId: 'one',
+        name: 'Overview',
+        visibility: 'Visible',
+        workbookOrder: 0,
+        isPinned: true,
+        groupId: null,
+        lastKnownStructuralState: { kind: 'pinned' },
+      },
+    };
+
+    vi.spyOn(Date, 'now')
+      .mockReturnValueOnce(100)
+      .mockReturnValueOnce(100);
+
+    const nextState = navigationReducer(state, {
+      type: 'createGroup',
+      name: 'Finance',
+      initialWorksheetId: 'one',
+    });
+
+    expect(nextState.groupOrder).toEqual(['group-100']);
+    expect(nextState.groupsById['group-100'].worksheetOrder).toEqual(['one']);
+    expect(nextState.worksheetsById.one.groupId).toBe('group-100');
+    expect(nextState.worksheetsById.one.isPinned).toBe(false);
+  });
+
   it('prevents pinning a grouped worksheet', () => {
     const state = createDefaultNavigationState();
     state.worksheetsById = {

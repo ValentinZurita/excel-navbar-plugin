@@ -85,6 +85,26 @@ describe('TaskpaneAppContainer', () => {
     expect(screen.getByLabelText('Name')).toHaveValue('Revenue');
   });
 
+  it('creates a group from the sheet menu using the source worksheet id', async () => {
+    const user = userEvent.setup();
+    const controller = createControllerMock();
+    useNavigationControllerMock.mockReturnValue(controller);
+
+    render(<TaskpaneAppContainer />);
+
+    const worksheetButton = screen.getByRole('button', { name: 'Revenue' });
+    const worksheetRow = worksheetButton.closest('article');
+
+    expect(worksheetRow).not.toBeNull();
+    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+
+    await user.click(screen.getByRole('button', { name: 'New group' }));
+    await user.type(screen.getByLabelText('Name'), 'Finance');
+    await user.click(screen.getByRole('button', { name: 'Create group' }));
+
+    expect(controller.createGroup).toHaveBeenCalledWith('Finance', 'sheet-1');
+  });
+
   it('closes worksheet context menu when right-clicking the same row twice', () => {
     useNavigationControllerMock.mockReturnValue(createControllerMock());
 
@@ -129,7 +149,7 @@ describe('TaskpaneAppContainer', () => {
 
     render(<TaskpaneAppContainer />);
 
-    const groupButton = screen.getByRole('button', { name: 'Finance 0 sheets' });
+    const groupButton = screen.getByRole('button', { name: 'Finance' });
     const groupRow = groupButton.closest('section');
 
     expect(groupRow).not.toBeNull();

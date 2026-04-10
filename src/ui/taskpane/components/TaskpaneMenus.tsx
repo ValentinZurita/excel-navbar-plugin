@@ -24,7 +24,7 @@ interface TaskpaneMenusProps {
   onRenameWorksheet: (worksheet: WorksheetEntity) => void;
   onMoveToGroup: (worksheetId: string, groupId: string) => void;
   onRemoveFromGroup: (worksheetId: string) => void;
-  onCreateGroup: () => void;
+  onCreateGroup: (initialWorksheetId?: string) => void;
   onRenameGroup: (groupId: string, groupName: string) => void;
   onDeleteGroup: (groupId: string, groupName: string) => void;
 }
@@ -137,7 +137,7 @@ export function TaskpaneMenus({
               icon={<AddGroupMenuIcon className="context-menu-icon-svg" />}
               label="New group"
               onClick={() => {
-                onCreateGroup();
+                onCreateGroup(sheetMenu.worksheet.worksheetId);
               }}
             />
           </div>

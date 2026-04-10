@@ -16,7 +16,7 @@ export type NavigationAction =
   | { type: 'setQuery'; query: string }
   | { type: 'toggleGroupCollapsed'; groupId: string }
   | { type: 'toggleHiddenSection' }
-  | { type: 'createGroup'; name: string; colorToken?: GroupColorToken }
+  | { type: 'createGroup'; name: string; colorToken?: GroupColorToken; initialWorksheetId?: string }
   | { type: 'renameGroup'; groupId: string; name: string }
   | { type: 'deleteGroup'; groupId: string }
   | { type: 'assignWorksheetToGroup'; worksheetId: string; groupId: string }
@@ -144,18 +144,45 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       return { ...state, hiddenSectionCollapsed: !state.hiddenSectionCollapsed };
     case 'createGroup': {
       const groupId = `group-${Date.now()}`;
+      const initialWorksheet = action.initialWorksheetId
+        ? state.worksheetsById[action.initialWorksheetId]
+        : null;
+      const nextGroupsById = Object.fromEntries(
+        Object.entries(state.groupsById).map(([key, value]) => [key, { ...value, worksheetOrder: [...value.worksheetOrder] }]),
+      );
       const group: GroupEntity = {
         groupId,
         name: action.name.trim(),
         colorToken: action.colorToken ?? nextGroupColor(state.groupOrder.length),
         isCollapsed: true,
-        worksheetOrder: [],
+        worksheetOrder: initialWorksheet && initialWorksheet.visibility === 'Visible'
+          ? [initialWorksheet.worksheetId]
+          : [],
         createdAt: Date.now(),
       };
+
+      const nextWorksheetsById = Object.fromEntries(
+        Object.entries(state.worksheetsById).map(([key, value]) => [key, { ...value }]),
+      );
+
+      if (initialWorksheet && initialWorksheet.visibility === 'Visible') {
+        removeWorksheetFromAnyGroup(
+          { ...state, groupsById: nextGroupsById, worksheetsById: nextWorksheetsById },
+          initialWorksheet.worksheetId,
+        );
+        nextWorksheetsById[initialWorksheet.worksheetId] = {
+          ...nextWorksheetsById[initialWorksheet.worksheetId],
+          isPinned: false,
+          groupId,
+          lastKnownStructuralState: { kind: 'group', groupId },
+        };
+      }
+
       return {
         ...state,
-        groupsById: { ...state.groupsById, [groupId]: group },
+        groupsById: { ...nextGroupsById, [groupId]: group },
         groupOrder: [groupId, ...state.groupOrder],
+        worksheetsById: nextWorksheetsById,
       };
     }
     case 'renameGroup': {

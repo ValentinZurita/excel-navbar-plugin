@@ -65,8 +65,8 @@ export function useNavigationController() {
     toggleHiddenSection() {
       dispatch({ type: 'toggleHiddenSection' });
     },
-    createGroup(name: string) {
-      dispatch({ type: 'createGroup', name });
+    createGroup(name: string, initialWorksheetId?: string) {
+      dispatch({ type: 'createGroup', name, initialWorksheetId });
     },
     renameGroup(groupId: string, name: string) {
       dispatch({ type: 'renameGroup', groupId, name });

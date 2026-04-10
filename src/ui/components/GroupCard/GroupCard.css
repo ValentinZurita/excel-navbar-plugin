@@ -39,9 +39,14 @@
 }
 
 .group-toggle {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  text-align: left;
 }
 
 .group-toggle::after {
@@ -67,8 +72,8 @@
 }
 
 .group-copy {
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: center;
   min-width: 0;
 }
 

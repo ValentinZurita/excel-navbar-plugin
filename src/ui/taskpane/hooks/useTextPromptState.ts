@@ -2,13 +2,13 @@ import { useCallback, useMemo, useState } from 'react';
 
 interface UseTextPromptStateParams {
   closeMenus: () => void;
-  createGroup: (name: string) => void;
+  createGroup: (name: string, initialWorksheetId?: string) => void;
   renameGroup: (groupId: string, name: string) => void;
   renameWorksheet: (worksheetId: string, name: string) => Promise<void>;
 }
 
 export type TextPromptState =
-  | { kind: 'create-group'; initialValue: string }
+  | { kind: 'create-group'; initialValue: string; initialWorksheetId?: string }
   | { kind: 'rename-sheet'; worksheetId: string; initialValue: string }
   | { kind: 'rename-group'; groupId: string; initialValue: string };
 
@@ -32,9 +32,9 @@ export function useTextPromptState({
     setTextPrompt(null);
   }, []);
 
-  const openCreateGroupPrompt = useCallback(() => {
+  const openCreateGroupPrompt = useCallback((initialWorksheetId?: string) => {
     closeMenus();
-    setTextPrompt({ kind: 'create-group', initialValue: '' });
+    setTextPrompt({ kind: 'create-group', initialValue: '', initialWorksheetId });
   }, [closeMenus]);
 
   const openRenameWorksheetPrompt = useCallback((worksheetId: string, currentName: string) => {
@@ -62,7 +62,7 @@ export function useTextPromptState({
 
     // Execute the side effect based on the active prompt mode.
     if (promptState.kind === 'create-group') {
-      createGroup(trimmedValue);
+      createGroup(trimmedValue, promptState.initialWorksheetId);
       return;
     }
 

@@ -69,22 +69,6 @@ export function TaskpaneSections({
         </Section>
       ) : null}
 
-      {/* Ungrouped visible worksheets form the default navigation block. */}
-      {navigatorView.ungrouped.length ? (
-        <Section title="Sheets">
-          <div className="primary-tabs">
-            <SheetList
-              worksheets={navigatorView.ungrouped}
-              activeWorksheetId={activeWorksheetId}
-              contextMenuOpenId={contextMenuOpenSheetId}
-              onActivate={onActivateWorksheet}
-              onTogglePin={onPinWorksheet}
-              onOpenContextMenu={onOpenSheetMenu}
-            />
-          </div>
-        </Section>
-      ) : null}
-
       {/* User-defined groups with collapse behavior and own context menu. */}
       {navigatorView.groups.length ? (
         <Section title="Groups">
@@ -98,6 +82,22 @@ export function TaskpaneSections({
             onOpenGroupMenu={onOpenGroupMenu}
             onOpenSheetMenu={onOpenSheetMenu}
           />
+        </Section>
+      ) : null}
+
+      {/* Ungrouped visible worksheets stay after pinned tabs and groups. */}
+      {navigatorView.ungrouped.length ? (
+        <Section title="Sheets">
+          <div className="primary-tabs">
+            <SheetList
+              worksheets={navigatorView.ungrouped}
+              activeWorksheetId={activeWorksheetId}
+              contextMenuOpenId={contextMenuOpenSheetId}
+              onActivate={onActivateWorksheet}
+              onTogglePin={onPinWorksheet}
+              onOpenContextMenu={onOpenSheetMenu}
+            />
+          </div>
         </Section>
       ) : null}
 

@@ -37,7 +37,6 @@ export function GroupCard({ group, onToggleCollapsed, onOpenGroupMenu, onOpenShe
           </span>
           <span className="group-copy">
             <span className="group-title">{group.name}</span>
-            <small>{group.worksheets.length} sheet{group.worksheets.length === 1 ? '' : 's'}</small>
           </span>
         </button>
       </header>
