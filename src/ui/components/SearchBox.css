@@ -5,7 +5,7 @@
 
 .search-results-wrapper {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% - 5px);
   left: 0;
   right: 0;
   z-index: 10;
@@ -25,6 +25,13 @@
 .search-results-wrapper .sheet-list {
   max-height: 260px;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.search-results-wrapper .sheet-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .search-results-wrapper .search-result {
