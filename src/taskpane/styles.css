@@ -568,14 +568,21 @@ button {
   padding: 4px 2px;
   margin-bottom: 0;
   border-bottom: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-/* Prevent accidental text selection on section titles. */
+/* Prevent accidental text selection on section titles and child elements. */
 .section-header h2 {
   font-size: 12px;
   font-weight: 400;
   line-height: 1;
   color: var(--excel-muted);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
 }
 
