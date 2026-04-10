@@ -1,7 +1,9 @@
 # Codebase Review
 
 ## Review Goal
+
 Check whether the current implementation still respects the agreed architecture rules:
+
 - small components
 - clear boundaries
 - Office.js outside presentation
@@ -11,6 +13,7 @@ Check whether the current implementation still respects the agreed architecture 
 ## Current Assessment
 
 ### What is going well
+
 - The repository is clearly split into:
   - `domain`
   - `infrastructure`
@@ -24,11 +27,13 @@ Check whether the current implementation still respects the agreed architecture 
 - The project already has product, design, tech, and dev docs
 
 ### What is acceptable but should be watched
+
 - `TaskpaneAppContainer.tsx` is becoming the orchestration hotspot
 - Context menu logic currently lives there, which is acceptable for now, but should not grow uncontrolled
 - Prompt-based rename/group creation is functional but not final UX
 
 ### What was cleaned up
+
 - Removed unused files that no longer matched the current direction:
   - `src/ui/components/GroupComposer.tsx`
   - `src/ui/shared/groupColors.ts`
@@ -38,20 +43,24 @@ This reduces noise for future AI work.
 ## Architecture Rule Check
 
 ### Component size
+
 Current UI components are still small and readable.
 
 ### Separation of concerns
+
 - good: reducer/selectors own navigation rules
 - good: persistence is separated
 - good: Office adapter is separated
 - acceptable: context-menu orchestration is in one container for now
 
 ### Styling strategy
+
 - good: one global stylesheet
 - good: Office theme adapter writes runtime tokens
 - improved: style system is now documented in `docs/design/style-system.md`
 
 ### AI-first readability
+
 - file names are descriptive
 - folders are easy to scan
 - boundaries are understandable without reverse-engineering the whole repo

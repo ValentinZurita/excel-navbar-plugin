@@ -1,6 +1,8 @@
 {
   "globs": [
-    "src/**/*.md"
+    "src/**/*.md",
+    "docs/dev/**/*.md",
+    "docs/tech/**/*.md"
   ],
   "config": {
     "default": false,
