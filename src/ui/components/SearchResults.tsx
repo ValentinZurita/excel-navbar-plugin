@@ -32,7 +32,7 @@ export function SearchResults({ results, onSelect }: SearchResultsProps) {
             </span>
           </button>
         ))}
-        {!results.length ? <p className="empty-state">No matching sheets.</p> : null}
+        {!results.length ? <p className="empty-state">No matching results.</p> : null}
       </div>
     </section>
   );
