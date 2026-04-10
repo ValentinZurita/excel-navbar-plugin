@@ -27,7 +27,6 @@
   cursor: not-allowed;
 }
 
-.ghost-button,
 .ghost-button {
   background: transparent;
   color: var(--excel-body-fg);
