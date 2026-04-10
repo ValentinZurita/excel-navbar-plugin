@@ -6,6 +6,10 @@
   "scripts": {
     "dev": "webpack serve --mode development",
     "lint": "tsc --noEmit",
+    "check:component-imports": "node scripts/check-component-imports.mjs",
+    "lint:css": "stylelint \"src/**/*.css\"",
+    "lint:md": "markdownlint-cli2",
+    "quality": "npm run check:component-imports && npm run lint:css && npm run lint:md",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -24,7 +28,9 @@
     "css-loader": "^7.1.2",
     "html-webpack-plugin": "^5.6.3",
     "jsdom": "^25.0.1",
+    "markdownlint-cli2": "^0.15.0",
     "style-loader": "^4.0.0",
+    "stylelint": "^16.9.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.7.2",
     "vite": "^6.0.3",

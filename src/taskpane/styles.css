@@ -114,10 +114,6 @@ button {
   border: none;
   border-radius: 0;
   box-shadow: none;
-}
-
-.section-card,
-.group-card {
   padding: 0;
 }
 
