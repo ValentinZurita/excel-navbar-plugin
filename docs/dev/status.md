@@ -2,19 +2,21 @@
 
 ## Current State
 
-The repository now contains a working Excel Office Add-in scaffold for **Sheet Navigator**.
+The repository now contains a working Excel Office Add-in for **Sheet Navigator** with the current visual baseline already established by the human reviewer.
 
-Implemented foundation:
+Implemented and documented so far:
 
 - Excel manifest with ribbon button + task pane entry
 - React + TypeScript project structure
 - Office adapter boundary
 - Hybrid persistence service
 - Single navigation store
-- Small UI components for the task pane
-- Core navigation rules for groups, pinning, hidden sheets, and rename
-- Initial tests for selectors, reducer behavior, persistence, and search results
-- AI-first guidance docs and project rules
+- Modular task pane UI with folder-per-component structure
+- Core navigation rules for groups, pinning, hidden sheets, rename, and delete-group confirmation
+- Product-owned dialog flows for create, rename, and delete-group actions
+- Design baseline + next-phase docs aligned with the current product direction
+- Quality gates for TypeScript, component import boundaries, CSS, and Markdown
+- Test coverage for navigation behavior and core task pane interactions
 
 ## Verified So Far
 
@@ -22,6 +24,7 @@ Verified in this session:
 
 - `npm run lint` ✅
 - `npm run test` ✅
+- `npm run quality` ✅
 
 Not yet verified in this session:
 
@@ -64,28 +67,30 @@ Not yet verified in this session:
 ## Next Recommended Step
 ### Immediate next step
 
-**Sideload and validate the add-in in real Excel.**
+**Sideload and validate the add-in in real Excel without changing the current visual appearance.**
 
 Why this is next:
 
-- The scaffold is already type-safe and test-safe
-- The main unknown is now host reality, not code structure
-- We need to confirm manifest behavior, task pane rendering, and Office.js interaction inside Excel
+- The current UI direction is intentionally locked by the human reviewer
+- Product-owned interaction flows are now in place for create, rename, and delete-group actions
+- The main remaining unknown is host reality, not baseline visual design
+- We need to confirm manifest behavior, task pane rendering, Office.js interaction, and dialog/menu behavior inside Excel
 
 ## After That
 Once sideloading is confirmed, the next implementation pass should focus on:
 
-1. visual refinement toward a more Excel-native feel
-2. interaction cleanup for contextual actions
-3. workbook event handling and sync resilience
-4. persistence validation in real workbook reopen flows
+1. non-visual interaction cleanup for contextual actions
+2. workbook event handling and sync resilience
+3. persistence validation in real workbook reopen flows
+4. documentation alignment when behavior or verified reality changes
 
 ## Open Risks
 
 - Manifest/task pane behavior may differ from expectations in the real Excel host
 - Office.js worksheet APIs may need adjustment once tested against live workbooks
 - VeryHidden behavior remains intentionally conservative and may need product clarification later
-- Current UI is intentionally clean and modular, but still needs host-based polish
+- Host rendering may still expose edge cases in dialog layering, context menu placement, or focus handling
+- `docs/dev/status.md` must stay aligned with verified code and recent commits so future resumes do not start from stale assumptions
 
 ## AI Resume Instructions
 
@@ -114,4 +119,4 @@ When docs, memory, and code disagree:
 4. then planning docs
 
 ## Last Session Outcome
-This project is **scaffolded and verified at lint/test level**, but **not yet validated inside Excel itself**.
+This project has moved beyond the initial scaffold stage, with interaction ownership largely in place, but it is still **not yet validated inside Excel itself**.

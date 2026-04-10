@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { WorksheetEntity } from '../../src/domain/navigation/types';
@@ -99,5 +99,50 @@ describe('TaskpaneAppContainer', () => {
 
     fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
     expect(screen.queryByRole('button', { name: 'Rename' })).not.toBeInTheDocument();
+  });
+
+  it('confirms group deletion through product-owned dialog instead of browser confirm', async () => {
+    const user = userEvent.setup();
+    const controller = createControllerMock() as any;
+    const group = {
+      groupId: 'group-1',
+      name: 'Finance',
+      colorToken: 'green' as const,
+      isCollapsed: false,
+      worksheets: [],
+    };
+
+    controller.state.groupsById = {
+      'group-1': {
+        groupId: 'group-1',
+        name: 'Finance',
+        colorToken: 'green',
+        isCollapsed: false,
+        worksheetOrder: [],
+        createdAt: 1,
+      },
+    };
+    controller.state.groupOrder = ['group-1'];
+    controller.navigatorView.groups = [group];
+
+    useNavigationControllerMock.mockReturnValue(controller);
+
+    render(<TaskpaneAppContainer />);
+
+    const groupButton = screen.getByRole('button', { name: 'Finance 0 sheets' });
+    const groupRow = groupButton.closest('section');
+
+    expect(groupRow).not.toBeNull();
+    fireEvent.contextMenu(groupRow as HTMLElement, { clientX: 120, clientY: 80 });
+
+    await user.click(screen.getByRole('button', { name: 'Delete group' }));
+
+    expect(screen.getByRole('heading', { name: 'Delete group' })).toBeInTheDocument();
+    expect(screen.getByText('Delete Finance? Sheets will become ungrouped.')).toBeInTheDocument();
+
+    const confirmDialog = screen.getByRole('dialog', { name: 'Delete group' });
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Delete group' }));
+
+    expect(controller.deleteGroup).toHaveBeenCalledWith('group-1');
   });
 });

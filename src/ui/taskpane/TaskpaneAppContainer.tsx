@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigationController } from '../../application/navigation/useNavigationController';
 import { TaskpaneShell } from '../components/TaskpaneShell';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { TextPromptDialog } from '../components/TextPromptDialog';
 import type { WorksheetEntity } from '../../domain/navigation/types';
 import { TaskpaneMenus } from './components/TaskpaneMenus';
@@ -11,6 +12,7 @@ import { useTextPromptState } from './hooks/useTextPromptState';
 export function TaskpaneAppContainer() {
   // The controller owns workbook operations and domain state transitions.
   const controller = useNavigationController();
+  const [deleteGroupRequest, setDeleteGroupRequest] = useState<{ groupId: string; groupName: string } | null>(null);
 
   // Context menus are isolated in a dedicated hook so view code stays simple.
   const {
@@ -72,9 +74,20 @@ export function TaskpaneAppContainer() {
   }
 
   function handleDeleteGroup(groupId: string, groupName: string) {
-    if (window.confirm(`Delete ${groupName}? Sheets will become ungrouped.`)) {
-      controller.deleteGroup(groupId);
+    setDeleteGroupRequest({ groupId, groupName });
+  }
+
+  function closeDeleteGroupDialog() {
+    setDeleteGroupRequest(null);
+  }
+
+  function confirmDeleteGroup() {
+    if (!deleteGroupRequest) {
+      return;
     }
+
+    controller.deleteGroup(deleteGroupRequest.groupId);
+    setDeleteGroupRequest(null);
   }
 
   return (
@@ -126,6 +139,20 @@ export function TaskpaneAppContainer() {
         submitLabel={textPromptConfig?.submitLabel ?? 'Save'}
         onCancel={closeTextPrompt}
         onSubmit={submitTextPrompt}
+      />
+
+      {/* Product-owned confirmation keeps delete flow aligned with the rest of the UI. */}
+      <ConfirmDialog
+        isOpen={Boolean(deleteGroupRequest)}
+        title="Delete group"
+        description={
+          deleteGroupRequest
+            ? `Delete ${deleteGroupRequest.groupName}? Sheets will become ungrouped.`
+            : undefined
+        }
+        confirmLabel="Delete group"
+        onCancel={closeDeleteGroupDialog}
+        onConfirm={confirmDeleteGroup}
       />
     </TaskpaneShell>
   );
