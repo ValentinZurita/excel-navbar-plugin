@@ -1,3 +1,12 @@
+.context-menu {
+  /* ...existing code... */
+}
+
+:root[data-office-theme-mode='dark'] .context-menu {
+  background: #18191a;
+  border-color: rgba(255,255,255,0.16);
+  color: #f3f2f1;
+}
 /* ==========================================================================
    1. Theme tokens
    The Office theme adapter writes these CSS variables at runtime.
