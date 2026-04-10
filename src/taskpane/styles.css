@@ -86,35 +86,13 @@ button {
   overflow-x: hidden;
 }
 
-/* Shared flex layout for headers, row tops, and inline controls. */
-.taskpane-header,
-.status-row,
+/* Shared flex layout for row headers and row top lines. */
 .group-header,
-.row-topline,
-.inline-form,
-.sheet-actions,
-.rename-form {
+.row-topline {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-}
-
-/* Remove default margins from section and header titles. */
-.taskpane-header h1 {
-  margin: 0;
-}
-
-/* Low-priority text styles for auxiliary copy and labels. */
-.eyebrow,
-.header-note,
-.status-row,
-.empty-state,
-.search-result small,
-.sheet-row small,
-.hidden-row small {
-  color: var(--excel-muted);
-  margin: 0;
 }
 
 /* Main taskpane content spacing. */
@@ -144,36 +122,9 @@ button {
 }
 
 /* ==========================================================================
-   5. Inputs and controls
-   The search field and all text inputs must stay readable in Excel webviews.
-   ========================================================================== */
-/* Standard shared input styles for search, inline and rename fields.
-   Keeps text readability consistent across hosts. */
-.inline-form input,
-.rename-form input,
-.sheet-actions select,
-.prompt-dialog-input {
-  width: 100%;
-  border: 1px solid var(--excel-border);
-  border-radius: 6px;
-  padding: 7px 10px;
-  background: var(--excel-control-bg);
-  color: var(--excel-body-fg);
-  -webkit-text-fill-color: var(--excel-body-fg);
-  caret-color: var(--excel-body-fg);
-  appearance: none;
-}
-
-.inline-form input::placeholder,
-.rename-form input::placeholder {
-  color: var(--excel-muted);
-  opacity: 1;
-}
-
-/* ==========================================================================
-   6. Shell-only primitives
-   Keep only taskpane-level layout and status styles here.
-   ========================================================================== */
+  5. Shell-only primitives
+  Keep only taskpane-level layout and status styles here.
+  ========================================================================== */
 /* ==========================================================================
    8. Secondary states
    Hidden sheets and error banners are intentionally lower priority.

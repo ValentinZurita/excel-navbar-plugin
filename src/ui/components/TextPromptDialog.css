@@ -49,7 +49,21 @@
 }
 
 .prompt-dialog-input {
+  width: 100%;
   min-width: 0;
+  border: 1px solid var(--excel-border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: var(--excel-control-bg);
+  color: var(--excel-body-fg);
+  -webkit-text-fill-color: var(--excel-body-fg);
+  caret-color: var(--excel-body-fg);
+  appearance: none;
+}
+
+.prompt-dialog-input::placeholder {
+  color: var(--excel-muted);
+  opacity: 1;
 }
 
 .prompt-dialog-actions {

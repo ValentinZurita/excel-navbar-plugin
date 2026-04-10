@@ -8,13 +8,9 @@
    These classes are used across taskpane sections and dialogs. */
 .primary-button,
 .ghost-button,
-.toolbar-button,
-.section-action,
-.chip-button,
 .sheet-link,
 .search-result,
-.group-toggle,
-.context-menu-item {
+.group-toggle {
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -32,27 +28,11 @@
 }
 
 .ghost-button,
-.chip-button {
+.ghost-button {
   background: transparent;
   color: var(--excel-body-fg);
   padding: 6px 10px;
   border: 1px solid var(--excel-border);
-}
-
-.toolbar-button,
-.section-action {
-  background: transparent;
-  color: var(--excel-muted);
-  padding: 2px 6px;
-  border: 1px solid transparent;
-}
-
-.toolbar-button {
-  min-width: 32px;
-}
-
-.chip-button-danger {
-  color: #a4262c;
 }
 
 /* Shared row/list utilities for navigation blocks. */
@@ -108,9 +88,7 @@
 }
 
 .search-result:focus-visible,
-.chip-button:focus-visible,
 .ghost-button:focus-visible,
-.toolbar-button:focus-visible,
 .primary-button:focus-visible,
 .sheet-link:focus-visible,
 .group-toggle:focus-visible,
@@ -119,9 +97,7 @@
   box-shadow: none;
 }
 
-.section-action:hover,
 .ghost-button:hover,
-.chip-button:hover,
 .sheet-link:hover,
 .search-result:hover,
 .group-toggle:hover {
@@ -156,8 +132,6 @@
 }
 
 /* Cross-component motion utilities for consistent interaction feel. */
-.section-action,
-.toolbar-button,
 .sheet-link,
 .group-toggle,
 .search-result {
