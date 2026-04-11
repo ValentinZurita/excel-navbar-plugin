@@ -5,6 +5,7 @@ export function createDefaultNavigationState(): NavigationState {
     worksheetsById: {},
     groupsById: {},
     groupOrder: [],
+    sheetSectionOrder: [],
     hiddenSectionCollapsed: true,
     query: '',
     activeWorksheetId: null,

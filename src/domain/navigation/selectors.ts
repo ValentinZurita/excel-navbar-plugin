@@ -22,6 +22,12 @@ export function buildNavigatorView(state: NavigationState): NavigatorView {
   const query = normalizeSearchValue(state.query);
   const worksheets = Object.values(state.worksheetsById);
   const visibleWorksheets = worksheets.filter((worksheet) => worksheet.visibility === 'Visible');
+  const sheetSectionOrder = state.sheetSectionOrder.length
+    ? state.sheetSectionOrder
+    : visibleWorksheets
+        .sort(byWorkbookOrder)
+        .map((worksheet) => worksheet.worksheetId);
+  const sheetOrderIndex = new Map(sheetSectionOrder.map((worksheetId, index) => [worksheetId, index]));
 
   const pinned = visibleWorksheets
     .filter((worksheet) => worksheet.isPinned && worksheet.groupId === null)
@@ -57,7 +63,16 @@ export function buildNavigatorView(state: NavigationState): NavigatorView {
 
   const ungrouped = visibleWorksheets
     .filter((worksheet) => !worksheet.isPinned && worksheet.groupId === null)
-    .sort(byWorkbookOrder);
+    .sort((left, right) => {
+      const leftOrder = sheetOrderIndex.get(left.worksheetId) ?? Number.MAX_SAFE_INTEGER;
+      const rightOrder = sheetOrderIndex.get(right.worksheetId) ?? Number.MAX_SAFE_INTEGER;
+
+      if (leftOrder === rightOrder) {
+        return byWorkbookOrder(left, right);
+      }
+
+      return leftOrder - rightOrder;
+    });
 
   const hidden = worksheets
     .filter((worksheet) => worksheet.visibility !== 'Visible')

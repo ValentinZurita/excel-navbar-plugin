@@ -7,6 +7,7 @@ describe('toPersistedModel', () => {
     const state = createDefaultNavigationState();
     state.hiddenSectionCollapsed = false;
     state.groupOrder = ['group-1'];
+    state.sheetSectionOrder = ['sheet-2', 'sheet-1'];
     state.groupsById = {
       'group-1': {
         groupId: 'group-1',
@@ -41,6 +42,7 @@ describe('toPersistedModel', () => {
     expect(toPersistedModel(state)).toEqual({
       metadataVersion: 1,
       groups: [state.groupsById['group-1']],
+      sheetSectionOrder: ['sheet-2', 'sheet-1'],
       pinnedWorksheetIds: ['sheet-1'],
       hiddenSectionCollapsed: false,
       priorStructuralStateByWorksheetId: {

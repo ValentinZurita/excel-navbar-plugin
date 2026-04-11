@@ -40,6 +40,7 @@ export interface WorkbookSnapshot {
 export interface PersistedNavigationModel {
   metadataVersion: 1;
   groups: GroupEntity[];
+  sheetSectionOrder: string[];
   pinnedWorksheetIds: string[];
   hiddenSectionCollapsed: boolean;
   priorStructuralStateByWorksheetId: Record<string, StructuralState | null>;
@@ -49,6 +50,7 @@ export interface NavigationState {
   worksheetsById: Record<string, WorksheetEntity>;
   groupsById: Record<string, GroupEntity>;
   groupOrder: string[];
+  sheetSectionOrder: string[];
   hiddenSectionCollapsed: boolean;
   query: string;
   activeWorksheetId: string | null;

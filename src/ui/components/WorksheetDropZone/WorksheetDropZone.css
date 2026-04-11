@@ -1,0 +1,10 @@
+.worksheet-drop-zone {
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+  transition: background-color 140ms ease;
+}
+
+.worksheet-drop-zone-active {
+  background: color-mix(in srgb, var(--excel-body-fg) 18%, transparent);
+}

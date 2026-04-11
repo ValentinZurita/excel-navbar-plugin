@@ -33,12 +33,15 @@ This list exists so pending work does not get lost between sessions.
 - [x] Immediate navigation on sheet selection
 - [x] Rename worksheet
 - [x] Product-owned dialogs for create / rename / delete-group flows
+- [x] Sidebar drag-and-drop for visible unpinned sheets
+- [x] Local persisted ordering for the Sheets section
 
 ### Implemented but still needs real Excel validation
 
 - [ ] Sideload and validate manifest behavior in Excel
 - [ ] Validate task pane rendering in real Excel host
 - [ ] Validate context menu behavior in real Excel host
+- [ ] Validate drag-and-drop behavior in real Excel host
 - [ ] Validate dialog focus / keyboard / close behavior in real Excel host
 - [ ] Validate worksheet activation from search in real Excel host
 - [ ] Validate rename worksheet against real Office.js runtime
@@ -50,6 +53,7 @@ This list exists so pending work does not get lost between sessions.
 
 - [ ] Context-menu behavior cleanup without changing visuals
 - [ ] Workbook event / sync resilience hardening
+- [ ] Reconcile external workbook tab changes against local sidebar ordering rules
 - [ ] Better error handling around Office runtime failures
 - [ ] Update planning docs that still describe already-completed interaction ownership work
 

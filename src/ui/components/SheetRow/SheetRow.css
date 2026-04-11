@@ -38,6 +38,10 @@
   transform: none;
 }
 
+.sheet-row-dragging {
+  opacity: 0.45;
+}
+
 /* Pin button stays hidden until row interaction. */
 .sheet-pin-button,
 .sheet-indent-slot {

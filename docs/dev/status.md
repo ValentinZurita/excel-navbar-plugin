@@ -14,6 +14,8 @@ Implemented and documented so far:
 - Modular task pane UI with folder-per-component structure
 - Core navigation rules for groups, pinning, hidden sheets, rename, and delete-group confirmation
 - Product-owned dialog flows for create, rename, and delete-group actions
+- Sidebar drag-and-drop for visible unpinned sheets across Sheets and Groups
+- Local persisted ordering for the Sheets section without changing Excel workbook tab order
 - Design baseline + next-phase docs aligned with the current product direction
 - Quality gates for TypeScript, component import boundaries, CSS, and Markdown
 - Test coverage for navigation behavior and core task pane interactions
@@ -31,6 +33,7 @@ Not yet verified in this session:
 - Real Excel sideloading
 - Real task pane behavior inside Excel host
 - Manifest install flow in Excel
+- Real drag-and-drop behavior inside Excel host
 - Office runtime behavior with real workbook events
 - Real workbook persistence behavior across reopen flows
 
@@ -73,21 +76,23 @@ Why this is next:
 
 - The current UI direction is intentionally locked by the human reviewer
 - Product-owned interaction flows are now in place for create, rename, and delete-group actions
+- Sidebar drag-and-drop now exists in code and must be verified against real Excel host behavior
 - The main remaining unknown is host reality, not baseline visual design
-- We need to confirm manifest behavior, task pane rendering, Office.js interaction, and dialog/menu behavior inside Excel
+- We need to confirm manifest behavior, task pane rendering, Office.js interaction, drag-and-drop behavior, and dialog/menu behavior inside Excel
 
 ## After That
 Once sideloading is confirmed, the next implementation pass should focus on:
 
 1. non-visual interaction cleanup for contextual actions
 2. workbook event handling and sync resilience
-3. persistence validation in real workbook reopen flows
+3. persistence validation in real workbook reopen flows, including local Sheets ordering
 4. documentation alignment when behavior or verified reality changes
 
 ## Open Risks
 
 - Manifest/task pane behavior may differ from expectations in the real Excel host
 - Office.js worksheet APIs may need adjustment once tested against live workbooks
+- Workbook changes outside the task pane may challenge the new local Sheets ordering rules until reconciliation is tested in real host flows
 - VeryHidden behavior remains intentionally conservative and may need product clarification later
 - Host rendering may still expose edge cases in dialog layering, context menu placement, or focus handling
 - `docs/dev/status.md` must stay aligned with verified code and recent commits so future resumes do not start from stale assumptions

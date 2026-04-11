@@ -38,6 +38,10 @@
   transform: none;
 }
 
+.group-header-drop-active {
+  background: color-mix(in srgb, var(--excel-body-fg) 10%, transparent);
+}
+
 .group-toggle {
   width: 100%;
   display: flex;

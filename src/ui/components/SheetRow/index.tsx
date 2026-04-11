@@ -1,3 +1,4 @@
+import type { DragEvent } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import { WorksheetPinIcon } from '../../icons';
 import './SheetRow.css';
@@ -6,8 +7,14 @@ interface SheetRowProps {
   worksheet: WorksheetEntity;
   isActive: boolean;
   isContextMenuOpen?: boolean;
+  isDragged?: boolean;
+  draggable?: boolean;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onTogglePin?: (worksheetId: string) => void;
+  onDragStart?: (event: DragEvent<HTMLElement>, worksheet: WorksheetEntity) => void;
+  onDragEnd?: () => void;
+  onDragOver?: (event: DragEvent<HTMLElement>, worksheet: WorksheetEntity) => void;
+  onDrop?: (event: DragEvent<HTMLElement>, worksheet: WorksheetEntity) => void;
   onOpenContextMenu: (args: {
     target: HTMLElement;
     x: number;
@@ -20,8 +27,14 @@ export function SheetRow({
   worksheet,
   isActive,
   isContextMenuOpen,
+  isDragged,
+  draggable,
   onActivate,
   onTogglePin,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDrop,
   onOpenContextMenu,
 }: SheetRowProps) {
   // Grouped rows do not expose pin action because grouping owns their position.
@@ -29,7 +42,12 @@ export function SheetRow({
 
   return (
     <article
-      className={`sheet-row ${isActive ? 'sheet-row-active' : ''} ${isContextMenuOpen ? 'sheet-row-context-open' : ''} ${worksheet.groupId ? 'sheet-row-grouped' : 'sheet-row-standalone'}`}
+      className={`sheet-row ${isActive ? 'sheet-row-active' : ''} ${isContextMenuOpen ? 'sheet-row-context-open' : ''} ${worksheet.groupId ? 'sheet-row-grouped' : 'sheet-row-standalone'} ${isDragged ? 'sheet-row-dragging' : ''}`}
+      draggable={draggable}
+      onDragStart={(event) => onDragStart?.(event, worksheet)}
+      onDragEnd={onDragEnd}
+      onDragOver={(event) => onDragOver?.(event, worksheet)}
+      onDrop={(event) => onDrop?.(event, worksheet)}
       onContextMenu={(event) => {
         event.preventDefault();
         onOpenContextMenu({

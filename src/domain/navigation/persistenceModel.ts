@@ -13,6 +13,7 @@ export function toPersistedModel(state: NavigationState): PersistedNavigationMod
   return {
     metadataVersion,
     groups: state.groupOrder.map((groupId) => state.groupsById[groupId]).filter(Boolean),
+    sheetSectionOrder: state.sheetSectionOrder,
     pinnedWorksheetIds: Object.values(state.worksheetsById)
       .filter((worksheet) => worksheet.isPinned)
       .sort((left, right) => left.workbookOrder - right.workbookOrder)

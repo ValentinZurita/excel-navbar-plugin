@@ -74,11 +74,17 @@ export function useNavigationController() {
     deleteGroup(groupId: string) {
       dispatch({ type: 'deleteGroup', groupId });
     },
-    assignWorksheetToGroup(worksheetId: string, groupId: string) {
-      dispatch({ type: 'assignWorksheetToGroup', worksheetId, groupId });
+    assignWorksheetToGroup(worksheetId: string, groupId: string, targetIndex?: number) {
+      dispatch({ type: 'assignWorksheetToGroup', worksheetId, groupId, targetIndex });
     },
-    removeWorksheetFromGroup(worksheetId: string) {
-      dispatch({ type: 'removeWorksheetFromGroup', worksheetId });
+    removeWorksheetFromGroup(worksheetId: string, targetIndex?: number) {
+      dispatch({ type: 'removeWorksheetFromGroup', worksheetId, targetIndex });
+    },
+    reorderGroupWorksheet(worksheetId: string, groupId: string, targetIndex: number) {
+      dispatch({ type: 'reorderGroupWorksheet', worksheetId, groupId, targetIndex });
+    },
+    reorderSheetSectionWorksheet(worksheetId: string, targetIndex: number) {
+      dispatch({ type: 'reorderSheetSectionWorksheet', worksheetId, targetIndex });
     },
     pinWorksheet(worksheetId: string) {
       dispatch({ type: 'pinWorksheet', worksheetId });

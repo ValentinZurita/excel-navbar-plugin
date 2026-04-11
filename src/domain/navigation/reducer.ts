@@ -5,7 +5,6 @@ import type {
   GroupEntity,
   NavigationState,
   PersistedNavigationModel,
-  StructuralState,
   WorkbookSnapshot,
   WorksheetEntity,
 } from './types';
@@ -19,8 +18,10 @@ export type NavigationAction =
   | { type: 'createGroup'; name: string; colorToken?: GroupColorToken; initialWorksheetId?: string }
   | { type: 'renameGroup'; groupId: string; name: string }
   | { type: 'deleteGroup'; groupId: string }
-  | { type: 'assignWorksheetToGroup'; worksheetId: string; groupId: string }
-  | { type: 'removeWorksheetFromGroup'; worksheetId: string }
+  | { type: 'assignWorksheetToGroup'; worksheetId: string; groupId: string; targetIndex?: number }
+  | { type: 'removeWorksheetFromGroup'; worksheetId: string; targetIndex?: number }
+  | { type: 'reorderGroupWorksheet'; worksheetId: string; groupId: string; targetIndex: number }
+  | { type: 'reorderSheetSectionWorksheet'; worksheetId: string; targetIndex: number }
   | { type: 'pinWorksheet'; worksheetId: string }
   | { type: 'unpinWorksheet'; worksheetId: string }
   | { type: 'markWorksheetUnhidden'; worksheetId: string }
@@ -31,7 +32,14 @@ function nextGroupColor(index: number): GroupColorToken {
   return groupColorTokens[index % groupColorTokens.length];
 }
 
-function toWorksheetEntity(snapshotWorksheet: WorkbookSnapshot['worksheets'][number], existing: WorksheetEntity | undefined): WorksheetEntity {
+function byWorkbookOrder(left: WorksheetEntity, right: WorksheetEntity) {
+  return left.workbookOrder - right.workbookOrder;
+}
+
+function toWorksheetEntity(
+  snapshotWorksheet: WorkbookSnapshot['worksheets'][number],
+  existing: WorksheetEntity | undefined,
+): WorksheetEntity {
   return {
     worksheetId: snapshotWorksheet.worksheetId,
     name: snapshotWorksheet.name,
@@ -41,6 +49,39 @@ function toWorksheetEntity(snapshotWorksheet: WorkbookSnapshot['worksheets'][num
     groupId: existing?.groupId ?? null,
     lastKnownStructuralState: existing?.lastKnownStructuralState ?? null,
   };
+}
+
+function dedupeWorksheetIds(ids: string[]) {
+  const seen = new Set<string>();
+  return ids.filter((worksheetId) => {
+    if (seen.has(worksheetId)) {
+      return false;
+    }
+
+    seen.add(worksheetId);
+    return true;
+  });
+}
+
+function reconcileSheetSectionOrder(
+  currentOrder: string[],
+  worksheetsById: Record<string, WorksheetEntity>,
+) {
+  const knownWorksheetIds = new Set(Object.keys(worksheetsById));
+  const kept = dedupeWorksheetIds(currentOrder).filter((worksheetId) => knownWorksheetIds.has(worksheetId));
+  const missing = Object.values(worksheetsById)
+    .sort(byWorkbookOrder)
+    .map((worksheet) => worksheet.worksheetId)
+    .filter((worksheetId) => !kept.includes(worksheetId));
+
+  return [...kept, ...missing];
+}
+
+function moveWorksheetId(order: string[], worksheetId: string, targetIndex: number) {
+  const nextOrder = order.filter((candidateId) => candidateId !== worksheetId);
+  const clampedIndex = Math.max(0, Math.min(targetIndex, nextOrder.length));
+  nextOrder.splice(clampedIndex, 0, worksheetId);
+  return nextOrder;
 }
 
 function applyPinnedState(state: NavigationState, pinnedWorksheetIds: string[]) {
@@ -54,6 +95,7 @@ function applyPinnedState(state: NavigationState, pinnedWorksheetIds: string[]) 
 
 function applyPersistence(state: NavigationState, model: PersistedNavigationModel | null) {
   if (!model) {
+    state.sheetSectionOrder = reconcileSheetSectionOrder(state.sheetSectionOrder, state.worksheetsById);
     return state;
   }
 
@@ -62,6 +104,7 @@ function applyPersistence(state: NavigationState, model: PersistedNavigationMode
     return accumulator;
   }, {});
   state.groupOrder = model.groups.map((group) => group.groupId);
+  state.sheetSectionOrder = reconcileSheetSectionOrder(model.sheetSectionOrder ?? [], state.worksheetsById);
   state.hiddenSectionCollapsed = model.hiddenSectionCollapsed;
 
   Object.values(state.worksheetsById).forEach((worksheet) => {
@@ -84,6 +127,23 @@ function applyPersistence(state: NavigationState, model: PersistedNavigationMode
   return state;
 }
 
+function cloneState(state: NavigationState): NavigationState {
+  return {
+    ...state,
+    groupsById: Object.fromEntries(
+      Object.entries(state.groupsById).map(([groupId, candidate]) => [
+        groupId,
+        { ...candidate, worksheetOrder: [...candidate.worksheetOrder] },
+      ]),
+    ),
+    groupOrder: [...state.groupOrder],
+    sheetSectionOrder: [...state.sheetSectionOrder],
+    worksheetsById: Object.fromEntries(
+      Object.entries(state.worksheetsById).map(([key, value]) => [key, { ...value }]),
+    ),
+  };
+}
+
 function removeWorksheetFromAnyGroup(state: NavigationState, worksheetId: string) {
   const worksheet = state.worksheetsById[worksheetId];
   if (!worksheet?.groupId) {
@@ -102,27 +162,22 @@ function removeWorksheetFromAnyGroup(state: NavigationState, worksheetId: string
 export function navigationReducer(state: NavigationState, action: NavigationAction): NavigationState {
   switch (action.type) {
     case 'hydrateFromWorkbook': {
-      const nextState: NavigationState = {
+      const nextWorksheetsById = action.snapshot.worksheets.reduce<Record<string, WorksheetEntity>>((accumulator, worksheet) => {
+        accumulator[worksheet.worksheetId] = toWorksheetEntity(worksheet, state.worksheetsById[worksheet.worksheetId]);
+        return accumulator;
+      }, {});
+
+      return {
         ...state,
-        worksheetsById: action.snapshot.worksheets.reduce<Record<string, WorksheetEntity>>((accumulator, worksheet) => {
-          accumulator[worksheet.worksheetId] = toWorksheetEntity(worksheet, state.worksheetsById[worksheet.worksheetId]);
-          return accumulator;
-        }, {}),
+        worksheetsById: nextWorksheetsById,
+        sheetSectionOrder: reconcileSheetSectionOrder(state.sheetSectionOrder, nextWorksheetsById),
         activeWorksheetId: action.snapshot.activeWorksheetId,
         lastSyncAt: Date.now(),
         isReady: true,
       };
-      return nextState;
     }
     case 'hydrateFromPersistence': {
-      const draft = {
-        ...state,
-        groupsById: { ...state.groupsById },
-        groupOrder: [...state.groupOrder],
-        worksheetsById: Object.fromEntries(
-          Object.entries(state.worksheetsById).map(([key, value]) => [key, { ...value }]),
-        ),
-      };
+      const draft = cloneState(state);
       return applyPersistence(draft, action.model);
     }
     case 'setQuery':
@@ -147,9 +202,7 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       const initialWorksheet = action.initialWorksheetId
         ? state.worksheetsById[action.initialWorksheetId]
         : null;
-      const nextGroupsById = Object.fromEntries(
-        Object.entries(state.groupsById).map(([key, value]) => [key, { ...value, worksheetOrder: [...value.worksheetOrder] }]),
-      );
+      const nextState = cloneState(state);
       const group: GroupEntity = {
         groupId,
         name: action.name.trim(),
@@ -161,17 +214,10 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
         createdAt: Date.now(),
       };
 
-      const nextWorksheetsById = Object.fromEntries(
-        Object.entries(state.worksheetsById).map(([key, value]) => [key, { ...value }]),
-      );
-
       if (initialWorksheet && initialWorksheet.visibility === 'Visible') {
-        removeWorksheetFromAnyGroup(
-          { ...state, groupsById: nextGroupsById, worksheetsById: nextWorksheetsById },
-          initialWorksheet.worksheetId,
-        );
-        nextWorksheetsById[initialWorksheet.worksheetId] = {
-          ...nextWorksheetsById[initialWorksheet.worksheetId],
+        removeWorksheetFromAnyGroup(nextState, initialWorksheet.worksheetId);
+        nextState.worksheetsById[initialWorksheet.worksheetId] = {
+          ...nextState.worksheetsById[initialWorksheet.worksheetId],
           isPinned: false,
           groupId,
           lastKnownStructuralState: { kind: 'group', groupId },
@@ -179,10 +225,10 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       }
 
       return {
-        ...state,
-        groupsById: { ...nextGroupsById, [groupId]: group },
-        groupOrder: [groupId, ...state.groupOrder],
-        worksheetsById: nextWorksheetsById,
+        ...nextState,
+        groupsById: { ...nextState.groupsById, [groupId]: group },
+        groupOrder: [groupId, ...nextState.groupOrder],
+        sheetSectionOrder: reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById),
       };
     }
     case 'renameGroup': {
@@ -199,54 +245,43 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       };
     }
     case 'deleteGroup': {
-      const nextGroups = { ...state.groupsById };
-      delete nextGroups[action.groupId];
+      const nextState = cloneState(state);
+      delete nextState.groupsById[action.groupId];
 
-      const nextWorksheets: Record<string, WorksheetEntity> = Object.fromEntries(
-        Object.entries(state.worksheetsById).map(([worksheetId, worksheet]) => {
-          const nextWorksheet =
-            worksheet.groupId === action.groupId
-              ? {
-                  ...worksheet,
-                  groupId: null,
-                  lastKnownStructuralState: { kind: 'ungrouped' as const },
-                }
-              : worksheet;
-
-          return [worksheetId, nextWorksheet];
-        }),
-      );
+      Object.values(nextState.worksheetsById).forEach((worksheet) => {
+        if (worksheet.groupId === action.groupId) {
+          worksheet.groupId = null;
+          worksheet.lastKnownStructuralState = { kind: 'ungrouped' };
+        }
+      });
 
       return {
-        ...state,
-        groupsById: nextGroups,
-        groupOrder: state.groupOrder.filter((groupId) => groupId !== action.groupId),
-        worksheetsById: nextWorksheets,
+        ...nextState,
+        groupOrder: nextState.groupOrder.filter((groupId) => groupId !== action.groupId),
+        sheetSectionOrder: reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById),
       };
     }
     case 'assignWorksheetToGroup': {
       const worksheet = state.worksheetsById[action.worksheetId];
       const group = state.groupsById[action.groupId];
-      if (!worksheet || !group || worksheet.visibility !== 'Visible') {
+      if (!worksheet || !group || worksheet.visibility !== 'Visible' || worksheet.isPinned) {
         return state;
       }
 
-      const nextState = {
-        ...state,
-        groupsById: Object.fromEntries(
-          Object.entries(state.groupsById).map(([groupId, candidate]) => [groupId, { ...candidate, worksheetOrder: [...candidate.worksheetOrder] }]),
-        ),
-        worksheetsById: Object.fromEntries(
-          Object.entries(state.worksheetsById).map(([key, value]) => [key, { ...value }]),
-        ),
-      };
-
+      const nextState = cloneState(state);
       removeWorksheetFromAnyGroup(nextState, action.worksheetId);
+
       const nextWorksheet = nextState.worksheetsById[action.worksheetId];
       nextWorksheet.isPinned = false;
       nextWorksheet.groupId = action.groupId;
       nextWorksheet.lastKnownStructuralState = { kind: 'group', groupId: action.groupId };
-      nextState.groupsById[action.groupId].worksheetOrder.push(action.worksheetId);
+
+      nextState.groupsById[action.groupId].worksheetOrder = moveWorksheetId(
+        nextState.groupsById[action.groupId].worksheetOrder,
+        action.worksheetId,
+        action.targetIndex ?? nextState.groupsById[action.groupId].worksheetOrder.length,
+      );
+
       return nextState;
     }
     case 'removeWorksheetFromGroup': {
@@ -254,17 +289,51 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       if (!worksheet) {
         return state;
       }
-      const nextState = {
+
+      const nextState = cloneState(state);
+      removeWorksheetFromAnyGroup(nextState, action.worksheetId);
+      const reconciledSheetSectionOrder = reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById);
+      nextState.sheetSectionOrder = action.targetIndex === undefined
+        ? reconciledSheetSectionOrder
+        : moveWorksheetId(
+            reconciledSheetSectionOrder,
+            action.worksheetId,
+            action.targetIndex,
+          );
+      return nextState;
+    }
+    case 'reorderGroupWorksheet': {
+      const worksheet = state.worksheetsById[action.worksheetId];
+      const group = state.groupsById[action.groupId];
+      if (!worksheet || !group || worksheet.groupId !== action.groupId) {
+        return state;
+      }
+
+      return {
         ...state,
-        groupsById: Object.fromEntries(
-          Object.entries(state.groupsById).map(([groupId, candidate]) => [groupId, { ...candidate, worksheetOrder: [...candidate.worksheetOrder] }]),
-        ),
-        worksheetsById: Object.fromEntries(
-          Object.entries(state.worksheetsById).map(([key, value]) => [key, { ...value }]),
+        groupsById: {
+          ...state.groupsById,
+          [action.groupId]: {
+            ...group,
+            worksheetOrder: moveWorksheetId(group.worksheetOrder, action.worksheetId, action.targetIndex),
+          },
+        },
+      };
+    }
+    case 'reorderSheetSectionWorksheet': {
+      const worksheet = state.worksheetsById[action.worksheetId];
+      if (!worksheet || worksheet.groupId || worksheet.isPinned || worksheet.visibility !== 'Visible') {
+        return state;
+      }
+
+      return {
+        ...state,
+        sheetSectionOrder: moveWorksheetId(
+          reconcileSheetSectionOrder(state.sheetSectionOrder, state.worksheetsById),
+          action.worksheetId,
+          action.targetIndex,
         ),
       };
-      removeWorksheetFromAnyGroup(nextState, action.worksheetId);
-      return nextState;
     }
     case 'pinWorksheet': {
       const worksheet = state.worksheetsById[action.worksheetId];
@@ -273,6 +342,7 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       }
       return {
         ...state,
+        sheetSectionOrder: reconcileSheetSectionOrder(state.sheetSectionOrder, state.worksheetsById),
         worksheetsById: {
           ...state.worksheetsById,
           [action.worksheetId]: {
@@ -290,6 +360,7 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       }
       return {
         ...state,
+        sheetSectionOrder: reconcileSheetSectionOrder(state.sheetSectionOrder, state.worksheetsById),
         worksheetsById: {
           ...state.worksheetsById,
           [action.worksheetId]: {
@@ -305,13 +376,16 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       if (!worksheet) {
         return state;
       }
+
       const nextWorksheet = { ...worksheet, visibility: 'Visible' as const };
+      const nextWorksheetsById = {
+        ...state.worksheetsById,
+        [action.worksheetId]: nextWorksheet,
+      };
       const nextState = {
         ...state,
-        worksheetsById: {
-          ...state.worksheetsById,
-          [action.worksheetId]: nextWorksheet,
-        },
+        sheetSectionOrder: reconcileSheetSectionOrder(state.sheetSectionOrder, nextWorksheetsById),
+        worksheetsById: nextWorksheetsById,
       };
 
       if (nextWorksheet.lastKnownStructuralState?.kind === 'group') {
@@ -331,7 +405,10 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
     }
     case 'markWorksheetHidden': {
       const worksheet = state.worksheetsById[action.worksheetId];
-      if (!worksheet) return state;
+      if (!worksheet) {
+        return state;
+      }
+
       return {
         ...state,
         worksheetsById: {

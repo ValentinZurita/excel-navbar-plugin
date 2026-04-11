@@ -1,3 +1,4 @@
+import type { DragEvent } from 'react';
 import type { NavigatorView } from '../../../domain/navigation/types';
 import { GroupSection } from '../../components/GroupSection';
 import { HiddenSection } from '../../components/HiddenSection';
@@ -5,6 +6,18 @@ import { SearchBox } from '../../components/SearchBox';
 import { Section } from '../../components/Section';
 import { SheetList } from '../../components/SheetList';
 import type { OpenGroupMenuArgs, OpenSheetMenuArgs } from '../types/contextMenuTypes';
+
+interface WorksheetDragConfig {
+  draggedWorksheetId: string | null;
+  activeDropTargetId: string | null;
+  isDragActive: boolean;
+  onStartDrag: (event: DragEvent<HTMLElement>, worksheet: NavigatorView['ungrouped'][number]) => void;
+  onEndDrag: () => void;
+  onDragOverDropZone: (event: DragEvent<HTMLElement>, dropTargetId: string) => void;
+  onDropIntoSheetSection: (event: DragEvent<HTMLElement>, targetIndex: number) => void;
+  onDropIntoGroup: (event: DragEvent<HTMLElement>, groupId: string, targetIndex: number) => void;
+  onDropIntoGroupHeader: (event: DragEvent<HTMLElement>, groupId: string, worksheetCount: number) => void;
+}
 
 interface TaskpaneSectionsProps {
   query: string;
@@ -14,6 +27,7 @@ interface TaskpaneSectionsProps {
   isHiddenSectionCollapsed: boolean;
   contextMenuOpenSheetId?: string;
   contextMenuOpenGroupId?: string;
+  dragConfig: WorksheetDragConfig;
   onChangeQuery: (query: string) => void;
   onSelectSearchResult: (worksheetId: string) => void | Promise<void>;
   onActivateWorksheet: (worksheetId: string) => void | Promise<void>;
@@ -34,6 +48,7 @@ export function TaskpaneSections({
   isHiddenSectionCollapsed,
   contextMenuOpenSheetId,
   contextMenuOpenGroupId,
+  dragConfig,
   onChangeQuery,
   onSelectSearchResult,
   onActivateWorksheet,
@@ -77,6 +92,16 @@ export function TaskpaneSections({
             activeWorksheetId={activeWorksheetId}
             contextMenuOpenId={contextMenuOpenSheetId}
             groupMenuOpenId={contextMenuOpenGroupId}
+            dragConfig={{
+              draggedWorksheetId: dragConfig.draggedWorksheetId,
+              activeDropTargetId: dragConfig.activeDropTargetId,
+              isDragActive: dragConfig.isDragActive,
+              onStartDrag: dragConfig.onStartDrag,
+              onEndDrag: dragConfig.onEndDrag,
+              onDragOverDropZone: dragConfig.onDragOverDropZone,
+              onDropAtIndex: dragConfig.onDropIntoGroup,
+              onDropOnHeader: dragConfig.onDropIntoGroupHeader,
+            }}
             onActivate={onActivateWorksheet}
             onToggleCollapsed={onToggleGroupCollapsed}
             onOpenGroupMenu={onOpenGroupMenu}
@@ -86,13 +111,23 @@ export function TaskpaneSections({
       ) : null}
 
       {/* Ungrouped visible worksheets stay after pinned tabs and groups. */}
-      {navigatorView.ungrouped.length ? (
+      {navigatorView.ungrouped.length || dragConfig.isDragActive ? (
         <Section title="Sheets">
           <div className="primary-tabs">
             <SheetList
               worksheets={navigatorView.ungrouped}
               activeWorksheetId={activeWorksheetId}
               contextMenuOpenId={contextMenuOpenSheetId}
+              dragConfig={{
+                draggedWorksheetId: dragConfig.draggedWorksheetId,
+                activeDropTargetId: dragConfig.activeDropTargetId,
+                dropTargetPrefix: 'sheet-section',
+                isDragActive: dragConfig.isDragActive,
+                onStartDrag: dragConfig.onStartDrag,
+                onEndDrag: dragConfig.onEndDrag,
+                onDragOverDropZone: dragConfig.onDragOverDropZone,
+                onDropAtIndex: dragConfig.onDropIntoSheetSection,
+              }}
               onActivate={onActivateWorksheet}
               onTogglePin={onPinWorksheet}
               onOpenContextMenu={onOpenSheetMenu}

@@ -6,6 +6,10 @@ Pinned sheets, groups, ungrouped sheets, and hidden sheets render in a single ta
 ## Groups
 Manual, single-membership groups that do not change workbook order.
 
+## Sidebar Ordering
+Visible ungrouped sheets can be reordered inside the sidebar without changing the real Excel tab order.
+Visible unpinned sheets can move between the Sheets section and groups, and between groups.
+
 ## Navigation
 Clicking a visible sheet activates it immediately.
 
@@ -13,10 +17,11 @@ Clicking a visible sheet activates it immediately.
 Search filters by sheet name and can show subtle group context.
 
 ## Pinning
-Only ungrouped sheets can be pinned.
+Only ungrouped sheets can be pinned, and pinned sheets do not participate in drag-and-drop ordering.
 
 ## Hidden Sheets
 A subdued, collapsible section lists hidden sheets and can unhide standard hidden sheets.
+Hidden sheets do not participate in drag-and-drop ordering.
 
 ## Rename Worksheet
 Rename is a contextual utility action.

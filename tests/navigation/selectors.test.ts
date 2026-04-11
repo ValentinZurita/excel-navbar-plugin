@@ -29,6 +29,7 @@ function group(partial: Partial<GroupEntity>): GroupEntity {
 describe('buildNavigatorView', () => {
   it('separates pinned, grouped, ungrouped, and hidden worksheets', () => {
     const state = createDefaultNavigationState();
+    state.sheetSectionOrder = ['three', 'one', 'two', 'four'];
     state.worksheetsById = {
       one: worksheet({ worksheetId: 'one', name: 'Overview', isPinned: true }),
       two: worksheet({ worksheetId: 'two', name: 'Revenue', groupId: 'group-1', workbookOrder: 1 }),
@@ -44,6 +45,20 @@ describe('buildNavigatorView', () => {
     expect(view.groups[0].worksheets.map((item) => item.worksheetId)).toEqual(['two']);
     expect(view.ungrouped.map((item) => item.worksheetId)).toEqual(['three']);
     expect(view.hidden.map((item) => item.worksheetId)).toEqual(['four']);
+  });
+
+  it('uses the persisted Sheets-section order for ungrouped worksheets', () => {
+    const state = createDefaultNavigationState();
+    state.sheetSectionOrder = ['three', 'one', 'two'];
+    state.worksheetsById = {
+      one: worksheet({ worksheetId: 'one', name: 'Overview', workbookOrder: 0 }),
+      two: worksheet({ worksheetId: 'two', name: 'Revenue', workbookOrder: 1 }),
+      three: worksheet({ worksheetId: 'three', name: 'Draft', workbookOrder: 2 }),
+    };
+
+    const view = buildNavigatorView(state);
+
+    expect(view.ungrouped.map((item) => item.worksheetId)).toEqual(['three', 'one', 'two']);
   });
 
   it('returns search results with subtle group context', () => {

@@ -1,12 +1,11 @@
 import type { ReactNode } from 'react';
-import type { GroupEntity, WorksheetEntity } from '../../../domain/navigation/types';
+import type { WorksheetEntity } from '../../../domain/navigation/types';
 import type { GroupMenuState, SheetMenuState } from '../types/contextMenuTypes';
 import {
   AddGroupMenuIcon,
   DeleteMenuIcon,
   EyeIcon,
   EyeOffIcon,
-  MoveMenuIcon,
   PinMenuIcon,
   PinOffMenuIcon,
   RemoveMenuIcon,
@@ -17,12 +16,10 @@ import '../styles/TaskpaneMenus.css';
 interface TaskpaneMenusProps {
   sheetMenu: SheetMenuState | null;
   groupMenu: GroupMenuState | null;
-  availableGroupOptions: GroupEntity[];
   onCloseMenus: () => void;
   onTogglePin: (worksheet: WorksheetEntity) => void;
   onToggleVisibility: (worksheet: WorksheetEntity) => void;
   onRenameWorksheet: (worksheet: WorksheetEntity) => void;
-  onMoveToGroup: (worksheetId: string, groupId: string) => void;
   onRemoveFromGroup: (worksheetId: string) => void;
   onCreateGroup: (initialWorksheetId?: string) => void;
   onRenameGroup: (groupId: string, groupName: string) => void;
@@ -52,12 +49,10 @@ function getMenuStyle(menu: SheetMenuState | GroupMenuState) {
 export function TaskpaneMenus({
   sheetMenu,
   groupMenu,
-  availableGroupOptions,
   onCloseMenus,
   onTogglePin,
   onToggleVisibility,
   onRenameWorksheet,
-  onMoveToGroup,
   onRemoveFromGroup,
   onCreateGroup,
   onRenameGroup,
@@ -112,17 +107,6 @@ export function TaskpaneMenus({
                 onRenameWorksheet(sheetMenu.worksheet);
               }}
             />
-            {availableGroupOptions.map((group) => (
-              <MenuItem
-                key={group.groupId}
-                icon={<MoveMenuIcon className="context-menu-icon-svg" />}
-                label={`Move to ${group.name}`}
-                onClick={() => {
-                  onMoveToGroup(sheetMenu.worksheet.worksheetId, group.groupId);
-                  onCloseMenus();
-                }}
-              />
-            ))}
             {sheetMenu.worksheet.groupId ? (
               <MenuItem
                 icon={<RemoveMenuIcon className="context-menu-icon-svg" />}

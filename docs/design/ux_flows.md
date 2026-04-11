@@ -7,7 +7,12 @@ Open pane, scan structure, optionally expand a group, click sheet, activate imme
 Type into the always-visible field, choose a result, activate immediately.
 
 ## Create Group
-Create manually, choose optional color, insert at the top of the groups section.
+Create manually from contextual actions and insert at the top of the groups section.
+If the flow starts from a worksheet action, the new group begins with that worksheet inside it.
+
+## Organize Worksheets
+Drag visible unpinned worksheets within the Sheets section, into groups, between groups, or back to Sheets.
+Pinned and hidden worksheets stay outside this drag-and-drop flow.
 
 ## Hidden Sheets
 Expand the subdued section, review hidden sheets, unhide when appropriate.

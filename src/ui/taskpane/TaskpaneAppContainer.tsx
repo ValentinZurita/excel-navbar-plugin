@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigationController } from '../../application/navigation/useNavigationController';
 import { TaskpaneShell } from '../components/TaskpaneShell';
 import { ConfirmDialog } from '../components/ConfirmDialog';
@@ -7,6 +7,7 @@ import type { WorksheetEntity } from '../../domain/navigation/types';
 import { TaskpaneMenus } from './components/TaskpaneMenus';
 import { TaskpaneSections } from './components/TaskpaneSections';
 import { useContextMenus } from './hooks/useContextMenus';
+import { useWorksheetDragAndDrop } from './hooks/useWorksheetDragAndDrop';
 import { useTextPromptState } from './hooks/useTextPromptState';
 
 export function TaskpaneAppContainer() {
@@ -41,14 +42,12 @@ export function TaskpaneAppContainer() {
     renameWorksheet: controller.renameWorksheet,
   });
 
-  // Precompute visible groups once per state update for menu rendering.
-  const availableGroupOptions = useMemo(
-    () =>
-      controller.state.groupOrder
-        .map((groupId) => controller.state.groupsById[groupId])
-        .filter((group): group is NonNullable<typeof group> => Boolean(group)),
-    [controller.state.groupOrder, controller.state.groupsById],
-  );
+  const dragAndDrop = useWorksheetDragAndDrop({
+    assignWorksheetToGroup: controller.assignWorksheetToGroup,
+    removeWorksheetFromGroup: controller.removeWorksheetFromGroup,
+    reorderGroupWorksheet: controller.reorderGroupWorksheet,
+    reorderSheetSectionWorksheet: controller.reorderSheetSectionWorksheet,
+  });
 
   async function activateWorksheetFromSearch(worksheetId: string) {
     await controller.activateWorksheet(worksheetId);
@@ -101,6 +100,17 @@ export function TaskpaneAppContainer() {
         isHiddenSectionCollapsed={controller.state.hiddenSectionCollapsed}
         contextMenuOpenSheetId={contextMenuOpenSheetId}
         contextMenuOpenGroupId={contextMenuOpenGroupId}
+        dragConfig={{
+          draggedWorksheetId: dragAndDrop.draggedWorksheetId,
+          activeDropTargetId: dragAndDrop.activeDropTargetId,
+          isDragActive: dragAndDrop.isDragActive,
+          onStartDrag: dragAndDrop.startWorksheetDrag,
+          onEndDrag: dragAndDrop.endWorksheetDrag,
+          onDragOverDropZone: dragAndDrop.registerDropTarget,
+          onDropIntoSheetSection: dragAndDrop.dropIntoSheetSection,
+          onDropIntoGroup: dragAndDrop.dropIntoGroup,
+          onDropIntoGroupHeader: dragAndDrop.dropIntoGroupHeader,
+        }}
         onChangeQuery={controller.setQuery}
         onSelectSearchResult={activateWorksheetFromSearch}
         onActivateWorksheet={controller.activateWorksheet}
@@ -117,12 +127,10 @@ export function TaskpaneAppContainer() {
       <TaskpaneMenus
         sheetMenu={sheetMenu}
         groupMenu={groupMenu}
-        availableGroupOptions={availableGroupOptions}
         onCloseMenus={closeMenus}
         onTogglePin={handleTogglePin}
         onToggleVisibility={handleToggleVisibility}
         onRenameWorksheet={(worksheet) => openRenameWorksheetPrompt(worksheet.worksheetId, worksheet.name)}
-        onMoveToGroup={controller.assignWorksheetToGroup}
         onRemoveFromGroup={controller.removeWorksheetFromGroup}
         onCreateGroup={openCreateGroupPrompt}
         onRenameGroup={openRenameGroupPrompt}
