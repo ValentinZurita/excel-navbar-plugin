@@ -13,6 +13,7 @@ If the flow starts from a worksheet action, the new group begins with that works
 ## Organize Worksheets
 Drag visible unpinned worksheets within the Sheets section, into groups, between groups, or back to Sheets.
 Pinned and hidden worksheets stay outside this drag-and-drop flow.
+The dragged worksheet keeps a calm ghost placeholder in its original slot while a separate overlay preview follows the pointer.
 
 ## Hidden Sheets
 Expand the subdued section, review hidden sheets, unhide when appropriate.
