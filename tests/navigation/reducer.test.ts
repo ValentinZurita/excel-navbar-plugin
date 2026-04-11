@@ -84,8 +84,19 @@ describe('navigationReducer', () => {
     expect(nextState.sheetSectionOrder).toEqual(['one', 'two', 'three']);
   });
 
-  it('prevents pinning a grouped worksheet', () => {
+  it('moves a grouped worksheet to pinned when pinning it', () => {
     const state = createDefaultNavigationState();
+    state.groupOrder = ['group-1'];
+    state.groupsById = {
+      'group-1': {
+        groupId: 'group-1',
+        name: 'Finance',
+        colorToken: 'green',
+        isCollapsed: false,
+        worksheetOrder: ['one'],
+        createdAt: 1,
+      },
+    };
     state.worksheetsById = {
       one: {
         worksheetId: 'one',
@@ -94,12 +105,16 @@ describe('navigationReducer', () => {
         workbookOrder: 0,
         isPinned: false,
         groupId: 'group-1',
-        lastKnownStructuralState: null,
+        lastKnownStructuralState: { kind: 'group', groupId: 'group-1' },
       },
     };
 
     const nextState = navigationReducer(state, { type: 'pinWorksheet', worksheetId: 'one' });
-    expect(nextState.worksheetsById.one.isPinned).toBe(false);
+
+    expect(nextState.worksheetsById.one.isPinned).toBe(true);
+    expect(nextState.worksheetsById.one.groupId).toBeNull();
+    expect(nextState.worksheetsById.one.lastKnownStructuralState).toEqual({ kind: 'pinned' });
+    expect(nextState.groupsById['group-1'].worksheetOrder).toEqual([]);
   });
 
   it('returns grouped sheets to ungrouped when a group is deleted', () => {

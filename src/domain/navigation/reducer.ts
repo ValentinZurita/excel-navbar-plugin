@@ -351,18 +351,23 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       };
     }
     case 'pinWorksheet': {
-      const worksheet = state.worksheetsById[action.worksheetId];
-      if (!worksheet || worksheet.groupId || worksheet.visibility !== 'Visible') {
+      const nextState = cloneState(state);
+      const worksheet = nextState.worksheetsById[action.worksheetId];
+      if (!worksheet || worksheet.visibility !== 'Visible') {
         return state;
       }
+
+      removeWorksheetFromAnyGroup(nextState, action.worksheetId);
+
       return {
-        ...state,
-        sheetSectionOrder: reconcileSheetSectionOrder(state.sheetSectionOrder, state.worksheetsById),
+        ...nextState,
+        sheetSectionOrder: reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById),
         worksheetsById: {
-          ...state.worksheetsById,
+          ...nextState.worksheetsById,
           [action.worksheetId]: {
             ...worksheet,
             isPinned: true,
+            groupId: null,
             lastKnownStructuralState: { kind: 'pinned' },
           },
         },
