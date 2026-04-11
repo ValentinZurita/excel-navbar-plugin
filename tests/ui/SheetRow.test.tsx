@@ -95,4 +95,20 @@ describe('SheetRow', () => {
     expect(row).toHaveAttribute('data-highlighted', 'false');
     expect(row).toHaveAttribute('data-pin-visible', 'false');
   });
+
+  it('keeps overlay styling independent from active worksheet state', () => {
+    const { container } = render(
+      <SheetRow
+        worksheet={baseWorksheet}
+        isActive
+        isOverlay
+        onActivate={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+      />,
+    );
+
+    const row = container.querySelector('.sheet-row');
+    expect(row).toHaveClass('sheet-row-overlay');
+    expect(row).toHaveClass('sheet-row-active');
+  });
 });
