@@ -87,6 +87,7 @@
   height: 15px;
   display: block;
   color: var(--excel-muted);
+  opacity: 0.85;
 }
 
 .group-copy {
