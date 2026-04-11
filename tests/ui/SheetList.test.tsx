@@ -25,7 +25,7 @@ describe('SheetList', () => {
     expect(screen.queryByTestId('group:group-1-drop-end')).not.toBeInTheDocument();
   });
 
-  it('does not render a group end drop zone for a group with worksheets during drag', () => {
+  it('renders a group end drop zone for a group with worksheets during drag', () => {
     render(
       <DndContext>
         <SheetList
@@ -43,7 +43,7 @@ describe('SheetList', () => {
       </DndContext>,
     );
 
-    expect(screen.queryByTestId('group:group-1-drop-end')).not.toBeInTheDocument();
+    expect(screen.getByTestId('group:group-1-drop-end')).toBeInTheDocument();
   });
 
   it('still renders an empty drop zone for the top-level Sheets container during drag', () => {

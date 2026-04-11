@@ -4,6 +4,13 @@
   align-items: center;
 }
 
+.worksheet-drop-zone:not(.worksheet-drop-zone-empty) {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -12px;
+}
+
 .worksheet-drop-zone-empty {
   min-height: 28px;
 }

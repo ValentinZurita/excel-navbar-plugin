@@ -108,4 +108,41 @@ describe('worksheetDndModel', () => {
       targetIndex: 1,
     });
   });
+
+  it('ignores no-op reorder when dragging a worksheet back to its original same-index location', () => {
+    expect(
+      buildDragCommit(
+        'sheet-1',
+        {
+          containerId: 'group:group-1',
+          index: 0,
+        },
+        {
+          containerId: 'group:group-1',
+          index: 1,
+        },
+      ),
+    ).toBeNull();
+  });
+
+  it('normalizes downward same-container destinations when computing reorder targets', () => {
+    expect(
+      buildDragCommit(
+        'sheet-1',
+        {
+          containerId: 'group:group-1',
+          index: 0,
+        },
+        {
+          containerId: 'group:group-1',
+          index: 2,
+        },
+      ),
+    ).toEqual({
+      kind: 'reorder-group',
+      worksheetId: 'sheet-1',
+      groupId: 'group-1',
+      targetIndex: 1,
+    });
+  });
 });

@@ -44,13 +44,12 @@ export function SheetList(props: SheetListProps) {
     return null;
   }
 
-  const isGroupContainer = Boolean(dragConfig && isGroupContainerId(dragConfig.containerId));
   const endDropLineActive = Boolean(
     dragConfig &&
       dragConfig.projectedDropTarget?.containerId === dragConfig.containerId &&
       dragConfig.projectedDropTarget.index === props.worksheets.length,
   );
-  const shouldRenderEndDropZone = Boolean(dragConfig && !isGroupContainer);
+  const shouldRenderEndDropZone = Boolean(dragConfig);
 
   if (!dragConfig) {
     return (

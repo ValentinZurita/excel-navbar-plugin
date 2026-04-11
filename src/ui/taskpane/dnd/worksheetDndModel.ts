@@ -160,14 +160,31 @@ export function getWorksheetEntitiesForContainer(
     .filter((worksheet): worksheet is WorksheetEntity => Boolean(worksheet));
 }
 
+function normalizeTargetIndex(
+  initialLocation: WorksheetInitialLocation,
+  finalLocation: WorksheetInitialLocation,
+) {
+  if (initialLocation.containerId !== finalLocation.containerId) {
+    return finalLocation.index;
+  }
+
+  if (finalLocation.index > initialLocation.index) {
+    return finalLocation.index - 1;
+  }
+
+  return finalLocation.index;
+}
+
 export function buildDragCommit(
   worksheetId: string,
   initialLocation: WorksheetInitialLocation,
   finalLocation: WorksheetInitialLocation,
 ): WorksheetDragCommit | null {
+  const normalizedTargetIndex = normalizeTargetIndex(initialLocation, finalLocation);
+
   if (
     initialLocation.containerId === finalLocation.containerId &&
-    initialLocation.index === finalLocation.index
+    initialLocation.index === normalizedTargetIndex
   ) {
     return null;
   }
@@ -176,7 +193,7 @@ export function buildDragCommit(
     return {
       kind: 'reorder-sheet-section',
       worksheetId,
-      targetIndex: finalLocation.index,
+      targetIndex: normalizedTargetIndex,
     };
   }
 
@@ -190,7 +207,7 @@ export function buildDragCommit(
       kind: 'reorder-group',
       worksheetId,
       groupId,
-      targetIndex: finalLocation.index,
+      targetIndex: normalizedTargetIndex,
     };
   }
 

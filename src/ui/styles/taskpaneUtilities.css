@@ -56,6 +56,10 @@
   gap: 4px;
 }
 
+.sheet-list {
+  position: relative;
+}
+
 /* Search result baseline styles used outside the dropdown variant. */
 .search-result {
   position: relative;
