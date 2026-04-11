@@ -1,5 +1,5 @@
 import { useDroppable } from '@dnd-kit/core';
-import type { NavigatorGroupView } from '../../../domain/navigation/types';
+import type { NavigatorGroupView, WorksheetEntity } from '../../../domain/navigation/types';
 import type { WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
 import { toGroupContainerId } from '../../taskpane/dnd/worksheetDndModel';
 import { GroupFolderIcon } from '../../icons';
@@ -7,6 +7,7 @@ import { SheetList } from '../SheetList';
 import './GroupCard.css';
 
 interface GroupDragConfig {
+  activeWorksheet?: WorksheetEntity | null;
   projectedDropTarget: WorksheetProjectedDropTarget | null;
   flashedGroupId: string | null;
   isDragActive: boolean;

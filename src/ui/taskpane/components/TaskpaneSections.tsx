@@ -9,7 +9,7 @@ import {
   type SensorDescriptor,
 } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import type { NavigatorView } from '../../../domain/navigation/types';
+import type { NavigatorView, WorksheetEntity } from '../../../domain/navigation/types';
 import { GroupSection } from '../../components/GroupSection';
 import { HiddenSection } from '../../components/HiddenSection';
 import { SearchBox } from '../../components/SearchBox';
@@ -21,6 +21,7 @@ import type { OpenGroupMenuArgs, OpenSheetMenuArgs } from '../types/contextMenuT
 interface WorksheetDragConfig {
   sensors: SensorDescriptor<any>[];
   projectedDropTarget: WorksheetProjectedDropTarget | null;
+  activeWorksheet: WorksheetEntity | null;
   flashedGroupId: string | null;
   isDragActive: boolean;
   shouldSuppressActivation: (worksheetId: string) => boolean;
@@ -115,6 +116,7 @@ export function TaskpaneSections({
               contextMenuOpenId={contextMenuOpenSheetId}
               groupMenuOpenId={contextMenuOpenGroupId}
               dragConfig={{
+                activeWorksheet: dragConfig.activeWorksheet,
                 projectedDropTarget: dragConfig.projectedDropTarget,
                 flashedGroupId: dragConfig.flashedGroupId,
                 isDragActive: dragConfig.isDragActive,
@@ -136,6 +138,7 @@ export function TaskpaneSections({
                 activeWorksheetId={activeWorksheetId}
                 contextMenuOpenId={contextMenuOpenSheetId}
                 dragConfig={{
+                  activeWorksheet: dragConfig.activeWorksheet,
                   containerId: 'sheets',
                   projectedDropTarget: dragConfig.projectedDropTarget,
                   isDragActive: dragConfig.isDragActive,

@@ -44,6 +44,10 @@
   transform: none;
 }
 
+.sheet-list-drag-active .sheet-row:hover {
+  background: transparent;
+}
+
 .sheet-row-dragging {
   opacity: 0.45;
 }

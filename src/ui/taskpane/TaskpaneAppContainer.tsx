@@ -105,6 +105,7 @@ export function TaskpaneAppContainer() {
           sensors: dragAndDrop.sensors,
           projectedDropTarget: dragAndDrop.projectedDropTarget,
           flashedGroupId: dragAndDrop.flashedGroupId,
+          activeWorksheet: dragAndDrop.activeWorksheet,
           isDragActive: Boolean(dragAndDrop.activeWorksheetId),
           shouldSuppressActivation: dragAndDrop.shouldSuppressActivation,
           onDragStart: dragAndDrop.onDragStart,

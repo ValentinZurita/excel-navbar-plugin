@@ -10,6 +10,7 @@ import { WorksheetDropZone } from '../WorksheetDropZone';
 
 interface SheetListDragConfig {
   containerId: WorksheetContainerId;
+  activeWorksheet?: WorksheetEntity | null;
   projectedDropTarget: WorksheetProjectedDropTarget | null;
   isDragActive: boolean;
   shouldSuppressActivation: (worksheetId: string) => boolean;
@@ -47,13 +48,15 @@ export function SheetList(props: SheetListProps) {
   const endDropLineActive = Boolean(
     dragConfig &&
       dragConfig.projectedDropTarget?.containerId === dragConfig.containerId &&
+      dragConfig.projectedDropTarget.kind === 'container-end' &&
       dragConfig.projectedDropTarget.index === props.worksheets.length,
   );
   const shouldRenderEndDropZone = Boolean(dragConfig);
+  const sheetListClassName = dragConfig?.isDragActive ? 'sheet-list sheet-list-drag-active' : 'sheet-list';
 
   if (!dragConfig) {
     return (
-      <div className="sheet-list">
+      <div className={sheetListClassName}>
         {props.worksheets.map((worksheet) => (
           <SheetRow
             key={worksheet.worksheetId}
@@ -71,7 +74,7 @@ export function SheetList(props: SheetListProps) {
 
   return (
     <SortableContext items={props.worksheets.map((worksheet) => worksheet.worksheetId)} strategy={verticalListSortingStrategy}>
-      <div className="sheet-list">
+      <div className={sheetListClassName}>
         {props.worksheets.map((worksheet, index) => (
           <SortableWorksheetRow
             key={worksheet.worksheetId}

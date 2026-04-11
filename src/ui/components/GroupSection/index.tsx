@@ -1,8 +1,9 @@
-import type { NavigatorGroupView } from '../../../domain/navigation/types';
+import type { NavigatorGroupView, WorksheetEntity } from '../../../domain/navigation/types';
 import type { WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
 import { GroupCard } from '../GroupCard';
 
 interface GroupDragConfig {
+  activeWorksheet?: WorksheetEntity | null;
   projectedDropTarget: WorksheetProjectedDropTarget | null;
   flashedGroupId: string | null;
   isDragActive: boolean;
