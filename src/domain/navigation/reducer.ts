@@ -296,7 +296,6 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
         action.worksheetId,
         action.targetIndex ?? nextState.groupsById[action.groupId].worksheetOrder.length,
       );
-      nextState.groupsById[action.groupId].isCollapsed = false;
 
       return nextState;
     }

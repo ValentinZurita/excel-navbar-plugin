@@ -1,6 +1,5 @@
 import {
   DndContext,
-  DragOverlay,
   MeasuringStrategy,
   closestCorners,
   type DragCancelEvent,
@@ -10,24 +9,20 @@ import {
   type SensorDescriptor,
 } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import type { NavigatorView, WorksheetEntity } from '../../../domain/navigation/types';
+import type { NavigatorView } from '../../../domain/navigation/types';
 import { GroupSection } from '../../components/GroupSection';
 import { HiddenSection } from '../../components/HiddenSection';
 import { SearchBox } from '../../components/SearchBox';
 import { Section } from '../../components/Section';
 import { SheetList } from '../../components/SheetList';
-import { SheetRow } from '../../components/SheetRow';
-import type { WorksheetContainerId, WorksheetProjectedDropTarget } from '../dnd/worksheetDndModel';
-import { toGroupContainerId } from '../dnd/worksheetDndModel';
+import type { WorksheetProjectedDropTarget } from '../dnd/worksheetDndModel';
 import type { OpenGroupMenuArgs, OpenSheetMenuArgs } from '../types/contextMenuTypes';
 
 interface WorksheetDragConfig {
   sensors: SensorDescriptor<any>[];
-  activeWorksheetId: string | null;
-  activeWorksheet: WorksheetEntity | null;
   projectedDropTarget: WorksheetProjectedDropTarget | null;
+  flashedGroupId: string | null;
   isDragActive: boolean;
-  getContainerWorksheets: (containerId: WorksheetContainerId, fallback: WorksheetEntity[]) => WorksheetEntity[];
   shouldSuppressActivation: (worksheetId: string) => boolean;
   onDragStart: (event: DragStartEvent) => void;
   onDragOver: (event: DragOverEvent) => void;
@@ -76,8 +71,6 @@ export function TaskpaneSections({
   onOpenSheetMenu,
   onOpenGroupMenu,
 }: TaskpaneSectionsProps) {
-  const displayedUngrouped = dragConfig.getContainerWorksheets('sheets', navigatorView.ungrouped);
-
   return (
     <>
       <SearchBox
@@ -122,14 +115,10 @@ export function TaskpaneSections({
               contextMenuOpenId={contextMenuOpenSheetId}
               groupMenuOpenId={contextMenuOpenGroupId}
               dragConfig={{
-                activeWorksheetId: dragConfig.activeWorksheetId,
                 projectedDropTarget: dragConfig.projectedDropTarget,
+                flashedGroupId: dragConfig.flashedGroupId,
                 isDragActive: dragConfig.isDragActive,
                 shouldSuppressActivation: dragConfig.shouldSuppressActivation,
-                getDisplayedWorksheets: (group) => dragConfig.getContainerWorksheets(
-                  toGroupContainerId(group.groupId),
-                  group.worksheets,
-                ),
               }}
               onActivate={onActivateWorksheet}
               onToggleCollapsed={onToggleGroupCollapsed}
@@ -139,16 +128,15 @@ export function TaskpaneSections({
           </Section>
         ) : null}
 
-        {displayedUngrouped.length || dragConfig.isDragActive ? (
+        {navigatorView.ungrouped.length || dragConfig.isDragActive ? (
           <Section title="Sheets">
             <div className="primary-tabs">
               <SheetList
-                worksheets={displayedUngrouped}
+                worksheets={navigatorView.ungrouped}
                 activeWorksheetId={activeWorksheetId}
                 contextMenuOpenId={contextMenuOpenSheetId}
                 dragConfig={{
                   containerId: 'sheets',
-                  activeWorksheetId: dragConfig.activeWorksheetId,
                   projectedDropTarget: dragConfig.projectedDropTarget,
                   isDragActive: dragConfig.isDragActive,
                   shouldSuppressActivation: dragConfig.shouldSuppressActivation,
@@ -156,22 +144,10 @@ export function TaskpaneSections({
                 onActivate={onActivateWorksheet}
                 onTogglePin={onPinWorksheet}
                 onOpenContextMenu={onOpenSheetMenu}
-              />
-            </div>
-          </Section>
-        ) : null}
-
-        <DragOverlay>
-          {dragConfig.activeWorksheet ? (
-            <SheetRow
-              worksheet={dragConfig.activeWorksheet}
-              isActive={false}
-              isOverlay
-              onActivate={() => undefined}
-              onOpenContextMenu={() => undefined}
             />
-          ) : null}
-        </DragOverlay>
+          </div>
+        </Section>
+      ) : null}
       </DndContext>
 
       {navigatorView.hidden.length ? (

@@ -1,13 +1,12 @@
-import type { NavigatorGroupView, WorksheetEntity } from '../../../domain/navigation/types';
+import type { NavigatorGroupView } from '../../../domain/navigation/types';
 import type { WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
 import { GroupCard } from '../GroupCard';
 
 interface GroupDragConfig {
-  activeWorksheetId: string | null;
   projectedDropTarget: WorksheetProjectedDropTarget | null;
+  flashedGroupId: string | null;
   isDragActive: boolean;
   shouldSuppressActivation: (worksheetId: string) => boolean;
-  getDisplayedWorksheets: (group: NavigatorGroupView) => WorksheetEntity[];
 }
 
 interface GroupSectionProps {
@@ -29,7 +28,6 @@ export function GroupSection(props: GroupSectionProps) {
         <GroupCard
           key={group.groupId}
           group={group}
-          displayedWorksheets={props.dragConfig?.getDisplayedWorksheets(group) ?? group.worksheets}
           {...props}
         />
       ))}

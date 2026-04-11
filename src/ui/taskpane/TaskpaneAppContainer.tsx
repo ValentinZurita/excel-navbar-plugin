@@ -43,13 +43,11 @@ export function TaskpaneAppContainer() {
   });
 
   const dragAndDrop = useWorksheetDnD({
-    navigatorView: controller.navigatorView,
     worksheetsById: controller.state.worksheetsById,
     assignWorksheetToGroup: controller.assignWorksheetToGroup,
     removeWorksheetFromGroup: controller.removeWorksheetFromGroup,
     reorderGroupWorksheet: controller.reorderGroupWorksheet,
     reorderSheetSectionWorksheet: controller.reorderSheetSectionWorksheet,
-    setGroupCollapsed: controller.setGroupCollapsed,
   });
 
   async function activateWorksheetFromSearch(worksheetId: string) {
@@ -105,11 +103,9 @@ export function TaskpaneAppContainer() {
         contextMenuOpenGroupId={contextMenuOpenGroupId}
         dragConfig={{
           sensors: dragAndDrop.sensors,
-          activeWorksheetId: dragAndDrop.activeWorksheetId,
-          activeWorksheet: dragAndDrop.activeWorksheet,
           projectedDropTarget: dragAndDrop.projectedDropTarget,
+          flashedGroupId: dragAndDrop.flashedGroupId,
           isDragActive: Boolean(dragAndDrop.activeWorksheetId),
-          getContainerWorksheets: dragAndDrop.getContainerWorksheets,
           shouldSuppressActivation: dragAndDrop.shouldSuppressActivation,
           onDragStart: dragAndDrop.onDragStart,
           onDragOver: dragAndDrop.onDragOver,

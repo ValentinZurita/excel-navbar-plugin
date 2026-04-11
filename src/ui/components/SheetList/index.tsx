@@ -10,7 +10,6 @@ import { WorksheetDropZone } from '../WorksheetDropZone';
 
 interface SheetListDragConfig {
   containerId: WorksheetContainerId;
-  activeWorksheetId: string | null;
   projectedDropTarget: WorksheetProjectedDropTarget | null;
   isDragActive: boolean;
   shouldSuppressActivation: (worksheetId: string) => boolean;

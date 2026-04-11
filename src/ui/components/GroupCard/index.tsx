@@ -7,15 +7,14 @@ import { SheetList } from '../SheetList';
 import './GroupCard.css';
 
 interface GroupDragConfig {
-  activeWorksheetId: string | null;
   projectedDropTarget: WorksheetProjectedDropTarget | null;
+  flashedGroupId: string | null;
   isDragActive: boolean;
   shouldSuppressActivation: (worksheetId: string) => boolean;
 }
 
 interface GroupCardProps {
   group: NavigatorGroupView;
-  displayedWorksheets: NavigatorGroupView['worksheets'];
   activeWorksheetId: string | null;
   contextMenuOpenId?: string;
   groupMenuOpenId?: string;
@@ -28,7 +27,6 @@ interface GroupCardProps {
 
 export function GroupCard({
   group,
-  displayedWorksheets,
   onToggleCollapsed,
   onOpenGroupMenu,
   onOpenSheetMenu,
@@ -40,7 +38,7 @@ export function GroupCard({
     data: {
       type: 'worksheet-drop-target',
       containerId,
-      index: displayedWorksheets.length,
+      index: group.worksheets.length,
       kind: 'group-header',
     },
     disabled: !rest.dragConfig?.isDragActive,
@@ -51,6 +49,7 @@ export function GroupCard({
       rest.dragConfig.projectedDropTarget?.containerId === containerId &&
       rest.dragConfig.projectedDropTarget.kind === 'group-header',
   );
+  const isFolderFlashing = rest.dragConfig?.flashedGroupId === group.groupId;
 
   return (
     <section
@@ -71,7 +70,7 @@ export function GroupCard({
         className={`group-header ${group.groupId === rest.groupMenuOpenId ? 'group-header-context-open' : ''} ${isDropActive ? 'group-header-drop-active' : ''}`}
       >
         <button className="group-toggle" type="button" onClick={() => onToggleCollapsed(group.groupId)}>
-          <span className="group-leading" aria-hidden="true">
+          <span className={`group-leading ${isFolderFlashing ? 'group-leading-flash' : ''}`} aria-hidden="true">
             <GroupFolderIcon className="group-folder-icon" />
           </span>
           <span className="group-copy">
@@ -82,12 +81,11 @@ export function GroupCard({
 
       {!group.isCollapsed ? (
         <SheetList
-          worksheets={displayedWorksheets}
+          worksheets={group.worksheets}
           activeWorksheetId={rest.activeWorksheetId}
           contextMenuOpenId={rest.contextMenuOpenId}
           dragConfig={rest.dragConfig ? {
             containerId,
-            activeWorksheetId: rest.dragConfig.activeWorksheetId,
             projectedDropTarget: rest.dragConfig.projectedDropTarget,
             isDragActive: rest.dragConfig.isDragActive,
             shouldSuppressActivation: rest.dragConfig.shouldSuppressActivation,

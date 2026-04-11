@@ -68,6 +68,10 @@
   justify-content: center;
 }
 
+.group-leading-flash {
+  animation: group-folder-pulse 240ms ease-out;
+}
+
 .group-folder-icon {
   width: 15px;
   height: 15px;
@@ -89,4 +93,18 @@
 
 .group-card .search-result {
   margin-left: 12px;
+}
+
+@keyframes group-folder-pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.18);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }

@@ -1,5 +1,4 @@
 import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import type { WorksheetContainerId } from '../../taskpane/dnd/worksheetDndModel';
 import { SheetRow } from '../SheetRow';
@@ -29,7 +28,7 @@ export function SortableWorksheetRow({
   onTogglePin,
   onOpenContextMenu,
 }: SortableWorksheetRowProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
     id: worksheet.worksheetId,
     data: {
       type: 'worksheet',
@@ -41,19 +40,13 @@ export function SortableWorksheetRow({
 
   return (
     <>
-      {isInsertionBefore ? <div className="worksheet-insertion-line" aria-hidden="true" /> : null}
+      {isInsertionBefore ? <div className="worksheet-insertion-line worksheet-insertion-line-active" aria-hidden="true" /> : null}
 
       <SheetRow
         worksheet={worksheet}
         isActive={isActive}
         isContextMenuOpen={isContextMenuOpen}
-        isDragged={isDragging}
         containerRef={setNodeRef}
-        containerStyle={{
-          transform: CSS.Transform.toString(transform),
-          transition,
-          zIndex: isDragging ? 1 : undefined,
-        }}
         containerProps={{
           ...attributes,
           ...listeners,
