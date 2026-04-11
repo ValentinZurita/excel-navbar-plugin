@@ -5,6 +5,7 @@ import {
   MeasuringStrategy,
   pointerWithin,
   closestCorners,
+  type Modifier,
   type DragCancelEvent,
   type DragEndEvent,
   type DragOverEvent,
@@ -70,6 +71,12 @@ const worksheetCollisionDetection: CollisionDetection = (args) => {
 
   return closestCorners(args);
 };
+
+const worksheetDragOverlayOffset: Modifier = ({ transform }) => ({
+  ...transform,
+  x: transform.x + 10,
+  y: transform.y - 6,
+});
 
 function shouldRenderUngroupedSection(navigatorView: NavigatorView, isDragActive: boolean) {
   return navigatorView.ungrouped.length > 0 || isDragActive;
@@ -161,7 +168,12 @@ export function TaskpaneSections({
         onDragEnd={dragConfig.onDragEnd}
         onDragCancel={dragConfig.onDragCancel}
       >
-        <DragOverlay dropAnimation={null}>
+        <DragOverlay
+          dropAnimation={null}
+          className="worksheet-drag-overlay"
+          modifiers={[worksheetDragOverlayOffset]}
+          zIndex={20}
+        >
           {dragConfig.activeDragWorksheet ? (
             <SheetRow
               worksheet={dragConfig.activeDragWorksheet}

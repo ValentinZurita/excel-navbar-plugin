@@ -8,8 +8,16 @@ vi.mock('@dnd-kit/core', async () => {
   const actual = await vi.importActual<typeof import('@dnd-kit/core')>('@dnd-kit/core');
   return {
     ...actual,
-    DragOverlay: ({ children }: { children?: ReactNode }) => (
-      <div data-testid="drag-overlay">{children}</div>
+    DragOverlay: ({
+      children,
+      className,
+    }: {
+      children?: ReactNode;
+      className?: string;
+    }) => (
+      <div data-testid="drag-overlay" className={className}>
+        {children}
+      </div>
     ),
   };
 });
@@ -75,7 +83,10 @@ describe('TaskpaneSections', () => {
       />,
     );
 
-    const overlayRows = screen.getByTestId('drag-overlay').querySelectorAll('.sheet-row-overlay');
+    const overlayRoot = screen.getByTestId('drag-overlay');
+    expect(overlayRoot).toHaveClass('worksheet-drag-overlay');
+
+    const overlayRows = overlayRoot.querySelectorAll('.sheet-row-overlay');
     expect(overlayRows).toHaveLength(1);
     expect(overlayRows[0]).toHaveAttribute('aria-label', 'Revenue');
   });
