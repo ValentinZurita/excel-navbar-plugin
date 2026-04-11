@@ -77,6 +77,30 @@ describe('worksheetDndModel', () => {
     });
   });
 
+  it('clamps destination indexes when projecting a move', () => {
+    const layout = moveWorksheetInLayout(
+      {
+        sheets: ['sheet-1'],
+        groups: {
+          'group-1': ['sheet-2', 'sheet-3'],
+        },
+      },
+      'sheet-1',
+      {
+        containerId: toGroupContainerId('group-1'),
+        index: 99,
+        kind: 'container-end',
+      },
+    );
+
+    expect(layout).toEqual({
+      sheets: [],
+      groups: {
+        'group-1': ['sheet-2', 'sheet-3', 'sheet-1'],
+      },
+    });
+  });
+
   it('finds the final location and translates it into a domain commit', () => {
     const finalLayout = {
       sheets: ['sheet-1'],
@@ -105,6 +129,47 @@ describe('worksheetDndModel', () => {
       kind: 'assign-to-group',
       worksheetId: 'sheet-2',
       groupId: 'group-1',
+      targetIndex: 1,
+    });
+  });
+
+  it('builds a remove-from-group commit when dropping back into Sheets', () => {
+    expect(
+      buildDragCommit(
+        'sheet-1',
+        {
+          containerId: 'group:group-1',
+          index: 1,
+        },
+        {
+          containerId: 'sheets',
+          index: 0,
+        },
+      ),
+    ).toEqual({
+      kind: 'remove-from-group',
+      worksheetId: 'sheet-1',
+      targetIndex: 0,
+    });
+  });
+
+  it('builds an assign-to-group commit when moving between groups', () => {
+    expect(
+      buildDragCommit(
+        'sheet-1',
+        {
+          containerId: 'group:group-1',
+          index: 0,
+        },
+        {
+          containerId: 'group:group-2',
+          index: 1,
+        },
+      ),
+    ).toEqual({
+      kind: 'assign-to-group',
+      worksheetId: 'sheet-1',
+      groupId: 'group-2',
       targetIndex: 1,
     });
   });
@@ -143,6 +208,26 @@ describe('worksheetDndModel', () => {
       worksheetId: 'sheet-1',
       groupId: 'group-1',
       targetIndex: 1,
+    });
+  });
+
+  it('normalizes downward sheet-section destinations when computing reorder targets', () => {
+    expect(
+      buildDragCommit(
+        'sheet-1',
+        {
+          containerId: 'sheets',
+          index: 0,
+        },
+        {
+          containerId: 'sheets',
+          index: 3,
+        },
+      ),
+    ).toEqual({
+      kind: 'reorder-sheet-section',
+      worksheetId: 'sheet-1',
+      targetIndex: 2,
     });
   });
 });

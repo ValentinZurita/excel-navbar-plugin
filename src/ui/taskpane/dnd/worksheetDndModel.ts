@@ -58,6 +58,14 @@ export function buildWorksheetDragLayout(navigatorView: NavigatorView): Workshee
   };
 }
 
+function clampInsertionIndex(index: number, length: number) {
+  return Math.max(0, Math.min(index, length));
+}
+
+function isSheetContainer(containerId: WorksheetContainerId) {
+  return containerId === 'sheets';
+}
+
 export function findWorksheetLocation(
   layout: WorksheetDragLayout,
   worksheetId: string,
@@ -84,7 +92,7 @@ export function getWorksheetIdsForContainer(
   layout: WorksheetDragLayout,
   containerId: WorksheetContainerId,
 ): string[] {
-  if (containerId === 'sheets') {
+  if (isSheetContainer(containerId)) {
     return layout.sheets;
   }
 
@@ -97,7 +105,7 @@ function setWorksheetIdsForContainer(
   containerId: WorksheetContainerId,
   worksheetIds: string[],
 ): WorksheetDragLayout {
-  if (containerId === 'sheets') {
+  if (isSheetContainer(containerId)) {
     return {
       ...layout,
       sheets: worksheetIds,
@@ -137,7 +145,7 @@ export function moveWorksheetInLayout(
     (candidateId) => candidateId !== worksheetId,
   );
 
-  const clampedIndex = Math.max(0, Math.min(destination.index, destinationWorksheetIds.length));
+  const clampedIndex = clampInsertionIndex(destination.index, destinationWorksheetIds.length);
   const nextDestinationWorksheetIds = [...destinationWorksheetIds];
   nextDestinationWorksheetIds.splice(clampedIndex, 0, worksheetId);
 
@@ -189,7 +197,7 @@ export function buildDragCommit(
     return null;
   }
 
-  if (initialLocation.containerId === 'sheets' && finalLocation.containerId === 'sheets') {
+  if (isSheetContainer(initialLocation.containerId) && isSheetContainer(finalLocation.containerId)) {
     return {
       kind: 'reorder-sheet-section',
       worksheetId,
@@ -197,7 +205,7 @@ export function buildDragCommit(
     };
   }
 
-  if (initialLocation.containerId !== 'sheets' && finalLocation.containerId === initialLocation.containerId) {
+  if (!isSheetContainer(initialLocation.containerId) && finalLocation.containerId === initialLocation.containerId) {
     const groupId = parseGroupIdFromContainerId(finalLocation.containerId);
     if (!groupId) {
       return null;
@@ -211,7 +219,7 @@ export function buildDragCommit(
     };
   }
 
-  if (finalLocation.containerId === 'sheets') {
+  if (isSheetContainer(finalLocation.containerId)) {
     return {
       kind: 'remove-from-group',
       worksheetId,

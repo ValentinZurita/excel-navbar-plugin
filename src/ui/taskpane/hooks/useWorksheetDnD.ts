@@ -10,7 +10,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import {
   buildDragCommit,
@@ -95,12 +95,22 @@ export function useWorksheetDnD({
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
+  // UI state drives the current drag preview rendered by the task pane.
   const [activeWorksheetId, setActiveWorksheetId] = useState<string | null>(null);
   const [projectedDropTarget, setProjectedDropTarget] = useState<WorksheetProjectedDropTarget | null>(null);
   const [flashedGroupId, setFlashedGroupId] = useState<string | null>(null);
+
+  // Mutable refs keep transient drag bookkeeping out of React's render cycle.
   const initialLocationRef = useRef<{ worksheetId: string; containerId: WorksheetContainerId; index: number } | null>(null);
   const flashTimeoutIdRef = useRef<number | null>(null);
   const suppressActivationRef = useRef<{ worksheetId: string | null; until: number }>({ worksheetId: null, until: 0 });
+
+  const clearFlashTimeout = useCallback(() => {
+    if (flashTimeoutIdRef.current !== null) {
+      window.clearTimeout(flashTimeoutIdRef.current);
+      flashTimeoutIdRef.current = null;
+    }
+  }, []);
 
   const resetDragState = useCallback(() => {
     setActiveWorksheetId(null);
@@ -108,6 +118,7 @@ export function useWorksheetDnD({
     initialLocationRef.current = null;
   }, []);
 
+  // Drag start captures the source location and seeds the initial preview state.
   const onDragStart = useCallback((event: DragStartEvent) => {
     const activeData = event.active.data.current;
     if (!isWorksheetDragItemData(activeData)) {
@@ -115,7 +126,11 @@ export function useWorksheetDnD({
     }
 
     setActiveWorksheetId(activeData.worksheetId);
-    setProjectedDropTarget(null);
+    setProjectedDropTarget({
+      containerId: activeData.containerId,
+      index: activeData.index,
+      kind: 'row',
+    });
     initialLocationRef.current = {
       worksheetId: activeData.worksheetId,
       containerId: activeData.containerId,
@@ -123,6 +138,7 @@ export function useWorksheetDnD({
     };
   }, []);
 
+  // Drag over is preview-only: it updates the highlighted drop target without committing.
   const onDragOver = useCallback((event: DragOverEvent) => {
     const nextProjectedDropTarget = getProjectedDropTarget(event.over?.data.current);
 
@@ -134,23 +150,41 @@ export function useWorksheetDnD({
     setProjectedDropTarget(nextProjectedDropTarget);
   }, []);
 
+  // Group flashes are time-based UI affordances, so they need explicit cleanup on unmount.
+  useEffect(() => {
+    return () => {
+      clearFlashTimeout();
+    };
+  }, [clearFlashTimeout]);
+
+  const flashAssignedGroup = useCallback((groupId: string) => {
+    clearFlashTimeout();
+    setFlashedGroupId(groupId);
+    flashTimeoutIdRef.current = window.setTimeout(() => {
+      setFlashedGroupId((currentGroupId) => (currentGroupId === groupId ? null : currentGroupId));
+      flashTimeoutIdRef.current = null;
+    }, 260);
+  }, [clearFlashTimeout]);
+
   const onDragCancel = useCallback((_event: DragCancelEvent) => {
     resetDragState();
   }, [resetDragState]);
 
+  // Drag end resolves the authoritative drop target from the event payload and commits once.
   const onDragEnd = useCallback((event: DragEndEvent) => {
     const activeData = event.active.data.current;
     const initialLocation = initialLocationRef.current;
 
-    if (!isWorksheetDragItemData(activeData) || !initialLocation || !event.over) {
+    if (!isWorksheetDragItemData(activeData) || !initialLocation) {
       resetDragState();
       return;
     }
 
-    const finalLocation = projectedDropTarget
+    const finalDropTarget = getProjectedDropTarget(event.over?.data.current);
+    const finalLocation = finalDropTarget
       ? {
-          containerId: projectedDropTarget.containerId,
-          index: projectedDropTarget.index,
+          containerId: finalDropTarget.containerId,
+          index: finalDropTarget.index,
         }
       : null;
 
@@ -171,14 +205,7 @@ export function useWorksheetDnD({
           break;
         case 'assign-to-group':
           assignWorksheetToGroup(commit.worksheetId, commit.groupId, commit.targetIndex);
-          if (flashTimeoutIdRef.current !== null) {
-            window.clearTimeout(flashTimeoutIdRef.current);
-          }
-          setFlashedGroupId(commit.groupId);
-          flashTimeoutIdRef.current = window.setTimeout(() => {
-            setFlashedGroupId((currentGroupId) => (currentGroupId === commit.groupId ? null : currentGroupId));
-            flashTimeoutIdRef.current = null;
-          }, 260);
+          flashAssignedGroup(commit.groupId);
           break;
         case 'remove-from-group':
           removeWorksheetFromGroup(commit.worksheetId, commit.targetIndex);
@@ -194,7 +221,7 @@ export function useWorksheetDnD({
     resetDragState();
   }, [
     assignWorksheetToGroup,
-    projectedDropTarget,
+    flashAssignedGroup,
     removeWorksheetFromGroup,
     reorderGroupWorksheet,
     reorderSheetSectionWorksheet,
