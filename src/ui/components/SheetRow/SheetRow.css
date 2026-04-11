@@ -86,6 +86,21 @@
   box-shadow: none;
 }
 
+.sheet-list-drag-active .sheet-row .sheet-row-icon,
+.sheet-list-drag-active .sheet-row:hover .sheet-row-icon,
+.sheet-list-drag-active .sheet-row:focus-within .sheet-row-icon,
+.sheet-list-drag-active .sheet-row.sheet-row-context-open .sheet-row-icon {
+  opacity: 0.85;
+}
+
+.sheet-list-drag-active .sheet-row .sheet-pin-button,
+.sheet-list-drag-active .sheet-row:hover .sheet-pin-button,
+.sheet-list-drag-active .sheet-row:focus-within .sheet-pin-button,
+.sheet-list-drag-active .sheet-row.sheet-row-context-open .sheet-pin-button {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .sheet-row-dragging {
   opacity: 0.45;
 }
