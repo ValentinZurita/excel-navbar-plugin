@@ -131,6 +131,7 @@ export function useWorksheetDnD({
     const nextProjectedDropTarget = getProjectedDropTarget(event.over?.data.current);
 
     if (!nextProjectedDropTarget) {
+      setProjectedDropTarget(null);
       return;
     }
 

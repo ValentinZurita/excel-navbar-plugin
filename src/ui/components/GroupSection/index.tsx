@@ -23,8 +23,10 @@ interface GroupSectionProps {
 }
 
 export function GroupSection(props: GroupSectionProps) {
+  const className = props.dragConfig?.isDragActive ? 'group-list group-list-drag-active' : 'group-list';
+
   return (
-    <div className="group-list">
+    <div className={className}>
       {props.groups.map((group) => (
         <GroupCard
           key={group.groupId}
