@@ -102,11 +102,50 @@ describe('TaskpaneAppContainer', () => {
     expect(worksheetRow).not.toBeNull();
     fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
 
+    // Click "New group" to start inline creation
     await user.click(screen.getByRole('button', { name: 'New group' }));
-    await user.type(screen.getByLabelText('Name'), 'Finance');
-    await user.click(screen.getByRole('button', { name: 'Create group' }));
+
+    // Inline creator should be visible
+    expect(screen.getByLabelText('Name')).toBeInTheDocument();
+
+    // Type name and press Enter (no button needed)
+    await user.type(screen.getByLabelText('Name'), 'Finance{Enter}');
 
     expect(controller.createGroup).toHaveBeenCalledWith('Finance', 'sheet-1');
+
+    // Menu should be closed after successful creation
+    expect(screen.queryByLabelText('Name')).not.toBeInTheDocument();
+  });
+
+  it('shows action menu after canceling creation with Escape', async () => {
+    const user = userEvent.setup();
+    useNavigationControllerMock.mockReturnValue(createControllerMock());
+
+    render(<TaskpaneAppContainer />);
+
+    const worksheetButton = screen.getByRole('button', { name: 'Revenue' });
+    const worksheetRow = worksheetButton.closest('article');
+
+    expect(worksheetRow).not.toBeNull();
+    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+
+    // Start inline creation
+    await user.click(screen.getByRole('button', { name: 'New group' }));
+    expect(screen.getByLabelText('Name')).toBeInTheDocument();
+
+    // Cancel with Escape
+    await user.keyboard('{Escape}');
+
+    // Menu should be closed
+    expect(screen.queryByLabelText('Name')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'New group' })).not.toBeInTheDocument();
+
+    // Open menu again - should show action menu, not creation
+    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+    expect(screen.getByRole('button', { name: 'Pin tab' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'New group' })).toBeInTheDocument();
+    // Should NOT show the inline creator
+    expect(screen.queryByLabelText('Name')).not.toBeInTheDocument();
   });
 
   it('closes worksheet context menu when right-clicking the same row twice', () => {

@@ -11,6 +11,7 @@ import {
   RemoveMenuIcon,
   RenameMenuIcon,
 } from '../../icons';
+import { InlineGroupCreator } from '../../components/InlineGroupCreator';
 import '../styles/TaskpaneMenus.css';
 
 interface MenuAction {
@@ -27,9 +28,13 @@ interface TaskpaneMenusProps {
   onToggleVisibility: (worksheet: WorksheetEntity) => void;
   onRenameWorksheet: (worksheet: WorksheetEntity) => void;
   onRemoveFromGroup: (worksheetId: string) => void;
-  onCreateGroup: (initialWorksheetId?: string) => void;
+  onStartCreatingGroup: (initialWorksheetId?: string) => void;
   onRenameGroup: (groupId: string, groupName: string) => void;
   onDeleteGroup: (groupId: string, groupName: string) => void;
+  // Inline creation state
+  isCreatingGroup: boolean;
+  onCancelCreatingGroup: () => void;
+  onConfirmCreatingGroup: (name: string) => void;
 }
 
 function MenuItem({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
@@ -84,7 +89,7 @@ function buildSheetMenuActions(
   sheetMenu: SheetMenuState,
   handlers: Pick<
     TaskpaneMenusProps,
-    'onCloseMenus' | 'onTogglePin' | 'onToggleVisibility' | 'onRenameWorksheet' | 'onRemoveFromGroup' | 'onCreateGroup'
+    'onCloseMenus' | 'onTogglePin' | 'onToggleVisibility' | 'onRenameWorksheet' | 'onRemoveFromGroup' | 'onStartCreatingGroup'
   >,
 ): MenuAction[] {
   const actions: MenuAction[] = [
@@ -141,7 +146,7 @@ function buildSheetMenuActions(
     icon: <AddGroupMenuIcon className="context-menu-icon-svg" />,
     label: 'New group',
     onSelect: () => {
-      handlers.onCreateGroup(sheetMenu.worksheet.worksheetId);
+      handlers.onStartCreatingGroup(sheetMenu.worksheet.worksheetId);
     },
   });
 
@@ -150,7 +155,7 @@ function buildSheetMenuActions(
 
 function buildGroupMenuActions(
   groupMenu: GroupMenuState,
-  handlers: Pick<TaskpaneMenusProps, 'onCloseMenus' | 'onCreateGroup' | 'onRenameGroup' | 'onDeleteGroup'>,
+  handlers: Pick<TaskpaneMenusProps, 'onCloseMenus' | 'onStartCreatingGroup' | 'onRenameGroup' | 'onDeleteGroup'>,
 ): MenuAction[] {
   return [
     {
@@ -175,7 +180,7 @@ function buildGroupMenuActions(
       icon: <AddGroupMenuIcon className="context-menu-icon-svg" />,
       label: 'New group',
       onSelect: () => {
-        handlers.onCreateGroup();
+        handlers.onStartCreatingGroup();
       },
     },
   ];
@@ -188,7 +193,10 @@ function SheetContextMenu({
   onToggleVisibility,
   onRenameWorksheet,
   onRemoveFromGroup,
-  onCreateGroup,
+  onStartCreatingGroup,
+  isCreatingGroup,
+  onCancelCreatingGroup,
+  onConfirmCreatingGroup,
 }: {
   sheetMenu: SheetMenuState;
   onCloseMenus: () => void;
@@ -196,7 +204,10 @@ function SheetContextMenu({
   onToggleVisibility: (worksheet: WorksheetEntity) => void;
   onRenameWorksheet: (worksheet: WorksheetEntity) => void;
   onRemoveFromGroup: (worksheetId: string) => void;
-  onCreateGroup: (initialWorksheetId?: string) => void;
+  onStartCreatingGroup: (initialWorksheetId?: string) => void;
+  isCreatingGroup: boolean;
+  onCancelCreatingGroup: () => void;
+  onConfirmCreatingGroup: (name: string) => void;
 }) {
   const actions = buildSheetMenuActions(sheetMenu, {
     onCloseMenus,
@@ -204,33 +215,63 @@ function SheetContextMenu({
     onToggleVisibility,
     onRenameWorksheet,
     onRemoveFromGroup,
-    onCreateGroup,
+    onStartCreatingGroup,
   });
 
-  return <ContextMenuLayer menu={sheetMenu} onCloseMenus={onCloseMenus}>{renderMenuActions(actions)}</ContextMenuLayer>;
+  return (
+    <ContextMenuLayer menu={sheetMenu} onCloseMenus={onCloseMenus}>
+      {isCreatingGroup ? (
+        <InlineGroupCreator
+          onCreate={onConfirmCreatingGroup}
+          onCancel={onCancelCreatingGroup}
+          onCloseMenu={onCloseMenus}
+        />
+      ) : (
+        renderMenuActions(actions)
+      )}
+    </ContextMenuLayer>
+  );
 }
 
 function GroupContextMenu({
   groupMenu,
   onCloseMenus,
-  onCreateGroup,
+  onStartCreatingGroup,
   onRenameGroup,
   onDeleteGroup,
+  isCreatingGroup,
+  onCancelCreatingGroup,
+  onConfirmCreatingGroup,
 }: {
   groupMenu: GroupMenuState;
   onCloseMenus: () => void;
-  onCreateGroup: (initialWorksheetId?: string) => void;
+  onStartCreatingGroup: (initialWorksheetId?: string) => void;
   onRenameGroup: (groupId: string, groupName: string) => void;
   onDeleteGroup: (groupId: string, groupName: string) => void;
+  isCreatingGroup: boolean;
+  onCancelCreatingGroup: () => void;
+  onConfirmCreatingGroup: (name: string) => void;
 }) {
   const actions = buildGroupMenuActions(groupMenu, {
     onCloseMenus,
-    onCreateGroup,
+    onStartCreatingGroup,
     onRenameGroup,
     onDeleteGroup,
   });
 
-  return <ContextMenuLayer menu={groupMenu} onCloseMenus={onCloseMenus}>{renderMenuActions(actions)}</ContextMenuLayer>;
+  return (
+    <ContextMenuLayer menu={groupMenu} onCloseMenus={onCloseMenus}>
+      {isCreatingGroup ? (
+        <InlineGroupCreator
+          onCreate={onConfirmCreatingGroup}
+          onCancel={onCancelCreatingGroup}
+          onCloseMenu={onCloseMenus}
+        />
+      ) : (
+        renderMenuActions(actions)
+      )}
+    </ContextMenuLayer>
+  );
 }
 
 export function TaskpaneMenus({
@@ -240,9 +281,12 @@ export function TaskpaneMenus({
   onToggleVisibility,
   onRenameWorksheet,
   onRemoveFromGroup,
-  onCreateGroup,
+  onStartCreatingGroup,
   onRenameGroup,
   onDeleteGroup,
+  isCreatingGroup,
+  onCancelCreatingGroup,
+  onConfirmCreatingGroup,
 }: TaskpaneMenusProps) {
   if (!activeMenu) {
     return null;
@@ -257,7 +301,10 @@ export function TaskpaneMenus({
         onToggleVisibility={onToggleVisibility}
         onRenameWorksheet={onRenameWorksheet}
         onRemoveFromGroup={onRemoveFromGroup}
-        onCreateGroup={onCreateGroup}
+        onStartCreatingGroup={onStartCreatingGroup}
+        isCreatingGroup={isCreatingGroup}
+        onCancelCreatingGroup={onCancelCreatingGroup}
+        onConfirmCreatingGroup={onConfirmCreatingGroup}
       />
     );
   }
@@ -266,9 +313,12 @@ export function TaskpaneMenus({
     <GroupContextMenu
       groupMenu={activeMenu}
       onCloseMenus={onCloseMenus}
-      onCreateGroup={onCreateGroup}
+      onStartCreatingGroup={onStartCreatingGroup}
       onRenameGroup={onRenameGroup}
       onDeleteGroup={onDeleteGroup}
+      isCreatingGroup={isCreatingGroup}
+      onCancelCreatingGroup={onCancelCreatingGroup}
+      onConfirmCreatingGroup={onConfirmCreatingGroup}
     />
   );
 }

@@ -9,6 +9,7 @@ import { TaskpaneSections } from './components/TaskpaneSections';
 import { useContextMenus } from './hooks/useContextMenus';
 import { useWorksheetDnD } from './hooks/useWorksheetDnD';
 import { useTextPromptState } from './hooks/useTextPromptState';
+import { useGroupCreationState } from './hooks/useGroupCreationState';
 
 export function TaskpaneAppContainer() {
   // The controller owns workbook operations and domain state transitions.
@@ -31,16 +32,30 @@ export function TaskpaneAppContainer() {
     textPrompt,
     textPromptConfig,
     closeTextPrompt,
-    openCreateGroupPrompt,
     openRenameWorksheetPrompt,
     openRenameGroupPrompt,
     submitTextPrompt,
   } = useTextPromptState({
     closeMenus,
-    createGroup: controller.createGroup,
     renameGroup: controller.renameGroup,
     renameWorksheet: controller.renameWorksheet,
   });
+
+  // Inline group creation state (replaces the dialog-based create-group flow).
+  const {
+    isCreating,
+    startCreating: startCreatingGroup,
+    cancelCreating: cancelCreatingGroup,
+    confirmCreating: confirmCreatingGroup,
+  } = useGroupCreationState({ onCreateGroup: controller.createGroup, onSuccess: closeMenus });
+
+  // Close menus and reset creation state when closing from outside.
+  function handleCloseMenus() {
+    closeMenus();
+    if (isCreating) {
+      cancelCreatingGroup();
+    }
+  }
 
   const dragAndDrop = useWorksheetDnD({
     assignWorksheetToGroup: controller.assignWorksheetToGroup,
@@ -141,14 +156,17 @@ export function TaskpaneAppContainer() {
       {/* Right-click context menus for worksheet and group actions. */}
       <TaskpaneMenus
         activeMenu={activeMenu}
-        onCloseMenus={closeMenus}
+        onCloseMenus={handleCloseMenus}
         onTogglePin={handleTogglePin}
         onToggleVisibility={handleToggleVisibility}
         onRenameWorksheet={(worksheet) => openRenameWorksheetPrompt(worksheet.worksheetId, worksheet.name)}
         onRemoveFromGroup={controller.removeWorksheetFromGroup}
-        onCreateGroup={openCreateGroupPrompt}
+        onStartCreatingGroup={startCreatingGroup}
         onRenameGroup={openRenameGroupPrompt}
         onDeleteGroup={handleDeleteGroup}
+        isCreatingGroup={isCreating}
+        onCancelCreatingGroup={cancelCreatingGroup}
+        onConfirmCreatingGroup={confirmCreatingGroup}
       />
 
       {/* Shared dialog used by create group and rename flows. */}

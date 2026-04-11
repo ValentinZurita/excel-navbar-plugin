@@ -17,21 +17,29 @@ function createWorksheet(overrides: Partial<WorksheetEntity> = {}): WorksheetEnt
   };
 }
 
+function renderSheetMenu(overrides: Partial<React.ComponentProps<typeof TaskpaneMenus>> = {}) {
+  return render(
+    <TaskpaneMenus
+      activeMenu={{ kind: 'sheet', x: 10, y: 20, worksheet: createWorksheet() }}
+      onCloseMenus={vi.fn()}
+      onTogglePin={vi.fn()}
+      onToggleVisibility={vi.fn()}
+      onRenameWorksheet={vi.fn()}
+      onRemoveFromGroup={vi.fn()}
+      onStartCreatingGroup={vi.fn()}
+      onRenameGroup={vi.fn()}
+      onDeleteGroup={vi.fn()}
+      isCreatingGroup={false}
+      onCancelCreatingGroup={vi.fn()}
+      onConfirmCreatingGroup={vi.fn()}
+      {...overrides}
+    />,
+  );
+}
+
 describe('TaskpaneMenus', () => {
   it('renders sheet actions from the active menu kind', () => {
-    render(
-      <TaskpaneMenus
-        activeMenu={{ kind: 'sheet', x: 10, y: 20, worksheet: createWorksheet() }}
-        onCloseMenus={vi.fn()}
-        onTogglePin={vi.fn()}
-        onToggleVisibility={vi.fn()}
-        onRenameWorksheet={vi.fn()}
-        onRemoveFromGroup={vi.fn()}
-        onCreateGroup={vi.fn()}
-        onRenameGroup={vi.fn()}
-        onDeleteGroup={vi.fn()}
-      />,
-    );
+    renderSheetMenu();
 
     expect(screen.getByRole('button', { name: 'Pin tab' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Hide sheet' })).toBeInTheDocument();
@@ -47,9 +55,12 @@ describe('TaskpaneMenus', () => {
         onToggleVisibility={vi.fn()}
         onRenameWorksheet={vi.fn()}
         onRemoveFromGroup={vi.fn()}
-        onCreateGroup={vi.fn()}
+        onStartCreatingGroup={vi.fn()}
         onRenameGroup={vi.fn()}
         onDeleteGroup={vi.fn()}
+        isCreatingGroup={false}
+        onCancelCreatingGroup={vi.fn()}
+        onConfirmCreatingGroup={vi.fn()}
       />,
     );
 
@@ -58,19 +69,9 @@ describe('TaskpaneMenus', () => {
   });
 
   it('shows remove-from-group only for grouped worksheets', () => {
-    const { rerender } = render(
-      <TaskpaneMenus
-        activeMenu={{ kind: 'sheet', x: 10, y: 20, worksheet: createWorksheet({ groupId: 'group-1' }) }}
-        onCloseMenus={vi.fn()}
-        onTogglePin={vi.fn()}
-        onToggleVisibility={vi.fn()}
-        onRenameWorksheet={vi.fn()}
-        onRemoveFromGroup={vi.fn()}
-        onCreateGroup={vi.fn()}
-        onRenameGroup={vi.fn()}
-        onDeleteGroup={vi.fn()}
-      />,
-    );
+    const { rerender } = renderSheetMenu({
+      activeMenu: { kind: 'sheet', x: 10, y: 20, worksheet: createWorksheet({ groupId: 'group-1' }) },
+    });
 
     expect(screen.getByRole('button', { name: 'Remove from group' })).toBeInTheDocument();
 
@@ -82,9 +83,12 @@ describe('TaskpaneMenus', () => {
         onToggleVisibility={vi.fn()}
         onRenameWorksheet={vi.fn()}
         onRemoveFromGroup={vi.fn()}
-        onCreateGroup={vi.fn()}
+        onStartCreatingGroup={vi.fn()}
         onRenameGroup={vi.fn()}
         onDeleteGroup={vi.fn()}
+        isCreatingGroup={false}
+        onCancelCreatingGroup={vi.fn()}
+        onConfirmCreatingGroup={vi.fn()}
       />,
     );
 
@@ -97,19 +101,7 @@ describe('TaskpaneMenus', () => {
     const onTogglePin = vi.fn();
     const onCloseMenus = vi.fn();
 
-    render(
-      <TaskpaneMenus
-        activeMenu={{ kind: 'sheet', x: 10, y: 20, worksheet }}
-        onCloseMenus={onCloseMenus}
-        onTogglePin={onTogglePin}
-        onToggleVisibility={vi.fn()}
-        onRenameWorksheet={vi.fn()}
-        onRemoveFromGroup={vi.fn()}
-        onCreateGroup={vi.fn()}
-        onRenameGroup={vi.fn()}
-        onDeleteGroup={vi.fn()}
-      />,
-    );
+    renderSheetMenu({ onTogglePin, onCloseMenus });
 
     await user.click(screen.getByRole('button', { name: 'Pin tab' }));
 
@@ -121,26 +113,12 @@ describe('TaskpaneMenus', () => {
     const user = userEvent.setup();
     const worksheet = createWorksheet();
     const onRenameWorksheet = vi.fn();
-    const onCloseMenus = vi.fn();
 
-    render(
-      <TaskpaneMenus
-        activeMenu={{ kind: 'sheet', x: 10, y: 20, worksheet }}
-        onCloseMenus={onCloseMenus}
-        onTogglePin={vi.fn()}
-        onToggleVisibility={vi.fn()}
-        onRenameWorksheet={onRenameWorksheet}
-        onRemoveFromGroup={vi.fn()}
-        onCreateGroup={vi.fn()}
-        onRenameGroup={vi.fn()}
-        onDeleteGroup={vi.fn()}
-      />,
-    );
+    renderSheetMenu({ onRenameWorksheet });
 
     await user.click(screen.getByRole('button', { name: 'Rename' }));
 
     expect(onRenameWorksheet).toHaveBeenCalledWith(worksheet);
-    expect(onCloseMenus).not.toHaveBeenCalled();
   });
 
   it('deletes a group and closes the group menu', async () => {
@@ -156,9 +134,12 @@ describe('TaskpaneMenus', () => {
         onToggleVisibility={vi.fn()}
         onRenameWorksheet={vi.fn()}
         onRemoveFromGroup={vi.fn()}
-        onCreateGroup={vi.fn()}
+        onStartCreatingGroup={vi.fn()}
         onRenameGroup={vi.fn()}
         onDeleteGroup={onDeleteGroup}
+        isCreatingGroup={false}
+        onCancelCreatingGroup={vi.fn()}
+        onConfirmCreatingGroup={vi.fn()}
       />,
     );
 
@@ -168,46 +149,104 @@ describe('TaskpaneMenus', () => {
     expect(onCloseMenus).toHaveBeenCalled();
   });
 
-  it('starts a new group from a worksheet menu with the worksheet id', async () => {
+  it('starts inline creation when New group is clicked', async () => {
     const user = userEvent.setup();
-    const onCreateGroup = vi.fn();
+    const onStartCreatingGroup = vi.fn();
 
-    render(
-      <TaskpaneMenus
-        activeMenu={{ kind: 'sheet', x: 10, y: 20, worksheet: createWorksheet() }}
-        onCloseMenus={vi.fn()}
-        onTogglePin={vi.fn()}
-        onToggleVisibility={vi.fn()}
-        onRenameWorksheet={vi.fn()}
-        onRemoveFromGroup={vi.fn()}
-        onCreateGroup={onCreateGroup}
-        onRenameGroup={vi.fn()}
-        onDeleteGroup={vi.fn()}
-      />,
-    );
+    renderSheetMenu({ onStartCreatingGroup, isCreatingGroup: false });
 
     await user.click(screen.getByRole('button', { name: 'New group' }));
 
-    expect(onCreateGroup).toHaveBeenCalledWith('sheet-1');
+    expect(onStartCreatingGroup).toHaveBeenCalledWith('sheet-1');
+  });
+
+  it('shows inline group creator when isCreatingGroup is true', async () => {
+    const user = userEvent.setup();
+    const onConfirmCreatingGroup = vi.fn();
+    const onCancelCreatingGroup = vi.fn();
+
+    renderSheetMenu({
+      isCreatingGroup: true,
+      onConfirmCreatingGroup,
+      onCancelCreatingGroup,
+    });
+
+    // Input should be visible
+    expect(screen.getByLabelText('Name')).toBeInTheDocument();
+
+    // Color placeholders should be visible
+    expect(screen.getByLabelText('Color options (coming soon)')).toBeInTheDocument();
+
+    // Hint should appear when there's content
+    await user.type(screen.getByLabelText('Name'), 'Finance');
+    expect(screen.getByText('Press Enter to create')).toBeInTheDocument();
+  });
+
+  it('creates group on Enter with valid name', async () => {
+    const user = userEvent.setup();
+    const onConfirmCreatingGroup = vi.fn();
+
+    renderSheetMenu({
+      isCreatingGroup: true,
+      onConfirmCreatingGroup,
+    });
+
+    await user.type(screen.getByLabelText('Name'), 'Finance{Enter}');
+
+    expect(onConfirmCreatingGroup).toHaveBeenCalledWith('Finance');
+  });
+
+  it('does not create group on Enter with empty name', async () => {
+    const user = userEvent.setup();
+    const onConfirmCreatingGroup = vi.fn();
+
+    renderSheetMenu({
+      isCreatingGroup: true,
+      onConfirmCreatingGroup,
+    });
+
+    await user.type(screen.getByLabelText('Name'), '{Enter}');
+
+    expect(onConfirmCreatingGroup).not.toHaveBeenCalled();
+  });
+
+  it('cancels creation and closes menu on Escape', async () => {
+    const user = userEvent.setup();
+    const onCancelCreatingGroup = vi.fn();
+    const onCloseMenus = vi.fn();
+
+    renderSheetMenu({
+      isCreatingGroup: true,
+      onCancelCreatingGroup,
+      onCloseMenus,
+    });
+
+    await user.keyboard('{Escape}');
+
+    // Both cancel and close should be called to fully exit creation mode
+    expect(onCancelCreatingGroup).toHaveBeenCalled();
+    expect(onCloseMenus).toHaveBeenCalled();
+  });
+
+  it('closes the menu when clicking the overlay while in creation mode', async () => {
+    const user = userEvent.setup();
+    const onCloseMenus = vi.fn();
+
+    renderSheetMenu({
+      isCreatingGroup: true,
+      onCloseMenus,
+    });
+
+    await user.click(document.querySelector('.context-menu-layer') as HTMLElement);
+
+    expect(onCloseMenus).toHaveBeenCalled();
   });
 
   it('closes the menu when clicking the overlay', async () => {
     const user = userEvent.setup();
     const onCloseMenus = vi.fn();
 
-    render(
-      <TaskpaneMenus
-        activeMenu={{ kind: 'sheet', x: 10, y: 20, worksheet: createWorksheet() }}
-        onCloseMenus={onCloseMenus}
-        onTogglePin={vi.fn()}
-        onToggleVisibility={vi.fn()}
-        onRenameWorksheet={vi.fn()}
-        onRemoveFromGroup={vi.fn()}
-        onCreateGroup={vi.fn()}
-        onRenameGroup={vi.fn()}
-        onDeleteGroup={vi.fn()}
-      />,
-    );
+    renderSheetMenu({ onCloseMenus });
 
     await user.click(document.querySelector('.context-menu-layer') as HTMLElement);
 

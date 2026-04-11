@@ -1,0 +1,65 @@
+.inline-group-creator {
+  display: grid;
+  gap: 8px;
+  padding: 6px 10px 8px;
+}
+
+.inline-group-creator-field {
+  display: grid;
+  gap: 4px;
+}
+
+.inline-group-creator-label {
+  font-size: 11px;
+  color: var(--excel-muted);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.inline-group-creator-input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--excel-border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  background: var(--excel-control-bg);
+  color: var(--excel-body-fg);
+  font-size: 12px;
+  line-height: 1.4;
+  caret-color: var(--excel-body-fg);
+  -webkit-text-fill-color: var(--excel-body-fg);
+  appearance: none;
+}
+
+.inline-group-creator-input::placeholder {
+  color: var(--excel-muted);
+  opacity: 1;
+}
+
+.inline-group-creator-input:focus {
+  outline: none;
+  border-color: var(--excel-accent, #0078d4);
+  box-shadow: 0 0 0 1px var(--excel-accent, #0078d4);
+}
+
+.inline-group-creator-colors {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.inline-group-creator-color-placeholder {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--excel-muted) 30%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--excel-muted) 50%, transparent);
+  flex-shrink: 0;
+}
+
+.inline-group-creator-hint {
+  font-size: 10px;
+  color: var(--excel-muted);
+  text-align: center;
+  padding-top: 2px;
+}
