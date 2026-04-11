@@ -1,34 +1,54 @@
-import type { DragEvent } from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import type {
+  WorksheetContainerId,
+  WorksheetDropKind,
+} from '../../taskpane/dnd/worksheetDndModel';
 import './WorksheetDropZone.css';
 
 interface WorksheetDropZoneProps {
-  testId: string;
   dropTargetId: string;
-  isDragActive: boolean;
+  containerId: WorksheetContainerId;
+  index: number;
+  kind: WorksheetDropKind;
   isActive: boolean;
-  onDragOver: (event: DragEvent<HTMLDivElement>, dropTargetId: string) => void;
-  onDrop: (event: DragEvent<HTMLDivElement>) => void;
+  isDragActive: boolean;
+  isEmpty?: boolean;
+  testId?: string;
 }
 
 export function WorksheetDropZone({
-  testId,
   dropTargetId,
-  isDragActive,
+  containerId,
+  index,
+  kind,
   isActive,
-  onDragOver,
-  onDrop,
+  isDragActive,
+  isEmpty,
+  testId,
 }: WorksheetDropZoneProps) {
+  const { setNodeRef } = useDroppable({
+    id: dropTargetId,
+    data: {
+      type: 'worksheet-drop-target',
+      containerId,
+      index,
+      kind,
+    },
+    disabled: !isDragActive,
+  });
+
   if (!isDragActive) {
     return null;
   }
 
   return (
     <div
+      ref={setNodeRef}
       aria-hidden="true"
       data-testid={testId}
-      className={`worksheet-drop-zone ${isActive ? 'worksheet-drop-zone-active' : ''}`}
-      onDragOver={(event) => onDragOver(event, dropTargetId)}
-      onDrop={onDrop}
-    />
+      className={`worksheet-drop-zone ${isEmpty ? 'worksheet-drop-zone-empty' : ''}`}
+    >
+      <div className={`worksheet-insertion-line ${isActive ? 'worksheet-insertion-line-active' : ''}`} />
+    </div>
   );
 }

@@ -51,6 +51,7 @@ function createControllerMock() {
     errorMessage: null,
     setQuery: vi.fn(),
     toggleGroupCollapsed: vi.fn(),
+    setGroupCollapsed: vi.fn(),
     toggleHiddenSection: vi.fn(),
     createGroup: vi.fn(),
     renameGroup: vi.fn(),
@@ -66,15 +67,6 @@ function createControllerMock() {
     unhideWorksheet: vi.fn().mockResolvedValue(undefined),
     hideWorksheet: vi.fn().mockResolvedValue(undefined),
     reload: vi.fn().mockResolvedValue(undefined),
-  };
-}
-
-function createDragDataTransfer() {
-  return {
-    effectAllowed: 'move',
-    dropEffect: 'move',
-    setData: vi.fn(),
-    getData: vi.fn(),
   };
 }
 
@@ -176,135 +168,5 @@ describe('TaskpaneAppContainer', () => {
     await user.click(within(confirmDialog).getByRole('button', { name: 'Delete group' }));
 
     expect(controller.deleteGroup).toHaveBeenCalledWith('group-1');
-  });
-
-  it('drops an ungrouped sheet into a group header', () => {
-    const controller = createControllerMock() as any;
-    controller.state.groupsById = {
-      'group-1': {
-        groupId: 'group-1',
-        name: 'Finance',
-        colorToken: 'green',
-        isCollapsed: false,
-        worksheetOrder: [],
-        createdAt: 1,
-      },
-    };
-    controller.state.groupOrder = ['group-1'];
-    controller.navigatorView.groups = [
-      {
-        groupId: 'group-1',
-        name: 'Finance',
-        colorToken: 'green',
-        isCollapsed: false,
-        worksheets: [],
-      },
-    ];
-
-    useNavigationControllerMock.mockReturnValue(controller);
-
-    render(<TaskpaneAppContainer />);
-
-    const dataTransfer = createDragDataTransfer();
-    const worksheetRow = screen.getByRole('button', { name: 'Revenue' }).closest('article');
-    const groupHeader = screen.getByRole('button', { name: 'Finance' }).closest('header');
-
-    expect(worksheetRow).not.toBeNull();
-    expect(groupHeader).not.toBeNull();
-
-    fireEvent.dragStart(worksheetRow as HTMLElement, { dataTransfer });
-    fireEvent.dragOver(groupHeader as HTMLElement, { dataTransfer });
-    fireEvent.drop(groupHeader as HTMLElement, { dataTransfer });
-    fireEvent.dragEnd(worksheetRow as HTMLElement, { dataTransfer });
-
-    expect(controller.assignWorksheetToGroup).toHaveBeenCalledWith('sheet-1', 'group-1', 0);
-  });
-
-  it('drops a grouped sheet back into the Sheets section', () => {
-    const controller = createControllerMock() as any;
-    const groupedWorksheet = createWorksheet({ worksheetId: 'sheet-2', name: 'Budget', groupId: 'group-1', isPinned: false });
-
-    controller.state.worksheetsById = { [groupedWorksheet.worksheetId]: groupedWorksheet };
-    controller.state.groupsById = {
-      'group-1': {
-        groupId: 'group-1',
-        name: 'Finance',
-        colorToken: 'green',
-        isCollapsed: false,
-        worksheetOrder: ['sheet-2'],
-        createdAt: 1,
-      },
-    };
-    controller.state.groupOrder = ['group-1'];
-    controller.state.sheetSectionOrder = ['sheet-2'];
-    controller.navigatorView.groups = [
-      {
-        groupId: 'group-1',
-        name: 'Finance',
-        colorToken: 'green',
-        isCollapsed: false,
-        worksheets: [groupedWorksheet],
-      },
-    ];
-    controller.navigatorView.ungrouped = [];
-
-    useNavigationControllerMock.mockReturnValue(controller);
-
-    render(<TaskpaneAppContainer />);
-
-    const dataTransfer = createDragDataTransfer();
-    const groupedRow = screen.getByRole('button', { name: 'Budget' }).closest('article');
-
-    expect(groupedRow).not.toBeNull();
-
-    fireEvent.dragStart(groupedRow as HTMLElement, { dataTransfer });
-    fireEvent.dragOver(screen.getByTestId('sheet-section-drop-0'), { dataTransfer });
-    fireEvent.drop(screen.getByTestId('sheet-section-drop-0'), { dataTransfer });
-    fireEvent.dragEnd(groupedRow as HTMLElement, { dataTransfer });
-
-    expect(controller.removeWorksheetFromGroup).toHaveBeenCalledWith('sheet-2', 0);
-  });
-
-  it('reorders an ungrouped sheet upward when dropped on a row body', () => {
-    const controller = createControllerMock() as any;
-    const topWorksheet = createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', workbookOrder: 1 });
-    const bottomWorksheet = createWorksheet({ worksheetId: 'sheet-2', name: 'Budget', workbookOrder: 2 });
-
-    controller.state.worksheetsById = {
-      'sheet-1': topWorksheet,
-      'sheet-2': bottomWorksheet,
-    };
-    controller.state.sheetSectionOrder = ['sheet-1', 'sheet-2'];
-    controller.navigatorView.ungrouped = [topWorksheet, bottomWorksheet];
-
-    useNavigationControllerMock.mockReturnValue(controller);
-
-    render(<TaskpaneAppContainer />);
-
-    const dataTransfer = createDragDataTransfer();
-    const draggedRow = screen.getByRole('button', { name: 'Budget' }).closest('article');
-    const targetRow = screen.getByRole('button', { name: 'Revenue' }).closest('article');
-
-    expect(draggedRow).not.toBeNull();
-    expect(targetRow).not.toBeNull();
-
-    vi.spyOn(targetRow as HTMLElement, 'getBoundingClientRect').mockReturnValue({
-      x: 0,
-      y: 0,
-      top: 0,
-      left: 0,
-      right: 200,
-      bottom: 40,
-      width: 200,
-      height: 40,
-      toJSON: () => ({}),
-    });
-
-    fireEvent.dragStart(draggedRow as HTMLElement, { dataTransfer });
-    fireEvent.dragOver(targetRow as HTMLElement, { dataTransfer, clientY: 5 });
-    fireEvent.drop(targetRow as HTMLElement, { dataTransfer, clientY: 5 });
-    fireEvent.dragEnd(draggedRow as HTMLElement, { dataTransfer });
-
-    expect(controller.reorderSheetSectionWorksheet).toHaveBeenCalledWith('sheet-2', 0);
   });
 });

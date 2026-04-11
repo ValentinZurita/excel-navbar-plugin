@@ -1,17 +1,19 @@
-import type { DragEvent } from 'react';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
+import type {
+  WorksheetContainerId,
+  WorksheetProjectedDropTarget,
+} from '../../taskpane/dnd/worksheetDndModel';
 import { SheetRow } from '../SheetRow';
+import { SortableWorksheetRow } from '../SortableWorksheetRow';
 import { WorksheetDropZone } from '../WorksheetDropZone';
 
 interface SheetListDragConfig {
-  draggedWorksheetId: string | null;
-  activeDropTargetId: string | null;
-  dropTargetPrefix: string;
+  containerId: WorksheetContainerId;
+  activeWorksheetId: string | null;
+  projectedDropTarget: WorksheetProjectedDropTarget | null;
   isDragActive: boolean;
-  onStartDrag: (event: DragEvent<HTMLElement>, worksheet: WorksheetEntity) => void;
-  onEndDrag: () => void;
-  onDragOverDropZone: (event: DragEvent<HTMLElement>, dropTargetId: string) => void;
-  onDropAtIndex: (event: DragEvent<HTMLElement>, targetIndex: number) => void;
+  shouldSuppressActivation: (worksheetId: string) => boolean;
 }
 
 interface SheetListProps {
@@ -29,65 +31,65 @@ export function SheetList(props: SheetListProps) {
     return null;
   }
 
-  function resolveTargetIndex(event: DragEvent<HTMLElement>, rowIndex: number) {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    if (bounds.height <= 0) {
-      return rowIndex;
-    }
+  const dragConfig = props.dragConfig;
 
-    const pointerY = Number.isFinite(event.clientY) ? event.clientY : bounds.top;
-    const pointerOffset = pointerY - bounds.top;
-    return pointerOffset < bounds.height / 2 ? rowIndex : rowIndex + 1;
-  }
+  const endDropLineActive = Boolean(
+    dragConfig &&
+      dragConfig.projectedDropTarget?.containerId === dragConfig.containerId &&
+      dragConfig.projectedDropTarget.index === props.worksheets.length,
+  );
 
-  return (
-    <div className="sheet-list">
-      {props.dragConfig ? (
-        <WorksheetDropZone
-          testId={`${props.dragConfig.dropTargetPrefix}-drop-0`}
-          dropTargetId={`${props.dragConfig.dropTargetPrefix}:0`}
-          isDragActive={props.dragConfig.isDragActive}
-          isActive={props.dragConfig.activeDropTargetId === `${props.dragConfig.dropTargetPrefix}:0`}
-          onDragOver={props.dragConfig.onDragOverDropZone}
-          onDrop={(event) => props.dragConfig?.onDropAtIndex(event, 0)}
-        />
-      ) : null}
-
-      {props.worksheets.map((worksheet, index) => (
-        <div key={worksheet.worksheetId}>
+  if (!dragConfig) {
+    return (
+      <div className="sheet-list">
+        {props.worksheets.map((worksheet) => (
           <SheetRow
+            key={worksheet.worksheetId}
             worksheet={worksheet}
             isActive={worksheet.worksheetId === props.activeWorksheetId}
             isContextMenuOpen={worksheet.worksheetId === props.contextMenuOpenId}
-            isDragged={props.dragConfig?.draggedWorksheetId === worksheet.worksheetId}
-            draggable={props.dragConfig?.isDragActive !== undefined ? worksheet.visibility === 'Visible' && !worksheet.isPinned : undefined}
             onActivate={props.onActivate}
             onTogglePin={props.onTogglePin}
-            onDragStart={props.dragConfig?.onStartDrag}
-            onDragEnd={props.dragConfig?.onEndDrag}
-            onDragOver={props.dragConfig ? (event) => {
-              const targetIndex = resolveTargetIndex(event, index);
-              props.dragConfig?.onDragOverDropZone(event, `${props.dragConfig.dropTargetPrefix}:${targetIndex}`);
-            } : undefined}
-            onDrop={props.dragConfig ? (event) => {
-              const targetIndex = resolveTargetIndex(event, index);
-              props.dragConfig?.onDropAtIndex(event, targetIndex);
-            } : undefined}
             onOpenContextMenu={props.onOpenContextMenu}
           />
+        ))}
+      </div>
+    );
+  }
 
-          {props.dragConfig ? (
-            <WorksheetDropZone
-              testId={`${props.dragConfig.dropTargetPrefix}-drop-${index + 1}`}
-              dropTargetId={`${props.dragConfig.dropTargetPrefix}:${index + 1}`}
-              isDragActive={props.dragConfig.isDragActive}
-              isActive={props.dragConfig.activeDropTargetId === `${props.dragConfig.dropTargetPrefix}:${index + 1}`}
-              onDragOver={props.dragConfig.onDragOverDropZone}
-              onDrop={(event) => props.dragConfig?.onDropAtIndex(event, index + 1)}
-            />
-          ) : null}
-        </div>
-      ))}
-    </div>
+  return (
+    <SortableContext items={props.worksheets.map((worksheet) => worksheet.worksheetId)} strategy={verticalListSortingStrategy}>
+      <div className="sheet-list">
+        {props.worksheets.map((worksheet, index) => (
+          <SortableWorksheetRow
+            key={worksheet.worksheetId}
+            worksheet={worksheet}
+            containerId={dragConfig.containerId}
+            index={index}
+            isActive={worksheet.worksheetId === props.activeWorksheetId}
+            isContextMenuOpen={worksheet.worksheetId === props.contextMenuOpenId}
+            isInsertionBefore={
+              dragConfig.projectedDropTarget?.containerId === dragConfig.containerId &&
+              dragConfig.projectedDropTarget.index === index
+            }
+            shouldSuppressActivation={dragConfig.shouldSuppressActivation}
+            onActivate={props.onActivate}
+            onTogglePin={props.onTogglePin}
+            onOpenContextMenu={props.onOpenContextMenu}
+          />
+        ))}
+
+        <WorksheetDropZone
+          dropTargetId={`${dragConfig.containerId}:end`}
+          containerId={dragConfig.containerId}
+          index={props.worksheets.length}
+          kind="container-end"
+          isActive={endDropLineActive}
+          isDragActive={dragConfig.isDragActive}
+          isEmpty={props.worksheets.length === 0}
+          testId={`${dragConfig.containerId}-drop-end`}
+        />
+      </div>
+    </SortableContext>
   );
 }

@@ -1,16 +1,13 @@
-import type { DragEvent } from 'react';
-import type { NavigatorGroupView } from '../../../domain/navigation/types';
+import type { NavigatorGroupView, WorksheetEntity } from '../../../domain/navigation/types';
+import type { WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
 import { GroupCard } from '../GroupCard';
 
 interface GroupDragConfig {
-  draggedWorksheetId: string | null;
-  activeDropTargetId: string | null;
+  activeWorksheetId: string | null;
+  projectedDropTarget: WorksheetProjectedDropTarget | null;
   isDragActive: boolean;
-  onStartDrag: (event: DragEvent<HTMLElement>, worksheet: NavigatorGroupView['worksheets'][number]) => void;
-  onEndDrag: () => void;
-  onDragOverDropZone: (event: DragEvent<HTMLElement>, dropTargetId: string) => void;
-  onDropAtIndex: (event: DragEvent<HTMLElement>, groupId: string, targetIndex: number) => void;
-  onDropOnHeader: (event: DragEvent<HTMLElement>, groupId: string, worksheetCount: number) => void;
+  shouldSuppressActivation: (worksheetId: string) => boolean;
+  getDisplayedWorksheets: (group: NavigatorGroupView) => WorksheetEntity[];
 }
 
 interface GroupSectionProps {
@@ -29,7 +26,12 @@ export function GroupSection(props: GroupSectionProps) {
   return (
     <div className="group-list">
       {props.groups.map((group) => (
-        <GroupCard key={group.groupId} group={group} {...props} />
+        <GroupCard
+          key={group.groupId}
+          group={group}
+          displayedWorksheets={props.dragConfig?.getDisplayedWorksheets(group) ?? group.worksheets}
+          {...props}
+        />
       ))}
     </div>
   );

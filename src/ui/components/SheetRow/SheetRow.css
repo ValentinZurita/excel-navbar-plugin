@@ -12,6 +12,7 @@
     border-color 140ms ease,
     box-shadow 140ms ease,
     transform 160ms ease;
+  cursor: pointer;
 }
 
 .sheet-row-grouped {
@@ -40,6 +41,10 @@
 
 .sheet-row-dragging {
   opacity: 0.45;
+}
+
+.sheet-row-overlay {
+  pointer-events: none;
 }
 
 /* Pin button stays hidden until row interaction. */
@@ -101,11 +106,4 @@
   display: flex;
   align-items: center;
   min-width: 0;
-}
-
-.sheet-link::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 1;
 }

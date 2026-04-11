@@ -14,6 +14,7 @@ export type NavigationAction =
   | { type: 'hydrateFromPersistence'; model: PersistedNavigationModel | null }
   | { type: 'setQuery'; query: string }
   | { type: 'toggleGroupCollapsed'; groupId: string }
+  | { type: 'setGroupCollapsed'; groupId: string; isCollapsed: boolean }
   | { type: 'toggleHiddenSection' }
   | { type: 'createGroup'; name: string; colorToken?: GroupColorToken; initialWorksheetId?: string }
   | { type: 'renameGroup'; groupId: string; name: string }
@@ -195,6 +196,20 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
         },
       };
     }
+    case 'setGroupCollapsed': {
+      const group = state.groupsById[action.groupId];
+      if (!group || group.isCollapsed === action.isCollapsed) {
+        return state;
+      }
+
+      return {
+        ...state,
+        groupsById: {
+          ...state.groupsById,
+          [action.groupId]: { ...group, isCollapsed: action.isCollapsed },
+        },
+      };
+    }
     case 'toggleHiddenSection':
       return { ...state, hiddenSectionCollapsed: !state.hiddenSectionCollapsed };
     case 'createGroup': {
@@ -281,6 +296,7 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
         action.worksheetId,
         action.targetIndex ?? nextState.groupsById[action.groupId].worksheetOrder.length,
       );
+      nextState.groupsById[action.groupId].isCollapsed = false;
 
       return nextState;
     }

@@ -1,22 +1,21 @@
-import type { DragEvent } from 'react';
+import { useDroppable } from '@dnd-kit/core';
 import type { NavigatorGroupView } from '../../../domain/navigation/types';
+import type { WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
+import { toGroupContainerId } from '../../taskpane/dnd/worksheetDndModel';
 import { GroupFolderIcon } from '../../icons';
 import { SheetList } from '../SheetList';
 import './GroupCard.css';
 
 interface GroupDragConfig {
-  draggedWorksheetId: string | null;
-  activeDropTargetId: string | null;
+  activeWorksheetId: string | null;
+  projectedDropTarget: WorksheetProjectedDropTarget | null;
   isDragActive: boolean;
-  onStartDrag: (event: DragEvent<HTMLElement>, worksheet: NavigatorGroupView['worksheets'][number]) => void;
-  onEndDrag: () => void;
-  onDragOverDropZone: (event: DragEvent<HTMLElement>, dropTargetId: string) => void;
-  onDropAtIndex: (event: DragEvent<HTMLElement>, groupId: string, targetIndex: number) => void;
-  onDropOnHeader: (event: DragEvent<HTMLElement>, groupId: string, worksheetCount: number) => void;
+  shouldSuppressActivation: (worksheetId: string) => boolean;
 }
 
 interface GroupCardProps {
   group: NavigatorGroupView;
+  displayedWorksheets: NavigatorGroupView['worksheets'];
   activeWorksheetId: string | null;
   contextMenuOpenId?: string;
   groupMenuOpenId?: string;
@@ -27,11 +26,35 @@ interface GroupCardProps {
   onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
 }
 
-export function GroupCard({ group, onToggleCollapsed, onOpenGroupMenu, onOpenSheetMenu, ...rest }: GroupCardProps) {
+export function GroupCard({
+  group,
+  displayedWorksheets,
+  onToggleCollapsed,
+  onOpenGroupMenu,
+  onOpenSheetMenu,
+  ...rest
+}: GroupCardProps) {
+  const containerId = toGroupContainerId(group.groupId);
+  const { setNodeRef } = useDroppable({
+    id: `group-header:${group.groupId}`,
+    data: {
+      type: 'worksheet-drop-target',
+      containerId,
+      index: displayedWorksheets.length,
+      kind: 'group-header',
+    },
+    disabled: !rest.dragConfig?.isDragActive,
+  });
+
+  const isDropActive = Boolean(
+    rest.dragConfig &&
+      rest.dragConfig.projectedDropTarget?.containerId === containerId &&
+      rest.dragConfig.projectedDropTarget.kind === 'group-header',
+  );
+
   return (
     <section
       className="group-card"
-      // Group menu opens from the card container to include header and child rows.
       onContextMenu={(event) => {
         event.preventDefault();
         onOpenGroupMenu({
@@ -44,9 +67,8 @@ export function GroupCard({ group, onToggleCollapsed, onOpenGroupMenu, onOpenShe
       }}
     >
       <header
-        className={`group-header ${group.groupId === rest.groupMenuOpenId ? 'group-header-context-open' : ''} ${rest.dragConfig?.activeDropTargetId === `group-header:${group.groupId}` ? 'group-header-drop-active' : ''}`}
-        onDragOver={(event) => rest.dragConfig?.onDragOverDropZone(event, `group-header:${group.groupId}`)}
-        onDrop={(event) => rest.dragConfig?.onDropOnHeader(event, group.groupId, group.worksheets.length)}
+        ref={setNodeRef}
+        className={`group-header ${group.groupId === rest.groupMenuOpenId ? 'group-header-context-open' : ''} ${isDropActive ? 'group-header-drop-active' : ''}`}
       >
         <button className="group-toggle" type="button" onClick={() => onToggleCollapsed(group.groupId)}>
           <span className="group-leading" aria-hidden="true">
@@ -60,18 +82,15 @@ export function GroupCard({ group, onToggleCollapsed, onOpenGroupMenu, onOpenShe
 
       {!group.isCollapsed ? (
         <SheetList
-          worksheets={group.worksheets}
+          worksheets={displayedWorksheets}
           activeWorksheetId={rest.activeWorksheetId}
           contextMenuOpenId={rest.contextMenuOpenId}
           dragConfig={rest.dragConfig ? {
-            draggedWorksheetId: rest.dragConfig.draggedWorksheetId,
-            activeDropTargetId: rest.dragConfig.activeDropTargetId,
-            dropTargetPrefix: `group:${group.groupId}`,
+            containerId,
+            activeWorksheetId: rest.dragConfig.activeWorksheetId,
+            projectedDropTarget: rest.dragConfig.projectedDropTarget,
             isDragActive: rest.dragConfig.isDragActive,
-            onStartDrag: rest.dragConfig.onStartDrag,
-            onEndDrag: rest.dragConfig.onEndDrag,
-            onDragOverDropZone: rest.dragConfig.onDragOverDropZone,
-            onDropAtIndex: (event, targetIndex) => rest.dragConfig?.onDropAtIndex(event, group.groupId, targetIndex),
+            shouldSuppressActivation: rest.dragConfig.shouldSuppressActivation,
           } : undefined}
           onActivate={rest.onActivate}
           onOpenContextMenu={onOpenSheetMenu}

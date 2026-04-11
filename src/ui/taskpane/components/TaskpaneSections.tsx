@@ -1,22 +1,38 @@
-import type { DragEvent } from 'react';
-import type { NavigatorView } from '../../../domain/navigation/types';
+import {
+  DndContext,
+  DragOverlay,
+  MeasuringStrategy,
+  closestCorners,
+  type DragCancelEvent,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+  type SensorDescriptor,
+} from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import type { NavigatorView, WorksheetEntity } from '../../../domain/navigation/types';
 import { GroupSection } from '../../components/GroupSection';
 import { HiddenSection } from '../../components/HiddenSection';
 import { SearchBox } from '../../components/SearchBox';
 import { Section } from '../../components/Section';
 import { SheetList } from '../../components/SheetList';
+import { SheetRow } from '../../components/SheetRow';
+import type { WorksheetContainerId, WorksheetProjectedDropTarget } from '../dnd/worksheetDndModel';
+import { toGroupContainerId } from '../dnd/worksheetDndModel';
 import type { OpenGroupMenuArgs, OpenSheetMenuArgs } from '../types/contextMenuTypes';
 
 interface WorksheetDragConfig {
-  draggedWorksheetId: string | null;
-  activeDropTargetId: string | null;
+  sensors: SensorDescriptor<any>[];
+  activeWorksheetId: string | null;
+  activeWorksheet: WorksheetEntity | null;
+  projectedDropTarget: WorksheetProjectedDropTarget | null;
   isDragActive: boolean;
-  onStartDrag: (event: DragEvent<HTMLElement>, worksheet: NavigatorView['ungrouped'][number]) => void;
-  onEndDrag: () => void;
-  onDragOverDropZone: (event: DragEvent<HTMLElement>, dropTargetId: string) => void;
-  onDropIntoSheetSection: (event: DragEvent<HTMLElement>, targetIndex: number) => void;
-  onDropIntoGroup: (event: DragEvent<HTMLElement>, groupId: string, targetIndex: number) => void;
-  onDropIntoGroupHeader: (event: DragEvent<HTMLElement>, groupId: string, worksheetCount: number) => void;
+  getContainerWorksheets: (containerId: WorksheetContainerId, fallback: WorksheetEntity[]) => WorksheetEntity[];
+  shouldSuppressActivation: (worksheetId: string) => boolean;
+  onDragStart: (event: DragStartEvent) => void;
+  onDragOver: (event: DragOverEvent) => void;
+  onDragEnd: (event: DragEndEvent) => void;
+  onDragCancel: (event: DragCancelEvent) => void;
 }
 
 interface TaskpaneSectionsProps {
@@ -60,9 +76,10 @@ export function TaskpaneSections({
   onOpenSheetMenu,
   onOpenGroupMenu,
 }: TaskpaneSectionsProps) {
+  const displayedUngrouped = dragConfig.getContainerWorksheets('sheets', navigatorView.ungrouped);
+
   return (
     <>
-      {/* Search stays first so keyboard users can navigate immediately. */}
       <SearchBox
         value={query}
         onChange={onChangeQuery}
@@ -70,7 +87,6 @@ export function TaskpaneSections({
         onSelect={onSelectSearchResult}
       />
 
-      {/* Pinned tabs are rendered as a dedicated section for quick access. */}
       {navigatorView.pinned.length ? (
         <Section title="Pinned">
           <SheetList
@@ -84,59 +100,80 @@ export function TaskpaneSections({
         </Section>
       ) : null}
 
-      {/* User-defined groups with collapse behavior and own context menu. */}
-      {navigatorView.groups.length ? (
-        <Section title="Groups">
-          <GroupSection
-            groups={navigatorView.groups}
-            activeWorksheetId={activeWorksheetId}
-            contextMenuOpenId={contextMenuOpenSheetId}
-            groupMenuOpenId={contextMenuOpenGroupId}
-            dragConfig={{
-              draggedWorksheetId: dragConfig.draggedWorksheetId,
-              activeDropTargetId: dragConfig.activeDropTargetId,
-              isDragActive: dragConfig.isDragActive,
-              onStartDrag: dragConfig.onStartDrag,
-              onEndDrag: dragConfig.onEndDrag,
-              onDragOverDropZone: dragConfig.onDragOverDropZone,
-              onDropAtIndex: dragConfig.onDropIntoGroup,
-              onDropOnHeader: dragConfig.onDropIntoGroupHeader,
-            }}
-            onActivate={onActivateWorksheet}
-            onToggleCollapsed={onToggleGroupCollapsed}
-            onOpenGroupMenu={onOpenGroupMenu}
-            onOpenSheetMenu={onOpenSheetMenu}
-          />
-        </Section>
-      ) : null}
-
-      {/* Ungrouped visible worksheets stay after pinned tabs and groups. */}
-      {navigatorView.ungrouped.length || dragConfig.isDragActive ? (
-        <Section title="Sheets">
-          <div className="primary-tabs">
-            <SheetList
-              worksheets={navigatorView.ungrouped}
+      <DndContext
+        sensors={dragConfig.sensors}
+        collisionDetection={closestCorners}
+        modifiers={[restrictToVerticalAxis]}
+        measuring={{
+          droppable: {
+            strategy: MeasuringStrategy.Always,
+          },
+        }}
+        onDragStart={dragConfig.onDragStart}
+        onDragOver={dragConfig.onDragOver}
+        onDragEnd={dragConfig.onDragEnd}
+        onDragCancel={dragConfig.onDragCancel}
+      >
+        {navigatorView.groups.length ? (
+          <Section title="Groups">
+            <GroupSection
+              groups={navigatorView.groups}
               activeWorksheetId={activeWorksheetId}
               contextMenuOpenId={contextMenuOpenSheetId}
+              groupMenuOpenId={contextMenuOpenGroupId}
               dragConfig={{
-                draggedWorksheetId: dragConfig.draggedWorksheetId,
-                activeDropTargetId: dragConfig.activeDropTargetId,
-                dropTargetPrefix: 'sheet-section',
+                activeWorksheetId: dragConfig.activeWorksheetId,
+                projectedDropTarget: dragConfig.projectedDropTarget,
                 isDragActive: dragConfig.isDragActive,
-                onStartDrag: dragConfig.onStartDrag,
-                onEndDrag: dragConfig.onEndDrag,
-                onDragOverDropZone: dragConfig.onDragOverDropZone,
-                onDropAtIndex: dragConfig.onDropIntoSheetSection,
+                shouldSuppressActivation: dragConfig.shouldSuppressActivation,
+                getDisplayedWorksheets: (group) => dragConfig.getContainerWorksheets(
+                  toGroupContainerId(group.groupId),
+                  group.worksheets,
+                ),
               }}
               onActivate={onActivateWorksheet}
-              onTogglePin={onPinWorksheet}
-              onOpenContextMenu={onOpenSheetMenu}
+              onToggleCollapsed={onToggleGroupCollapsed}
+              onOpenGroupMenu={onOpenGroupMenu}
+              onOpenSheetMenu={onOpenSheetMenu}
             />
-          </div>
-        </Section>
-      ) : null}
+          </Section>
+        ) : null}
 
-      {/* Hidden sheets stay separated to avoid accidental navigation noise. */}
+        {displayedUngrouped.length || dragConfig.isDragActive ? (
+          <Section title="Sheets">
+            <div className="primary-tabs">
+              <SheetList
+                worksheets={displayedUngrouped}
+                activeWorksheetId={activeWorksheetId}
+                contextMenuOpenId={contextMenuOpenSheetId}
+                dragConfig={{
+                  containerId: 'sheets',
+                  activeWorksheetId: dragConfig.activeWorksheetId,
+                  projectedDropTarget: dragConfig.projectedDropTarget,
+                  isDragActive: dragConfig.isDragActive,
+                  shouldSuppressActivation: dragConfig.shouldSuppressActivation,
+                }}
+                onActivate={onActivateWorksheet}
+                onTogglePin={onPinWorksheet}
+                onOpenContextMenu={onOpenSheetMenu}
+              />
+            </div>
+          </Section>
+        ) : null}
+
+        <DragOverlay>
+          {dragConfig.activeWorksheet ? (
+            <SheetRow
+              worksheet={dragConfig.activeWorksheet}
+              isActive={false}
+              isOverlay
+              onActivate={() => undefined}
+              onOpenContextMenu={() => undefined}
+            />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+
       {navigatorView.hidden.length ? (
         <HiddenSection
           isCollapsed={isHiddenSectionCollapsed}

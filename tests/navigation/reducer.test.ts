@@ -133,4 +133,27 @@ describe('navigationReducer', () => {
     expect(nextState.groupOrder).toEqual([]);
     expect(nextState.sheetSectionOrder).toEqual(['one']);
   });
+
+  it('sets group collapsed state explicitly', () => {
+    const state = createDefaultNavigationState();
+    state.groupOrder = ['group-1'];
+    state.groupsById = {
+      'group-1': {
+        groupId: 'group-1',
+        name: 'Core',
+        colorToken: 'blue',
+        isCollapsed: true,
+        worksheetOrder: [],
+        createdAt: 1,
+      },
+    };
+
+    const nextState = navigationReducer(state, {
+      type: 'setGroupCollapsed',
+      groupId: 'group-1',
+      isCollapsed: false,
+    });
+
+    expect(nextState.groupsById['group-1'].isCollapsed).toBe(false);
+  });
 });

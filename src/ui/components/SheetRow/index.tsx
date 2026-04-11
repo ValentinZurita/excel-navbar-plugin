@@ -1,4 +1,4 @@
-import type { DragEvent } from 'react';
+import type { CSSProperties, HTMLAttributes, Ref } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import { WorksheetPinIcon } from '../../icons';
 import './SheetRow.css';
@@ -8,13 +8,12 @@ interface SheetRowProps {
   isActive: boolean;
   isContextMenuOpen?: boolean;
   isDragged?: boolean;
-  draggable?: boolean;
+  isOverlay?: boolean;
+  containerRef?: Ref<HTMLElement>;
+  containerStyle?: CSSProperties;
+  containerProps?: HTMLAttributes<HTMLElement>;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onTogglePin?: (worksheetId: string) => void;
-  onDragStart?: (event: DragEvent<HTMLElement>, worksheet: WorksheetEntity) => void;
-  onDragEnd?: () => void;
-  onDragOver?: (event: DragEvent<HTMLElement>, worksheet: WorksheetEntity) => void;
-  onDrop?: (event: DragEvent<HTMLElement>, worksheet: WorksheetEntity) => void;
   onOpenContextMenu: (args: {
     target: HTMLElement;
     x: number;
@@ -28,26 +27,31 @@ export function SheetRow({
   isActive,
   isContextMenuOpen,
   isDragged,
-  draggable,
+  isOverlay,
+  containerRef,
+  containerStyle,
+  containerProps,
   onActivate,
   onTogglePin,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
-  onDrop,
   onOpenContextMenu,
 }: SheetRowProps) {
-  // Grouped rows do not expose pin action because grouping owns their position.
   const canTogglePin = worksheet.groupId === null && worksheet.visibility === 'Visible' && Boolean(onTogglePin);
 
   return (
     <article
-      className={`sheet-row ${isActive ? 'sheet-row-active' : ''} ${isContextMenuOpen ? 'sheet-row-context-open' : ''} ${worksheet.groupId ? 'sheet-row-grouped' : 'sheet-row-standalone'} ${isDragged ? 'sheet-row-dragging' : ''}`}
-      draggable={draggable}
-      onDragStart={(event) => onDragStart?.(event, worksheet)}
-      onDragEnd={onDragEnd}
-      onDragOver={(event) => onDragOver?.(event, worksheet)}
-      onDrop={(event) => onDrop?.(event, worksheet)}
+      ref={containerRef}
+      className={`sheet-row ${isActive ? 'sheet-row-active' : ''} ${isContextMenuOpen ? 'sheet-row-context-open' : ''} ${worksheet.groupId ? 'sheet-row-grouped' : 'sheet-row-standalone'} ${isDragged ? 'sheet-row-dragging' : ''} ${isOverlay ? 'sheet-row-overlay' : ''}`}
+      style={containerStyle}
+      role="button"
+      tabIndex={0}
+      aria-label={worksheet.name}
+      onClick={() => void onActivate(worksheet.worksheetId)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          void onActivate(worksheet.worksheetId);
+        }
+      }}
       onContextMenu={(event) => {
         event.preventDefault();
         onOpenContextMenu({
@@ -57,6 +61,7 @@ export function SheetRow({
           worksheet,
         });
       }}
+      {...containerProps}
     >
       <div className="row-topline">
         {canTogglePin ? (
@@ -73,9 +78,9 @@ export function SheetRow({
           </button>
         ) : worksheet.groupId ? <span className="sheet-indent-slot" aria-hidden="true" /> : null}
 
-        <button className="sheet-link" type="button" onClick={() => onActivate(worksheet.worksheetId)}>
+        <div className="sheet-link">
           <span className="sheet-title">{worksheet.name}</span>
-        </button>
+        </div>
       </div>
     </article>
   );

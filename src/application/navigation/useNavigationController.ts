@@ -62,6 +62,9 @@ export function useNavigationController() {
     toggleGroupCollapsed(groupId: string) {
       dispatch({ type: 'toggleGroupCollapsed', groupId });
     },
+    setGroupCollapsed(groupId: string, isCollapsed: boolean) {
+      dispatch({ type: 'setGroupCollapsed', groupId, isCollapsed });
+    },
     toggleHiddenSection() {
       dispatch({ type: 'toggleHiddenSection' });
     },

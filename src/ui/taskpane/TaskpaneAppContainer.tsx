@@ -7,7 +7,7 @@ import type { WorksheetEntity } from '../../domain/navigation/types';
 import { TaskpaneMenus } from './components/TaskpaneMenus';
 import { TaskpaneSections } from './components/TaskpaneSections';
 import { useContextMenus } from './hooks/useContextMenus';
-import { useWorksheetDragAndDrop } from './hooks/useWorksheetDragAndDrop';
+import { useWorksheetDnD } from './hooks/useWorksheetDnD';
 import { useTextPromptState } from './hooks/useTextPromptState';
 
 export function TaskpaneAppContainer() {
@@ -42,11 +42,14 @@ export function TaskpaneAppContainer() {
     renameWorksheet: controller.renameWorksheet,
   });
 
-  const dragAndDrop = useWorksheetDragAndDrop({
+  const dragAndDrop = useWorksheetDnD({
+    navigatorView: controller.navigatorView,
+    worksheetsById: controller.state.worksheetsById,
     assignWorksheetToGroup: controller.assignWorksheetToGroup,
     removeWorksheetFromGroup: controller.removeWorksheetFromGroup,
     reorderGroupWorksheet: controller.reorderGroupWorksheet,
     reorderSheetSectionWorksheet: controller.reorderSheetSectionWorksheet,
+    setGroupCollapsed: controller.setGroupCollapsed,
   });
 
   async function activateWorksheetFromSearch(worksheetId: string) {
@@ -101,15 +104,17 @@ export function TaskpaneAppContainer() {
         contextMenuOpenSheetId={contextMenuOpenSheetId}
         contextMenuOpenGroupId={contextMenuOpenGroupId}
         dragConfig={{
-          draggedWorksheetId: dragAndDrop.draggedWorksheetId,
-          activeDropTargetId: dragAndDrop.activeDropTargetId,
-          isDragActive: dragAndDrop.isDragActive,
-          onStartDrag: dragAndDrop.startWorksheetDrag,
-          onEndDrag: dragAndDrop.endWorksheetDrag,
-          onDragOverDropZone: dragAndDrop.registerDropTarget,
-          onDropIntoSheetSection: dragAndDrop.dropIntoSheetSection,
-          onDropIntoGroup: dragAndDrop.dropIntoGroup,
-          onDropIntoGroupHeader: dragAndDrop.dropIntoGroupHeader,
+          sensors: dragAndDrop.sensors,
+          activeWorksheetId: dragAndDrop.activeWorksheetId,
+          activeWorksheet: dragAndDrop.activeWorksheet,
+          projectedDropTarget: dragAndDrop.projectedDropTarget,
+          isDragActive: Boolean(dragAndDrop.activeWorksheetId),
+          getContainerWorksheets: dragAndDrop.getContainerWorksheets,
+          shouldSuppressActivation: dragAndDrop.shouldSuppressActivation,
+          onDragStart: dragAndDrop.onDragStart,
+          onDragOver: dragAndDrop.onDragOver,
+          onDragEnd: dragAndDrop.onDragEnd,
+          onDragCancel: dragAndDrop.onDragCancel,
         }}
         onChangeQuery={controller.setQuery}
         onSelectSearchResult={activateWorksheetFromSearch}
