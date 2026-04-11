@@ -107,6 +107,7 @@ export function SheetRow({
         }
 
         event.preventDefault();
+        event.stopPropagation();
         onOpenContextMenu({
           target: event.currentTarget,
           x: event.clientX,

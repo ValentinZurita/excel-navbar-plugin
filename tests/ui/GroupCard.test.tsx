@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { DndContext } from '@dnd-kit/core';
 import { GroupCard } from '../../src/ui/components/GroupCard';
@@ -29,6 +29,33 @@ function createGroup(overrides: Partial<NavigatorGroupView> = {}): NavigatorGrou
 }
 
 describe('GroupCard', () => {
+  it('opens only worksheet menu when right-clicking a worksheet row inside a group', () => {
+    const onOpenGroupMenu = vi.fn();
+    const onOpenSheetMenu = vi.fn();
+
+    render(
+      <DndContext>
+        <GroupCard
+          group={createGroup()}
+          activeWorksheetId={null}
+          onActivate={vi.fn()}
+          onToggleCollapsed={vi.fn()}
+          onOpenGroupMenu={onOpenGroupMenu}
+          onOpenSheetMenu={onOpenSheetMenu}
+        />
+      </DndContext>,
+    );
+
+    const worksheetButton = screen.getByRole('button', { name: 'Revenue' });
+    const worksheetRow = worksheetButton.closest('article');
+
+    expect(worksheetRow).not.toBeNull();
+    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+
+    expect(onOpenSheetMenu).toHaveBeenCalledTimes(1);
+    expect(onOpenGroupMenu).not.toHaveBeenCalled();
+  });
+
   it('activates the group header only for group-header targets in the same container', () => {
     const group = createGroup();
     const { container, rerender } = render(
