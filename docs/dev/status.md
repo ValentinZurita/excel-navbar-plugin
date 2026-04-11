@@ -28,6 +28,34 @@ Verified in this session:
 - `npm run test` ✅
 - `npm run quality` ✅
 
+## Critical Blocker (P0)
+
+**Unresolved drag-and-drop visual integrity bug in task pane navigation.**
+
+Observed in manual stress tests:
+
+- Ghost hover/highlight states can still appear on multiple groups and worksheet rows after aggressive drag movement.
+- Insertion line and perceived pointer target can drift apart under fast pointer movement, degrading placement trust.
+- UX consistency is currently unreliable under stress scenarios.
+
+Current state:
+
+- The issue has been reduced in some paths but is **not resolved**.
+- This is a release-blocking quality issue and must be fixed before continuing with other implementation tracks.
+
+Working findings so far:
+
+- Stale projected drop target handling was one contributor and has partial mitigation.
+- Pointer-first collision strategy reduced some false positives but does not fully eliminate stress-case artifacts.
+- The remaining defect likely involves interaction between collision targeting, visual state classes, and rapid over-null-over transitions.
+
+Required next phase:
+
+1. Add temporary instrumentation for drag lifecycle (`start/over/end/cancel`) with target IDs and kinds.
+2. Capture reproducible stress traces for over transitions and highlight class application.
+3. Define strict visual-state contract: only one active drop target + one insertion indicator at any time.
+4. Implement fix based on evidence, then validate with stress protocol and regression tests.
+
 Not yet verified in this session:
 
 - Real Excel sideloading
@@ -70,15 +98,14 @@ Not yet verified in this session:
 ## Next Recommended Step
 ### Immediate next step
 
-**Sideload and validate the add-in in real Excel without changing the current visual appearance.**
+**Resolve the task pane DnD ghost-highlight and insertion-line drift blocker before any other work.**
 
 Why this is next:
 
-- The current UI direction is intentionally locked by the human reviewer
-- Product-owned interaction flows are now in place for create, rename, and delete-group actions
-- Sidebar drag-and-drop now exists in code and must be verified against real Excel host behavior
-- The main remaining unknown is host reality, not baseline visual design
-- We need to confirm manifest behavior, task pane rendering, Office.js interaction, drag-and-drop behavior, and dialog/menu behavior inside Excel
+- The bug directly breaks trust in core navigation interactions.
+- It produces visible multi-highlight artifacts and inconsistent insertion cues.
+- Continuing with new feature work before stabilizing this flow increases rework risk.
+- A robust root-cause investigation is required, not quick UI masking.
 
 ## After That
 Once sideloading is confirmed, the next implementation pass should focus on:

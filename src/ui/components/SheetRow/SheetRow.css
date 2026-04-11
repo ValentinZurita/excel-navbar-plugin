@@ -48,6 +48,13 @@
   background: transparent;
 }
 
+.sheet-list-drag-active .sheet-row-context-open,
+.sheet-list-drag-active .sheet-row-active {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
 .sheet-row-dragging {
   opacity: 0.45;
 }

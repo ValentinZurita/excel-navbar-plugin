@@ -10,6 +10,22 @@ AI-first execution with human supervision. Tasks should stay small, explicit, an
 - Visual/behavior acceptance note
 - Verification before claiming completion
 
+## P0 Blocker: DnD Ghost Highlights And Indicator Drift
+
+This blocker is **not resolved** and has priority over all new feature work.
+
+- [ ] Produce a deterministic repro protocol (fast-drag stress path across Sheets + Groups).
+- [ ] Add short-lived instrumentation for drag target transitions (`over` target id/kind/container).
+- [ ] Add short-lived instrumentation for highlight class application/removal on group headers and sheet rows.
+- [ ] Define invariant checks:
+  - [ ] at most one active group drop highlight
+  - [ ] at most one insertion indicator
+  - [ ] insertion indicator must map to current projected target
+- [ ] Implement fix from evidence (not visual masking only).
+- [ ] Add regression tests for rapid over-null-over transitions.
+- [ ] Run manual stress verification in task pane and record acceptance notes.
+- [ ] Remove temporary instrumentation once validated.
+
 ## Feature Audit Snapshot
 
 This list exists so pending work does not get lost between sessions.

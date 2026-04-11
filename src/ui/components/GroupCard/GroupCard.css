@@ -42,6 +42,12 @@
   background: transparent;
 }
 
+.group-list-drag-active .group-header-context-open:not(.group-header-drop-active) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
 .group-header-drop-active {
   background: color-mix(in srgb, var(--excel-body-fg) 10%, transparent);
 }

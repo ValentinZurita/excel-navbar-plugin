@@ -1,6 +1,8 @@
 import {
+  type CollisionDetection,
   DndContext,
   MeasuringStrategy,
+  pointerWithin,
   closestCorners,
   type DragCancelEvent,
   type DragEndEvent,
@@ -52,6 +54,22 @@ interface TaskpaneSectionsProps {
   onOpenGroupMenu: (args: OpenGroupMenuArgs) => void;
 }
 
+const worksheetCollisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+
+  if (pointerCollisions.length > 0) {
+    return pointerCollisions;
+  }
+
+  // For pointer-driven drag, avoid geometric fallback to keep projected targets
+  // strictly aligned with the pointer and prevent distant ghost highlights.
+  if (args.pointerCoordinates) {
+    return [];
+  }
+
+  return closestCorners(args);
+};
+
 export function TaskpaneSections({
   query,
   searchResults,
@@ -96,7 +114,7 @@ export function TaskpaneSections({
 
       <DndContext
         sensors={dragConfig.sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={worksheetCollisionDetection}
         modifiers={[restrictToVerticalAxis]}
         measuring={{
           droppable: {
