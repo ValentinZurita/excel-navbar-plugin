@@ -115,11 +115,7 @@ export function useWorksheetDnD({
     }
 
     setActiveWorksheetId(activeData.worksheetId);
-    setProjectedDropTarget({
-      containerId: activeData.containerId,
-      index: activeData.index,
-      kind: 'row',
-    });
+    setProjectedDropTarget(null);
     initialLocationRef.current = {
       worksheetId: activeData.worksheetId,
       containerId: activeData.containerId,

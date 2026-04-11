@@ -44,6 +44,59 @@ describe('useWorksheetDnD', () => {
       } as any);
     });
 
+    expect(result.current.projectedDropTarget).toBeNull();
+
+    act(() => {
+      result.current.onDragOver({ over: null } as any);
+    });
+
+    expect(result.current.projectedDropTarget).toBeNull();
+  });
+
+  it('resets drag state after ending a drag in the same location', () => {
+    const worksheet = createWorksheet();
+    const { result } = renderHook(() =>
+      useWorksheetDnD({
+        worksheetsById: { [worksheet.worksheetId]: worksheet },
+        assignWorksheetToGroup: vi.fn(),
+        removeWorksheetFromGroup: vi.fn(),
+        reorderGroupWorksheet: vi.fn(),
+        reorderSheetSectionWorksheet: vi.fn(),
+      }),
+    );
+
+    act(() => {
+      result.current.onDragStart({
+        active: {
+          data: {
+            current: {
+              type: 'worksheet',
+              worksheetId: worksheet.worksheetId,
+              containerId: 'group:group-1',
+              index: 0,
+            },
+          },
+        },
+      } as any);
+    });
+
+    expect(result.current.activeWorksheetId).toBe(worksheet.worksheetId);
+
+    act(() => {
+      result.current.onDragOver({
+        over: {
+          data: {
+            current: {
+              type: 'worksheet',
+              worksheetId: worksheet.worksheetId,
+              containerId: 'group:group-1',
+              index: 0,
+            },
+          },
+        },
+      } as any);
+    });
+
     expect(result.current.projectedDropTarget).toEqual({
       containerId: 'group:group-1',
       index: 0,
@@ -51,9 +104,31 @@ describe('useWorksheetDnD', () => {
     });
 
     act(() => {
-      result.current.onDragOver({ over: null } as any);
+      result.current.onDragEnd({
+        active: {
+          data: {
+            current: {
+              type: 'worksheet',
+              worksheetId: worksheet.worksheetId,
+              containerId: 'group:group-1',
+              index: 0,
+            },
+          },
+        },
+        over: {
+          data: {
+            current: {
+              type: 'worksheet',
+              worksheetId: worksheet.worksheetId,
+              containerId: 'group:group-1',
+              index: 0,
+            },
+          },
+        },
+      } as any);
     });
 
+    expect(result.current.activeWorksheetId).toBeNull();
     expect(result.current.projectedDropTarget).toBeNull();
   });
 });
