@@ -11,7 +11,6 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { WorksheetEntity } from '../../../domain/navigation/types';
 import {
   buildDragCommit,
   type WorksheetContainerId,
@@ -21,7 +20,6 @@ import {
 } from '../dnd/worksheetDndModel';
 
 interface UseWorksheetDnDParams {
-  worksheetsById: Record<string, WorksheetEntity>;
   assignWorksheetToGroup: (worksheetId: string, groupId: string, targetIndex?: number) => void;
   removeWorksheetFromGroup: (worksheetId: string, targetIndex?: number) => void;
   reorderGroupWorksheet: (worksheetId: string, groupId: string, targetIndex: number) => void;
@@ -73,7 +71,6 @@ function getProjectedDropTarget(data: unknown): WorksheetProjectedDropTarget | n
 }
 
 export function useWorksheetDnD({
-  worksheetsById,
   assignWorksheetToGroup,
   removeWorksheetFromGroup,
   reorderGroupWorksheet,
@@ -236,7 +233,6 @@ export function useWorksheetDnD({
   return {
     sensors,
     activeWorksheetId,
-    activeWorksheet: activeWorksheetId ? worksheetsById[activeWorksheetId] ?? null : null,
     projectedDropTarget,
     flashedGroupId,
     onDragStart,

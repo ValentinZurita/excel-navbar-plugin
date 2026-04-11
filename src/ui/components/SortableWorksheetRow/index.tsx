@@ -16,6 +16,10 @@ interface SortableWorksheetRowProps {
   onOpenContextMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: WorksheetEntity }) => void;
 }
 
+function shouldBlockActivation(isDragging: boolean, shouldSuppressActivation: (worksheetId: string) => boolean, worksheetId: string) {
+  return isDragging || shouldSuppressActivation(worksheetId);
+}
+
 export function SortableWorksheetRow({
   worksheet,
   containerId,
@@ -38,6 +42,14 @@ export function SortableWorksheetRow({
     },
   });
 
+  const handleActivate = (worksheetId: string) => {
+    if (shouldBlockActivation(isDragging, shouldSuppressActivation, worksheetId)) {
+      return;
+    }
+
+    void onActivate(worksheetId);
+  };
+
   return (
     <div className="sortable-worksheet-row">
       {isInsertionBefore ? (
@@ -56,13 +68,7 @@ export function SortableWorksheetRow({
           ...attributes,
           ...listeners,
         }}
-        onActivate={(worksheetId) => {
-          if (isDragging || shouldSuppressActivation(worksheetId)) {
-            return;
-          }
-
-          void onActivate(worksheetId);
-        }}
+        onActivate={handleActivate}
         onTogglePin={onTogglePin}
         onOpenContextMenu={onOpenContextMenu}
       />

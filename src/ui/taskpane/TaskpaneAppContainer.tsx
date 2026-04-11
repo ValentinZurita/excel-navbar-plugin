@@ -17,8 +17,7 @@ export function TaskpaneAppContainer() {
 
   // Context menus are isolated in a dedicated hook so view code stays simple.
   const {
-    sheetMenu,
-    groupMenu,
+    activeMenu,
     contextMenuOpenSheetId,
     contextMenuOpenGroupId,
     closeMenus,
@@ -43,7 +42,6 @@ export function TaskpaneAppContainer() {
   });
 
   const dragAndDrop = useWorksheetDnD({
-    worksheetsById: controller.state.worksheetsById,
     assignWorksheetToGroup: controller.assignWorksheetToGroup,
     removeWorksheetFromGroup: controller.removeWorksheetFromGroup,
     reorderGroupWorksheet: controller.reorderGroupWorksheet,
@@ -105,7 +103,6 @@ export function TaskpaneAppContainer() {
           sensors: dragAndDrop.sensors,
           projectedDropTarget: dragAndDrop.projectedDropTarget,
           flashedGroupId: dragAndDrop.flashedGroupId,
-          activeWorksheet: dragAndDrop.activeWorksheet,
           isDragActive: Boolean(dragAndDrop.activeWorksheetId),
           shouldSuppressActivation: dragAndDrop.shouldSuppressActivation,
           onDragStart: dragAndDrop.onDragStart,
@@ -127,8 +124,7 @@ export function TaskpaneAppContainer() {
 
       {/* Right-click context menus for worksheet and group actions. */}
       <TaskpaneMenus
-        sheetMenu={sheetMenu}
-        groupMenu={groupMenu}
+        activeMenu={activeMenu}
         onCloseMenus={closeMenus}
         onTogglePin={handleTogglePin}
         onToggleVisibility={handleToggleVisibility}

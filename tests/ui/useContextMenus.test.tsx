@@ -30,6 +30,7 @@ describe('useContextMenus', () => {
       });
     });
 
+    expect(result.current.activeMenu?.kind).toBe('sheet');
     expect(result.current.sheetMenu?.worksheet.worksheetId).toBe('sheet-1');
 
     act(() => {
@@ -57,6 +58,7 @@ describe('useContextMenus', () => {
       });
     });
 
+    expect(result.current.activeMenu?.kind).toBe('sheet');
     expect(result.current.sheetMenu).not.toBeNull();
     expect(result.current.groupMenu).toBeNull();
 
@@ -70,6 +72,7 @@ describe('useContextMenus', () => {
       });
     });
 
+    expect(result.current.activeMenu?.kind).toBe('group');
     expect(result.current.sheetMenu).toBeNull();
     expect(result.current.groupMenu?.groupId).toBe('group-1');
   });

@@ -1,14 +1,8 @@
-import type { NavigatorGroupView, WorksheetEntity } from '../../../domain/navigation/types';
-import type { WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
+import type { NavigatorGroupView } from '../../../domain/navigation/types';
+import type { GroupDragVisualConfig } from '../../taskpane/types/worksheetDragVisualConfig';
 import { GroupCard } from '../GroupCard';
 
-interface GroupDragConfig {
-  activeWorksheet?: WorksheetEntity | null;
-  projectedDropTarget: WorksheetProjectedDropTarget | null;
-  flashedGroupId: string | null;
-  isDragActive: boolean;
-  shouldSuppressActivation: (worksheetId: string) => boolean;
-}
+type GroupDragConfig = GroupDragVisualConfig;
 
 interface GroupSectionProps {
   groups: NavigatorGroupView[];
@@ -23,17 +17,35 @@ interface GroupSectionProps {
   onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
 }
 
-export function GroupSection(props: GroupSectionProps) {
-  const className = props.dragConfig?.isDragActive ? 'group-list group-list-drag-active' : 'group-list';
+export function GroupSection({
+  groups,
+  activeWorksheetId,
+  contextMenuOpenId,
+  groupMenuOpenId,
+  dragConfig,
+  onActivate,
+  onToggleCollapsed,
+  onTogglePin,
+  onOpenGroupMenu,
+  onOpenSheetMenu,
+}: GroupSectionProps) {
+  const className = dragConfig?.isDragActive ? 'group-list group-list-drag-active' : 'group-list';
 
   return (
     <div className={className}>
-      {props.groups.map((group) => (
+      {groups.map((group) => (
         <GroupCard
           key={group.groupId}
           group={group}
-          onTogglePin={props.onTogglePin}
-          {...props}
+          activeWorksheetId={activeWorksheetId}
+          contextMenuOpenId={contextMenuOpenId}
+          groupMenuOpenId={groupMenuOpenId}
+          dragConfig={dragConfig}
+          onActivate={onActivate}
+          onToggleCollapsed={onToggleCollapsed}
+          onTogglePin={onTogglePin}
+          onOpenGroupMenu={onOpenGroupMenu}
+          onOpenSheetMenu={onOpenSheetMenu}
         />
       ))}
     </div>

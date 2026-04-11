@@ -77,7 +77,6 @@ describe('useWorksheetDnD', () => {
     const worksheet = createWorksheet();
     const { result } = renderHook(() =>
       useWorksheetDnD({
-        worksheetsById: { [worksheet.worksheetId]: worksheet },
         assignWorksheetToGroup: vi.fn(),
         removeWorksheetFromGroup: vi.fn(),
         reorderGroupWorksheet: vi.fn(),
@@ -107,7 +106,6 @@ describe('useWorksheetDnD', () => {
     const assignWorksheetToGroup = vi.fn();
     const { result } = renderHook(() =>
       useWorksheetDnD({
-        worksheetsById: { [worksheet.worksheetId]: worksheet },
         assignWorksheetToGroup,
         removeWorksheetFromGroup: vi.fn(),
         reorderGroupWorksheet: vi.fn(),
@@ -135,7 +133,6 @@ describe('useWorksheetDnD', () => {
     const clearTimeoutSpy = vi.spyOn(window, 'clearTimeout');
     const { result, unmount } = renderHook(() =>
       useWorksheetDnD({
-        worksheetsById: { [worksheet.worksheetId]: worksheet },
         assignWorksheetToGroup: vi.fn(),
         removeWorksheetFromGroup: vi.fn(),
         reorderGroupWorksheet: vi.fn(),

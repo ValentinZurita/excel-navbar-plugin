@@ -1,34 +1,34 @@
 import { useCallback, useState } from 'react';
-import type { GroupMenuState, OpenGroupMenuArgs, OpenSheetMenuArgs, SheetMenuState } from '../types/contextMenuTypes';
+import type { ContextMenuState, OpenGroupMenuArgs, OpenSheetMenuArgs } from '../types/contextMenuTypes';
 
 export function useContextMenus() {
   // Only one context menu can be visible at a time.
-  const [sheetMenu, setSheetMenu] = useState<SheetMenuState | null>(null);
-  const [groupMenu, setGroupMenu] = useState<GroupMenuState | null>(null);
+  const [activeMenu, setActiveMenu] = useState<ContextMenuState | null>(null);
 
   const closeMenus = useCallback(() => {
-    setSheetMenu(null);
-    setGroupMenu(null);
+    setActiveMenu(null);
   }, []);
 
   const openSheetMenu = useCallback(({ x, y, worksheet }: OpenSheetMenuArgs) => {
     // Right-clicking the same worksheet toggles the menu off.
-    setGroupMenu(null);
-    setSheetMenu((currentMenu) => {
-      if (currentMenu?.worksheet.worksheetId === worksheet.worksheetId) {
+    setActiveMenu((currentMenu) => {
+      if (currentMenu?.kind === 'sheet' && currentMenu.worksheet.worksheetId === worksheet.worksheetId) {
         return null;
       }
 
-      return { x, y, worksheet };
+      return { kind: 'sheet', x, y, worksheet };
     });
   }, []);
 
   const openGroupMenu = useCallback(({ x, y, groupId, groupName }: OpenGroupMenuArgs) => {
-    setSheetMenu(null);
-    setGroupMenu({ x, y, groupId, groupName });
+    setActiveMenu({ kind: 'group', x, y, groupId, groupName });
   }, []);
 
+  const sheetMenu = activeMenu?.kind === 'sheet' ? activeMenu : null;
+  const groupMenu = activeMenu?.kind === 'group' ? activeMenu : null;
+
   return {
+    activeMenu,
     sheetMenu,
     groupMenu,
     contextMenuOpenSheetId: sheetMenu?.worksheet.worksheetId,

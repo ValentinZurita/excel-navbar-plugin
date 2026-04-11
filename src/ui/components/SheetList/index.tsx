@@ -1,19 +1,13 @@
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
-import type {
-  WorksheetContainerId,
-  WorksheetProjectedDropTarget,
-} from '../../taskpane/dnd/worksheetDndModel';
+import type { WorksheetContainerId, WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
+import type { WorksheetDragVisualConfig } from '../../taskpane/types/worksheetDragVisualConfig';
 import { SheetRow } from '../SheetRow';
 import { SortableWorksheetRow } from '../SortableWorksheetRow';
 import { WorksheetDropZone } from '../WorksheetDropZone';
 
-interface SheetListDragConfig {
+interface SheetListDragConfig extends WorksheetDragVisualConfig {
   containerId: WorksheetContainerId;
-  activeWorksheet?: WorksheetEntity | null;
-  projectedDropTarget: WorksheetProjectedDropTarget | null;
-  isDragActive: boolean;
-  shouldSuppressActivation: (worksheetId: string) => boolean;
 }
 
 interface SheetListProps {
@@ -30,31 +24,54 @@ function isGroupContainerId(containerId: WorksheetContainerId): boolean {
   return containerId !== 'sheets';
 }
 
-export function SheetList(props: SheetListProps) {
-  if (!props.worksheets.length && !props.dragConfig?.isDragActive) {
-    return null;
+function shouldHideEmptyList(worksheets: WorksheetEntity[], dragConfig?: SheetListDragConfig) {
+  if (!dragConfig) {
+    return worksheets.length === 0;
   }
 
-  const dragConfig = props.dragConfig;
+  return isGroupContainerId(dragConfig.containerId) && worksheets.length === 0;
+}
 
-  if (
-    dragConfig &&
-    isGroupContainerId(dragConfig.containerId) &&
-    props.worksheets.length === 0
-  ) {
-    return null;
-  }
+function isProjectedTargetInContainer(
+  projectedDropTarget: WorksheetProjectedDropTarget | null,
+  containerId: WorksheetContainerId,
+) {
+  return projectedDropTarget?.containerId === containerId;
+}
 
-  const endDropLineActive = Boolean(
-    dragConfig &&
-      dragConfig.projectedDropTarget?.containerId === dragConfig.containerId &&
-      dragConfig.projectedDropTarget.kind === 'container-end' &&
-      dragConfig.projectedDropTarget.index === props.worksheets.length,
+function isEndDropLineActive(
+  projectedDropTarget: WorksheetProjectedDropTarget | null,
+  containerId: WorksheetContainerId,
+  worksheetCount: number,
+) {
+  return Boolean(
+    isProjectedTargetInContainer(projectedDropTarget, containerId) &&
+      projectedDropTarget?.kind === 'container-end' &&
+      projectedDropTarget.index === worksheetCount,
   );
-  const shouldRenderEndDropZone = Boolean(dragConfig);
+}
+
+function isInsertionBeforeIndex(
+  projectedDropTarget: WorksheetProjectedDropTarget | null,
+  containerId: WorksheetContainerId,
+  index: number,
+) {
+  return Boolean(
+    isProjectedTargetInContainer(projectedDropTarget, containerId) && projectedDropTarget?.index === index,
+  );
+}
+
+export function SheetList(props: SheetListProps) {
+  const dragConfig = props.dragConfig;
+  const shouldRenderStaticList = !dragConfig;
+
+  if (shouldHideEmptyList(props.worksheets, dragConfig)) {
+    return null;
+  }
+
   const sheetListClassName = dragConfig?.isDragActive ? 'sheet-list sheet-list-drag-active' : 'sheet-list';
 
-  if (!dragConfig) {
+  if (shouldRenderStaticList) {
     return (
       <div className={sheetListClassName}>
         {props.worksheets.map((worksheet) => (
@@ -72,6 +89,12 @@ export function SheetList(props: SheetListProps) {
     );
   }
 
+  const endDropLineActive = isEndDropLineActive(
+    dragConfig.projectedDropTarget,
+    dragConfig.containerId,
+    props.worksheets.length,
+  );
+
   return (
     <SortableContext items={props.worksheets.map((worksheet) => worksheet.worksheetId)} strategy={verticalListSortingStrategy}>
       <div className={sheetListClassName}>
@@ -83,10 +106,7 @@ export function SheetList(props: SheetListProps) {
             index={index}
             isActive={worksheet.worksheetId === props.activeWorksheetId}
             isContextMenuOpen={worksheet.worksheetId === props.contextMenuOpenId}
-            isInsertionBefore={
-              dragConfig.projectedDropTarget?.containerId === dragConfig.containerId &&
-              dragConfig.projectedDropTarget.index === index
-            }
+            isInsertionBefore={isInsertionBeforeIndex(dragConfig.projectedDropTarget, dragConfig.containerId, index)}
             shouldSuppressActivation={dragConfig.shouldSuppressActivation}
             onActivate={props.onActivate}
             onTogglePin={props.onTogglePin}
@@ -94,18 +114,16 @@ export function SheetList(props: SheetListProps) {
           />
         ))}
 
-        {shouldRenderEndDropZone ? (
-          <WorksheetDropZone
-            dropTargetId={`${dragConfig.containerId}:end`}
-            containerId={dragConfig.containerId}
-            index={props.worksheets.length}
-            kind="container-end"
-            isActive={endDropLineActive}
-            isDragActive={dragConfig.isDragActive}
-            isEmpty={props.worksheets.length === 0}
-            testId={`${dragConfig.containerId}-drop-end`}
-          />
-        ) : null}
+        <WorksheetDropZone
+          dropTargetId={`${dragConfig.containerId}:end`}
+          containerId={dragConfig.containerId}
+          index={props.worksheets.length}
+          kind="container-end"
+          isActive={endDropLineActive}
+          isDragActive={dragConfig.isDragActive}
+          isEmpty={props.worksheets.length === 0}
+          testId={`${dragConfig.containerId}-drop-end`}
+        />
       </div>
     </SortableContext>
   );

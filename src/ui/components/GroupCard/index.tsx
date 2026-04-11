@@ -1,18 +1,13 @@
 import { useDroppable } from '@dnd-kit/core';
-import type { NavigatorGroupView, WorksheetEntity } from '../../../domain/navigation/types';
+import type { NavigatorGroupView } from '../../../domain/navigation/types';
 import type { WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
+import type { GroupDragVisualConfig } from '../../taskpane/types/worksheetDragVisualConfig';
 import { toGroupContainerId } from '../../taskpane/dnd/worksheetDndModel';
 import { GroupFolderIcon } from '../../icons';
 import { SheetList } from '../SheetList';
 import './GroupCard.css';
 
-interface GroupDragConfig {
-  activeWorksheet?: WorksheetEntity | null;
-  projectedDropTarget: WorksheetProjectedDropTarget | null;
-  flashedGroupId: string | null;
-  isDragActive: boolean;
-  shouldSuppressActivation: (worksheetId: string) => boolean;
-}
+type GroupDragConfig = GroupDragVisualConfig;
 
 interface GroupCardProps {
   group: NavigatorGroupView;
@@ -27,6 +22,15 @@ interface GroupCardProps {
   onTogglePin?: (worksheetId: string) => void;
 }
 
+function isGroupHeaderDropActive(
+  projectedDropTarget: WorksheetProjectedDropTarget | null,
+  containerId: ReturnType<typeof toGroupContainerId>,
+) {
+  return Boolean(
+    projectedDropTarget?.containerId === containerId && projectedDropTarget.kind === 'group-header',
+  );
+}
+
 export function GroupCard({
   group,
   onToggleCollapsed,
@@ -35,6 +39,16 @@ export function GroupCard({
   ...rest
 }: GroupCardProps) {
   const containerId = toGroupContainerId(group.groupId);
+  const dragConfig = rest.dragConfig;
+  const sheetListDragConfig = dragConfig
+    ? {
+        containerId,
+        projectedDropTarget: dragConfig.projectedDropTarget,
+        isDragActive: dragConfig.isDragActive,
+        shouldSuppressActivation: dragConfig.shouldSuppressActivation,
+      }
+    : undefined;
+
   const { setNodeRef } = useDroppable({
     id: `group-header:${group.groupId}`,
     data: {
@@ -43,15 +57,11 @@ export function GroupCard({
       index: group.worksheets.length,
       kind: 'group-header',
     },
-    disabled: !rest.dragConfig?.isDragActive,
+    disabled: !dragConfig?.isDragActive,
   });
 
-  const isDropActive = Boolean(
-    rest.dragConfig &&
-      rest.dragConfig.projectedDropTarget?.containerId === containerId &&
-      rest.dragConfig.projectedDropTarget.kind === 'group-header',
-  );
-  const isFolderFlashing = rest.dragConfig?.flashedGroupId === group.groupId;
+  const isDropActive = isGroupHeaderDropActive(dragConfig?.projectedDropTarget ?? null, containerId);
+  const isFolderFlashing = dragConfig?.flashedGroupId === group.groupId;
 
   return (
     <section
@@ -86,12 +96,7 @@ export function GroupCard({
           worksheets={group.worksheets}
           activeWorksheetId={rest.activeWorksheetId}
           contextMenuOpenId={rest.contextMenuOpenId}
-          dragConfig={rest.dragConfig ? {
-            containerId,
-            projectedDropTarget: rest.dragConfig.projectedDropTarget,
-            isDragActive: rest.dragConfig.isDragActive,
-            shouldSuppressActivation: rest.dragConfig.shouldSuppressActivation,
-          } : undefined}
+          dragConfig={sheetListDragConfig}
           onActivate={rest.onActivate}
           onTogglePin={rest.onTogglePin}
           onOpenContextMenu={onOpenSheetMenu}
