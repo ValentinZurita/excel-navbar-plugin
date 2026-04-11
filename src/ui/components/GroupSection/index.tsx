@@ -18,6 +18,7 @@ interface GroupSectionProps {
   dragConfig?: GroupDragConfig;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onToggleCollapsed: (groupId: string) => void;
+  onTogglePin?: (worksheetId: string) => void;
   onOpenGroupMenu: (args: { target: HTMLElement; x: number; y: number; groupId: string; groupName: string }) => void;
   onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
 }
@@ -31,6 +32,7 @@ export function GroupSection(props: GroupSectionProps) {
         <GroupCard
           key={group.groupId}
           group={group}
+          onTogglePin={props.onTogglePin}
           {...props}
         />
       ))}

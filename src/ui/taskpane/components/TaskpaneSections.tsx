@@ -142,6 +142,7 @@ export function TaskpaneSections({
               }}
               onActivate={onActivateWorksheet}
               onToggleCollapsed={onToggleGroupCollapsed}
+              onTogglePin={onPinWorksheet}
               onOpenGroupMenu={onOpenGroupMenu}
               onOpenSheetMenu={onOpenSheetMenu}
             />

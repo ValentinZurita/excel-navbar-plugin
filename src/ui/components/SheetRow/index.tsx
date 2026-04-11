@@ -35,7 +35,7 @@ export function SheetRow({
   onTogglePin,
   onOpenContextMenu,
 }: SheetRowProps) {
-  const canTogglePin = worksheet.groupId === null && worksheet.visibility === 'Visible' && Boolean(onTogglePin);
+  const canTogglePin = worksheet.visibility === 'Visible' && Boolean(onTogglePin);
   const isToggleable = canTogglePin;
 
   function renderRowIcon() {

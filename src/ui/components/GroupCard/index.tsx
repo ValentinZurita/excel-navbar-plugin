@@ -24,6 +24,7 @@ interface GroupCardProps {
   onToggleCollapsed: (groupId: string) => void;
   onOpenGroupMenu: (args: { target: HTMLElement; x: number; y: number; groupId: string; groupName: string }) => void;
   onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
+  onTogglePin?: (worksheetId: string) => void;
 }
 
 export function GroupCard({
@@ -92,6 +93,7 @@ export function GroupCard({
             shouldSuppressActivation: rest.dragConfig.shouldSuppressActivation,
           } : undefined}
           onActivate={rest.onActivate}
+          onTogglePin={rest.onTogglePin}
           onOpenContextMenu={onOpenSheetMenu}
         />
       ) : null}

@@ -29,6 +29,22 @@ describe('SheetRow', () => {
     expect(container.querySelector('.sheet-pin-button')).toBeInTheDocument();
   });
 
+  it('renders a worksheet icon for visible unpinned sheets inside a group', () => {
+    const worksheet = { ...baseWorksheet, groupId: 'group-1' };
+    const { container } = render(
+      <SheetRow
+        worksheet={worksheet}
+        isActive={false}
+        onActivate={vi.fn()}
+        onTogglePin={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+      />,
+    );
+
+    expect(container.querySelector('.sheet-row-icon')).toBeInTheDocument();
+    expect(container.querySelector('.sheet-pin-button')).toBeInTheDocument();
+  });
+
   it('does not render a worksheet icon for pinned sheets', () => {
     const worksheet = { ...baseWorksheet, isPinned: true };
     const { container } = render(
