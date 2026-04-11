@@ -39,7 +39,7 @@
   height: 14px;
   display: block;
   color: var(--excel-muted);
-  opacity: 0.85;
+  opacity: 0.45;
   transition: opacity 160ms ease, color 160ms ease;
 }
 

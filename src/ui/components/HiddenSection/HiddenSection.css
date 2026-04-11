@@ -44,7 +44,7 @@
   border-radius: 0;
   color: var(--excel-muted);
   box-shadow: none;
-  opacity: 0.55;
+  opacity: 0.45;
   transition: opacity 160ms ease;
   position: relative;
   z-index: 2;
@@ -53,7 +53,7 @@
 
 .sheet-unhide-button:hover,
 .sheet-unhide-button:focus-visible {
-  opacity: 0.85;
+  opacity: 0.75;
   color: var(--excel-body-fg);
 }
 
