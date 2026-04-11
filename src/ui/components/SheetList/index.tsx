@@ -83,7 +83,7 @@ export function SheetList(props: SheetListProps) {
             isActive={worksheet.worksheetId === props.activeWorksheetId}
             isContextMenuOpen={worksheet.worksheetId === props.contextMenuOpenId}
             isHovered={worksheet.worksheetId === props.hoveredWorksheetId}
-            isInteractionSuppressed={Boolean(dragConfig?.isDragActive)}
+            isInteractionSuppressed={false}
             onHoverChange={props.onHoverWorksheet}
             onActivate={props.onActivate}
             onTogglePin={props.onTogglePin}
