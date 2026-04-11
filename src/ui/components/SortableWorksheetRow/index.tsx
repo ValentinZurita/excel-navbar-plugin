@@ -39,8 +39,13 @@ export function SortableWorksheetRow({
   });
 
   return (
-    <>
-      {isInsertionBefore ? <div className="worksheet-insertion-line worksheet-insertion-line-active" aria-hidden="true" /> : null}
+    <div className="sortable-worksheet-row">
+      {isInsertionBefore ? (
+        <div
+          className="worksheet-insertion-line worksheet-insertion-line-active row-insertion-line"
+          aria-hidden="true"
+        />
+      ) : null}
 
       <SheetRow
         worksheet={worksheet}
@@ -61,6 +66,6 @@ export function SortableWorksheetRow({
         onTogglePin={onTogglePin}
         onOpenContextMenu={onOpenContextMenu}
       />
-    </>
+    </div>
   );
 }

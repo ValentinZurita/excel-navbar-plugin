@@ -10,8 +10,7 @@
   transition:
     background-color 140ms ease,
     border-color 140ms ease,
-    box-shadow 140ms ease,
-    transform 160ms ease;
+    box-shadow 140ms ease;
   cursor: pointer;
 }
 
@@ -44,6 +43,20 @@
 }
 
 .sheet-row-overlay {
+  pointer-events: none;
+}
+
+.sortable-worksheet-row {
+  position: relative;
+}
+
+.row-insertion-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 1;
   pointer-events: none;
 }
 
