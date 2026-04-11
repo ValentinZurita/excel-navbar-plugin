@@ -43,9 +43,7 @@
   transition: opacity 160ms ease, color 160ms ease;
 }
 
-.sheet-row-pin-toggleable:hover .sheet-row-icon,
-.sheet-row-pin-toggleable:focus-within .sheet-row-icon,
-.sheet-row-pin-toggleable.sheet-row-context-open .sheet-row-icon {
+.sheet-row[data-pin-visible='true'] .sheet-row-icon {
   opacity: 0;
 }
 
@@ -67,42 +65,33 @@
   transform: none;
 }
 
-.sheet-row:hover,
-.sheet-row-context-open {
+.sheet-row[data-highlighted='true'] {
   background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
   border-color: transparent;
   box-shadow: none;
   transform: none;
 }
 
-.sheet-list-drag-active .sheet-row:hover {
-  background: transparent;
-}
-
-.sheet-list-drag-active .sheet-row-context-open,
-.sheet-list-drag-active .sheet-row-active {
+.sheet-list-drag-active .sheet-row[data-context-open='true'],
+.sheet-list-drag-active .sheet-row[data-active='true'],
+.sheet-list-drag-active .sheet-row[data-highlighted='true'] {
   background: transparent;
   border-color: transparent;
   box-shadow: none;
 }
 
-.sheet-list-drag-active .sheet-row .sheet-row-icon,
-.sheet-list-drag-active .sheet-row:hover .sheet-row-icon,
-.sheet-list-drag-active .sheet-row:focus-within .sheet-row-icon,
-.sheet-list-drag-active .sheet-row.sheet-row-context-open .sheet-row-icon {
+.sheet-list-drag-active .sheet-row .sheet-row-icon {
   opacity: 0.85;
 }
 
-.sheet-list-drag-active .sheet-row .sheet-pin-button,
-.sheet-list-drag-active .sheet-row:hover .sheet-pin-button,
-.sheet-list-drag-active .sheet-row:focus-within .sheet-pin-button,
-.sheet-list-drag-active .sheet-row.sheet-row-context-open .sheet-pin-button {
+.sheet-list-drag-active .sheet-row .sheet-pin-button {
   opacity: 0;
   pointer-events: none;
 }
 
 .sheet-row-dragging {
-  opacity: 0.45;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .sheet-row-overlay {
@@ -148,14 +137,23 @@
   z-index: 2;
 }
 
-.sheet-row-pin-toggleable:hover .sheet-pin-button,
-.sheet-row-pin-toggleable:focus-within .sheet-pin-button,
-.sheet-row-pin-toggleable.sheet-row-context-open .sheet-pin-button {
+.sheet-row[data-pin-visible='true'] .sheet-pin-button {
   opacity: 0.45;
   pointer-events: auto;
 }
 
-.sheet-row .sheet-pin-button:hover,
+@media (hover: hover) and (pointer: fine) {
+  .sheet-row .sheet-pin-button:hover,
+  .sheet-row .sheet-pin-button:focus-visible {
+    opacity: 0.75;
+  }
+}
+
+.sheet-row:focus-visible {
+  outline: 1px solid color-mix(in srgb, var(--excel-accent) 40%, transparent);
+  outline-offset: 1px;
+}
+
 .sheet-row .sheet-pin-button:focus-visible {
   opacity: 0.75;
 }

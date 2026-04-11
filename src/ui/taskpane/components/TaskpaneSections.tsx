@@ -1,6 +1,7 @@
 import {
   type CollisionDetection,
   DndContext,
+  DragOverlay,
   MeasuringStrategy,
   pointerWithin,
   closestCorners,
@@ -17,10 +18,13 @@ import { HiddenSection } from '../../components/HiddenSection';
 import { SearchBox } from '../../components/SearchBox';
 import { Section } from '../../components/Section';
 import { SheetList } from '../../components/SheetList';
+import { SheetRow } from '../../components/SheetRow';
 import type { GroupDragVisualConfig, WorksheetDragVisualConfig } from '../types/worksheetDragVisualConfig';
 import type { OpenGroupMenuArgs, OpenSheetMenuArgs } from '../types/contextMenuTypes';
+import type { WorksheetEntity } from '../../../domain/navigation/types';
 
 interface WorksheetDragConfig extends GroupDragVisualConfig {
+  activeDragWorksheet: WorksheetEntity | null;
   sensors: SensorDescriptor<any>[];
   onDragStart: (event: DragStartEvent) => void;
   onDragOver: (event: DragOverEvent) => void;
@@ -33,6 +37,7 @@ interface TaskpaneSectionsProps {
   searchResults: NavigatorView['searchResults'];
   navigatorView: NavigatorView;
   activeWorksheetId: string | null;
+  hoveredWorksheetId: string | null;
   isHiddenSectionCollapsed: boolean;
   contextMenuOpenSheetId?: string;
   contextMenuOpenGroupId?: string;
@@ -40,6 +45,7 @@ interface TaskpaneSectionsProps {
   onChangeQuery: (query: string) => void;
   onSelectSearchResult: (worksheetId: string) => void | Promise<void>;
   onActivateWorksheet: (worksheetId: string) => void | Promise<void>;
+  onHoverWorksheet: (worksheetId: string | null) => void;
   onPinWorksheet: (worksheetId: string) => void;
   onUnpinWorksheet: (worksheetId: string) => void;
   onToggleGroupCollapsed: (groupId: string) => void;
@@ -95,6 +101,7 @@ export function TaskpaneSections({
   searchResults,
   navigatorView,
   activeWorksheetId,
+  hoveredWorksheetId,
   isHiddenSectionCollapsed,
   contextMenuOpenSheetId,
   contextMenuOpenGroupId,
@@ -102,6 +109,7 @@ export function TaskpaneSections({
   onChangeQuery,
   onSelectSearchResult,
   onActivateWorksheet,
+  onHoverWorksheet,
   onPinWorksheet,
   onUnpinWorksheet,
   onToggleGroupCollapsed,
@@ -130,7 +138,9 @@ export function TaskpaneSections({
             worksheets={navigatorView.pinned}
             activeWorksheetId={activeWorksheetId}
             contextMenuOpenId={contextMenuOpenSheetId}
+            hoveredWorksheetId={hoveredWorksheetId}
             onActivate={onActivateWorksheet}
+            onHoverWorksheet={onHoverWorksheet}
             onTogglePin={onUnpinWorksheet}
             onOpenContextMenu={onOpenSheetMenu}
           />
@@ -151,6 +161,18 @@ export function TaskpaneSections({
         onDragEnd={dragConfig.onDragEnd}
         onDragCancel={dragConfig.onDragCancel}
       >
+        <DragOverlay dropAnimation={null}>
+          {dragConfig.activeDragWorksheet ? (
+            <SheetRow
+              worksheet={dragConfig.activeDragWorksheet}
+              isActive={dragConfig.activeDragWorksheet.worksheetId === activeWorksheetId}
+              isOverlay
+              onActivate={() => Promise.resolve()}
+              onOpenContextMenu={() => undefined}
+            />
+          ) : null}
+        </DragOverlay>
+
         {shouldShowGroupsSection ? (
           <Section title="Groups">
             <GroupSection
@@ -158,8 +180,10 @@ export function TaskpaneSections({
               activeWorksheetId={activeWorksheetId}
               contextMenuOpenId={contextMenuOpenSheetId}
               groupMenuOpenId={contextMenuOpenGroupId}
+              hoveredWorksheetId={hoveredWorksheetId}
               dragConfig={buildGroupDragConfig(dragConfig)}
               onActivate={onActivateWorksheet}
+              onHoverWorksheet={onHoverWorksheet}
               onToggleCollapsed={onToggleGroupCollapsed}
               onTogglePin={onPinWorksheet}
               onOpenGroupMenu={onOpenGroupMenu}
@@ -175,8 +199,10 @@ export function TaskpaneSections({
                 worksheets={navigatorView.ungrouped}
                 activeWorksheetId={activeWorksheetId}
                 contextMenuOpenId={contextMenuOpenSheetId}
+                hoveredWorksheetId={hoveredWorksheetId}
                 dragConfig={buildSheetListDragConfig(dragConfig, 'sheets')}
                 onActivate={onActivateWorksheet}
+                onHoverWorksheet={onHoverWorksheet}
                 onTogglePin={onPinWorksheet}
                 onOpenContextMenu={onOpenSheetMenu}
               />

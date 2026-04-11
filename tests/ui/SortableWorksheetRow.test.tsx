@@ -80,6 +80,7 @@ describe('SortableWorksheetRow', () => {
     await user.click(screen.getByRole('button', { name: 'Revenue' }));
 
     expect(onActivate).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveClass('sheet-row-dragging');
   });
 
   it('does not activate when suppression says the click belongs to drag cleanup', async () => {

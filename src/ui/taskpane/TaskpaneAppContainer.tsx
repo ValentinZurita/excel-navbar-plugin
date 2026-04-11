@@ -14,6 +14,7 @@ export function TaskpaneAppContainer() {
   // The controller owns workbook operations and domain state transitions.
   const controller = useNavigationController();
   const [deleteGroupRequest, setDeleteGroupRequest] = useState<{ groupId: string; groupName: string } | null>(null);
+  const [hoveredWorksheetId, setHoveredWorksheetId] = useState<string | null>(null);
 
   // Context menus are isolated in a dedicated hook so view code stays simple.
   const {
@@ -47,6 +48,9 @@ export function TaskpaneAppContainer() {
     reorderGroupWorksheet: controller.reorderGroupWorksheet,
     reorderSheetSectionWorksheet: controller.reorderSheetSectionWorksheet,
   });
+  const activeDragWorksheet = dragAndDrop.activeWorksheetId
+    ? controller.state.worksheetsById[dragAndDrop.activeWorksheetId] ?? null
+    : null;
 
   async function activateWorksheetFromSearch(worksheetId: string) {
     await controller.activateWorksheet(worksheetId);
@@ -96,23 +100,35 @@ export function TaskpaneAppContainer() {
         searchResults={controller.navigatorView.searchResults}
         navigatorView={controller.navigatorView}
         activeWorksheetId={controller.state.activeWorksheetId}
+        hoveredWorksheetId={hoveredWorksheetId}
         isHiddenSectionCollapsed={controller.state.hiddenSectionCollapsed}
         contextMenuOpenSheetId={contextMenuOpenSheetId}
         contextMenuOpenGroupId={contextMenuOpenGroupId}
         dragConfig={{
+          activeDragWorksheet,
           sensors: dragAndDrop.sensors,
           projectedDropTarget: dragAndDrop.projectedDropTarget,
           flashedGroupId: dragAndDrop.flashedGroupId,
           isDragActive: Boolean(dragAndDrop.activeWorksheetId),
           shouldSuppressActivation: dragAndDrop.shouldSuppressActivation,
-          onDragStart: dragAndDrop.onDragStart,
+          onDragStart: (event) => {
+            setHoveredWorksheetId(null);
+            dragAndDrop.onDragStart(event);
+          },
           onDragOver: dragAndDrop.onDragOver,
-          onDragEnd: dragAndDrop.onDragEnd,
-          onDragCancel: dragAndDrop.onDragCancel,
+          onDragEnd: (event) => {
+            setHoveredWorksheetId(null);
+            dragAndDrop.onDragEnd(event);
+          },
+          onDragCancel: (event) => {
+            setHoveredWorksheetId(null);
+            dragAndDrop.onDragCancel(event);
+          },
         }}
         onChangeQuery={controller.setQuery}
         onSelectSearchResult={activateWorksheetFromSearch}
         onActivateWorksheet={controller.activateWorksheet}
+        onHoverWorksheet={setHoveredWorksheetId}
         onPinWorksheet={controller.pinWorksheet}
         onUnpinWorksheet={controller.unpinWorksheet}
         onToggleGroupCollapsed={controller.toggleGroupCollapsed}

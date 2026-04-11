@@ -9,9 +9,12 @@ interface SheetRowProps {
   isContextMenuOpen?: boolean;
   isDragged?: boolean;
   isOverlay?: boolean;
+  isHovered?: boolean;
+  isInteractionSuppressed?: boolean;
   containerRef?: Ref<HTMLElement>;
   containerStyle?: CSSProperties;
   containerProps?: HTMLAttributes<HTMLElement>;
+  onHoverChange?: (worksheetId: string | null) => void;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onTogglePin?: (worksheetId: string) => void;
   onOpenContextMenu: (args: {
@@ -28,15 +31,22 @@ export function SheetRow({
   isContextMenuOpen,
   isDragged,
   isOverlay,
+  isHovered,
+  isInteractionSuppressed,
   containerRef,
   containerStyle,
   containerProps,
+  onHoverChange,
   onActivate,
   onTogglePin,
   onOpenContextMenu,
 }: SheetRowProps) {
   const canTogglePin = worksheet.visibility === 'Visible' && Boolean(onTogglePin);
   const isToggleable = canTogglePin;
+  const isInteractiveHighlight = !isInteractionSuppressed && Boolean(isHovered);
+  const isHighlighted = isActive || Boolean(isContextMenuOpen) || isInteractiveHighlight;
+  const isPinVisible =
+    Boolean(worksheet.isPinned) || Boolean(isContextMenuOpen) || (canTogglePin && isInteractiveHighlight);
 
   function renderRowIcon() {
     if (worksheet.isPinned) {
@@ -54,10 +64,24 @@ export function SheetRow({
     <article
       ref={containerRef}
       className={`sheet-row ${isActive ? 'sheet-row-active' : ''} ${isContextMenuOpen ? 'sheet-row-context-open' : ''} ${isToggleable ? 'sheet-row-pin-toggleable' : ''} ${worksheet.groupId ? 'sheet-row-grouped' : 'sheet-row-standalone'} ${isDragged ? 'sheet-row-dragging' : ''} ${isOverlay ? 'sheet-row-overlay' : ''}`}
+      data-active={isActive ? 'true' : 'false'}
+      data-highlighted={isHighlighted ? 'true' : 'false'}
+      data-hovered={isHovered ? 'true' : 'false'}
+      data-context-open={isContextMenuOpen ? 'true' : 'false'}
+      data-pin-visible={isPinVisible ? 'true' : 'false'}
+      data-interaction-suppressed={isInteractionSuppressed ? 'true' : 'false'}
       style={containerStyle}
       role="button"
       tabIndex={0}
       aria-label={worksheet.name}
+      onPointerEnter={() => {
+        if (!isInteractionSuppressed) {
+          onHoverChange?.(worksheet.worksheetId);
+        }
+      }}
+      onPointerLeave={() => {
+        onHoverChange?.(null);
+      }}
       onClick={() => void onActivate(worksheet.worksheetId)}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {

@@ -60,4 +60,39 @@ describe('SheetRow', () => {
     expect(container.querySelector('.sheet-row-icon')).not.toBeInTheDocument();
     expect(container.querySelector('.sheet-pin-button')).toBeInTheDocument();
   });
+
+  it('marks the row as highlighted and pin-visible when hover is controlled explicitly', () => {
+    const { container } = render(
+      <SheetRow
+        worksheet={baseWorksheet}
+        isActive={false}
+        isHovered
+        onActivate={vi.fn()}
+        onTogglePin={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+      />,
+    );
+
+    const row = container.querySelector('.sheet-row');
+    expect(row).toHaveAttribute('data-highlighted', 'true');
+    expect(row).toHaveAttribute('data-pin-visible', 'true');
+  });
+
+  it('suppresses transient hover visuals while drag interaction is active', () => {
+    const { container } = render(
+      <SheetRow
+        worksheet={baseWorksheet}
+        isActive={false}
+        isHovered
+        isInteractionSuppressed
+        onActivate={vi.fn()}
+        onTogglePin={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+      />,
+    );
+
+    const row = container.querySelector('.sheet-row');
+    expect(row).toHaveAttribute('data-highlighted', 'false');
+    expect(row).toHaveAttribute('data-pin-visible', 'false');
+  });
 });

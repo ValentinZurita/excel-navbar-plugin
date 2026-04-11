@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { useState } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import type { WorksheetEntity } from '../../src/domain/navigation/types';
 import { SheetList } from '../../src/ui/components/SheetList';
@@ -108,7 +110,6 @@ describe('SheetList', () => {
           onActivate={vi.fn()}
           onOpenContextMenu={vi.fn()}
           dragConfig={{
-            activeWorksheet: worksheet,
             containerId: 'group:group-1',
             projectedDropTarget: { containerId: 'group:group-1', index: 1, kind: 'group-header' },
             isDragActive: true,
@@ -142,7 +143,6 @@ describe('SheetList', () => {
           onActivate={vi.fn()}
           onOpenContextMenu={vi.fn()}
           dragConfig={{
-            activeWorksheet: worksheet,
             containerId: 'group:group-1',
             projectedDropTarget: { containerId: 'group:group-1', index: 0, kind: 'row' },
             isDragActive: true,
@@ -153,5 +153,42 @@ describe('SheetList', () => {
     );
 
     expect(container.querySelector('.row-insertion-line.worksheet-insertion-line-active')).toBeInTheDocument();
+  });
+
+  it('keeps hover highlight to a single worksheet when hover state is controlled explicitly', async () => {
+    const user = userEvent.setup();
+    const worksheets: WorksheetEntity[] = [
+      { worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible', workbookOrder: 1, isPinned: false, groupId: null, lastKnownStructuralState: null },
+      { worksheetId: 'sheet-2', name: 'Budget', visibility: 'Visible', workbookOrder: 2, isPinned: false, groupId: null, lastKnownStructuralState: null },
+    ];
+
+    function HoverHarness() {
+      const [hoveredWorksheetId, setHoveredWorksheetId] = useState<string | null>(null);
+
+      return (
+        <SheetList
+          worksheets={worksheets}
+          activeWorksheetId={null}
+          hoveredWorksheetId={hoveredWorksheetId}
+          onHoverWorksheet={setHoveredWorksheetId}
+          onActivate={vi.fn()}
+          onOpenContextMenu={vi.fn()}
+          onTogglePin={vi.fn()}
+        />
+      );
+    }
+
+    render(<HoverHarness />);
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    const budgetRow = screen.getByRole('button', { name: 'Budget' });
+
+    await user.hover(revenueRow);
+    expect(revenueRow).toHaveAttribute('data-highlighted', 'true');
+    expect(budgetRow).toHaveAttribute('data-highlighted', 'false');
+
+    await user.hover(budgetRow);
+    expect(revenueRow).toHaveAttribute('data-highlighted', 'false');
+    expect(budgetRow).toHaveAttribute('data-highlighted', 'true');
   });
 });

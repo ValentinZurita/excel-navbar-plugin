@@ -9,8 +9,10 @@ interface GroupSectionProps {
   activeWorksheetId: string | null;
   contextMenuOpenId?: string;
   groupMenuOpenId?: string;
+  hoveredWorksheetId?: string | null;
   dragConfig?: GroupDragConfig;
   onActivate: (worksheetId: string) => void | Promise<void>;
+  onHoverWorksheet?: (worksheetId: string | null) => void;
   onToggleCollapsed: (groupId: string) => void;
   onTogglePin?: (worksheetId: string) => void;
   onOpenGroupMenu: (args: { target: HTMLElement; x: number; y: number; groupId: string; groupName: string }) => void;
@@ -22,8 +24,10 @@ export function GroupSection({
   activeWorksheetId,
   contextMenuOpenId,
   groupMenuOpenId,
+  hoveredWorksheetId,
   dragConfig,
   onActivate,
+  onHoverWorksheet,
   onToggleCollapsed,
   onTogglePin,
   onOpenGroupMenu,
@@ -40,8 +44,10 @@ export function GroupSection({
           activeWorksheetId={activeWorksheetId}
           contextMenuOpenId={contextMenuOpenId}
           groupMenuOpenId={groupMenuOpenId}
+          hoveredWorksheetId={hoveredWorksheetId}
           dragConfig={dragConfig}
           onActivate={onActivate}
+          onHoverWorksheet={onHoverWorksheet}
           onToggleCollapsed={onToggleCollapsed}
           onTogglePin={onTogglePin}
           onOpenGroupMenu={onOpenGroupMenu}

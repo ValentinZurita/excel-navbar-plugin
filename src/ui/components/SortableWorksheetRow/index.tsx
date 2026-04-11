@@ -10,7 +10,10 @@ interface SortableWorksheetRowProps {
   isActive: boolean;
   isContextMenuOpen?: boolean;
   isInsertionBefore: boolean;
+  isHovered?: boolean;
+  isInteractionSuppressed?: boolean;
   shouldSuppressActivation: (worksheetId: string) => boolean;
+  onHoverChange?: (worksheetId: string | null) => void;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onTogglePin?: (worksheetId: string) => void;
   onOpenContextMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: WorksheetEntity }) => void;
@@ -27,7 +30,10 @@ export function SortableWorksheetRow({
   isActive,
   isContextMenuOpen,
   isInsertionBefore,
+  isHovered,
+  isInteractionSuppressed,
   shouldSuppressActivation,
+  onHoverChange,
   onActivate,
   onTogglePin,
   onOpenContextMenu,
@@ -63,11 +69,15 @@ export function SortableWorksheetRow({
         worksheet={worksheet}
         isActive={isActive}
         isContextMenuOpen={isContextMenuOpen}
+        isDragged={isDragging}
+        isHovered={isHovered}
+        isInteractionSuppressed={isInteractionSuppressed}
         containerRef={setNodeRef}
         containerProps={{
           ...attributes,
           ...listeners,
         }}
+        onHoverChange={onHoverChange}
         onActivate={handleActivate}
         onTogglePin={onTogglePin}
         onOpenContextMenu={onOpenContextMenu}
