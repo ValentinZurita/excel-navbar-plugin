@@ -25,6 +25,10 @@ interface SheetListProps {
   dragConfig?: SheetListDragConfig;
 }
 
+function isGroupContainerId(containerId: WorksheetContainerId): boolean {
+  return containerId !== 'sheets';
+}
+
 export function SheetList(props: SheetListProps) {
   if (!props.worksheets.length && !props.dragConfig?.isDragActive) {
     return null;
@@ -32,11 +36,21 @@ export function SheetList(props: SheetListProps) {
 
   const dragConfig = props.dragConfig;
 
+  if (
+    dragConfig &&
+    isGroupContainerId(dragConfig.containerId) &&
+    props.worksheets.length === 0
+  ) {
+    return null;
+  }
+
+  const isGroupContainer = Boolean(dragConfig && isGroupContainerId(dragConfig.containerId));
   const endDropLineActive = Boolean(
     dragConfig &&
       dragConfig.projectedDropTarget?.containerId === dragConfig.containerId &&
       dragConfig.projectedDropTarget.index === props.worksheets.length,
   );
+  const shouldRenderEndDropZone = Boolean(dragConfig && !isGroupContainer);
 
   if (!dragConfig) {
     return (
@@ -78,16 +92,18 @@ export function SheetList(props: SheetListProps) {
           />
         ))}
 
-        <WorksheetDropZone
-          dropTargetId={`${dragConfig.containerId}:end`}
-          containerId={dragConfig.containerId}
-          index={props.worksheets.length}
-          kind="container-end"
-          isActive={endDropLineActive}
-          isDragActive={dragConfig.isDragActive}
-          isEmpty={props.worksheets.length === 0}
-          testId={`${dragConfig.containerId}-drop-end`}
-        />
+        {shouldRenderEndDropZone ? (
+          <WorksheetDropZone
+            dropTargetId={`${dragConfig.containerId}:end`}
+            containerId={dragConfig.containerId}
+            index={props.worksheets.length}
+            kind="container-end"
+            isActive={endDropLineActive}
+            isDragActive={dragConfig.isDragActive}
+            isEmpty={props.worksheets.length === 0}
+            testId={`${dragConfig.containerId}-drop-end`}
+          />
+        ) : null}
       </div>
     </SortableContext>
   );
