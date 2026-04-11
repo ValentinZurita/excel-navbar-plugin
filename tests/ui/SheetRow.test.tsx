@@ -111,4 +111,21 @@ describe('SheetRow', () => {
     expect(row).toHaveClass('sheet-row-overlay');
     expect(row).toHaveClass('sheet-row-active');
   });
+
+  it('renders drag overlay rows as presentational only', () => {
+    const { container } = render(
+      <SheetRow
+        worksheet={baseWorksheet}
+        isActive={false}
+        isOverlay
+        onActivate={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+      />,
+    );
+
+    const row = container.querySelector('.sheet-row');
+    expect(row).toHaveAttribute('tabindex', '-1');
+    expect(row).toHaveAttribute('aria-hidden', 'true');
+    expect(row).not.toHaveAttribute('role', 'button');
+  });
 });

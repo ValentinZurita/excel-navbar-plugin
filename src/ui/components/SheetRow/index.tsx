@@ -41,6 +41,7 @@ export function SheetRow({
   onTogglePin,
   onOpenContextMenu,
 }: SheetRowProps) {
+  const isInteractive = !isOverlay;
   const canTogglePin = worksheet.visibility === 'Visible' && Boolean(onTogglePin);
   const isToggleable = canTogglePin;
   const isInteractiveHighlight = !isInteractionSuppressed && Boolean(isHovered);
@@ -71,25 +72,40 @@ export function SheetRow({
       data-pin-visible={isPinVisible ? 'true' : 'false'}
       data-interaction-suppressed={isInteractionSuppressed ? 'true' : 'false'}
       style={containerStyle}
-      role="button"
-      tabIndex={0}
+      role={isInteractive ? 'button' : undefined}
+      tabIndex={isInteractive ? 0 : -1}
+      aria-hidden={isInteractive ? undefined : true}
       aria-label={worksheet.name}
       onPointerEnter={() => {
-        if (!isInteractionSuppressed) {
+        if (isInteractive && !isInteractionSuppressed) {
           onHoverChange?.(worksheet.worksheetId);
         }
       }}
       onPointerLeave={() => {
-        onHoverChange?.(null);
+        if (isInteractive) {
+          onHoverChange?.(null);
+        }
       }}
-      onClick={() => void onActivate(worksheet.worksheetId)}
+      onClick={() => {
+        if (isInteractive) {
+          void onActivate(worksheet.worksheetId);
+        }
+      }}
       onKeyDown={(event) => {
+        if (!isInteractive) {
+          return;
+        }
+
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           void onActivate(worksheet.worksheetId);
         }
       }}
       onContextMenu={(event) => {
+        if (!isInteractive) {
+          return;
+        }
+
         event.preventDefault();
         onOpenContextMenu({
           target: event.currentTarget,
