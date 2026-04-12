@@ -1,4 +1,5 @@
-/* Sheet row container with subtle hover/active states. */
+/* Styles for a sheet row item in the worksheet navigator. */
+/* This file controls row layout, selection/highlight state, drag interactions, and the pin button. */
 .sheet-row {
   position: relative;
   display: grid;
@@ -14,16 +15,19 @@
   cursor: pointer;
 }
 
+/* Indent child rows in grouped worksheet hierarchies. */
 .sheet-row-grouped {
   padding-left: 20px;
 }
 
+/* Top row content layout: icon, title, and action region. */
 .row-topline {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+/* Leading area inside the row used by the drag handle / pin indicator. */
 .sheet-row-leading {
   position: relative;
   display: inline-flex;
@@ -34,6 +38,7 @@
   height: 20px;
 }
 
+/* Icon displayed next to the row title, such as a sheet or grouped indicator. */
 .sheet-row-icon {
   width: 14px;
   height: 14px;
@@ -47,6 +52,7 @@
   opacity: 0;
 }
 
+/* Invisible overlay element reserved for future hover or focus visuals. */
 .sheet-row::before {
   content: '';
   position: absolute;
@@ -58,6 +64,7 @@
   box-shadow: none;
 }
 
+/* Selected and highlighted row states. These are the visual cues for active navigation focus. */
 .sheet-row-active {
   background: color-mix(in srgb, var(--excel-body-fg) 10%, transparent);
   border-color: transparent;
@@ -72,6 +79,7 @@
   transform: none;
 }
 
+/* When drag mode is active, suppress row states so the drag overlay stays visible. */
 .sheet-list-drag-active .sheet-row[data-context-open='true'],
 .sheet-list-drag-active .sheet-row[data-active='true'],
 .sheet-list-drag-active .sheet-row[data-highlighted='true'] {
@@ -89,6 +97,7 @@
   pointer-events: none;
 }
 
+/* Dragging state for when a row is being moved. It becomes translucent and non-interactive. */
 .sheet-row-dragging {
   opacity: 0.22;
   pointer-events: none;
@@ -103,6 +112,7 @@
   box-shadow: none;
 }
 
+/* Overlay styles used by row previews or temporary drag-hover visuals. */
 .sheet-row-overlay {
   pointer-events: none;
   background: var(--excel-surface-raised);
@@ -113,6 +123,7 @@
   opacity: 0.96;
 }
 
+/* Reuse overlay styling for active/highlight/context-open states in floating preview mode. */
 .sheet-row-overlay.sheet-row-active,
 .sheet-row-overlay[data-highlighted='true'],
 .sheet-row-overlay[data-context-open='true'] {
@@ -123,10 +134,12 @@
     0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
+/* Container used for the drag-and-drop row ordering overlay. */
 .sortable-worksheet-row {
   position: relative;
 }
 
+/* Visual insertion marker shown when dragging a row above/below another. */
 .row-insertion-line {
   position: absolute;
   top: 0;
@@ -143,6 +156,7 @@
   min-width: 20px;
 }
 
+/* Action button positioned over the row leading area for pin/unpin. */
 .sheet-pin-button {
   position: absolute;
   inset: 0;
@@ -162,6 +176,7 @@
   z-index: 2;
 }
 
+/* When the pin icon is visible, the button becomes interactive. */
 .sheet-row[data-pin-visible='true'] .sheet-pin-button {
   opacity: 0.45;
   pointer-events: auto;
@@ -174,11 +189,13 @@
   }
 }
 
+/* Keyboard focus style for the entire row entry. */
 .sheet-row:focus-visible {
-  outline: 1px solid color-mix(in srgb, var(--excel-accent) 40%, transparent);
+  outline: 1px solid var(--excel-body-fg);
   outline-offset: 1px;
 }
 
+/* Focus style for the pin button while still keeping it subtle. */
 .sheet-row .sheet-pin-button:focus-visible {
   opacity: 0.75;
 }
@@ -198,11 +215,12 @@
   display: block;
 }
 
+/* Active pin icon state used when the row is currently pinned. */
 .sheet-pin-icon-active {
   color: var(--excel-muted);
 }
 
-/* Full-row clickable title action. */
+/* Row title area that spans the full width and remains clickable. */
 .sheet-link {
   display: flex;
   align-items: center;

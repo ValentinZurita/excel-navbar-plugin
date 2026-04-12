@@ -1,21 +1,18 @@
+/* Wrapper for the inline group creator UI used inside the taskpane. */
 .inline-group-creator {
   display: grid;
   gap: 8px;
-  padding: 6px 10px 8px;
+  padding: 12px 10px 10px;
 }
 
+/* Layout container for the input and optional helper text. */
 .inline-group-creator-field {
   display: grid;
   gap: 4px;
 }
 
-.inline-group-creator-label {
-  font-size: 11px;
-  color: var(--excel-muted);
-  font-weight: 500;
-  letter-spacing: 0.01em;
-}
-
+/* The main text field where the user types the new group name. */
+/* It uses a compact Office-style input and keeps the row width fluid. */
 .inline-group-creator-input {
   width: 100%;
   min-width: 0;
@@ -29,6 +26,16 @@
   caret-color: var(--excel-body-fg);
   -webkit-text-fill-color: var(--excel-body-fg);
   appearance: none;
+  outline: none;
+}
+
+/* Explicit theme overrides for the input background to keep it consistent with Office mode. */
+:root[data-office-theme-mode="light"] .inline-group-creator-input {
+  background: #ffffff;
+}
+
+:root[data-office-theme-mode="dark"] .inline-group-creator-input {
+  background: #1a1a1a;
 }
 
 .inline-group-creator-input::placeholder {
@@ -36,27 +43,72 @@
   opacity: 1;
 }
 
+/* Placeholder text is intentionally fully opaque for readability. */
 .inline-group-creator-input:focus {
-  outline: none;
-  border-color: var(--excel-accent, #0078d4);
-  box-shadow: 0 0 0 1px var(--excel-accent, #0078d4);
+  border-color: var(--excel-border);
+  box-shadow: none;
 }
 
+/* Keep focused input backgrounds stable across Office light/dark theme modes. */
+:root[data-office-theme-mode="light"] .inline-group-creator-input:focus {
+  background: #ffffff;
+}
+
+:root[data-office-theme-mode="dark"] .inline-group-creator-input:focus {
+  background: #1a1a1a;
+}
+
+/* Color chips row shown below the input; chooses a default palette for group styling. */
 .inline-group-creator-colors {
   display: flex;
-  gap: 8px;
-  padding: 4px 0;
+  gap: 10px;
+  padding: 6px 0;
+  justify-content: center;
 }
 
-.inline-group-creator-color-placeholder {
-  width: 14px;
-  height: 14px;
+.inline-group-creator-color {
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--excel-muted) 30%, transparent);
-  border: 1px dashed color-mix(in srgb, var(--excel-muted) 50%, transparent);
   flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease;
+  opacity: 0.85;
 }
 
+/* Hover state for the accent chips; visual affordance for selection-like UI. */
+.inline-group-creator-color:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+/* Each color chip represents a preset group accent. */
+/* PPT colors — subtle and elegant */
+.inline-group-creator-color-gray {
+  background: #a8a8a8;
+}
+
+.inline-group-creator-color-green {
+  background: #8eb892;
+}
+
+.inline-group-creator-color-blue {
+  background: #8faecd;
+}
+
+.inline-group-creator-color-red {
+  background: #cf8e8e;
+}
+
+.inline-group-creator-color-purple {
+  background: #aea7cd;
+}
+
+.inline-group-creator-color-yellow {
+  background: #cdb88e;
+}
+
+/* Hint text below the palette; shown once the user types to signal submit key. */
 .inline-group-creator-hint {
   font-size: 10px;
   color: var(--excel-muted);

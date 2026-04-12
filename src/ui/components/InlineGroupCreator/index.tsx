@@ -8,11 +8,12 @@ interface InlineGroupCreatorProps {
   autoFocus?: boolean;
 }
 
+// Inline group creation UI shown inside the sheet navigator.
+// Handles focus, keyboard submit, and cancel behavior while typing a new group name.
 export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus = true }: InlineGroupCreatorProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState('');
   const inputId = useId();
-  const labelId = useId();
 
   useEffect(() => {
     if (autoFocus) {
@@ -48,27 +49,27 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
 
   return (
     <div className="inline-group-creator">
-      <label className="inline-group-creator-field" htmlFor={inputId}>
-        <span id={labelId} className="inline-group-creator-label">Name</span>
-        <input
-          ref={inputRef}
-          id={inputId}
-          className="inline-group-creator-input"
-          type="text"
-          value={name}
-          placeholder="Group name"
-          onChange={(event) => setName(event.target.value)}
-          onKeyDown={handleInputKeyDown}
-          autoFocus={autoFocus}
-          aria-labelledby={labelId}
-          spellCheck={false}
-        />
-      </label>
+      <input
+        ref={inputRef}
+        id={inputId}
+        className="inline-group-creator-input"
+        type="text"
+        value={name}
+        placeholder=""
+        onChange={(event) => setName(event.target.value)}
+        onKeyDown={handleInputKeyDown}
+        autoFocus={autoFocus}
+        spellCheck={false}
+      />
 
-      <div className="inline-group-creator-colors" aria-label="Color options (coming soon)">
-        <span className="inline-group-creator-color-placeholder" />
-        <span className="inline-group-creator-color-placeholder" />
-        <span className="inline-group-creator-color-placeholder" />
+      {/* Color palette chips below the input; currently shown as non-interactive decorations. */}
+      <div className="inline-group-creator-colors">
+        <span className="inline-group-creator-color inline-group-creator-color-gray" />
+        <span className="inline-group-creator-color inline-group-creator-color-green" />
+        <span className="inline-group-creator-color inline-group-creator-color-blue" />
+        <span className="inline-group-creator-color inline-group-creator-color-red" />
+        <span className="inline-group-creator-color inline-group-creator-color-purple" />
+        <span className="inline-group-creator-color inline-group-creator-color-yellow" />
       </div>
 
       {hasContent && (
