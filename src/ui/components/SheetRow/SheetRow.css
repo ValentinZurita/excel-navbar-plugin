@@ -115,8 +115,8 @@
 /* Overlay styles used by row previews or temporary drag-hover visuals. */
 .sheet-row-overlay {
   pointer-events: none;
-  background: var(--excel-surface-raised);
-  border-color: color-mix(in srgb, var(--excel-border) 84%, transparent);
+  background: var(--excel-control-bg);
+  border-color: var(--excel-border);
   box-shadow:
     0 8px 18px rgba(0, 0, 0, 0.12),
     0 2px 6px rgba(0, 0, 0, 0.08);
@@ -127,8 +127,8 @@
 .sheet-row-overlay.sheet-row-active,
 .sheet-row-overlay[data-highlighted='true'],
 .sheet-row-overlay[data-context-open='true'] {
-  background: var(--excel-surface-raised);
-  border-color: color-mix(in srgb, var(--excel-border) 84%, transparent);
+  background: var(--excel-control-bg);
+  border-color: var(--excel-border);
   box-shadow:
     0 8px 18px rgba(0, 0, 0, 0.12),
     0 2px 6px rgba(0, 0, 0, 0.08);
