@@ -15,11 +15,14 @@ interface SheetListProps {
   activeWorksheetId: string | null;
   contextMenuOpenId?: string;
   hoveredWorksheetId?: string | null;
+  renamingWorksheetId?: string | null;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onHoverWorksheet?: (worksheetId: string | null) => void;
   onTogglePin?: (worksheetId: string) => void;
   onOpenContextMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: WorksheetEntity }) => void;
   dragConfig?: SheetListDragConfig;
+  onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
+  onRenameCancel?: () => void;
 }
 
 function isGroupContainerId(containerId: WorksheetContainerId): boolean {
@@ -84,10 +87,13 @@ export function SheetList(props: SheetListProps) {
             isContextMenuOpen={worksheet.worksheetId === props.contextMenuOpenId}
             isHovered={worksheet.worksheetId === props.hoveredWorksheetId}
             isInteractionSuppressed={false}
+            isRenaming={props.renamingWorksheetId === worksheet.worksheetId}
             onHoverChange={props.onHoverWorksheet}
             onActivate={props.onActivate}
             onTogglePin={props.onTogglePin}
             onOpenContextMenu={props.onOpenContextMenu}
+            onRenameSubmit={props.onRenameSubmit}
+            onRenameCancel={props.onRenameCancel}
           />
         ))}
       </div>
@@ -115,10 +121,13 @@ export function SheetList(props: SheetListProps) {
             isInteractionSuppressed={dragConfig.isDragActive}
             isInsertionBefore={isInsertionBeforeIndex(dragConfig.projectedDropTarget, dragConfig.containerId, index)}
             shouldSuppressActivation={dragConfig.shouldSuppressActivation}
+            isRenaming={props.renamingWorksheetId === worksheet.worksheetId}
             onHoverChange={props.onHoverWorksheet}
             onActivate={props.onActivate}
             onTogglePin={props.onTogglePin}
             onOpenContextMenu={props.onOpenContextMenu}
+            onRenameSubmit={props.onRenameSubmit}
+            onRenameCancel={props.onRenameCancel}
           />
         ))}
 

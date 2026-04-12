@@ -12,11 +12,14 @@ interface SortableWorksheetRowProps {
   isInsertionBefore: boolean;
   isHovered?: boolean;
   isInteractionSuppressed?: boolean;
+  isRenaming?: boolean;
   shouldSuppressActivation: (worksheetId: string) => boolean;
   onHoverChange?: (worksheetId: string | null) => void;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onTogglePin?: (worksheetId: string) => void;
   onOpenContextMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: WorksheetEntity }) => void;
+  onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
+  onRenameCancel?: () => void;
 }
 
 function shouldBlockActivation(isDragging: boolean, shouldSuppressActivation: (worksheetId: string) => boolean, worksheetId: string) {
@@ -32,11 +35,14 @@ export function SortableWorksheetRow({
   isInsertionBefore,
   isHovered,
   isInteractionSuppressed,
+  isRenaming,
   shouldSuppressActivation,
   onHoverChange,
   onActivate,
   onTogglePin,
   onOpenContextMenu,
+  onRenameSubmit,
+  onRenameCancel,
 }: SortableWorksheetRowProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({
     id: worksheet.worksheetId,
@@ -72,6 +78,7 @@ export function SortableWorksheetRow({
         isDragged={isDragging}
         isHovered={isHovered}
         isInteractionSuppressed={isInteractionSuppressed}
+        isRenaming={isRenaming}
         containerRef={setNodeRef}
         containerProps={{
           ...attributes,
@@ -81,6 +88,8 @@ export function SortableWorksheetRow({
         onActivate={handleActivate}
         onTogglePin={onTogglePin}
         onOpenContextMenu={onOpenContextMenu}
+        onRenameSubmit={onRenameSubmit}
+        onRenameCancel={onRenameCancel}
       />
     </div>
   );

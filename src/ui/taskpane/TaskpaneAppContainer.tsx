@@ -17,6 +17,10 @@ export function TaskpaneAppContainer() {
   const [deleteGroupRequest, setDeleteGroupRequest] = useState<{ groupId: string; groupName: string } | null>(null);
   const [hoveredWorksheetId, setHoveredWorksheetId] = useState<string | null>(null);
 
+  // Inline rename state for worksheets and groups (replaces dialog-based rename).
+  const [renamingWorksheetId, setRenamingWorksheetId] = useState<string | null>(null);
+  const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null);
+
   // Context menus are isolated in a dedicated hook so view code stays simple.
   const {
     activeMenu,
@@ -107,6 +111,36 @@ export function TaskpaneAppContainer() {
     setDeleteGroupRequest(null);
   }
 
+  // Inline rename handlers for worksheets.
+  function handleRenameWorksheetStart(worksheet: WorksheetEntity) {
+    closeMenus();
+    setRenamingWorksheetId(worksheet.worksheetId);
+  }
+
+  async function handleRenameWorksheetSubmit(worksheetId: string, newName: string) {
+    await controller.renameWorksheet(worksheetId, newName);
+    setRenamingWorksheetId(null);
+  }
+
+  function handleRenameWorksheetCancel() {
+    setRenamingWorksheetId(null);
+  }
+
+  // Inline rename handlers for groups.
+  function handleRenameGroupStart(groupId: string, groupName: string) {
+    closeMenus();
+    setRenamingGroupId(groupId);
+  }
+
+  function handleRenameGroupSubmit(groupId: string, newName: string) {
+    controller.renameGroup(groupId, newName);
+    setRenamingGroupId(null);
+  }
+
+  function handleRenameGroupCancel() {
+    setRenamingGroupId(null);
+  }
+
   return (
     <TaskpaneShell errorMessage={controller.errorMessage}>
       {/* Main taskpane navigation sections (search, pinned, groups, hidden). */}
@@ -119,6 +153,8 @@ export function TaskpaneAppContainer() {
         isHiddenSectionCollapsed={controller.state.hiddenSectionCollapsed}
         contextMenuOpenSheetId={contextMenuOpenSheetId}
         contextMenuOpenGroupId={contextMenuOpenGroupId}
+        renamingWorksheetId={renamingWorksheetId}
+        renamingGroupId={renamingGroupId}
         dragConfig={{
           activeDragWorksheet,
           sensors: dragAndDrop.sensors,
@@ -151,6 +187,12 @@ export function TaskpaneAppContainer() {
         onUnhideWorksheet={controller.unhideWorksheet}
         onOpenSheetMenu={openSheetMenu}
         onOpenGroupMenu={openGroupMenu}
+        onRenameWorksheetSubmit={handleRenameWorksheetSubmit}
+        onRenameGroupSubmit={handleRenameGroupSubmit}
+        onRenameCancel={() => {
+          handleRenameWorksheetCancel();
+          handleRenameGroupCancel();
+        }}
       />
 
       {/* Right-click context menus for worksheet and group actions. */}
@@ -159,10 +201,10 @@ export function TaskpaneAppContainer() {
         onCloseMenus={handleCloseMenus}
         onTogglePin={handleTogglePin}
         onToggleVisibility={handleToggleVisibility}
-        onRenameWorksheet={(worksheet) => openRenameWorksheetPrompt(worksheet.worksheetId, worksheet.name)}
+        onRenameWorksheet={handleRenameWorksheetStart}
         onRemoveFromGroup={controller.removeWorksheetFromGroup}
         onStartCreatingGroup={startCreatingGroup}
-        onRenameGroup={openRenameGroupPrompt}
+        onRenameGroup={handleRenameGroupStart}
         onDeleteGroup={handleDeleteGroup}
         isCreatingGroup={isCreating}
         onCancelCreatingGroup={cancelCreatingGroup}

@@ -1,0 +1,44 @@
+/* Inline rename input — Excel-style inline editing.
+   The input is visually invisible; only the caret indicates editing mode. */
+.inline-rename-input {
+  display: inline;
+  width: auto;
+  min-width: 0;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.2;
+  caret-color: var(--excel-body-fg);
+  -webkit-text-fill-color: transparent;
+  appearance: none;
+  outline: none;
+  box-shadow: none;
+  vertical-align: baseline;
+  text-align: left;
+}
+
+/* Show the text in light mode */
+:root[data-office-theme-mode="light"] .inline-rename-input {
+  -webkit-text-fill-color: var(--excel-body-fg);
+}
+
+/* Show the text in dark mode */
+:root[data-office-theme-mode="dark"] .inline-rename-input {
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.92);
+}
+
+.inline-rename-input::selection {
+  background: color-mix(in srgb, var(--excel-accent, #107c41) 30%, transparent);
+}
+
+.inline-rename-input:focus {
+  border: none;
+  outline: none;
+  box-shadow: none;
+}

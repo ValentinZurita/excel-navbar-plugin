@@ -1,11 +1,13 @@
 import type { CSSProperties, HTMLAttributes, Ref } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
+import { InlineRenameInput } from '../InlineRenameInput';
 import './SheetRow.css';
 
 interface SheetRowProps {
   worksheet: WorksheetEntity;
   isActive: boolean;
+  isRenaming?: boolean;
   isContextMenuOpen?: boolean;
   isDragged?: boolean;
   isOverlay?: boolean;
@@ -23,11 +25,14 @@ interface SheetRowProps {
     y: number;
     worksheet: WorksheetEntity;
   }) => void;
+  onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
+  onRenameCancel?: () => void;
 }
 
 export function SheetRow({
   worksheet,
   isActive,
+  isRenaming,
   isContextMenuOpen,
   isDragged,
   isOverlay,
@@ -40,6 +45,8 @@ export function SheetRow({
   onActivate,
   onTogglePin,
   onOpenContextMenu,
+  onRenameSubmit,
+  onRenameCancel,
 }: SheetRowProps) {
   const isInteractive = !isOverlay;
   const canTogglePin = worksheet.visibility === 'Visible' && Boolean(onTogglePin);
@@ -136,7 +143,15 @@ export function SheetRow({
         </span>
 
         <div className="sheet-link">
-          <span className="sheet-title">{worksheet.name}</span>
+          {isRenaming && onRenameSubmit ? (
+            <InlineRenameInput
+              initialValue={worksheet.name}
+              onSubmit={(newName) => onRenameSubmit(worksheet.worksheetId, newName)}
+              onCancel={onRenameCancel ?? (() => {})}
+            />
+          ) : (
+            <span className="sheet-title">{worksheet.name}</span>
+          )}
         </div>
       </div>
     </article>

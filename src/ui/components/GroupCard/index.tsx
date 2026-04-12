@@ -5,6 +5,7 @@ import type { GroupDragVisualConfig } from '../../taskpane/types/worksheetDragVi
 import { toGroupContainerId } from '../../taskpane/dnd/worksheetDndModel';
 import { GroupFolderIcon } from '../../icons';
 import { SheetList } from '../SheetList';
+import { InlineRenameInput } from '../InlineRenameInput';
 import './GroupCard.css';
 
 type GroupDragConfig = GroupDragVisualConfig;
@@ -16,12 +17,15 @@ interface GroupCardProps {
   groupMenuOpenId?: string;
   hoveredWorksheetId?: string | null;
   dragConfig?: GroupDragConfig;
+  isRenaming?: boolean;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onHoverWorksheet?: (worksheetId: string | null) => void;
   onToggleCollapsed: (groupId: string) => void;
   onOpenGroupMenu: (args: { target: HTMLElement; x: number; y: number; groupId: string; groupName: string }) => void;
   onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
   onTogglePin?: (worksheetId: string) => void;
+  onRenameSubmit?: (groupId: string, newName: string) => void;
+  onRenameCancel?: () => void;
 }
 
 function isGroupHeaderDropActive(
@@ -38,6 +42,9 @@ export function GroupCard({
   onToggleCollapsed,
   onOpenGroupMenu,
   onOpenSheetMenu,
+  isRenaming,
+  onRenameSubmit,
+  onRenameCancel,
   ...rest
 }: GroupCardProps) {
   const containerId = toGroupContainerId(group.groupId);
@@ -88,7 +95,15 @@ export function GroupCard({
             <GroupFolderIcon className="group-folder-icon" />
           </span>
           <span className="group-copy">
-            <span className="group-title">{group.name}</span>
+            {isRenaming && onRenameSubmit ? (
+              <InlineRenameInput
+                initialValue={group.name}
+                onSubmit={(newName) => onRenameSubmit(group.groupId, newName)}
+                onCancel={onRenameCancel ?? (() => {})}
+              />
+            ) : (
+              <span className="group-title">{group.name}</span>
+            )}
           </span>
         </button>
       </header>
