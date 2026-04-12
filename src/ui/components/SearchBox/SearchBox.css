@@ -126,3 +126,37 @@
   padding: 12px;
 }
 
+/* Dark theme: search results dropdown matches the dark search field style. */
+:root[data-office-theme-mode='dark'] .search-results-wrapper .search-results {
+  background: color-mix(in srgb, var(--excel-body-bg) 92%, white);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.28),
+    0 4px 8px rgba(0, 0, 0, 0.16);
+}
+
+:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result:hover,
+:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result:focus-visible {
+  background: color-mix(in srgb, var(--excel-body-fg) 12%, transparent);
+}
+
+:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result-leading {
+  color: rgba(255, 255, 255, 0.7);
+  opacity: 0.6;
+}
+
+:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result:hover .search-result-leading,
+:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result:focus-visible .search-result-leading {
+  color: rgba(255, 255, 255, 0.92);
+  opacity: 0.85;
+}
+
+:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result-meta {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result-icon {
+  color: rgba(255, 255, 255, 0.7);
+  opacity: 0.45;
+}
+
