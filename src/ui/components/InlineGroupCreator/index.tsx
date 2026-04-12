@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import './InlineGroupCreator.css';
 
 interface InlineGroupCreatorProps {
@@ -13,7 +13,6 @@ interface InlineGroupCreatorProps {
 export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus = true }: InlineGroupCreatorProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState('');
-  const inputId = useId();
 
   useEffect(() => {
     if (autoFocus) {
@@ -51,11 +50,11 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
     <div className="inline-group-creator">
       <input
         ref={inputRef}
-        id={inputId}
         className="inline-group-creator-input"
         type="text"
         value={name}
-        placeholder=""
+        aria-label="Name"
+        placeholder="Group name"
         onChange={(event) => setName(event.target.value)}
         onKeyDown={handleInputKeyDown}
         autoFocus={autoFocus}
@@ -63,7 +62,7 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
       />
 
       {/* Color palette chips below the input; currently shown as non-interactive decorations. */}
-      <div className="inline-group-creator-colors">
+      <div className="inline-group-creator-colors" role="group" aria-label="Color options (coming soon)">
         <span className="inline-group-creator-color inline-group-creator-color-gray" />
         <span className="inline-group-creator-color inline-group-creator-color-green" />
         <span className="inline-group-creator-color inline-group-creator-color-blue" />

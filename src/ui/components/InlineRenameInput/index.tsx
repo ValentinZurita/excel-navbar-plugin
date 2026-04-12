@@ -6,6 +6,7 @@ interface InlineRenameInputProps {
   onSubmit: (value: string) => void | Promise<void>;
   onCancel: () => void;
   autoFocus?: boolean;
+  ariaLabel?: string;
 }
 
 export function InlineRenameInput({
@@ -13,6 +14,7 @@ export function InlineRenameInput({
   onSubmit,
   onCancel,
   autoFocus = true,
+  ariaLabel = 'Name',
 }: InlineRenameInputProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState(initialValue);
@@ -62,6 +64,7 @@ export function InlineRenameInput({
       ref={inputRef}
       className="inline-rename-input"
       type="text"
+      aria-label={ariaLabel}
       value={value}
       onChange={(event) => setValue(event.target.value)}
       onKeyDown={handleKeyDown}

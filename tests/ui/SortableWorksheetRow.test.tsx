@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorksheetEntity } from '../../src/domain/navigation/types';
@@ -104,6 +104,46 @@ describe('SortableWorksheetRow', () => {
     await user.click(screen.getByRole('button', { name: 'Revenue' }));
 
     expect(shouldSuppressActivation).toHaveBeenCalledWith('sheet-1');
+    expect(onActivate).not.toHaveBeenCalled();
+  });
+
+  it('disables sortable listeners while a worksheet is being renamed inline', () => {
+    const sortableKeydownListener = vi.fn();
+    const onActivate = vi.fn();
+
+    useSortableMock.mockReturnValue({
+      attributes: { 'data-sortable': 'true' },
+      listeners: { onPointerDown: vi.fn(), onKeyDown: sortableKeydownListener },
+      setNodeRef: vi.fn(),
+      isDragging: false,
+    });
+
+    render(
+      <SortableWorksheetRow
+        worksheet={createWorksheet()}
+        containerId="sheets"
+        index={0}
+        isActive={false}
+        isInsertionBefore={false}
+        isRenaming
+        shouldSuppressActivation={() => false}
+        onActivate={onActivate}
+        onOpenContextMenu={vi.fn()}
+        onRenameSubmit={vi.fn()}
+        onRenameCancel={vi.fn()}
+      />,
+    );
+
+    expect(useSortableMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'sheet-1',
+        disabled: true,
+      }),
+    );
+
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: ' ' });
+
+    expect(sortableKeydownListener).not.toHaveBeenCalled();
     expect(onActivate).not.toHaveBeenCalled();
   });
 });

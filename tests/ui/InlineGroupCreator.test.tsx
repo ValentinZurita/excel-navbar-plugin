@@ -17,7 +17,7 @@ describe('InlineGroupCreator', () => {
     expect(screen.getByLabelText('Name')).toHaveAttribute('placeholder', 'Group name');
   });
 
-  it('renders 3 color placeholders', () => {
+  it('renders all color placeholders', () => {
     render(
       <InlineGroupCreator
         onCreate={vi.fn()}
@@ -28,7 +28,7 @@ describe('InlineGroupCreator', () => {
 
     const colorContainer = screen.getByLabelText('Color options (coming soon)');
     const colorPlaceholders = colorContainer.querySelectorAll('span');
-    expect(colorPlaceholders).toHaveLength(3);
+    expect(colorPlaceholders).toHaveLength(6);
   });
 
   it('focuses input on mount', async () => {

@@ -4,6 +4,19 @@ import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 import { InlineRenameInput } from '../InlineRenameInput';
 import './SheetRow.css';
 
+function hasNestedInteractiveTarget(target: EventTarget | null, currentTarget: HTMLElement) {
+  if (!(target instanceof HTMLElement) || target === currentTarget) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  const interactiveTarget = target.closest('input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]');
+  return Boolean(interactiveTarget && currentTarget.contains(interactiveTarget));
+}
+
 interface SheetRowProps {
   worksheet: WorksheetEntity;
   isActive: boolean;
@@ -48,6 +61,7 @@ export function SheetRow({
   onRenameSubmit,
   onRenameCancel,
 }: SheetRowProps) {
+  const { onKeyDown: onContainerKeyDown, ...restContainerProps } = containerProps ?? {};
   const isInteractive = !isOverlay;
   const canTogglePin = worksheet.visibility === 'Visible' && Boolean(onTogglePin);
   const isToggleable = canTogglePin;
@@ -103,6 +117,12 @@ export function SheetRow({
           return;
         }
 
+        onContainerKeyDown?.(event);
+
+        if (event.defaultPrevented || hasNestedInteractiveTarget(event.target, event.currentTarget)) {
+          return;
+        }
+
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           void onActivate(worksheet.worksheetId);
@@ -122,7 +142,7 @@ export function SheetRow({
           worksheet,
         });
       }}
-      {...containerProps}
+      {...restContainerProps}
     >
       <div className="row-topline">
         <span className="sheet-row-leading" aria-hidden="true">

@@ -44,6 +44,7 @@ export function SortableWorksheetRow({
   onRenameSubmit,
   onRenameCancel,
 }: SortableWorksheetRowProps) {
+  const isRenameActive = Boolean(isRenaming);
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({
     id: worksheet.worksheetId,
     data: {
@@ -52,6 +53,7 @@ export function SortableWorksheetRow({
       containerId,
       index,
     },
+    disabled: isRenameActive,
   });
 
   const handleActivate = (worksheetId: string) => {
@@ -82,7 +84,7 @@ export function SortableWorksheetRow({
         containerRef={setNodeRef}
         containerProps={{
           ...attributes,
-          ...listeners,
+          ...(isRenameActive ? {} : listeners),
         }}
         onHoverChange={onHoverChange}
         onActivate={handleActivate}

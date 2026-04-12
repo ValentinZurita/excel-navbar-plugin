@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { WorksheetEntity } from '../../src/domain/navigation/types';
 import { SheetRow } from '../../src/ui/components/SheetRow';
@@ -127,5 +127,47 @@ describe('SheetRow', () => {
     expect(row).toHaveAttribute('tabindex', '-1');
     expect(row).toHaveAttribute('aria-hidden', 'true');
     expect(row).not.toHaveAttribute('role', 'button');
+  });
+
+  it('does not activate when Space is pressed inside the inline rename input', () => {
+    const onActivate = vi.fn();
+
+    render(
+      <SheetRow
+        worksheet={baseWorksheet}
+        isActive={false}
+        isRenaming
+        onActivate={onActivate}
+        onOpenContextMenu={vi.fn()}
+        onRenameSubmit={vi.fn()}
+        onRenameCancel={vi.fn()}
+      />,
+    );
+
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: ' ' });
+
+    expect(onActivate).not.toHaveBeenCalled();
+  });
+
+  it('respects container keydown prevention before running row activation shortcuts', () => {
+    const onActivate = vi.fn();
+    const onContainerKeyDown = vi.fn((event: { preventDefault: () => void }) => {
+      event.preventDefault();
+    });
+
+    render(
+      <SheetRow
+        worksheet={baseWorksheet}
+        isActive={false}
+        onActivate={onActivate}
+        onOpenContextMenu={vi.fn()}
+        containerProps={{ onKeyDown: onContainerKeyDown }}
+      />,
+    );
+
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Revenue' }), { key: ' ' });
+
+    expect(onContainerKeyDown).toHaveBeenCalled();
+    expect(onActivate).not.toHaveBeenCalled();
   });
 });

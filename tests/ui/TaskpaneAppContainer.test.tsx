@@ -71,7 +71,7 @@ function createControllerMock() {
 }
 
 describe('TaskpaneAppContainer', () => {
-  it('opens rename dialog from worksheet context menu', async () => {
+  it('starts inline rename from worksheet context menu', async () => {
     const user = userEvent.setup();
     useNavigationControllerMock.mockReturnValue(createControllerMock());
 
@@ -85,8 +85,9 @@ describe('TaskpaneAppContainer', () => {
 
     await user.click(screen.getByRole('button', { name: 'Rename' }));
 
-    expect(screen.getByRole('heading', { name: 'Rename sheet' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Name')).toHaveValue('Revenue');
+    const renameInput = await screen.findByLabelText('Name');
+    expect(renameInput).toHaveValue('Revenue');
+    expect(renameInput).toHaveClass('inline-rename-input');
   });
 
   it('creates a group from the sheet menu using the source worksheet id', async () => {
