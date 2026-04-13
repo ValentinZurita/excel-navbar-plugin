@@ -198,10 +198,11 @@
   }
 }
 
-/* Keyboard focus style for the entire row entry. */
+/* Keyboard focus style for the entire row entry. Uses the same visual feedback as mouse hover. */
 .sheet-row:focus-visible {
-  outline: 1px solid var(--excel-body-fg);
-  outline-offset: 1px;
+  background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 /* Focus style for the pin button while still keeping it subtle. */
