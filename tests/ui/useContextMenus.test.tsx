@@ -69,6 +69,7 @@ describe('useContextMenus', () => {
         y: 20,
         groupId: 'group-1',
         groupName: 'Finance',
+        colorToken: 'blue',
       });
     });
 

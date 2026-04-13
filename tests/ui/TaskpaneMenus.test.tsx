@@ -29,6 +29,7 @@ function renderSheetMenu(overrides: Partial<React.ComponentProps<typeof Taskpane
       onStartCreatingGroup={vi.fn()}
       onRenameGroup={vi.fn()}
       onDeleteGroup={vi.fn()}
+      onSetGroupColor={vi.fn()}
       isCreatingGroup={false}
       onCancelCreatingGroup={vi.fn()}
       onConfirmCreatingGroup={vi.fn()}
@@ -49,7 +50,7 @@ describe('TaskpaneMenus', () => {
   it('renders group actions from the active menu kind', () => {
     render(
       <TaskpaneMenus
-        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance' }}
+        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
         onCloseMenus={vi.fn()}
         onTogglePin={vi.fn()}
         onToggleVisibility={vi.fn()}
@@ -58,6 +59,7 @@ describe('TaskpaneMenus', () => {
         onStartCreatingGroup={vi.fn()}
         onRenameGroup={vi.fn()}
         onDeleteGroup={vi.fn()}
+        onSetGroupColor={vi.fn()}
         isCreatingGroup={false}
         onCancelCreatingGroup={vi.fn()}
         onConfirmCreatingGroup={vi.fn()}
@@ -86,6 +88,7 @@ describe('TaskpaneMenus', () => {
         onStartCreatingGroup={vi.fn()}
         onRenameGroup={vi.fn()}
         onDeleteGroup={vi.fn()}
+        onSetGroupColor={vi.fn()}
         isCreatingGroup={false}
         onCancelCreatingGroup={vi.fn()}
         onConfirmCreatingGroup={vi.fn()}
@@ -128,7 +131,7 @@ describe('TaskpaneMenus', () => {
 
     render(
       <TaskpaneMenus
-        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance' }}
+        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
         onCloseMenus={onCloseMenus}
         onTogglePin={vi.fn()}
         onToggleVisibility={vi.fn()}
@@ -137,6 +140,7 @@ describe('TaskpaneMenus', () => {
         onStartCreatingGroup={vi.fn()}
         onRenameGroup={vi.fn()}
         onDeleteGroup={onDeleteGroup}
+        onSetGroupColor={vi.fn()}
         isCreatingGroup={false}
         onCancelCreatingGroup={vi.fn()}
         onConfirmCreatingGroup={vi.fn()}
@@ -175,7 +179,7 @@ describe('TaskpaneMenus', () => {
     expect(screen.getByLabelText('Name')).toBeInTheDocument();
 
     // Color placeholders should be visible
-    expect(screen.getByLabelText('Color options (coming soon)')).toBeInTheDocument();
+    expect(screen.getByLabelText('Color options')).toBeInTheDocument();
 
     // Hint should appear when there's content
     await user.type(screen.getByLabelText('Name'), 'Finance');
@@ -193,7 +197,7 @@ describe('TaskpaneMenus', () => {
 
     await user.type(screen.getByLabelText('Name'), 'Finance{Enter}');
 
-    expect(onConfirmCreatingGroup).toHaveBeenCalledWith('Finance');
+    expect(onConfirmCreatingGroup).toHaveBeenCalledWith('Finance', 'blue');
   });
 
   it('does not create group on Enter with empty name', async () => {

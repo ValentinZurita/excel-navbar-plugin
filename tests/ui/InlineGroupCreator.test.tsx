@@ -26,8 +26,8 @@ describe('InlineGroupCreator', () => {
       />,
     );
 
-    const colorContainer = screen.getByLabelText('Color options (coming soon)');
-    const colorPlaceholders = colorContainer.querySelectorAll('span');
+    const colorContainer = screen.getByLabelText('Color options');
+    const colorPlaceholders = colorContainer.querySelectorAll('button');
     expect(colorPlaceholders).toHaveLength(6);
   });
 
@@ -75,7 +75,7 @@ describe('InlineGroupCreator', () => {
 
     await user.type(screen.getByLabelText('Name'), '  Finance  {Enter}');
 
-    expect(onCreate).toHaveBeenCalledWith('Finance');
+    expect(onCreate).toHaveBeenCalledWith('Finance', 'blue');
   });
 
   it('does not call onCreate on Enter with empty name', async () => {

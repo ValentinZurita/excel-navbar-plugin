@@ -68,10 +68,10 @@ describe('useGroupCreationState', () => {
     });
 
     act(() => {
-      result.current.confirmCreating('Finance');
+      result.current.confirmCreating('Finance', 'blue');
     });
 
-    expect(onCreateGroup).toHaveBeenCalledWith('Finance', 'sheet-1');
+    expect(onCreateGroup).toHaveBeenCalledWith('Finance', 'blue', 'sheet-1');
   });
 
   it('calls onCreateGroup with only name when no worksheet id', () => {
@@ -85,10 +85,10 @@ describe('useGroupCreationState', () => {
     });
 
     act(() => {
-      result.current.confirmCreating('Operations');
+      result.current.confirmCreating('Operations', 'blue');
     });
 
-    expect(onCreateGroup).toHaveBeenCalledWith('Operations', undefined);
+    expect(onCreateGroup).toHaveBeenCalledWith('Operations', 'blue', undefined);
   });
 
   it('does not call onCreateGroup with empty name', () => {
@@ -102,7 +102,7 @@ describe('useGroupCreationState', () => {
     });
 
     act(() => {
-      result.current.confirmCreating('');
+      result.current.confirmCreating('', 'blue');
     });
 
     expect(onCreateGroup).not.toHaveBeenCalled();
@@ -119,7 +119,7 @@ describe('useGroupCreationState', () => {
     });
 
     act(() => {
-      result.current.confirmCreating('   ');
+      result.current.confirmCreating('   ', 'blue');
     });
 
     expect(onCreateGroup).not.toHaveBeenCalled();
@@ -136,10 +136,10 @@ describe('useGroupCreationState', () => {
     });
 
     act(() => {
-      result.current.confirmCreating('  Finance  ');
+      result.current.confirmCreating('  Finance  ', 'blue');
     });
 
-    expect(onCreateGroup).toHaveBeenCalledWith('Finance', 'sheet-1');
+    expect(onCreateGroup).toHaveBeenCalledWith('Finance', 'blue', 'sheet-1');
   });
 
   it('exits creating mode after successful confirmation', () => {
@@ -154,7 +154,7 @@ describe('useGroupCreationState', () => {
     expect(result.current.isCreating).toBe(true);
 
     act(() => {
-      result.current.confirmCreating('Finance');
+      result.current.confirmCreating('Finance', 'blue');
     });
 
     expect(result.current.isCreating).toBe(false);
@@ -173,7 +173,7 @@ describe('useGroupCreationState', () => {
     });
 
     act(() => {
-      result.current.confirmCreating('Finance');
+      result.current.confirmCreating('Finance', 'blue');
     });
 
     expect(onSuccess).toHaveBeenCalledTimes(1);
@@ -191,7 +191,7 @@ describe('useGroupCreationState', () => {
     });
 
     act(() => {
-      result.current.confirmCreating('');
+      result.current.confirmCreating('', 'blue');
     });
 
     expect(onSuccess).not.toHaveBeenCalled();

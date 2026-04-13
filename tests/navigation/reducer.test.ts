@@ -25,6 +25,7 @@ describe('navigationReducer', () => {
     const nextState = navigationReducer(state, {
       type: 'createGroup',
       name: 'Finance',
+      colorToken: 'blue',
       initialWorksheetId: 'one',
     });
 
