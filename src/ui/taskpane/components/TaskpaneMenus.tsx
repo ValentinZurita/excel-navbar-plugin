@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import type { WorksheetEntity } from '../../../domain/navigation/types';
+import { useState, type ReactNode } from 'react';
+import type { GroupColorToken, WorksheetEntity } from '../../../domain/navigation/types';
 import type { ContextMenuState, GroupMenuState, SheetMenuState } from '../types/contextMenuTypes';
 import {
   AddGroupMenuIcon,
@@ -31,10 +31,11 @@ interface TaskpaneMenusProps {
   onStartCreatingGroup: (initialWorksheetId?: string) => void;
   onRenameGroup: (groupId: string, groupName: string) => void;
   onDeleteGroup: (groupId: string, groupName: string) => void;
+  onSetGroupColor: (groupId: string, colorToken: GroupColorToken) => void;
   // Inline creation state
   isCreatingGroup: boolean;
   onCancelCreatingGroup: () => void;
-  onConfirmCreatingGroup: (name: string) => void;
+  onConfirmCreatingGroup: (name: string, colorToken: GroupColorToken) => void;
 }
 
 function MenuItem({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
@@ -153,9 +154,13 @@ function buildSheetMenuActions(
   return actions;
 }
 
+// Lista de colores disponibles para el picker
+const colorPickerColors: GroupColorToken[] = ['blue', 'green', 'orange', 'purple', 'red', 'gray'];
+
 function buildGroupMenuActions(
   groupMenu: GroupMenuState,
-  handlers: Pick<TaskpaneMenusProps, 'onCloseMenus' | 'onStartCreatingGroup' | 'onRenameGroup' | 'onDeleteGroup'>,
+  handlers: Pick<TaskpaneMenusProps, 'onCloseMenus' | 'onStartCreatingGroup' | 'onRenameGroup' | 'onDeleteGroup' | 'onSetGroupColor'>,
+  onOpenColorPicker: (open: boolean) => void,
 ): MenuAction[] {
   return [
     {
@@ -164,6 +169,19 @@ function buildGroupMenuActions(
       label: 'Rename group',
       onSelect: () => {
         handlers.onRenameGroup(groupMenu.groupId, groupMenu.groupName);
+      },
+    },
+    {
+      key: 'change-color-group',
+      icon: (
+        <span
+          className="context-menu-color-preview"
+          style={{ backgroundColor: `var(--group-color-${groupMenu.colorToken})` }}
+        />
+      ),
+      label: 'Change color',
+      onSelect: () => {
+        onOpenColorPicker(true);
       },
     },
     {
@@ -207,7 +225,7 @@ function SheetContextMenu({
   onStartCreatingGroup: (initialWorksheetId?: string) => void;
   isCreatingGroup: boolean;
   onCancelCreatingGroup: () => void;
-  onConfirmCreatingGroup: (name: string) => void;
+  onConfirmCreatingGroup: (name: string, colorToken: GroupColorToken) => void;
 }) {
   const actions = buildSheetMenuActions(sheetMenu, {
     onCloseMenus,
@@ -239,6 +257,7 @@ function GroupContextMenu({
   onStartCreatingGroup,
   onRenameGroup,
   onDeleteGroup,
+  onSetGroupColor,
   isCreatingGroup,
   onCancelCreatingGroup,
   onConfirmCreatingGroup,
@@ -248,16 +267,25 @@ function GroupContextMenu({
   onStartCreatingGroup: (initialWorksheetId?: string) => void;
   onRenameGroup: (groupId: string, groupName: string) => void;
   onDeleteGroup: (groupId: string, groupName: string) => void;
+  onSetGroupColor: (groupId: string, colorToken: GroupColorToken) => void;
   isCreatingGroup: boolean;
   onCancelCreatingGroup: () => void;
-  onConfirmCreatingGroup: (name: string) => void;
+  onConfirmCreatingGroup: (name: string, colorToken: GroupColorToken) => void;
 }) {
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+
   const actions = buildGroupMenuActions(groupMenu, {
     onCloseMenus,
     onStartCreatingGroup,
     onRenameGroup,
     onDeleteGroup,
-  });
+    onSetGroupColor,
+  }, setIsColorPickerOpen);
+
+  function handleColorSelect(color: GroupColorToken) {
+    onSetGroupColor(groupMenu.groupId, color);
+    onCloseMenus();
+  }
 
   return (
     <ContextMenuLayer menu={groupMenu} onCloseMenus={onCloseMenus}>
@@ -267,6 +295,32 @@ function GroupContextMenu({
           onCancel={onCancelCreatingGroup}
           onCloseMenu={onCloseMenus}
         />
+      ) : isColorPickerOpen ? (
+        <div className="context-menu-color-picker">
+          <div className="context-menu-color-picker-header">Select color</div>
+          <div className="context-menu-color-picker-grid">
+            {colorPickerColors.map((color) => (
+              <button
+                key={color}
+                type="button"
+                className={`context-menu-color-picker-item ${
+                  groupMenu.colorToken === color ? 'context-menu-color-picker-item-selected' : ''
+                }`}
+                style={{ backgroundColor: `var(--group-color-${color})` }}
+                aria-label={`Select ${color}`}
+                aria-pressed={groupMenu.colorToken === color}
+                onClick={() => handleColorSelect(color)}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            className="context-menu-color-picker-cancel"
+            onClick={() => setIsColorPickerOpen(false)}
+          >
+            Cancel
+          </button>
+        </div>
       ) : (
         renderMenuActions(actions)
       )}
@@ -284,6 +338,7 @@ export function TaskpaneMenus({
   onStartCreatingGroup,
   onRenameGroup,
   onDeleteGroup,
+  onSetGroupColor,
   isCreatingGroup,
   onCancelCreatingGroup,
   onConfirmCreatingGroup,
@@ -316,6 +371,7 @@ export function TaskpaneMenus({
       onStartCreatingGroup={onStartCreatingGroup}
       onRenameGroup={onRenameGroup}
       onDeleteGroup={onDeleteGroup}
+      onSetGroupColor={onSetGroupColor}
       isCreatingGroup={isCreatingGroup}
       onCancelCreatingGroup={onCancelCreatingGroup}
       onConfirmCreatingGroup={onConfirmCreatingGroup}
