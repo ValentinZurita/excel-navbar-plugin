@@ -82,12 +82,63 @@
   animation: group-folder-pulse 240ms ease-out;
 }
 
+/* Icon container with colored background behind outlined icon */
+.group-leading {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+/* Colored background circle behind the outlined icon - larger and subtler */
+.group-leading::before {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  z-index: 0;
+  opacity: 0.35;
+}
+
+/* Icon remains outlined in gray - subtle like pinned icons */
 .group-folder-icon {
+  position: relative;
+  z-index: 1;
   width: 15px;
   height: 15px;
   display: block;
   color: var(--excel-muted);
   opacity: 0.45;
+  transition: color 140ms ease, opacity 140ms ease;
+}
+
+/* Background color variants using CSS tokens */
+.group-leading-gray::before {
+  background: var(--group-color-gray);
+}
+
+.group-leading-green::before {
+  background: var(--group-color-green);
+}
+
+.group-leading-blue::before {
+  background: var(--group-color-blue);
+}
+
+.group-leading-red::before {
+  background: var(--group-color-red);
+}
+
+.group-leading-purple::before {
+  background: var(--group-color-purple);
+}
+
+.group-leading-orange::before {
+  background: var(--group-color-orange);
 }
 
 .group-copy {

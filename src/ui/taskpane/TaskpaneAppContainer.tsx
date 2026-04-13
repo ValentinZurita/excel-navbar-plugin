@@ -207,6 +207,7 @@ export function TaskpaneAppContainer() {
         onStartCreatingGroup={startCreatingGroup}
         onRenameGroup={handleRenameGroupStart}
         onDeleteGroup={handleDeleteGroup}
+        onSetGroupColor={controller.setGroupColor}
         isCreatingGroup={isCreating}
         onCancelCreatingGroup={cancelCreatingGroup}
         onConfirmCreatingGroup={confirmCreatingGroup}

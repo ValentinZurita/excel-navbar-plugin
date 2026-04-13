@@ -1,4 +1,4 @@
-import type { NavigatorGroupView } from '../../../domain/navigation/types';
+import type { GroupColorToken, NavigatorGroupView } from '../../../domain/navigation/types';
 import type { GroupDragVisualConfig } from '../../taskpane/types/worksheetDragVisualConfig';
 import { GroupCard } from '../GroupCard';
 
@@ -16,7 +16,7 @@ interface GroupSectionProps {
   onHoverWorksheet?: (worksheetId: string | null) => void;
   onToggleCollapsed: (groupId: string) => void;
   onTogglePin?: (worksheetId: string) => void;
-  onOpenGroupMenu: (args: { target: HTMLElement; x: number; y: number; groupId: string; groupName: string }) => void;
+  onOpenGroupMenu: (args: { target: HTMLElement; x: number; y: number; groupId: string; groupName: string; colorToken: GroupColorToken }) => void;
   onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
   onRenameSubmit?: (groupId: string, newName: string) => void;
   onRenameCancel?: () => void;

@@ -1,5 +1,5 @@
 import { useDroppable } from '@dnd-kit/core';
-import type { NavigatorGroupView } from '../../../domain/navigation/types';
+import type { GroupColorToken, NavigatorGroupView } from '../../../domain/navigation/types';
 import type { WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
 import type { GroupDragVisualConfig } from '../../taskpane/types/worksheetDragVisualConfig';
 import { toGroupContainerId } from '../../taskpane/dnd/worksheetDndModel';
@@ -21,7 +21,7 @@ interface GroupCardProps {
   onActivate: (worksheetId: string) => void | Promise<void>;
   onHoverWorksheet?: (worksheetId: string | null) => void;
   onToggleCollapsed: (groupId: string) => void;
-  onOpenGroupMenu: (args: { target: HTMLElement; x: number; y: number; groupId: string; groupName: string }) => void;
+  onOpenGroupMenu: (args: { target: HTMLElement; x: number; y: number; groupId: string; groupName: string; colorToken: GroupColorToken }) => void;
   onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
   onTogglePin?: (worksheetId: string) => void;
   onRenameSubmit?: (groupId: string, newName: string) => void;
@@ -83,6 +83,7 @@ export function GroupCard({
           y: event.clientY,
           groupId: group.groupId,
           groupName: group.name,
+          colorToken: group.colorToken,
         });
       }}
     >
@@ -91,7 +92,7 @@ export function GroupCard({
         className={`group-header ${group.groupId === rest.groupMenuOpenId ? 'group-header-context-open' : ''} ${isDropActive ? 'group-header-drop-active' : ''}`}
       >
         <button className="group-toggle" type="button" onClick={() => onToggleCollapsed(group.groupId)}>
-          <span className={`group-leading ${isFolderFlashing ? 'group-leading-flash' : ''}`} aria-hidden="true">
+          <span className={`group-leading group-leading-${group.colorToken} ${isFolderFlashing ? 'group-leading-flash' : ''}`} aria-hidden="true">
             <GroupFolderIcon className="group-folder-icon" />
           </span>
           <span className="group-copy">

@@ -72,8 +72,10 @@
   border-radius: 50%;
   flex-shrink: 0;
   cursor: pointer;
-  transition: transform 120ms ease, opacity 120ms ease;
+  transition: transform 120ms ease, opacity 120ms ease, box-shadow 120ms ease;
   opacity: 0.85;
+  border: none;
+  padding: 0;
 }
 
 /* Hover state for the accent chips; visual affordance for selection-like UI. */
@@ -82,8 +84,14 @@
   opacity: 1;
 }
 
-/* Each color chip represents a preset group accent. */
-/* PPT colors — subtle and elegant */
+/* Selected state with focus ring */
+.inline-group-creator-color-selected {
+  opacity: 1;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px var(--excel-body-bg), 0 0 0 4px var(--excel-accent);
+}
+
+/* Each color chip represents a preset group accent - original palette */
 .inline-group-creator-color-gray {
   background: #a8a8a8;
 }
@@ -104,7 +112,7 @@
   background: #aea7cd;
 }
 
-.inline-group-creator-color-yellow {
+.inline-group-creator-color-orange {
   background: #cdb88e;
 }
 
