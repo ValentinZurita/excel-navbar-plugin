@@ -90,4 +90,54 @@ describe('TaskpaneSections', () => {
     expect(overlayRows).toHaveLength(1);
     expect(overlayRows[0]).toHaveAttribute('aria-label', 'Revenue');
   });
+
+  it('renders a subtle groups session-only hint only when groups exist', () => {
+    const navigatorView = createNavigatorView();
+    navigatorView.groups = [{
+      groupId: 'group-1',
+      name: 'Finance',
+      colorToken: 'green',
+      isCollapsed: false,
+      worksheets: [],
+    }];
+
+    render(
+      <TaskpaneSections
+        query=""
+        searchResults={[]}
+        navigatorView={navigatorView}
+        activeWorksheetId={null}
+        hoveredWorksheetId={null}
+        isHiddenSectionCollapsed={false}
+        isSessionOnlyPersistence
+        dragConfig={{
+          activeDragWorksheet: null,
+          sensors: [],
+          projectedDropTarget: null,
+          flashedGroupId: null,
+          isDragActive: false,
+          shouldSuppressActivation: () => false,
+          onDragStart: vi.fn(),
+          onDragOver: vi.fn(),
+          onDragEnd: vi.fn(),
+          onDragCancel: vi.fn(),
+        }}
+        onChangeQuery={vi.fn()}
+        onSelectSearchResult={vi.fn()}
+        onActivateWorksheet={vi.fn()}
+        onHoverWorksheet={vi.fn()}
+        onPinWorksheet={vi.fn()}
+        onUnpinWorksheet={vi.fn()}
+        onToggleGroupCollapsed={vi.fn()}
+        onToggleHiddenSection={vi.fn()}
+        onUnhideWorksheet={vi.fn()}
+        onOpenSheetMenu={vi.fn()}
+        onOpenGroupMenu={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('button', {
+      name: 'This workbook has not been saved yet. Group changes persist only for this session.',
+    })).toHaveAttribute('title', 'This workbook has not been saved yet. Group changes persist only for this session.');
+  });
 });

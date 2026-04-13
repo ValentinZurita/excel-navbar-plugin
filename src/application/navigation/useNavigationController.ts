@@ -12,6 +12,7 @@ export function useNavigationController() {
   const { state, dispatch, navigatorView } = useNavigationContext();
   const [isBusy, setIsBusy] = useState(false);
   const [banner, setBanner] = useState<BannerState | null>(null);
+  const [isSessionOnlyPersistence, setIsSessionOnlyPersistence] = useState(false);
   const hasLoaded = useRef(false);
   const latestStateRef = useRef(state);
   const persistenceContextRef = useRef<WorkbookPersistenceContext | null>(null);
@@ -33,9 +34,11 @@ export function useNavigationController() {
       dispatch({ type: 'hydrateFromWorkbook', snapshot });
       dispatch({ type: 'hydrateFromPersistence', model: persistedModel });
       persistenceContextRef.current = persistenceContext;
-      setBanner(status.banner);
+      setIsSessionOnlyPersistence(status.mode === 'session-only');
+      setBanner(status.banner?.tone === 'info' ? null : status.banner);
       hasLoaded.current = true;
     } catch (error) {
+      setIsSessionOnlyPersistence(false);
       setBanner({
         tone: 'error',
         message: error instanceof Error ? error.message : 'Unable to load workbook state.',
@@ -59,8 +62,10 @@ export function useNavigationController() {
     }
 
     void persistence.save(persistenceContext, toPersistedModel(state)).then((status) => {
-      setBanner(status.banner);
+      setIsSessionOnlyPersistence(status.mode === 'session-only');
+      setBanner(status.banner?.tone === 'info' ? null : status.banner);
     }).catch((error) => {
+      setIsSessionOnlyPersistence(false);
       setBanner({
         tone: 'warning',
         message: error instanceof Error ? error.message : 'Unable to save workbook state.',
@@ -85,18 +90,18 @@ export function useNavigationController() {
 
         if (transitionedToStable) {
           const status = await persistence.save(persistenceContext, toPersistedModel(latestStateRef.current));
-          setBanner(status.banner);
+          setIsSessionOnlyPersistence(status.mode === 'session-only');
+          setBanner(status.banner?.tone === 'info' ? null : status.banner);
           return;
         }
 
         if (persistenceContext.mode === 'session-only') {
-          setBanner({
-            tone: 'info',
-            message: 'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
-          });
+          setIsSessionOnlyPersistence(true);
+          setBanner((currentBanner) => (currentBanner?.tone === 'warning' || currentBanner?.tone === 'error' ? currentBanner : null));
           return;
         }
 
+        setIsSessionOnlyPersistence(false);
         setBanner((currentBanner) => (currentBanner?.tone === 'warning' ? currentBanner : null));
       }).catch(() => undefined);
     }, 5000);
@@ -169,6 +174,7 @@ export function useNavigationController() {
     navigatorView,
     isBusy,
     banner,
+    isSessionOnlyPersistence,
     ...handlers,
   };
 }

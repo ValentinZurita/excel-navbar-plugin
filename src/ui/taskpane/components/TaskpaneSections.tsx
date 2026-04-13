@@ -44,6 +44,7 @@ interface TaskpaneSectionsProps {
   contextMenuOpenGroupId?: string;
   renamingWorksheetId?: string | null;
   renamingGroupId?: string | null;
+  isSessionOnlyPersistence?: boolean;
   dragConfig: WorksheetDragConfig;
   onChangeQuery: (query: string) => void;
   onSelectSearchResult: (worksheetId: string) => void | Promise<void>;
@@ -119,6 +120,7 @@ export function TaskpaneSections({
   contextMenuOpenGroupId,
   renamingWorksheetId,
   renamingGroupId,
+  isSessionOnlyPersistence = false,
   dragConfig,
   onChangeQuery,
   onSelectSearchResult,
@@ -139,6 +141,21 @@ export function TaskpaneSections({
   const shouldShowGroupsSection = navigatorView.groups.length > 0;
   const shouldShowUngroupedSection = shouldRenderUngroupedSection(navigatorView, dragConfig.isDragActive);
   const shouldShowHiddenSection = navigatorView.hidden.length > 0;
+  const shouldShowSessionOnlyGroupsHint = shouldShowGroupsSection && isSessionOnlyPersistence;
+  const groupsSessionOnlyHint = shouldShowSessionOnlyGroupsHint ? (
+    <button
+      className="section-hint-button"
+      type="button"
+      aria-label="This workbook has not been saved yet. Group changes persist only for this session."
+      title="This workbook has not been saved yet. Group changes persist only for this session."
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      }}
+    >
+      !
+    </button>
+  ) : null;
 
   return (
     <>
@@ -199,7 +216,7 @@ export function TaskpaneSections({
         </DragOverlay>
 
         {shouldShowGroupsSection ? (
-          <Section title="Groups">
+          <Section title="Groups" headerAccessory={groupsSessionOnlyHint}>
             <GroupSection
               groups={navigatorView.groups}
               activeWorksheetId={activeWorksheetId}

@@ -41,10 +41,40 @@
   gap: 6px;
 }
 
+.section-header-accessory {
+  display: inline-flex;
+  align-items: center;
+}
+
 .inline-chevron {
   color: var(--excel-muted);
   font-size: 11px;
   line-height: 1;
+}
+
+.section-hint-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--excel-muted) 14%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: color-mix(in srgb, var(--excel-muted) 64%, transparent);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: help;
+}
+
+.section-hint-button:hover,
+.section-hint-button:focus-visible {
+  color: var(--excel-muted);
+  border-color: color-mix(in srgb, var(--excel-muted) 34%, transparent);
+  background: transparent;
+  outline: none;
 }
 
 .section-body {

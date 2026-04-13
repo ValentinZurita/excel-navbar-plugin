@@ -49,6 +49,7 @@ function createControllerMock() {
     },
     isBusy: false,
     banner,
+    isSessionOnlyPersistence: false,
     setQuery: vi.fn(),
     toggleGroupCollapsed: vi.fn(),
     setGroupCollapsed: vi.fn(),
@@ -212,11 +213,11 @@ describe('TaskpaneAppContainer', () => {
     expect(controller.deleteGroup).toHaveBeenCalledWith('group-1');
   });
 
-  it('renders the persistence banner when the controller exposes one', () => {
+  it('renders warning banners when the controller exposes one', () => {
     const controller = createControllerMock();
     const sessionBanner: BannerState = {
-      tone: 'info',
-      message: 'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
+      tone: 'warning',
+      message: 'We could not save to this workbook, but your navigation state was cached locally for this workbook on this device.',
     };
     controller.banner = sessionBanner;
     useNavigationControllerMock.mockReturnValue(controller);
@@ -224,5 +225,35 @@ describe('TaskpaneAppContainer', () => {
     render(<TaskpaneAppContainer />);
 
     expect(screen.getByText(sessionBanner.message)).toBeInTheDocument();
+  });
+
+  it('renders the groups session-only hint instead of a banner', () => {
+    const controller = createControllerMock();
+    controller.isSessionOnlyPersistence = true;
+    controller.state.groupsById = {
+      'group-1': {
+        groupId: 'group-1',
+        name: 'Finance',
+        colorToken: 'green',
+        isCollapsed: false,
+        worksheetOrder: [],
+        createdAt: 1,
+      },
+    };
+    controller.state.groupOrder = ['group-1'];
+    controller.navigatorView.groups = [{
+      groupId: 'group-1',
+      name: 'Finance',
+      colorToken: 'green',
+      isCollapsed: false,
+      worksheets: [],
+    }];
+    useNavigationControllerMock.mockReturnValue(controller);
+
+    render(<TaskpaneAppContainer />);
+
+    expect(screen.getByRole('button', {
+      name: 'This workbook has not been saved yet. Group changes persist only for this session.',
+    })).toBeInTheDocument();
   });
 });

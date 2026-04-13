@@ -5,10 +5,11 @@ import './Section.css';
 interface SectionProps {
   title: string;
   defaultCollapsed?: boolean;
+  headerAccessory?: ReactNode;
   children: ReactNode;
 }
 
-export function Section({ title, defaultCollapsed = false, children }: SectionProps) {
+export function Section({ title, defaultCollapsed = false, headerAccessory, children }: SectionProps) {
   // Generic collapsible block used by pinned/sheets/groups sections.
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
@@ -20,6 +21,7 @@ export function Section({ title, defaultCollapsed = false, children }: SectionPr
             {isCollapsed ? <ChevronRightIcon width="12" height="12" /> : <ChevronDownIcon width="12" height="12" />}
           </span>
           <h2>{title}</h2>
+          {headerAccessory ? <span className="section-header-accessory">{headerAccessory}</span> : null}
         </div>
       </header>
       {!isCollapsed ? <div className="section-body">{children}</div> : null}

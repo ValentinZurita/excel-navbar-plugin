@@ -155,6 +155,7 @@ export function TaskpaneAppContainer() {
         contextMenuOpenGroupId={contextMenuOpenGroupId}
         renamingWorksheetId={renamingWorksheetId}
         renamingGroupId={renamingGroupId}
+        isSessionOnlyPersistence={controller.isSessionOnlyPersistence}
         dragConfig={{
           activeDragWorksheet,
           sensors: dragAndDrop.sensors,

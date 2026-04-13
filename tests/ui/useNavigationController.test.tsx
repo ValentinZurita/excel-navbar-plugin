@@ -95,7 +95,7 @@ describe('useNavigationController', () => {
     vi.useRealTimers();
   });
 
-  it('shows a subtle banner in session-only mode', async () => {
+  it('tracks session-only persistence without surfacing an info banner', async () => {
     adapterMock.getWorkbookSnapshot.mockResolvedValue(createSnapshot());
     adapterMock.getPersistenceContext.mockResolvedValue(createContext({ stableWorkbookKey: null, mode: 'session-only', source: 'none' }));
     persistenceMock.load.mockResolvedValue({
@@ -119,8 +119,9 @@ describe('useNavigationController', () => {
     const { result } = renderHook(() => useNavigationController(), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.banner?.message).toBe('This workbook does not have a stable file identity yet. Groups will persist only for this session.');
+      expect(result.current.isSessionOnlyPersistence).toBe(true);
     });
+    expect(result.current.banner).toBeNull();
   });
 
   it('shows degraded warning when canonical save fails', async () => {
@@ -181,7 +182,8 @@ describe('useNavigationController', () => {
     await act(async () => {
       await Promise.resolve();
     });
-    expect(result.current.banner?.tone).toBe('info');
+    expect(result.current.isSessionOnlyPersistence).toBe(true);
+    expect(result.current.banner).toBeNull();
 
     await act(async () => {
       vi.advanceTimersByTime(5000);
@@ -193,6 +195,7 @@ describe('useNavigationController', () => {
       createContext(),
       expect.objectContaining({ metadataVersion: 1 }),
     );
+    expect(result.current.isSessionOnlyPersistence).toBe(false);
     expect(result.current.banner).toBeNull();
   });
 });
