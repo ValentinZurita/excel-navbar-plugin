@@ -1,4 +1,4 @@
-import type { WorksheetEntity } from '../../../domain/navigation/types';
+import type { GroupColorToken, WorksheetEntity } from '../../../domain/navigation/types';
 
 // Shared context menu types keep components/hooks aligned on payload shape.
 
@@ -15,6 +15,7 @@ export interface GroupMenuState {
   y: number;
   groupId: string;
   groupName: string;
+  colorToken: GroupColorToken;
 }
 
 export type ContextMenuState = SheetMenuState | GroupMenuState;
@@ -32,4 +33,5 @@ export interface OpenGroupMenuArgs {
   y: number;
   groupId: string;
   groupName: string;
+  colorToken: GroupColorToken;
 }

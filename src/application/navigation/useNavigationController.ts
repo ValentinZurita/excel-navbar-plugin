@@ -3,7 +3,7 @@ import { NavigationPersistence } from '../../infrastructure/persistence/Navigati
 import { OfficeWorkbookAdapter } from '../../infrastructure/office/OfficeWorkbookAdapter';
 import { toPersistedModel } from '../../domain/navigation/persistenceModel';
 import { useNavigationContext } from '../../ui/navigation/NavigationProvider';
-import type { BannerState, WorkbookPersistenceContext } from '../../domain/navigation/types';
+import type { BannerState, GroupColorToken, WorkbookPersistenceContext } from '../../domain/navigation/types';
 
 const adapter = new OfficeWorkbookAdapter();
 const persistence = new NavigationPersistence();
@@ -122,14 +122,17 @@ export function useNavigationController() {
     toggleHiddenSection() {
       dispatch({ type: 'toggleHiddenSection' });
     },
-    createGroup(name: string, initialWorksheetId?: string) {
-      dispatch({ type: 'createGroup', name, initialWorksheetId });
+    createGroup(name: string, colorToken: GroupColorToken, initialWorksheetId?: string) {
+      dispatch({ type: 'createGroup', name, colorToken, initialWorksheetId });
     },
     renameGroup(groupId: string, name: string) {
       dispatch({ type: 'renameGroup', groupId, name });
     },
     deleteGroup(groupId: string) {
       dispatch({ type: 'deleteGroup', groupId });
+    },
+    setGroupColor(groupId: string, colorToken: GroupColorToken) {
+      dispatch({ type: 'setGroupColor', groupId, colorToken });
     },
     assignWorksheetToGroup(worksheetId: string, groupId: string, targetIndex?: number) {
       dispatch({ type: 'assignWorksheetToGroup', worksheetId, groupId, targetIndex });

@@ -1,7 +1,8 @@
 import { useCallback, useState } from 'react';
+import type { GroupColorToken } from '../../../domain/navigation/types';
 
 interface UseGroupCreationStateOptions {
-  onCreateGroup: (name: string, initialWorksheetId?: string) => void;
+  onCreateGroup: (name: string, colorToken: GroupColorToken, initialWorksheetId?: string) => void;
   onSuccess?: () => void;
 }
 
@@ -20,12 +21,12 @@ export function useGroupCreationState({ onCreateGroup, onSuccess }: UseGroupCrea
   }, []);
 
   const confirmCreating = useCallback(
-    (name: string) => {
+    (name: string, colorToken: GroupColorToken) => {
       if (!name.trim()) {
         return;
       }
 
-      onCreateGroup(name.trim(), initialWorksheetId);
+      onCreateGroup(name.trim(), colorToken, initialWorksheetId);
       setIsCreating(false);
       setInitialWorksheetId(undefined);
       onSuccess?.();

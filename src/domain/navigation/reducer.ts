@@ -16,9 +16,10 @@ export type NavigationAction =
   | { type: 'toggleGroupCollapsed'; groupId: string }
   | { type: 'setGroupCollapsed'; groupId: string; isCollapsed: boolean }
   | { type: 'toggleHiddenSection' }
-  | { type: 'createGroup'; name: string; colorToken?: GroupColorToken; initialWorksheetId?: string }
+  | { type: 'createGroup'; name: string; colorToken: GroupColorToken; initialWorksheetId?: string }
   | { type: 'renameGroup'; groupId: string; name: string }
   | { type: 'deleteGroup'; groupId: string }
+  | { type: 'setGroupColor'; groupId: string; colorToken: GroupColorToken }
   | { type: 'assignWorksheetToGroup'; worksheetId: string; groupId: string; targetIndex?: number }
   | { type: 'removeWorksheetFromGroup'; worksheetId: string; targetIndex?: number }
   | { type: 'reorderGroupWorksheet'; worksheetId: string; groupId: string; targetIndex: number }
@@ -274,6 +275,20 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
         ...nextState,
         groupOrder: nextState.groupOrder.filter((groupId) => groupId !== action.groupId),
         sheetSectionOrder: reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById),
+      };
+    }
+    case 'setGroupColor': {
+      const group = state.groupsById[action.groupId];
+      if (!group) {
+        return state;
+      }
+
+      return {
+        ...state,
+        groupsById: {
+          ...state.groupsById,
+          [action.groupId]: { ...group, colorToken: action.colorToken },
+        },
       };
     }
     case 'assignWorksheetToGroup': {

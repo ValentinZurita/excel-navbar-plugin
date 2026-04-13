@@ -20,8 +20,8 @@ export function useContextMenus() {
     });
   }, []);
 
-  const openGroupMenu = useCallback(({ x, y, groupId, groupName }: OpenGroupMenuArgs) => {
-    setActiveMenu({ kind: 'group', x, y, groupId, groupName });
+  const openGroupMenu = useCallback(({ x, y, groupId, groupName, colorToken }: OpenGroupMenuArgs) => {
+    setActiveMenu({ kind: 'group', x, y, groupId, groupName, colorToken });
   }, []);
 
   const sheetMenu = activeMenu?.kind === 'sheet' ? activeMenu : null;
