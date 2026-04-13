@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import type { WorksheetEntity } from '../../src/domain/navigation/types';
+import type { BannerState, WorksheetEntity } from '../../src/domain/navigation/types';
 import { TaskpaneAppContainer } from '../../src/ui/taskpane/TaskpaneAppContainer';
 
 const { useNavigationControllerMock } = vi.hoisted(() => ({
@@ -27,8 +27,8 @@ function createWorksheet(overrides: Partial<WorksheetEntity> = {}): WorksheetEnt
 
 function createControllerMock() {
   const worksheet = createWorksheet();
-
-  return {
+  const banner: BannerState | null = null;
+  const controller: any = {
     state: {
       worksheetsById: { [worksheet.worksheetId]: worksheet },
       groupsById: {},
@@ -48,7 +48,7 @@ function createControllerMock() {
       searchResults: [],
     },
     isBusy: false,
-    errorMessage: null,
+    banner,
     setQuery: vi.fn(),
     toggleGroupCollapsed: vi.fn(),
     setGroupCollapsed: vi.fn(),
@@ -68,6 +68,8 @@ function createControllerMock() {
     hideWorksheet: vi.fn().mockResolvedValue(undefined),
     reload: vi.fn().mockResolvedValue(undefined),
   };
+
+  return controller;
 }
 
 describe('TaskpaneAppContainer', () => {
@@ -208,5 +210,19 @@ describe('TaskpaneAppContainer', () => {
     await user.click(within(confirmDialog).getByRole('button', { name: 'Delete group' }));
 
     expect(controller.deleteGroup).toHaveBeenCalledWith('group-1');
+  });
+
+  it('renders the persistence banner when the controller exposes one', () => {
+    const controller = createControllerMock();
+    const sessionBanner: BannerState = {
+      tone: 'info',
+      message: 'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
+    };
+    controller.banner = sessionBanner;
+    useNavigationControllerMock.mockReturnValue(controller);
+
+    render(<TaskpaneAppContainer />);
+
+    expect(screen.getByText(sessionBanner.message)).toBeInTheDocument();
   });
 });

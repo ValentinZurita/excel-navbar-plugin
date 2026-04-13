@@ -159,12 +159,6 @@
   pointer-events: none;
 }
 
-/* Pin button stays hidden until row interaction. */
-.sheet-row-leading {
-  width: 20px;
-  min-width: 20px;
-}
-
 /* Action button positioned over the row leading area for pin/unpin. */
 .sheet-pin-button {
   position: absolute;

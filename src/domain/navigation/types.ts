@@ -37,6 +37,13 @@ export interface WorkbookSnapshot {
   activeWorksheetId: string | null;
 }
 
+export interface WorkbookPersistenceContext {
+  documentSettingsAvailable: boolean;
+  stableWorkbookKey: string | null;
+  mode: 'stable' | 'session-only';
+  source: 'document-url' | 'file-properties-url' | 'none';
+}
+
 export interface PersistedNavigationModel {
   metadataVersion: 1;
   groups: GroupEntity[];
@@ -44,6 +51,18 @@ export interface PersistedNavigationModel {
   pinnedWorksheetIds: string[];
   hiddenSectionCollapsed: boolean;
   priorStructuralStateByWorksheetId: Record<string, StructuralState | null>;
+}
+
+export interface BannerState {
+  tone: 'error' | 'warning' | 'info';
+  message: string;
+}
+
+export interface PersistenceStatus {
+  mode: 'document+local-cache' | 'document-only' | 'session-only' | 'degraded';
+  banner: BannerState | null;
+  lastSource: 'document-settings' | 'scoped-local-cache' | 'none';
+  lastError?: string;
 }
 
 export interface NavigationState {

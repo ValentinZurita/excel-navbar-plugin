@@ -3,6 +3,7 @@ import { NavigationPersistence } from '../../infrastructure/persistence/Navigati
 import { OfficeWorkbookAdapter } from '../../infrastructure/office/OfficeWorkbookAdapter';
 import { toPersistedModel } from '../../domain/navigation/persistenceModel';
 import { useNavigationContext } from '../../ui/navigation/NavigationProvider';
+import type { BannerState, WorkbookPersistenceContext } from '../../domain/navigation/types';
 
 const adapter = new OfficeWorkbookAdapter();
 const persistence = new NavigationPersistence();
@@ -10,23 +11,35 @@ const persistence = new NavigationPersistence();
 export function useNavigationController() {
   const { state, dispatch, navigatorView } = useNavigationContext();
   const [isBusy, setIsBusy] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [banner, setBanner] = useState<BannerState | null>(null);
   const hasLoaded = useRef(false);
+  const latestStateRef = useRef(state);
+  const persistenceContextRef = useRef<WorkbookPersistenceContext | null>(null);
+
+  useEffect(() => {
+    latestStateRef.current = state;
+  }, [state]);
 
   const load = useCallback(async () => {
     setIsBusy(true);
-    setErrorMessage(null);
+    setBanner(null);
 
     try {
-      const [snapshot, persistedModel] = await Promise.all([
+      const [snapshot, persistenceContext] = await Promise.all([
         adapter.getWorkbookSnapshot(),
-        persistence.load(),
+        adapter.getPersistenceContext(),
       ]);
+      const { model: persistedModel, status } = await persistence.load(persistenceContext);
       dispatch({ type: 'hydrateFromWorkbook', snapshot });
       dispatch({ type: 'hydrateFromPersistence', model: persistedModel });
+      persistenceContextRef.current = persistenceContext;
+      setBanner(status.banner);
       hasLoaded.current = true;
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Unable to load workbook state.');
+      setBanner({
+        tone: 'error',
+        message: error instanceof Error ? error.message : 'Unable to load workbook state.',
+      });
     } finally {
       setIsBusy(false);
     }
@@ -40,15 +53,51 @@ export function useNavigationController() {
     if (!hasLoaded.current) {
       return;
     }
-    void persistence.save(toPersistedModel(state)).catch(() => {
-      // Keep the UI usable even if persistence falls back to local cache only.
+    const persistenceContext = persistenceContextRef.current;
+    if (!persistenceContext) {
+      return;
+    }
+
+    void persistence.save(persistenceContext, toPersistedModel(state)).then((status) => {
+      setBanner(status.banner);
+    }).catch((error) => {
+      setBanner({
+        tone: 'warning',
+        message: error instanceof Error ? error.message : 'Unable to save workbook state.',
+      });
     });
   }, [state]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
-      void adapter.getWorkbookSnapshot().then((snapshot) => {
+      void Promise.all([
+        adapter.getWorkbookSnapshot(),
+        adapter.getPersistenceContext(),
+      ]).then(async ([snapshot, persistenceContext]) => {
         dispatch({ type: 'hydrateFromWorkbook', snapshot });
+
+        const previousContext = persistenceContextRef.current;
+        const transitionedToStable = previousContext?.mode === 'session-only'
+          && persistenceContext.mode === 'stable'
+          && Boolean(persistenceContext.stableWorkbookKey);
+
+        persistenceContextRef.current = persistenceContext;
+
+        if (transitionedToStable) {
+          const status = await persistence.save(persistenceContext, toPersistedModel(latestStateRef.current));
+          setBanner(status.banner);
+          return;
+        }
+
+        if (persistenceContext.mode === 'session-only') {
+          setBanner({
+            tone: 'info',
+            message: 'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
+          });
+          return;
+        }
+
+        setBanner((currentBanner) => (currentBanner?.tone === 'warning' ? currentBanner : null));
       }).catch(() => undefined);
     }, 5000);
 
@@ -119,7 +168,7 @@ export function useNavigationController() {
     state,
     navigatorView,
     isBusy,
-    errorMessage,
+    banner,
     ...handlers,
   };
 }

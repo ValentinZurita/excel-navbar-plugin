@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react';
+import type { BannerState } from '../../../domain/navigation/types';
 
 interface TaskpaneShellProps {
   children: ReactNode;
-  errorMessage: string | null;
+  banner: BannerState | null;
 }
 
-export function TaskpaneShell({ children, errorMessage }: TaskpaneShellProps) {
+export function TaskpaneShell({ children, banner }: TaskpaneShellProps) {
   return (
     <main className="taskpane-shell">
-      {errorMessage ? <div className="error-banner">{errorMessage}</div> : null}
+      {banner ? <div className={`status-banner status-banner-${banner.tone}`}>{banner.message}</div> : null}
       <section className="taskpane-content">{children}</section>
     </main>
   );

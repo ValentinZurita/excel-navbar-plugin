@@ -1,5 +1,13 @@
-import { localCacheKey, workbookSettingsKey } from '../../domain/navigation/constants';
-import type { PersistedNavigationModel } from '../../domain/navigation/types';
+import {
+  buildScopedLocalCacheKey,
+  legacyLocalCacheKey,
+  workbookSettingsKey,
+} from '../../domain/navigation/constants';
+import type {
+  PersistedNavigationModel,
+  PersistenceStatus,
+  WorkbookPersistenceContext,
+} from '../../domain/navigation/types';
 
 function parseModel(rawValue: unknown): PersistedNavigationModel | null {
   if (!rawValue || typeof rawValue !== 'object') {
@@ -10,21 +18,106 @@ function parseModel(rawValue: unknown): PersistedNavigationModel | null {
   return candidate.metadataVersion === 1 ? candidate : null;
 }
 
-function hasOfficeDocumentSettings() {
-  return typeof Office !== 'undefined' && Boolean(Office.context?.document?.settings);
+function hasWindowLocalStorage() {
+  return typeof window !== 'undefined' && Boolean(window.localStorage);
+}
+
+function createSessionOnlyStatus(lastSource: PersistenceStatus['lastSource']): PersistenceStatus {
+  return {
+    mode: 'session-only',
+    banner: {
+      tone: 'info',
+      message: 'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
+    },
+    lastSource,
+  };
+}
+
+function createHealthyStatus(context: WorkbookPersistenceContext, lastSource: PersistenceStatus['lastSource']): PersistenceStatus {
+  if (context.mode === 'session-only') {
+    return createSessionOnlyStatus(lastSource);
+  }
+
+  return {
+    mode: 'document+local-cache',
+    banner: null,
+    lastSource,
+  };
+}
+
+function createDocumentOnlyStatus(lastSource: PersistenceStatus['lastSource']): PersistenceStatus {
+  return {
+    mode: 'document-only',
+    banner: null,
+    lastSource,
+  };
+}
+
+function createDegradedStatus(context: WorkbookPersistenceContext, lastSource: PersistenceStatus['lastSource'], error: unknown): PersistenceStatus {
+  const lastError = error instanceof Error ? error.message : String(error);
+
+  if (context.stableWorkbookKey) {
+    return {
+      mode: 'degraded',
+      banner: {
+        tone: 'warning',
+        message: 'We could not save to this workbook, but your navigation state was cached locally for this workbook on this device.',
+      },
+      lastSource,
+      lastError,
+    };
+  }
+
+  return {
+    mode: 'degraded',
+    banner: {
+      tone: 'warning',
+      message: 'We could not save this workbook state, and this workbook does not have a stable file identity yet. Your changes might not persist.',
+    },
+    lastSource,
+    lastError,
+  };
 }
 
 export class NavigationPersistence {
-  async load(): Promise<PersistedNavigationModel | null> {
-    const workbookValue = hasOfficeDocumentSettings()
-      ? parseModel(Office.context.document.settings.get(workbookSettingsKey))
-      : null;
+  private legacyCacheCleaned = false;
 
-    if (workbookValue) {
-      return workbookValue;
+  private cleanupLegacyLocalCache() {
+    if (this.legacyCacheCleaned || !hasWindowLocalStorage()) {
+      return;
     }
 
-    const cachedValue = window.localStorage.getItem(localCacheKey);
+    try {
+      window.localStorage.removeItem(legacyLocalCacheKey);
+    } catch {
+      // Ignore cleanup failures. The important behavior is never reading the legacy key again.
+    }
+
+    this.legacyCacheCleaned = true;
+  }
+
+  private readDocumentSettingsModel() {
+    if (!contextHasDocumentSettings()) {
+      return null;
+    }
+
+    return parseModel(Office.context.document.settings.get(workbookSettingsKey));
+  }
+
+  private writeScopedLocalCache(stableWorkbookKey: string, model: PersistedNavigationModel) {
+    if (!hasWindowLocalStorage()) {
+      throw new Error('Local storage is unavailable.');
+    }
+
+    window.localStorage.setItem(buildScopedLocalCacheKey(stableWorkbookKey), JSON.stringify(model));
+  }
+
+  private readScopedLocalCache(stableWorkbookKey: string) {
+    if (!hasWindowLocalStorage()) {
+      return null;
+    }
+
+    const cachedValue = window.localStorage.getItem(buildScopedLocalCacheKey(stableWorkbookKey));
     if (!cachedValue) {
       return null;
     }
@@ -36,11 +129,9 @@ export class NavigationPersistence {
     }
   }
 
-  async save(model: PersistedNavigationModel): Promise<void> {
-    window.localStorage.setItem(localCacheKey, JSON.stringify(model));
-
-    if (!hasOfficeDocumentSettings()) {
-      return;
+  private async saveToDocumentSettings(model: PersistedNavigationModel) {
+    if (!contextHasDocumentSettings()) {
+      throw new Error('Document settings are unavailable.');
     }
 
     Office.context.document.settings.set(workbookSettingsKey, model);
@@ -55,4 +146,84 @@ export class NavigationPersistence {
       });
     });
   }
+
+  async load(context: WorkbookPersistenceContext): Promise<{ model: PersistedNavigationModel | null; status: PersistenceStatus }> {
+    this.cleanupLegacyLocalCache();
+
+    const documentModel = this.readDocumentSettingsModel();
+    if (documentModel) {
+      return {
+        model: documentModel,
+        status: context.stableWorkbookKey
+          ? createHealthyStatus(context, 'document-settings')
+          : createDocumentOnlyStatus('document-settings'),
+      };
+    }
+
+    if (context.stableWorkbookKey) {
+      const scopedCacheModel = this.readScopedLocalCache(context.stableWorkbookKey);
+      if (scopedCacheModel) {
+        if (context.documentSettingsAvailable) {
+          try {
+            await this.saveToDocumentSettings(scopedCacheModel);
+          } catch {
+            // Keep the local cache as the recovered source even if canonical rehydration fails.
+          }
+        }
+
+        return {
+          model: scopedCacheModel,
+          status: createHealthyStatus(context, 'scoped-local-cache'),
+        };
+      }
+    }
+
+    const status = context.mode === 'session-only'
+      ? createSessionOnlyStatus('none')
+      : createHealthyStatus(context, 'none');
+
+    return { model: null, status };
+  }
+
+  async save(context: WorkbookPersistenceContext, model: PersistedNavigationModel): Promise<PersistenceStatus> {
+    this.cleanupLegacyLocalCache();
+
+    if (context.mode === 'session-only') {
+      try {
+        if (context.documentSettingsAvailable) {
+          await this.saveToDocumentSettings(model);
+        }
+      } catch (error) {
+        return createDegradedStatus(context, 'none', error);
+      }
+
+      return createSessionOnlyStatus('none');
+    }
+
+    let localCacheWritten = false;
+    try {
+      if (context.stableWorkbookKey) {
+        this.writeScopedLocalCache(context.stableWorkbookKey, model);
+        localCacheWritten = true;
+      }
+    } catch {
+      localCacheWritten = false;
+    }
+
+    try {
+      await this.saveToDocumentSettings(model);
+
+      if (!localCacheWritten) {
+        return createDocumentOnlyStatus('document-settings');
+      }
+
+      return createHealthyStatus(context, 'document-settings');
+    } catch (error) {
+      return createDegradedStatus(context, localCacheWritten ? 'scoped-local-cache' : 'none', error);
+    }
+  }
+}
+
+function contextHasDocumentSettings() {
+  return typeof Office !== 'undefined' && Boolean(Office.context?.document?.settings);
 }

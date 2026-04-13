@@ -4,8 +4,16 @@
 - Adapter/service layer outside UI
 - Container/presentational split
 - Single workbook navigation store
-- Hybrid persistence: workbook settings first, local cache second
+- Hybrid persistence: workbook settings first, workbook-scoped local cache second
 - Small focused components and low cognitive complexity
+
+## Persistence contract
+
+- `Office.context.document.settings` is the canonical store for the current workbook
+- Local cache is scoped by stable workbook identity and never shared globally across workbooks
+- Unsaved or identity-less workbooks run in session-only persistence mode
+- The legacy global cache key is ignored and cleaned so one workbook cannot hydrate another workbook's groups
+- Persistence degradation is surfaced through a subtle task pane banner instead of silent failure
 
 ## Worksheet drag-and-drop guardrails
 

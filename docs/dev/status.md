@@ -9,7 +9,7 @@ Implemented and documented so far:
 - Excel manifest with ribbon button + task pane entry
 - React + TypeScript project structure
 - Office adapter boundary
-- Hybrid persistence service
+- Hybrid persistence service with workbook-scoped local backup
 - Single navigation store
 - Modular task pane UI with folder-per-component structure
 - Core navigation rules for groups, pinning, hidden sheets, rename, and delete-group confirmation
@@ -112,7 +112,7 @@ Once sideloading is confirmed, the next implementation pass should focus on:
 
 1. non-visual interaction cleanup for contextual actions
 2. workbook event handling and sync resilience
-3. persistence validation in real workbook reopen flows, including local Sheets ordering
+3. persistence validation in real workbook reopen flows, including workbook-scoped recovery and local Sheets ordering
 4. documentation alignment when behavior or verified reality changes
 
 ## Open Risks
@@ -120,6 +120,7 @@ Once sideloading is confirmed, the next implementation pass should focus on:
 - Manifest/task pane behavior may differ from expectations in the real Excel host
 - Office.js worksheet APIs may need adjustment once tested against live workbooks
 - Workbook changes outside the task pane may challenge the new local Sheets ordering rules until reconciliation is tested in real host flows
+- Workbook identity availability may differ by host/save state, so session-only persistence must be validated in real Excel
 - VeryHidden behavior remains intentionally conservative and may need product clarification later
 - Host rendering may still expose edge cases in dialog layering, context menu placement, or focus handling
 - `docs/dev/status.md` must stay aligned with verified code and recent commits so future resumes do not start from stale assumptions
@@ -152,3 +153,8 @@ When docs, memory, and code disagree:
 
 ## Last Session Outcome
 This project has moved beyond the initial scaffold stage, with interaction ownership largely in place, but it is still **not yet validated inside Excel itself**.
+
+## Persistence Notes
+
+- The legacy global cache key `sheetNavigator.navigation.cache` is now considered unsafe because it can leak state across workbooks
+- New persistence behavior must prefer workbook settings, then workbook-scoped local cache, then session-only mode when no stable workbook identity exists

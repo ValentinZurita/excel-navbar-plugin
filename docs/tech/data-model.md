@@ -8,3 +8,6 @@
 - Workbook reconciliation preserves local sidebar order, removes deleted worksheet IDs, and appends newly discovered worksheets using Excel workbook order
 - Persist only meaningful workbook UI state
 - Persist a metadata version from day one
+- Persisted navigation model shape stays unchanged; only the storage routing changes
+- Canonical persistence is per workbook, and local backup uses a workbook-scoped cache key
+- Workbooks without stable identity use session-only persistence and never read or write local cache

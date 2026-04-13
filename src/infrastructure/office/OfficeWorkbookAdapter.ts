@@ -1,9 +1,46 @@
-import type { WorkbookSnapshot, WorksheetVisibility } from '../../domain/navigation/types';
+import type { WorkbookPersistenceContext, WorkbookSnapshot, WorksheetVisibility } from '../../domain/navigation/types';
 import type { WorkbookAdapter } from './WorkbookAdapter';
-
 
 export function hasOfficeRuntime() {
   return typeof Office !== 'undefined' && typeof Excel !== 'undefined';
+}
+
+function hasOfficeDocument() {
+  return typeof Office !== 'undefined' && Boolean(Office.context?.document);
+}
+
+function normalizeWorkbookUrl(url: string | null | undefined) {
+  if (!url) {
+    return null;
+  }
+
+  const trimmed = url.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function getDocumentUrl(): string | null {
+  if (!hasOfficeDocument()) {
+    return null;
+  }
+
+  return normalizeWorkbookUrl(Office.context.document.url);
+}
+
+async function getFilePropertiesUrl(): Promise<string | null> {
+  if (!hasOfficeDocument() || typeof Office.context.document.getFilePropertiesAsync !== 'function') {
+    return null;
+  }
+
+  return new Promise<string | null>((resolve) => {
+    Office.context.document.getFilePropertiesAsync((result) => {
+      if (result.status === Office.AsyncResultStatus.Failed) {
+        resolve(null);
+        return;
+      }
+
+      resolve(normalizeWorkbookUrl(result.value?.url));
+    });
+  });
 }
 
 export class OfficeWorkbookAdapter implements WorkbookAdapter {
@@ -36,6 +73,36 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
         activeWorksheetId: activeWorksheet.id,
       };
     });
+  }
+
+  async getPersistenceContext(): Promise<WorkbookPersistenceContext> {
+    const documentSettingsAvailable = typeof Office !== 'undefined' && Boolean(Office.context?.document?.settings);
+    const documentUrl = getDocumentUrl();
+    if (documentUrl) {
+      return {
+        documentSettingsAvailable,
+        stableWorkbookKey: documentUrl,
+        mode: 'stable',
+        source: 'document-url',
+      };
+    }
+
+    const filePropertiesUrl = await getFilePropertiesUrl();
+    if (filePropertiesUrl) {
+      return {
+        documentSettingsAvailable,
+        stableWorkbookKey: filePropertiesUrl,
+        mode: 'stable',
+        source: 'file-properties-url',
+      };
+    }
+
+    return {
+      documentSettingsAvailable,
+      stableWorkbookKey: null,
+      mode: 'session-only',
+      source: 'none',
+    };
   }
 
   async activateWorksheet(worksheetId: string): Promise<void> {

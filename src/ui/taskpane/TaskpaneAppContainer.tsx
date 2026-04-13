@@ -142,7 +142,7 @@ export function TaskpaneAppContainer() {
   }
 
   return (
-    <TaskpaneShell errorMessage={controller.errorMessage}>
+    <TaskpaneShell banner={controller.banner}>
       {/* Main taskpane navigation sections (search, pinned, groups, hidden). */}
       <TaskpaneSections
         query={controller.state.query}
