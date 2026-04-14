@@ -115,7 +115,7 @@ describe('TaskpaneAppContainer', () => {
     // Type name and press Enter (no button needed)
     await user.type(screen.getByLabelText('Name'), 'Finance{Enter}');
 
-    expect(controller.createGroup).toHaveBeenCalledWith('Finance', 'blue', 'sheet-1');
+    expect(controller.createGroup).toHaveBeenCalledWith('Finance', 'none', 'sheet-1');
 
     // Menu should be closed after successful creation
     expect(screen.queryByLabelText('Name')).not.toBeInTheDocument();

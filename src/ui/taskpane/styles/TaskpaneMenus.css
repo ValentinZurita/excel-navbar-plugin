@@ -114,6 +114,25 @@
   flex-shrink: 0;
 }
 
+/* "No color" preview — outlined circle with a diagonal slash. */
+.context-menu-color-preview-none {
+  background: transparent;
+  border: 1.5px solid var(--excel-muted);
+  position: relative;
+}
+
+.context-menu-color-preview-none::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 65%;
+  height: 1.5px;
+  background: var(--excel-muted);
+  transform: translate(-50%, -50%) rotate(-45deg);
+  border-radius: 1px;
+}
+
 /* Color picker submenu panel */
 .context-menu-color-picker {
   display: flex;
@@ -148,6 +167,25 @@
 
 .context-menu-color-picker-item:hover {
   transform: scale(1.1);
+}
+
+/* "No color" picker item — outlined circle with diagonal slash, matching Excel's no-fill pattern. */
+.context-menu-color-picker-item-none {
+  background: transparent;
+  border: 2px solid var(--excel-muted);
+  position: relative;
+}
+
+.context-menu-color-picker-item-none::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 55%;
+  height: 2px;
+  background: var(--excel-muted);
+  transform: translate(-50%, -50%) rotate(-45deg);
+  border-radius: 1px;
 }
 
 .context-menu-color-picker-item-selected {

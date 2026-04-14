@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import type { GroupColorToken, WorksheetEntity } from '../../../domain/navigation/types';
+import { selectableGroupColorTokens } from '../../../domain/navigation/constants';
 import type { ContextMenuState, GroupMenuState, SheetMenuState } from '../types/contextMenuTypes';
 import {
   AddGroupMenuIcon,
@@ -154,8 +155,11 @@ function buildSheetMenuActions(
   return actions;
 }
 
-// Lista de colores disponibles para el picker
-const colorPickerColors: GroupColorToken[] = ['blue', 'green', 'orange', 'purple', 'red', 'gray'];
+// Lista de colores disponibles para el picker — importada desde dominio para consistencia.
+
+function isColorNone(color: GroupColorToken): color is 'none' {
+  return color === 'none';
+}
 
 function buildGroupMenuActions(
   groupMenu: GroupMenuState,
@@ -173,7 +177,9 @@ function buildGroupMenuActions(
     },
     {
       key: 'change-color-group',
-      icon: (
+      icon: isColorNone(groupMenu.colorToken) ? (
+        <span className="context-menu-color-preview context-menu-color-preview-none" />
+      ) : (
         <span
           className="context-menu-color-preview"
           style={{ backgroundColor: `var(--group-color-${groupMenu.colorToken})` }}
@@ -299,18 +305,31 @@ function GroupContextMenu({
         <div className="context-menu-color-picker">
           <div className="context-menu-color-picker-header">Select color</div>
           <div className="context-menu-color-picker-grid">
-            {colorPickerColors.map((color) => (
-              <button
-                key={color}
-                type="button"
-                className={`context-menu-color-picker-item ${
-                  groupMenu.colorToken === color ? 'context-menu-color-picker-item-selected' : ''
-                }`}
-                style={{ backgroundColor: `var(--group-color-${color})` }}
-                aria-label={`Select ${color}`}
-                aria-pressed={groupMenu.colorToken === color}
-                onClick={() => handleColorSelect(color)}
-              />
+            {selectableGroupColorTokens.map((color) => (
+              isColorNone(color) ? (
+                <button
+                  key={color}
+                  type="button"
+                  className={`context-menu-color-picker-item context-menu-color-picker-item-none ${
+                    groupMenu.colorToken === color ? 'context-menu-color-picker-item-selected' : ''
+                  }`}
+                  aria-label="No color"
+                  aria-pressed={groupMenu.colorToken === color}
+                  onClick={() => handleColorSelect(color)}
+                />
+              ) : (
+                <button
+                  key={color}
+                  type="button"
+                  className={`context-menu-color-picker-item ${
+                    groupMenu.colorToken === color ? 'context-menu-color-picker-item-selected' : ''
+                  }`}
+                  style={{ backgroundColor: `var(--group-color-${color})` }}
+                  aria-label={`Select ${color}`}
+                  aria-pressed={groupMenu.colorToken === color}
+                  onClick={() => handleColorSelect(color)}
+                />
+              )
             ))}
           </div>
           <button

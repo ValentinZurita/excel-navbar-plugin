@@ -125,4 +125,24 @@ describe('GroupCard', () => {
     expect(screen.queryByTestId('group:group-1-drop-end')).not.toBeInTheDocument();
     expect(document.querySelector('.group-leading-flash')).toBeInTheDocument();
   });
+
+  it('renders group with none color token without background circle', () => {
+    const group = createGroup({ colorToken: 'none' });
+
+    render(
+      <DndContext>
+        <GroupCard
+          group={group}
+          activeWorksheetId={null}
+          onActivate={vi.fn()}
+          onToggleCollapsed={vi.fn()}
+          onOpenGroupMenu={vi.fn()}
+          onOpenSheetMenu={vi.fn()}
+        />
+      </DndContext>,
+    );
+
+    const leading = document.querySelector('.group-leading-none');
+    expect(leading).toBeInTheDocument();
+  });
 });

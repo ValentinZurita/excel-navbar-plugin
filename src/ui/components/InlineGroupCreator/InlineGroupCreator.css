@@ -91,6 +91,34 @@
   box-shadow: 0 0 0 2px var(--excel-body-bg), 0 0 0 4px var(--excel-accent);
 }
 
+/* "No color" chip - outlined circle with a diagonal slash, matching Excel's no-fill pattern. */
+.inline-group-creator-color-none {
+  background: transparent;
+  border: 1.5px solid var(--excel-muted);
+  position: relative;
+  opacity: 0.55;
+}
+
+.inline-group-creator-color-none::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70%;
+  height: 1.5px;
+  background: var(--excel-muted);
+  transform: translate(-50%, -50%) rotate(-45deg);
+  border-radius: 1px;
+}
+
+.inline-group-creator-color-none:hover {
+  opacity: 0.8;
+}
+
+.inline-group-creator-color-selected.inline-group-creator-color-none {
+  opacity: 1;
+}
+
 /* Each color chip represents a preset group accent - original palette */
 .inline-group-creator-color-gray {
   background: #a8a8a8;

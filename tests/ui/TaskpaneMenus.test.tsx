@@ -197,7 +197,7 @@ describe('TaskpaneMenus', () => {
 
     await user.type(screen.getByLabelText('Name'), 'Finance{Enter}');
 
-    expect(onConfirmCreatingGroup).toHaveBeenCalledWith('Finance', 'blue');
+    expect(onConfirmCreatingGroup).toHaveBeenCalledWith('Finance', 'none');
   });
 
   it('does not create group on Enter with empty name', async () => {

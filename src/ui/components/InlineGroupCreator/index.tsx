@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import type { GroupColorToken } from '../../../domain/navigation/types';
+import { selectableGroupColorTokens } from '../../../domain/navigation/constants';
 import './InlineGroupCreator.css';
 
-// Mapeo de tokens a clases CSS para los chips
+// Token-to-CSS class map for the color chips.
 const colorChipClasses: Record<GroupColorToken, string> = {
+  none: 'inline-group-creator-color-none',
   gray: 'inline-group-creator-color-gray',
   green: 'inline-group-creator-color-green',
   blue: 'inline-group-creator-color-blue',
@@ -12,25 +14,20 @@ const colorChipClasses: Record<GroupColorToken, string> = {
   orange: 'inline-group-creator-color-orange',
 };
 
-// Orden de colores disponibles
-const availableColors: GroupColorToken[] = ['blue', 'green', 'orange', 'purple', 'red', 'gray'];
-
 interface InlineGroupCreatorProps {
   onCreate: (name: string, colorToken: GroupColorToken) => void;
   onCancel: () => void;
   onCloseMenu: () => void;
   autoFocus?: boolean;
-  defaultColorIndex?: number;
+  defaultColor?: GroupColorToken;
 }
 
 // Inline group creation UI shown inside the sheet navigator.
 // Handles focus, keyboard submit, and color selection while typing a new group name.
-export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus = true, defaultColorIndex = 0 }: InlineGroupCreatorProps) {
+export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus = true, defaultColor = 'none' }: InlineGroupCreatorProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState('');
-  const [selectedColor, setSelectedColor] = useState<GroupColorToken>(
-    () => availableColors[defaultColorIndex % availableColors.length],
-  );
+  const [selectedColor, setSelectedColor] = useState<GroupColorToken>(defaultColor);
 
   useEffect(() => {
     if (autoFocus) {
@@ -89,14 +86,14 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
         role="group"
         aria-label="Color options"
       >
-        {availableColors.map((color) => (
+        {selectableGroupColorTokens.map((color) => (
           <button
             key={color}
             type="button"
             className={`inline-group-creator-color ${colorChipClasses[color]} ${
               selectedColor === color ? 'inline-group-creator-color-selected' : ''
             }`}
-            aria-label={`Color ${color}`}
+            aria-label={color === 'none' ? 'No color' : `Color ${color}`}
             aria-pressed={selectedColor === color}
             onClick={() => handleColorClick(color)}
           />

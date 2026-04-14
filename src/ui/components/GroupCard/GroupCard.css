@@ -117,6 +117,12 @@
 }
 
 /* Background color variants using CSS tokens */
+
+/* "No color" — no background circle, folder icon appears on its own. */
+.group-leading-none::before {
+  background: transparent;
+}
+
 .group-leading-gray::before {
   background: var(--group-color-gray);
 }

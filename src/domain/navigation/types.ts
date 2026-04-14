@@ -1,6 +1,7 @@
 export type WorksheetVisibility = 'Visible' | 'Hidden' | 'VeryHidden';
 
 export type GroupColorToken =
+  | 'none'
   | 'blue'
   | 'green'
   | 'orange'

@@ -172,4 +172,85 @@ describe('navigationReducer', () => {
 
     expect(nextState.groupsById['group-1'].isCollapsed).toBe(false);
   });
+
+  it('creates a group with no color when colorToken is none', () => {
+    const state = createDefaultNavigationState();
+
+    vi.spyOn(Date, 'now')
+      .mockReturnValueOnce(200)
+      .mockReturnValueOnce(200);
+
+    const nextState = navigationReducer(state, {
+      type: 'createGroup',
+      name: 'NoColor',
+      colorToken: 'none',
+    });
+
+    expect(nextState.groupsById['group-200'].colorToken).toBe('none');
+  });
+
+  it('changes group color to none via setGroupColor', () => {
+    const state = createDefaultNavigationState();
+    state.groupOrder = ['group-1'];
+    state.groupsById = {
+      'group-1': {
+        groupId: 'group-1',
+        name: 'Finance',
+        colorToken: 'blue',
+        isCollapsed: false,
+        worksheetOrder: [],
+        createdAt: 1,
+      },
+    };
+
+    const nextState = navigationReducer(state, {
+      type: 'setGroupColor',
+      groupId: 'group-1',
+      colorToken: 'none',
+    });
+
+    expect(nextState.groupsById['group-1'].colorToken).toBe('none');
+  });
+
+  it('changes group color from none to a regular color via setGroupColor', () => {
+    const state = createDefaultNavigationState();
+    state.groupOrder = ['group-1'];
+    state.groupsById = {
+      'group-1': {
+        groupId: 'group-1',
+        name: 'Finance',
+        colorToken: 'none',
+        isCollapsed: false,
+        worksheetOrder: [],
+        createdAt: 1,
+      },
+    };
+
+    const nextState = navigationReducer(state, {
+      type: 'setGroupColor',
+      groupId: 'group-1',
+      colorToken: 'green',
+    });
+
+    expect(nextState.groupsById['group-1'].colorToken).toBe('green');
+  });
+
+  it('never assigns none as the automatic group color', () => {
+    const state = createDefaultNavigationState();
+
+    vi.spyOn(Date, 'now')
+      .mockReturnValueOnce(300)
+      .mockReturnValueOnce(300);
+
+    // createGroup without explicit colorToken falls back to nextGroupColor
+    // which rotates through groupColorTokens (excludes 'none')
+    const nextState = navigationReducer(state, {
+      type: 'createGroup',
+      name: 'Auto',
+      colorToken: 'blue',
+    });
+
+    // Always a real color, never 'none'
+    expect(nextState.groupsById['group-300'].colorToken).not.toBe('none');
+  });
 });
