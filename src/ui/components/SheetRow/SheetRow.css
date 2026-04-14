@@ -72,11 +72,23 @@
   transform: none;
 }
 
+/* Active row accent bar - left border indicator to clearly distinguish active from hover. */
+.sheet-row-active::before {
+  opacity: 1;
+  box-shadow: inset 2px 0 0 0 var(--excel-accent);
+}
+
 .sheet-row[data-highlighted='true'] {
   background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
   border-color: transparent;
   box-shadow: none;
   transform: none;
+}
+
+/* Ensure active row keeps accent bar even when highlighted (hover over active). */
+.sheet-row-active[data-highlighted='true']::before {
+  opacity: 1;
+  box-shadow: inset 2px 0 0 0 var(--excel-accent);
 }
 
 /* When drag mode is active, suppress row states so the drag overlay stays visible. */
