@@ -66,8 +66,8 @@
 
 /* Selected and highlighted row states. These are the visual cues for active navigation focus. */
 .sheet-row-active {
-  background: color-mix(in srgb, var(--excel-body-fg) 26%, transparent);
-  border-color: transparent;
+  background: var(--excel-surface-raised);
+  border-color: color-mix(in srgb, var(--excel-border) 50%, transparent);
   box-shadow: none;
   transform: none;
 }
