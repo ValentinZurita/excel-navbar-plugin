@@ -50,6 +50,7 @@ export interface PersistedNavigationModel {
   groups: GroupEntity[];
   sheetSectionOrder: string[];
   pinnedWorksheetIds: string[];
+  pinnedWorksheetOrder?: string[];
   hiddenSectionCollapsed: boolean;
   priorStructuralStateByWorksheetId: Record<string, StructuralState | null>;
 }
@@ -71,6 +72,7 @@ export interface NavigationState {
   groupsById: Record<string, GroupEntity>;
   groupOrder: string[];
   sheetSectionOrder: string[];
+  pinnedWorksheetOrder: string[];
   hiddenSectionCollapsed: boolean;
   query: string;
   activeWorksheetId: string | null;
