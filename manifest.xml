@@ -6,7 +6,7 @@
            xsi:type="TaskPaneApp">
   <Id>7a703fd6-f2d8-4b75-841d-fd5edf8c0d14</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>OpenAI Codex</ProviderName>
+  <ProviderName>Valentin</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Sheet Navigator"/>
   <Description DefaultValue="Modern worksheet navigation for Excel."/>
