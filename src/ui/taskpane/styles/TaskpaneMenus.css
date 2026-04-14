@@ -141,13 +141,6 @@
   padding: 8px;
 }
 
-.context-menu-color-picker-header {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--excel-body-fg);
-  padding: 0 4px;
-}
-
 .context-menu-color-picker-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -191,21 +184,4 @@
 .context-menu-color-picker-item-selected {
   border-color: var(--excel-body-fg);
   box-shadow: 0 0 0 2px var(--excel-control-bg), 0 0 0 4px var(--excel-accent);
-}
-
-.context-menu-color-picker-cancel {
-  width: 100%;
-  padding: 6px 10px;
-  border: none;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--excel-muted);
-  font-size: 12px;
-  cursor: pointer;
-  text-align: center;
-}
-
-.context-menu-color-picker-cancel:hover {
-  background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
-  color: var(--excel-body-fg);
 }

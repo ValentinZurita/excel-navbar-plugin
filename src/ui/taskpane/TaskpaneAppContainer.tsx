@@ -205,8 +205,6 @@ export function TaskpaneAppContainer() {
         onRenameWorksheet={handleRenameWorksheetStart}
         onRemoveFromGroup={controller.removeWorksheetFromGroup}
         onStartCreatingGroup={startCreatingGroup}
-        onRenameGroup={handleRenameGroupStart}
-        onDeleteGroup={handleDeleteGroup}
         onSetGroupColor={controller.setGroupColor}
         isCreatingGroup={isCreating}
         onCancelCreatingGroup={cancelCreatingGroup}

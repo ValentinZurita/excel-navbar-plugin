@@ -168,7 +168,7 @@ describe('TaskpaneAppContainer', () => {
     expect(screen.queryByRole('button', { name: 'Rename' })).not.toBeInTheDocument();
   });
 
-  it('confirms group deletion through product-owned dialog instead of browser confirm', async () => {
+  it('shows color picker when right-clicking a group header', async () => {
     const user = userEvent.setup();
     const controller = createControllerMock() as any;
     const group = {
@@ -202,15 +202,13 @@ describe('TaskpaneAppContainer', () => {
     expect(groupRow).not.toBeNull();
     fireEvent.contextMenu(groupRow as HTMLElement, { clientX: 120, clientY: 80 });
 
-    await user.click(screen.getByRole('button', { name: 'Delete group' }));
+    // Group menu shows the color picker directly — 7 color options
+    const colorPicker = screen.getByRole('group', { name: 'Color options' });
+    const colorButtons = within(colorPicker).getAllByRole('button');
+    expect(colorButtons).toHaveLength(7);
 
-    expect(screen.getByRole('heading', { name: 'Delete group' })).toBeInTheDocument();
-    expect(screen.getByText('Delete Finance? Sheets will become ungrouped.')).toBeInTheDocument();
-
-    const confirmDialog = screen.getByRole('dialog', { name: 'Delete group' });
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Delete group' }));
-
-    expect(controller.deleteGroup).toHaveBeenCalledWith('group-1');
+    // The group's current color (green) is selected
+    expect(screen.getByRole('button', { name: 'Select green', pressed: true })).toBeInTheDocument();
   });
 
   it('renders warning banners when the controller exposes one', () => {
