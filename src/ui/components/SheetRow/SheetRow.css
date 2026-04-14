@@ -65,15 +65,16 @@
 }
 
 /* Selected and highlighted row states. These are the visual cues for active navigation focus. */
-.sheet-row-active {
-  background: var(--excel-surface-raised);
-  border-color: color-mix(in srgb, var(--excel-border) 50%, transparent);
+.sheet-row-active,
+.sheet-row[data-active='true'] {
+  background: var(--excel-nav-active-bg);
+  border-color: transparent;
   box-shadow: none;
   transform: none;
 }
 
-.sheet-row[data-highlighted='true'] {
-  background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
+.sheet-row[data-highlighted='true']:not([data-active='true']) {
+  background: var(--excel-nav-hover-bg);
   border-color: transparent;
   box-shadow: none;
   transform: none;
@@ -186,6 +187,12 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .sheet-row:hover:not([data-active='true']):not([data-interaction-suppressed='true']) {
+    background: var(--excel-nav-hover-bg);
+    border-color: transparent;
+    box-shadow: none;
+  }
+
   .sheet-row .sheet-pin-button:hover,
   .sheet-row .sheet-pin-button:focus-visible {
     opacity: 0.75;
@@ -194,7 +201,7 @@
 
 /* Keyboard focus style for the entire row entry. Uses the same visual feedback as mouse hover. */
 .sheet-row:focus-visible {
-  background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
+  background: var(--excel-nav-hover-bg);
   border-color: transparent;
   box-shadow: none;
 }

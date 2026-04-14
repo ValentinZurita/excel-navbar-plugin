@@ -90,7 +90,7 @@
 }
 
 .search-result:hover {
-  background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
+  background: var(--excel-nav-hover-bg);
   border-color: transparent;
   box-shadow: none;
   transform: none;

@@ -18,6 +18,12 @@
   --excel-surface-raised: color-mix(in srgb, var(--excel-control-bg) 96%, var(--excel-body-bg));
   --excel-focus-ring: color-mix(in srgb, var(--excel-muted) 18%, transparent);
 
+  /* Navigation row state semantics: hover → active → drag-over.
+     Adjust these three to tune the entire navigator visual hierarchy. */
+  --excel-nav-hover-bg: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
+  --excel-nav-active-bg: color-mix(in srgb, var(--excel-body-fg) 12%, transparent);
+  --excel-nav-drag-target-bg: color-mix(in srgb, var(--excel-body-fg) 10%, transparent);
+
   /* Group color tokens - subtle palette matching creator chips */
   --group-color-gray: #a8a8a8;
   --group-color-green: #8eb892;
