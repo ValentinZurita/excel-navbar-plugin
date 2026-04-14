@@ -71,6 +71,10 @@ export function GroupCard({
 
   const isDropActive = isGroupHeaderDropActive(dragConfig?.projectedDropTarget ?? null, containerId);
   const isFolderFlashing = dragConfig?.flashedGroupId === group.groupId;
+  const containsActiveWorksheet = group.worksheets.some(
+    (w) => w.worksheetId === rest.activeWorksheetId
+  );
+  const isActiveGroupHeader = group.isCollapsed && containsActiveWorksheet;
 
   return (
     <section
@@ -89,7 +93,7 @@ export function GroupCard({
     >
       <header
         ref={setNodeRef}
-        className={`group-header ${group.groupId === rest.groupMenuOpenId ? 'group-header-context-open' : ''} ${isDropActive ? 'group-header-drop-active' : ''}`}
+        className={`group-header ${group.groupId === rest.groupMenuOpenId ? 'group-header-context-open' : ''} ${isDropActive ? 'group-header-drop-active' : ''} ${isActiveGroupHeader ? 'group-header-active' : ''}`}
       >
         <button className="group-toggle" type="button" onClick={() => onToggleCollapsed(group.groupId)}>
           <span className={`group-leading group-leading-${group.colorToken} ${isFolderFlashing ? 'group-leading-flash' : ''}`} aria-hidden="true">

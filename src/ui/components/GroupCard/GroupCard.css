@@ -30,15 +30,15 @@
   box-shadow: none;
 }
 
-.group-header:hover,
-.group-header-context-open {
+.group-header:hover:not(.group-header-active),
+.group-header-context-open:not(.group-header-active) {
   background: var(--excel-nav-hover-bg);
   border-color: transparent;
   box-shadow: none;
   transform: none;
 }
 
-.group-list-drag-active .group-header:hover:not(.group-header-drop-active) {
+.group-list-drag-active .group-header:hover:not(.group-header-drop-active):not(.group-header-active) {
   background: transparent;
 }
 
@@ -50,6 +50,13 @@
 
 .group-header-drop-active {
   background: var(--excel-nav-drag-target-bg);
+}
+
+/* Active state for collapsed groups containing the active worksheet.
+   Shows the group header as selected when the active sheet is hidden inside a closed group. */
+.group-header-active {
+  background: var(--excel-nav-active-bg);
+  border-color: transparent;
 }
 
 .group-toggle {
