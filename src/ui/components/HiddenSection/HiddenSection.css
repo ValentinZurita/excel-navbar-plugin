@@ -1,6 +1,6 @@
 /* Hidden sheets are visually secondary and collapsed by default in many flows. */
 .hidden-section {
-  margin-top: 6px;
+  /* Spacing between sections is handled by the parent grid (taskpane-content gap). */
 }
 
 .hidden-section .section-header {
