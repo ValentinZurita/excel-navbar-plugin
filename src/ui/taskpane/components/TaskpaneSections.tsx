@@ -109,6 +109,18 @@ function buildSheetListDragConfig(
   };
 }
 
+function buildPinnedDragConfig(
+  dragConfig: WorksheetDragConfig,
+  containerId: 'pinned',
+): WorksheetDragVisualConfig & { containerId: 'pinned' } {
+  return {
+    containerId,
+    projectedDropTarget: dragConfig.projectedDropTarget,
+    isDragActive: dragConfig.isDragActive,
+    shouldSuppressActivation: dragConfig.shouldSuppressActivation,
+  };
+}
+
 export function TaskpaneSections({
   query,
   searchResults,
@@ -166,24 +178,6 @@ export function TaskpaneSections({
         onSelect={onSelectSearchResult}
       />
 
-      {shouldShowPinnedSection ? (
-        <Section title="Pinned">
-          <SheetList
-            worksheets={navigatorView.pinned}
-            activeWorksheetId={activeWorksheetId}
-            contextMenuOpenId={contextMenuOpenSheetId}
-            hoveredWorksheetId={hoveredWorksheetId}
-            renamingWorksheetId={renamingWorksheetId}
-            onActivate={onActivateWorksheet}
-            onHoverWorksheet={onHoverWorksheet}
-            onTogglePin={onUnpinWorksheet}
-            onOpenContextMenu={onOpenSheetMenu}
-            onRenameSubmit={onRenameWorksheetSubmit}
-            onRenameCancel={onRenameCancel}
-          />
-        </Section>
-      ) : null}
-
       <DndContext
         sensors={dragConfig.sensors}
         collisionDetection={worksheetCollisionDetection}
@@ -214,6 +208,25 @@ export function TaskpaneSections({
             />
           ) : null}
         </DragOverlay>
+
+        {shouldShowPinnedSection ? (
+          <Section title="Pinned">
+            <SheetList
+              worksheets={navigatorView.pinned}
+              activeWorksheetId={activeWorksheetId}
+              contextMenuOpenId={contextMenuOpenSheetId}
+              hoveredWorksheetId={hoveredWorksheetId}
+              dragConfig={buildPinnedDragConfig(dragConfig, 'pinned')}
+              renamingWorksheetId={renamingWorksheetId}
+              onActivate={onActivateWorksheet}
+              onHoverWorksheet={onHoverWorksheet}
+              onTogglePin={onUnpinWorksheet}
+              onOpenContextMenu={onOpenSheetMenu}
+              onRenameSubmit={onRenameWorksheetSubmit}
+              onRenameCancel={onRenameCancel}
+            />
+          </Section>
+        ) : null}
 
         {shouldShowGroupsSection ? (
           <Section title="Groups" headerAccessory={groupsSessionOnlyHint}>

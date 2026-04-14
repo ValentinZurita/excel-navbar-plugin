@@ -26,12 +26,17 @@ interface SheetListProps {
 }
 
 function isGroupContainerId(containerId: WorksheetContainerId): boolean {
-  return containerId !== 'sheets';
+  return containerId !== 'sheets' && containerId !== 'pinned';
 }
 
 function shouldHideEmptyList(worksheets: WorksheetEntity[], dragConfig?: SheetListDragConfig) {
   if (!dragConfig) {
     return worksheets.length === 0;
+  }
+
+  // Pinned section should not be hidden even when empty during drag
+  if (dragConfig.containerId === 'pinned') {
+    return false;
   }
 
   return isGroupContainerId(dragConfig.containerId) && worksheets.length === 0;
