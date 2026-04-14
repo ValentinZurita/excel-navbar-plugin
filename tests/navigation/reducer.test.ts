@@ -253,4 +253,184 @@ describe('navigationReducer', () => {
     // Always a real color, never 'none'
     expect(nextState.groupsById['group-300'].colorToken).not.toBe('none');
   });
+
+  describe('reorderPinnedWorksheet', () => {
+    it('reorders pinned worksheets within the pinned section', () => {
+      const state = createDefaultNavigationState();
+      state.pinnedWorksheetOrder = ['sheet-1', 'sheet-2', 'sheet-3'];
+      state.worksheetsById = {
+        'sheet-1': {
+          worksheetId: 'sheet-1',
+          name: 'One',
+          visibility: 'Visible',
+          workbookOrder: 0,
+          isPinned: true,
+          groupId: null,
+          lastKnownStructuralState: { kind: 'pinned' },
+        },
+        'sheet-2': {
+          worksheetId: 'sheet-2',
+          name: 'Two',
+          visibility: 'Visible',
+          workbookOrder: 1,
+          isPinned: true,
+          groupId: null,
+          lastKnownStructuralState: { kind: 'pinned' },
+        },
+        'sheet-3': {
+          worksheetId: 'sheet-3',
+          name: 'Three',
+          visibility: 'Visible',
+          workbookOrder: 2,
+          isPinned: true,
+          groupId: null,
+          lastKnownStructuralState: { kind: 'pinned' },
+        },
+      };
+
+      const nextState = navigationReducer(state, {
+        type: 'reorderPinnedWorksheet',
+        worksheetId: 'sheet-3',
+        targetIndex: 0,
+      });
+
+      expect(nextState.pinnedWorksheetOrder).toEqual(['sheet-3', 'sheet-1', 'sheet-2']);
+    });
+
+    it('ignores reorder for non-pinned worksheets', () => {
+      const state = createDefaultNavigationState();
+      state.pinnedWorksheetOrder = ['sheet-1'];
+      state.worksheetsById = {
+        'sheet-1': {
+          worksheetId: 'sheet-1',
+          name: 'One',
+          visibility: 'Visible',
+          workbookOrder: 0,
+          isPinned: true,
+          groupId: null,
+          lastKnownStructuralState: { kind: 'pinned' },
+        },
+        'sheet-2': {
+          worksheetId: 'sheet-2',
+          name: 'Two',
+          visibility: 'Visible',
+          workbookOrder: 1,
+          isPinned: false,
+          groupId: null,
+          lastKnownStructuralState: null,
+        },
+      };
+
+      const nextState = navigationReducer(state, {
+        type: 'reorderPinnedWorksheet',
+        worksheetId: 'sheet-2',
+        targetIndex: 0,
+      });
+
+      // State should remain unchanged
+      expect(nextState.pinnedWorksheetOrder).toEqual(['sheet-1']);
+    });
+  });
+
+  describe('pinWorksheet pinnedWorksheetOrder', () => {
+    it('adds worksheet to pinnedWorksheetOrder when pinning', () => {
+      const state = createDefaultNavigationState();
+      state.pinnedWorksheetOrder = ['sheet-1'];
+      state.worksheetsById = {
+        'sheet-1': {
+          worksheetId: 'sheet-1',
+          name: 'One',
+          visibility: 'Visible',
+          workbookOrder: 0,
+          isPinned: true,
+          groupId: null,
+          lastKnownStructuralState: { kind: 'pinned' },
+        },
+        'sheet-2': {
+          worksheetId: 'sheet-2',
+          name: 'Two',
+          visibility: 'Visible',
+          workbookOrder: 1,
+          isPinned: false,
+          groupId: null,
+          lastKnownStructuralState: null,
+        },
+      };
+
+      const nextState = navigationReducer(state, {
+        type: 'pinWorksheet',
+        worksheetId: 'sheet-2',
+      });
+
+      expect(nextState.pinnedWorksheetOrder).toContain('sheet-2');
+      expect(nextState.pinnedWorksheetOrder).toHaveLength(2);
+    });
+
+    it('does not duplicate worksheet in pinnedWorksheetOrder when already pinned', () => {
+      const state = createDefaultNavigationState();
+      state.pinnedWorksheetOrder = ['sheet-1'];
+      state.worksheetsById = {
+        'sheet-1': {
+          worksheetId: 'sheet-1',
+          name: 'One',
+          visibility: 'Visible',
+          workbookOrder: 0,
+          isPinned: true,
+          groupId: null,
+          lastKnownStructuralState: { kind: 'pinned' },
+        },
+      };
+
+      const nextState = navigationReducer(state, {
+        type: 'pinWorksheet',
+        worksheetId: 'sheet-1',
+      });
+
+      expect(nextState.pinnedWorksheetOrder).toEqual(['sheet-1']);
+      expect(nextState.pinnedWorksheetOrder).toHaveLength(1);
+    });
+  });
+
+  describe('unpinWorksheet pinnedWorksheetOrder', () => {
+    it('removes worksheet from pinnedWorksheetOrder when unpinning', () => {
+      const state = createDefaultNavigationState();
+      state.pinnedWorksheetOrder = ['sheet-1', 'sheet-2', 'sheet-3'];
+      state.worksheetsById = {
+        'sheet-1': {
+          worksheetId: 'sheet-1',
+          name: 'One',
+          visibility: 'Visible',
+          workbookOrder: 0,
+          isPinned: true,
+          groupId: null,
+          lastKnownStructuralState: { kind: 'pinned' },
+        },
+        'sheet-2': {
+          worksheetId: 'sheet-2',
+          name: 'Two',
+          visibility: 'Visible',
+          workbookOrder: 1,
+          isPinned: true,
+          groupId: null,
+          lastKnownStructuralState: { kind: 'pinned' },
+        },
+        'sheet-3': {
+          worksheetId: 'sheet-3',
+          name: 'Three',
+          visibility: 'Visible',
+          workbookOrder: 2,
+          isPinned: true,
+          groupId: null,
+          lastKnownStructuralState: { kind: 'pinned' },
+        },
+      };
+
+      const nextState = navigationReducer(state, {
+        type: 'unpinWorksheet',
+        worksheetId: 'sheet-2',
+      });
+
+      expect(nextState.pinnedWorksheetOrder).toEqual(['sheet-1', 'sheet-3']);
+    });
+  });
 });
