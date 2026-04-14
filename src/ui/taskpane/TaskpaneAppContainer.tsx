@@ -10,6 +10,7 @@ import { useContextMenus } from './hooks/useContextMenus';
 import { useWorksheetDnD } from './hooks/useWorksheetDnD';
 import { useTextPromptState } from './hooks/useTextPromptState';
 import { useGroupCreationState } from './hooks/useGroupCreationState';
+import { pinnedSectionPolicy } from './dnd/dndPolicies';
 
 export function TaskpaneAppContainer() {
   // The controller owns workbook operations and domain state transitions.
@@ -67,6 +68,8 @@ export function TaskpaneAppContainer() {
     reorderGroupWorksheet: controller.reorderGroupWorksheet,
     reorderSheetSectionWorksheet: controller.reorderSheetSectionWorksheet,
     reorderPinnedWorksheet: controller.reorderPinnedWorksheet,
+    policy: pinnedSectionPolicy,
+    policyState: { worksheetsById: controller.state.worksheetsById },
   });
   const activeDragWorksheet = dragAndDrop.activeWorksheetId
     ? controller.state.worksheetsById[dragAndDrop.activeWorksheetId] ?? null
