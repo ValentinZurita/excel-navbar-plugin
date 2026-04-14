@@ -1,5 +1,11 @@
 import { createDefaultNavigationState } from './defaultState';
 import { groupColorTokens } from './constants';
+import {
+  byWorkbookOrder,
+  dedupeWorksheetIds,
+  moveWorksheetId,
+  reconcileSheetSectionOrder,
+} from './utils';
 import type {
   GroupColorToken,
   GroupEntity,
@@ -24,6 +30,7 @@ export type NavigationAction =
   | { type: 'removeWorksheetFromGroup'; worksheetId: string; targetIndex?: number }
   | { type: 'reorderGroupWorksheet'; worksheetId: string; groupId: string; targetIndex: number }
   | { type: 'reorderSheetSectionWorksheet'; worksheetId: string; targetIndex: number }
+  | { type: 'reorderPinnedWorksheet'; worksheetId: string; targetIndex: number }
   | { type: 'pinWorksheet'; worksheetId: string }
   | { type: 'unpinWorksheet'; worksheetId: string }
   | { type: 'markWorksheetUnhidden'; worksheetId: string }
@@ -32,10 +39,6 @@ export type NavigationAction =
 
 function nextGroupColor(index: number): GroupColorToken {
   return groupColorTokens[index % groupColorTokens.length];
-}
-
-function byWorkbookOrder(left: WorksheetEntity, right: WorksheetEntity) {
-  return left.workbookOrder - right.workbookOrder;
 }
 
 function toWorksheetEntity(
@@ -53,46 +56,23 @@ function toWorksheetEntity(
   };
 }
 
-function dedupeWorksheetIds(ids: string[]) {
-  const seen = new Set<string>();
-  return ids.filter((worksheetId) => {
-    if (seen.has(worksheetId)) {
-      return false;
-    }
-
-    seen.add(worksheetId);
-    return true;
-  });
-}
-
-function reconcileSheetSectionOrder(
-  currentOrder: string[],
-  worksheetsById: Record<string, WorksheetEntity>,
-) {
-  const knownWorksheetIds = new Set(Object.keys(worksheetsById));
-  const kept = dedupeWorksheetIds(currentOrder).filter((worksheetId) => knownWorksheetIds.has(worksheetId));
-  const missing = Object.values(worksheetsById)
-    .sort(byWorkbookOrder)
-    .map((worksheet) => worksheet.worksheetId)
-    .filter((worksheetId) => !kept.includes(worksheetId));
-
-  return [...kept, ...missing];
-}
-
-function moveWorksheetId(order: string[], worksheetId: string, targetIndex: number) {
-  const nextOrder = order.filter((candidateId) => candidateId !== worksheetId);
-  const clampedIndex = Math.max(0, Math.min(targetIndex, nextOrder.length));
-  nextOrder.splice(clampedIndex, 0, worksheetId);
-  return nextOrder;
-}
-
-function applyPinnedState(state: NavigationState, pinnedWorksheetIds: string[]) {
+function applyPinnedState(state: NavigationState, pinnedWorksheetIds: string[], pinnedWorksheetOrder?: string[]) {
   Object.values(state.worksheetsById).forEach((worksheet) => {
     worksheet.isPinned = pinnedWorksheetIds.includes(worksheet.worksheetId) && worksheet.groupId === null;
     if (worksheet.isPinned) {
       worksheet.lastKnownStructuralState = { kind: 'pinned' };
     }
   });
+
+  // Initialize or reconcile pinnedWorksheetOrder
+  if (pinnedWorksheetOrder && pinnedWorksheetOrder.length > 0) {
+    // Use persisted order, filtered to only include currently pinned worksheets
+    const pinnedIds = new Set(pinnedWorksheetIds);
+    state.pinnedWorksheetOrder = dedupeWorksheetIds(pinnedWorksheetOrder).filter((id) => pinnedIds.has(id));
+  } else {
+    // Fallback: derive from pinnedWorksheetIds
+    state.pinnedWorksheetOrder = [...pinnedWorksheetIds];
+  }
 }
 
 function applyPersistence(state: NavigationState, model: PersistedNavigationModel | null) {
@@ -125,7 +105,7 @@ function applyPersistence(state: NavigationState, model: PersistedNavigationMode
     }
   }
 
-  applyPinnedState(state, model.pinnedWorksheetIds);
+  applyPinnedState(state, model.pinnedWorksheetIds, model.pinnedWorksheetOrder);
   return state;
 }
 
@@ -140,6 +120,7 @@ function cloneState(state: NavigationState): NavigationState {
     ),
     groupOrder: [...state.groupOrder],
     sheetSectionOrder: [...state.sheetSectionOrder],
+    pinnedWorksheetOrder: [...state.pinnedWorksheetOrder],
     worksheetsById: Object.fromEntries(
       Object.entries(state.worksheetsById).map(([key, value]) => [key, { ...value }]),
     ),
@@ -365,6 +346,21 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
         ),
       };
     }
+    case 'reorderPinnedWorksheet': {
+      const worksheet = state.worksheetsById[action.worksheetId];
+      if (!worksheet || !worksheet.isPinned) {
+        return state;
+      }
+
+      const nextState = cloneState(state);
+      nextState.pinnedWorksheetOrder = moveWorksheetId(
+        nextState.pinnedWorksheetOrder,
+        action.worksheetId,
+        action.targetIndex,
+      );
+
+      return nextState;
+    }
     case 'pinWorksheet': {
       const nextState = cloneState(state);
       const worksheet = nextState.worksheetsById[action.worksheetId];
@@ -374,9 +370,15 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
 
       removeWorksheetFromAnyGroup(nextState, action.worksheetId);
 
+      // Add to pinned order if not already present
+      if (!nextState.pinnedWorksheetOrder.includes(action.worksheetId)) {
+        nextState.pinnedWorksheetOrder.push(action.worksheetId);
+      }
+
       return {
         ...nextState,
         sheetSectionOrder: reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById),
+        pinnedWorksheetOrder: nextState.pinnedWorksheetOrder,
         worksheetsById: {
           ...nextState.worksheetsById,
           [action.worksheetId]: {
@@ -396,6 +398,7 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       return {
         ...state,
         sheetSectionOrder: reconcileSheetSectionOrder(state.sheetSectionOrder, state.worksheetsById),
+        pinnedWorksheetOrder: state.pinnedWorksheetOrder.filter((id) => id !== action.worksheetId),
         worksheetsById: {
           ...state.worksheetsById,
           [action.worksheetId]: {
