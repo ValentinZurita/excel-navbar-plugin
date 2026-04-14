@@ -27,11 +27,6 @@
     <Hosts>
       <Host xsi:type="Workbook">
         <DesktopFormFactor>
-          <GetStarted>
-            <Title resid="GetStarted.Title"/>
-            <Description resid="GetStarted.Description"/>
-            <LearnMoreUrl resid="GetStarted.LearnMoreUrl"/>
-          </GetStarted>
           <FunctionFile resid="Commands.Url"/>
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
             <OfficeTab id="TabHome">
@@ -71,17 +66,14 @@
         <bt:Image id="Icon.80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://learn.microsoft.com/office/dev/add-ins/"/>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Get started with Sheet Navigator"/>
         <bt:String id="Group.Label" DefaultValue="Sheet Navigator"/>
         <bt:String id="TaskpaneButton.Label" DefaultValue="Open Navigator"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="GetStarted.Description" DefaultValue="Open the navigator to manage worksheet groups, pinned sheets, and hidden sheets."/>
         <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Open the worksheet navigator task pane."/>
       </bt:LongStrings>
     </Resources>
