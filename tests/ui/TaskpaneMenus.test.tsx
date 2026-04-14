@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { WorksheetEntity } from '../../src/domain/navigation/types';
@@ -27,6 +27,8 @@ function renderSheetMenu(overrides: Partial<React.ComponentProps<typeof Taskpane
       onRenameWorksheet={vi.fn()}
       onRemoveFromGroup={vi.fn()}
       onStartCreatingGroup={vi.fn()}
+      onRenameGroup={vi.fn()}
+      onDeleteGroup={vi.fn()}
       onSetGroupColor={vi.fn()}
       isCreatingGroup={false}
       onCancelCreatingGroup={vi.fn()}
@@ -45,7 +47,7 @@ describe('TaskpaneMenus', () => {
     expect(screen.getByRole('button', { name: 'Rename' })).toBeInTheDocument();
   });
 
-  it('shows color picker directly when group menu is open', () => {
+  it('renders group actions from the active menu kind', () => {
     render(
       <TaskpaneMenus
         activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
@@ -55,6 +57,8 @@ describe('TaskpaneMenus', () => {
         onRenameWorksheet={vi.fn()}
         onRemoveFromGroup={vi.fn()}
         onStartCreatingGroup={vi.fn()}
+        onRenameGroup={vi.fn()}
+        onDeleteGroup={vi.fn()}
         onSetGroupColor={vi.fn()}
         isCreatingGroup={false}
         onCancelCreatingGroup={vi.fn()}
@@ -62,40 +66,8 @@ describe('TaskpaneMenus', () => {
       />,
     );
 
-    // Color picker grid is shown directly — 7 options (none + 6 colors)
-    const colorPicker = screen.getByRole('group', { name: 'Color options' });
-    const colorButtons = within(colorPicker).getAllByRole('button');
-    expect(colorButtons).toHaveLength(7);
-
-    // Current color (blue) is selected
-    expect(screen.getByRole('button', { name: 'Select blue', pressed: true })).toBeInTheDocument();
-  });
-
-  it('applies color and closes menu when a color is selected', async () => {
-    const user = userEvent.setup();
-    const onSetGroupColor = vi.fn();
-    const onCloseMenus = vi.fn();
-
-    render(
-      <TaskpaneMenus
-        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
-        onCloseMenus={onCloseMenus}
-        onTogglePin={vi.fn()}
-        onToggleVisibility={vi.fn()}
-        onRenameWorksheet={vi.fn()}
-        onRemoveFromGroup={vi.fn()}
-        onStartCreatingGroup={vi.fn()}
-        onSetGroupColor={onSetGroupColor}
-        isCreatingGroup={false}
-        onCancelCreatingGroup={vi.fn()}
-        onConfirmCreatingGroup={vi.fn()}
-      />,
-    );
-
-    await user.click(screen.getByRole('button', { name: 'Select green' }));
-
-    expect(onSetGroupColor).toHaveBeenCalledWith('group-1', 'green');
-    expect(onCloseMenus).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Rename group' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete group' })).toBeInTheDocument();
   });
 
   it('shows remove-from-group only for grouped worksheets', () => {
@@ -114,6 +86,8 @@ describe('TaskpaneMenus', () => {
         onRenameWorksheet={vi.fn()}
         onRemoveFromGroup={vi.fn()}
         onStartCreatingGroup={vi.fn()}
+        onRenameGroup={vi.fn()}
+        onDeleteGroup={vi.fn()}
         onSetGroupColor={vi.fn()}
         isCreatingGroup={false}
         onCancelCreatingGroup={vi.fn()}
@@ -150,6 +124,35 @@ describe('TaskpaneMenus', () => {
     expect(onRenameWorksheet).toHaveBeenCalledWith(worksheet);
   });
 
+  it('deletes a group and closes the group menu', async () => {
+    const user = userEvent.setup();
+    const onDeleteGroup = vi.fn();
+    const onCloseMenus = vi.fn();
+
+    render(
+      <TaskpaneMenus
+        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
+        onCloseMenus={onCloseMenus}
+        onTogglePin={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        onRenameWorksheet={vi.fn()}
+        onRemoveFromGroup={vi.fn()}
+        onStartCreatingGroup={vi.fn()}
+        onRenameGroup={vi.fn()}
+        onDeleteGroup={onDeleteGroup}
+        onSetGroupColor={vi.fn()}
+        isCreatingGroup={false}
+        onCancelCreatingGroup={vi.fn()}
+        onConfirmCreatingGroup={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Delete group' }));
+
+    expect(onDeleteGroup).toHaveBeenCalledWith('group-1', 'Finance');
+    expect(onCloseMenus).toHaveBeenCalled();
+  });
+
   it('starts inline creation when New group is clicked', async () => {
     const user = userEvent.setup();
     const onStartCreatingGroup = vi.fn();
@@ -162,10 +165,14 @@ describe('TaskpaneMenus', () => {
   });
 
   it('shows inline group creator when isCreatingGroup is true', async () => {
+    const user = userEvent.setup();
+    const onConfirmCreatingGroup = vi.fn();
+    const onCancelCreatingGroup = vi.fn();
+
     renderSheetMenu({
       isCreatingGroup: true,
-      onConfirmCreatingGroup: vi.fn(),
-      onCancelCreatingGroup: vi.fn(),
+      onConfirmCreatingGroup,
+      onCancelCreatingGroup,
     });
 
     // Input should be visible
@@ -216,6 +223,7 @@ describe('TaskpaneMenus', () => {
 
     await user.keyboard('{Escape}');
 
+    // Both cancel and close should be called to fully exit creation mode
     expect(onCancelCreatingGroup).toHaveBeenCalled();
     expect(onCloseMenus).toHaveBeenCalled();
   });

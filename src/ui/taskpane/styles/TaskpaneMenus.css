@@ -137,36 +137,41 @@
 .context-menu-color-picker {
   display: flex;
   flex-direction: column;
-  gap: 8px;
   padding: 8px;
 }
 
-.context-menu-color-picker-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+/* Horizontal row of color chips, matching InlineGroupCreator layout */
+.context-menu-color-picker-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
 }
 
 .context-menu-color-picker-item {
-  width: 28px;
-  height: 28px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  border: 2px solid transparent;
+  border: none;
   cursor: pointer;
   transition:
     transform 120ms ease,
-    box-shadow 120ms ease;
+    box-shadow 120ms ease,
+    opacity 120ms ease;
+  opacity: 0.85;
+  padding: 0;
 }
 
 .context-menu-color-picker-item:hover {
   transform: scale(1.1);
+  opacity: 1;
 }
 
 /* "No color" picker item — outlined circle with diagonal slash, matching Excel's no-fill pattern. */
 .context-menu-color-picker-item-none {
   background: transparent;
-  border: 2px solid var(--excel-muted);
+  border: 1.5px solid var(--excel-muted);
   position: relative;
+  opacity: 0.55;
 }
 
 .context-menu-color-picker-item-none::after {
@@ -174,14 +179,23 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 55%;
-  height: 2px;
+  width: 70%;
+  height: 1.5px;
   background: var(--excel-muted);
   transform: translate(-50%, -50%) rotate(-45deg);
   border-radius: 1px;
 }
 
+.context-menu-color-picker-item-none:hover {
+  opacity: 0.8;
+}
+
 .context-menu-color-picker-item-selected {
-  border-color: var(--excel-body-fg);
-  box-shadow: 0 0 0 2px var(--excel-control-bg), 0 0 0 4px var(--excel-accent);
+  opacity: 1;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px var(--excel-body-bg), 0 0 0 4px var(--excel-accent);
+}
+
+.context-menu-color-picker-item-selected.context-menu-color-picker-item-none {
+  opacity: 1;
 }
