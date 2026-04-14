@@ -23,6 +23,7 @@
 - Treat the overlay as presentational only. It must not keep button semantics, tab focus, or pointer interaction.
 - Apply drag preview offsets through `dnd-kit` modifiers, not by overriding the overlay `transform` style directly.
 - Keep hover-driven affordances secondary. If a visual state matters for correctness, drive it from explicit props or data attributes.
+- During drag, non-target worksheet row leading indicators must remain in their base state. Visual drag emphasis belongs to the overlay, source ghost, insertion line, and active group drop target only.
 - Preserve a single source of truth for the final drop target. Preview state may inform the UI, but the committed drop must come from the drag event payload.
 
 ## Safety checklist before changing worksheet drag behavior

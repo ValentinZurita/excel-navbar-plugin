@@ -91,6 +91,30 @@ describe('SheetList', () => {
     expect(container.querySelector('.sheet-list-drag-active')).toBeInTheDocument();
   });
 
+  it('keeps dragged-list rows in their base leading state even if hover state exists', () => {
+    render(
+      <DndContext>
+        <SheetList
+          worksheets={[{ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible', workbookOrder: 1, isPinned: false, groupId: 'group-1', lastKnownStructuralState: null }]}
+          activeWorksheetId={null}
+          hoveredWorksheetId="sheet-1"
+          onActivate={vi.fn()}
+          onOpenContextMenu={vi.fn()}
+          onTogglePin={vi.fn()}
+          dragConfig={{
+            containerId: 'group:group-1',
+            projectedDropTarget: null,
+            isDragActive: true,
+            shouldSuppressActivation: () => false,
+          }}
+        />
+      </DndContext>,
+    );
+
+    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveAttribute('data-leading-state', 'indicator');
+    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveAttribute('data-pin-visible', 'false');
+  });
+
   it('does not activate the end divider when projected target is the same-group header', () => {
     const worksheet: WorksheetEntity = {
       worksheetId: 'sheet-1',

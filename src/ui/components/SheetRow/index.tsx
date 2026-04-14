@@ -4,6 +4,8 @@ import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 import { InlineRenameInput } from '../InlineRenameInput';
 import './SheetRow.css';
 
+type LeadingState = 'indicator' | 'pin-action' | 'pinned-indicator';
+
 function hasNestedInteractiveTarget(target: EventTarget | null, currentTarget: HTMLElement) {
   if (!(target instanceof HTMLElement) || target === currentTarget) {
     return false;
@@ -67,12 +69,26 @@ export function SheetRow({
   const isToggleable = canTogglePin;
   const isInteractiveHighlight = !isInteractionSuppressed && Boolean(isHovered);
   const isHighlighted = isActive || Boolean(isContextMenuOpen) || isInteractiveHighlight;
-  const isPinVisible =
-    Boolean(worksheet.isPinned) || Boolean(isContextMenuOpen) || (canTogglePin && isInteractiveHighlight);
+  const shouldShowPinAction =
+    !worksheet.isPinned &&
+    canTogglePin &&
+    !isOverlay &&
+    !isDragged &&
+    !isInteractionSuppressed &&
+    (Boolean(isContextMenuOpen) || isInteractiveHighlight);
+  const leadingState: LeadingState = worksheet.isPinned
+    ? 'pinned-indicator'
+    : shouldShowPinAction
+      ? 'pin-action'
+      : 'indicator';
 
-  function renderRowIcon() {
+  function renderBaseIndicator() {
     if (worksheet.isPinned) {
-      return null;
+      return (
+        <span className="sheet-row-static-indicator" aria-hidden="true">
+          <WorksheetPinIcon className="sheet-pin-icon sheet-pin-icon-active" />
+        </span>
+      );
     }
 
     if (worksheet.visibility !== 'Visible') {
@@ -90,7 +106,8 @@ export function SheetRow({
       data-highlighted={isHighlighted ? 'true' : 'false'}
       data-hovered={isHovered ? 'true' : 'false'}
       data-context-open={isContextMenuOpen ? 'true' : 'false'}
-      data-pin-visible={isPinVisible ? 'true' : 'false'}
+      data-pin-visible={leadingState === 'pin-action' ? 'true' : 'false'}
+      data-leading-state={leadingState}
       data-interaction-suppressed={isInteractionSuppressed ? 'true' : 'false'}
       style={containerStyle}
       role={isInteractive ? 'button' : undefined}
@@ -146,20 +163,19 @@ export function SheetRow({
     >
       <div className="row-topline">
         <span className="sheet-row-leading" aria-hidden="true">
-          {renderRowIcon()}
-          {canTogglePin ? (
+          {leadingState === 'pin-action' && canTogglePin ? (
             <button
-              className={`sheet-pin-button ${worksheet.isPinned ? 'sheet-pin-button-active' : ''}`}
+              className="sheet-pin-button"
               type="button"
-              aria-label={worksheet.isPinned ? `Unpin ${worksheet.name}` : `Pin ${worksheet.name}`}
+              aria-label={`Pin ${worksheet.name}`}
               onClick={(event) => {
                 event.stopPropagation();
                 onTogglePin?.(worksheet.worksheetId);
               }}
             >
-              <WorksheetPinIcon className={`sheet-pin-icon ${worksheet.isPinned ? 'sheet-pin-icon-active' : ''}`} />
+              <WorksheetPinIcon className="sheet-pin-icon" />
             </button>
-          ) : null}
+          ) : renderBaseIndicator()}
         </span>
 
         <div className="sheet-link">

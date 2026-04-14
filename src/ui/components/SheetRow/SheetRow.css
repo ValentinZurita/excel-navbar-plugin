@@ -48,8 +48,14 @@
   transition: opacity 160ms ease, color 160ms ease;
 }
 
-.sheet-row[data-pin-visible='true'] .sheet-row-icon {
-  opacity: 0;
+.sheet-row-static-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  color: var(--excel-muted);
+  opacity: 0.45;
 }
 
 /* Invisible overlay element reserved for future hover or focus visuals. */
@@ -87,15 +93,6 @@
   background: transparent;
   border-color: transparent;
   box-shadow: none;
-}
-
-.sheet-list-drag-active .sheet-row .sheet-row-icon {
-  opacity: 0.85;
-}
-
-.sheet-list-drag-active .sheet-row .sheet-pin-button {
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* Dragging state for when a row is being moved. It becomes translucent and non-interactive. */
@@ -180,8 +177,8 @@
   z-index: 2;
 }
 
-/* When the pin icon is visible, the button becomes interactive. */
-.sheet-row[data-pin-visible='true'] .sheet-pin-button {
+/* When the contextual pin action is visible, the button becomes interactive. */
+.sheet-row[data-leading-state='pin-action'] .sheet-pin-button {
   opacity: 0.45;
   pointer-events: auto;
 }
@@ -208,15 +205,6 @@
 
 /* Focus style for the pin button while still keeping it subtle. */
 .sheet-row .sheet-pin-button:focus-visible {
-  opacity: 0.75;
-}
-
-.sheet-row .sheet-pin-button.sheet-pin-button-active {
-  opacity: 0.45;
-}
-
-.sheet-row .sheet-pin-button.sheet-pin-button-active:hover,
-.sheet-row .sheet-pin-button.sheet-pin-button-active:focus-visible {
   opacity: 0.75;
 }
 
