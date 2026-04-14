@@ -18,6 +18,8 @@ import {
   type WorksheetDropTargetData,
   type WorksheetProjectedDropTarget,
 } from '../dnd/worksheetDndModel';
+import type { DnDPolicy, PolicyEvaluationState } from '../dnd/dndPolicies';
+import type { WorksheetEntity } from '../../../domain/navigation/types';
 
 interface UseWorksheetDnDParams {
   assignWorksheetToGroup: (worksheetId: string, groupId: string, targetIndex?: number) => void;
@@ -25,6 +27,15 @@ interface UseWorksheetDnDParams {
   reorderGroupWorksheet: (worksheetId: string, groupId: string, targetIndex: number) => void;
   reorderSheetSectionWorksheet: (worksheetId: string, targetIndex: number) => void;
   reorderPinnedWorksheet: (worksheetId: string, targetIndex: number) => void;
+  /**
+   * Optional policy to validate drag operations. When provided, visual feedback
+   * will be suppressed for drop targets that violate the policy.
+   */
+  policy?: DnDPolicy;
+  /**
+   * Required when policy is provided. Used to evaluate policy conditions.
+   */
+  policyState?: PolicyEvaluationState;
 }
 
 function isWorksheetDragItemData(data: unknown): data is WorksheetDragItemData {
@@ -77,6 +88,8 @@ export function useWorksheetDnD({
   reorderGroupWorksheet,
   reorderSheetSectionWorksheet,
   reorderPinnedWorksheet,
+  policy,
+  policyState,
 }: UseWorksheetDnDParams) {
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -138,16 +151,37 @@ export function useWorksheetDnD({
   }, []);
 
   // Drag over is preview-only: it updates the highlighted drop target without committing.
+  // Validates against policy before showing visual feedback to prevent misleading UX.
   const onDragOver = useCallback((event: DragOverEvent) => {
     const nextProjectedDropTarget = getProjectedDropTarget(event.over?.data.current);
+    const initialLocation = initialLocationRef.current;
 
     if (!nextProjectedDropTarget) {
       setProjectedDropTarget(null);
       return;
     }
 
+    // Validate against policy if provided to suppress invalid drop targets visually
+    if (policy && policyState && initialLocation) {
+      const worksheet = policyState.worksheetsById[initialLocation.worksheetId];
+      if (worksheet) {
+        const isDropAllowed = policy.canDrop(
+          worksheet,
+          initialLocation.containerId,
+          nextProjectedDropTarget.containerId,
+          policyState
+        );
+
+        if (!isDropAllowed) {
+          // Drop violates policy - hide visual feedback
+          setProjectedDropTarget(null);
+          return;
+        }
+      }
+    }
+
     setProjectedDropTarget(nextProjectedDropTarget);
-  }, []);
+  }, [policy, policyState]);
 
   // Group flashes are time-based UI affordances, so they need explicit cleanup on unmount.
   useEffect(() => {
