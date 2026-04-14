@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { InlineGroupCreator } from '../../src/ui/components/InlineGroupCreator';
 
 describe('InlineGroupCreator', () => {
-  it('renders input with placeholder', () => {
+  it('renders input and color options', () => {
     render(
       <InlineGroupCreator
         onCreate={vi.fn()}
@@ -14,21 +14,11 @@ describe('InlineGroupCreator', () => {
     );
 
     expect(screen.getByLabelText('Name')).toBeInTheDocument();
-    expect(screen.getByLabelText('Name')).toHaveAttribute('placeholder', 'Group name');
-  });
-
-  it('renders all color placeholders', () => {
-    render(
-      <InlineGroupCreator
-        onCreate={vi.fn()}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
+    expect(screen.getByLabelText('Name')).not.toHaveAttribute('placeholder');
 
     const colorContainer = screen.getByLabelText('Color options');
-    const colorPlaceholders = colorContainer.querySelectorAll('button');
-    expect(colorPlaceholders).toHaveLength(7);
+    const colorButtons = colorContainer.querySelectorAll('button');
+    expect(colorButtons).toHaveLength(7);
   });
 
   it('focuses input on mount', async () => {
@@ -147,34 +137,6 @@ describe('InlineGroupCreator', () => {
 
     expect(onCancel).toHaveBeenCalled();
     expect(onCloseMenu).toHaveBeenCalled();
-  });
-
-  it('shows hint text when name has content', async () => {
-    const user = userEvent.setup();
-
-    render(
-      <InlineGroupCreator
-        onCreate={vi.fn()}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
-
-    await user.type(screen.getByLabelText('Name'), 'F');
-
-    expect(screen.getByText('Press Enter to create')).toBeInTheDocument();
-  });
-
-  it('hides hint text when name is empty', () => {
-    render(
-      <InlineGroupCreator
-        onCreate={vi.fn()}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
-
-    expect(screen.queryByText('Press Enter to create')).not.toBeInTheDocument();
   });
 
   it('allows typing and modifying the name', async () => {

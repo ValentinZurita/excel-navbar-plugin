@@ -5,12 +5,6 @@
   padding: 12px 10px 10px;
 }
 
-/* Layout container for the input and optional helper text. */
-.inline-group-creator-field {
-  display: grid;
-  gap: 4px;
-}
-
 /* The main text field where the user types the new group name. */
 /* It uses a compact Office-style input and keeps the row width fluid. */
 .inline-group-creator-input {
@@ -38,12 +32,6 @@
   background: #1a1a1a;
 }
 
-.inline-group-creator-input::placeholder {
-  color: var(--excel-muted);
-  opacity: 1;
-}
-
-/* Placeholder text is intentionally fully opaque for readability. */
 .inline-group-creator-input:focus {
   border-color: var(--excel-border);
   box-shadow: none;
@@ -142,12 +130,4 @@
 
 .inline-group-creator-color-orange {
   background: #cdb88e;
-}
-
-/* Hint text below the palette; shown once the user types to signal submit key. */
-.inline-group-creator-hint {
-  font-size: 10px;
-  color: var(--excel-muted);
-  text-align: center;
-  padding-top: 2px;
 }

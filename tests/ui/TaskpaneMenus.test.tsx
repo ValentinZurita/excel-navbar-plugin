@@ -178,12 +178,8 @@ describe('TaskpaneMenus', () => {
     // Input should be visible
     expect(screen.getByLabelText('Name')).toBeInTheDocument();
 
-    // Color placeholders should be visible
+    // Color options should be visible
     expect(screen.getByLabelText('Color options')).toBeInTheDocument();
-
-    // Hint should appear when there's content
-    await user.type(screen.getByLabelText('Name'), 'Finance');
-    expect(screen.getByText('Press Enter to create')).toBeInTheDocument();
   });
 
   it('creates group on Enter with valid name', async () => {

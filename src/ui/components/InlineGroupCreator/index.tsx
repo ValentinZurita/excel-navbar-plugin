@@ -63,8 +63,6 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
     setSelectedColor(color);
   }
 
-  const hasContent = name.trim().length > 0;
-
   return (
     <div className="inline-group-creator">
       <input
@@ -73,7 +71,6 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
         type="text"
         value={name}
         aria-label="Name"
-        placeholder="Group name"
         onChange={(event) => setName(event.target.value)}
         onKeyDown={handleInputKeyDown}
         autoFocus={autoFocus}
@@ -99,10 +96,6 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
           />
         ))}
       </div>
-
-      {hasContent && (
-        <span className="inline-group-creator-hint">Press Enter to create</span>
-      )}
     </div>
   );
 }
