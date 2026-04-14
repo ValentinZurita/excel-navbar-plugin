@@ -66,6 +66,7 @@ export function TaskpaneAppContainer() {
     removeWorksheetFromGroup: controller.removeWorksheetFromGroup,
     reorderGroupWorksheet: controller.reorderGroupWorksheet,
     reorderSheetSectionWorksheet: controller.reorderSheetSectionWorksheet,
+    reorderPinnedWorksheet: controller.reorderPinnedWorksheet,
   });
   const activeDragWorksheet = dragAndDrop.activeWorksheetId
     ? controller.state.worksheetsById[dragAndDrop.activeWorksheetId] ?? null

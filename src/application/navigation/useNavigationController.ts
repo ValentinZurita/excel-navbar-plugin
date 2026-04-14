@@ -146,6 +146,9 @@ export function useNavigationController() {
     reorderSheetSectionWorksheet(worksheetId: string, targetIndex: number) {
       dispatch({ type: 'reorderSheetSectionWorksheet', worksheetId, targetIndex });
     },
+    reorderPinnedWorksheet(worksheetId: string, targetIndex: number) {
+      dispatch({ type: 'reorderPinnedWorksheet', worksheetId, targetIndex });
+    },
     pinWorksheet(worksheetId: string) {
       dispatch({ type: 'pinWorksheet', worksheetId });
     },

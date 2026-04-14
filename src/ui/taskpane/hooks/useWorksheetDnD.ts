@@ -24,6 +24,7 @@ interface UseWorksheetDnDParams {
   removeWorksheetFromGroup: (worksheetId: string, targetIndex?: number) => void;
   reorderGroupWorksheet: (worksheetId: string, groupId: string, targetIndex: number) => void;
   reorderSheetSectionWorksheet: (worksheetId: string, targetIndex: number) => void;
+  reorderPinnedWorksheet: (worksheetId: string, targetIndex: number) => void;
 }
 
 function isWorksheetDragItemData(data: unknown): data is WorksheetDragItemData {
@@ -75,6 +76,7 @@ export function useWorksheetDnD({
   removeWorksheetFromGroup,
   reorderGroupWorksheet,
   reorderSheetSectionWorksheet,
+  reorderPinnedWorksheet,
 }: UseWorksheetDnDParams) {
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -197,6 +199,9 @@ export function useWorksheetDnD({
         case 'reorder-sheet-section':
           reorderSheetSectionWorksheet(commit.worksheetId, commit.targetIndex);
           break;
+        case 'reorder-pinned':
+          reorderPinnedWorksheet(commit.worksheetId, commit.targetIndex);
+          break;
         case 'reorder-group':
           reorderGroupWorksheet(commit.worksheetId, commit.groupId, commit.targetIndex);
           break;
@@ -221,6 +226,7 @@ export function useWorksheetDnD({
     flashAssignedGroup,
     removeWorksheetFromGroup,
     reorderGroupWorksheet,
+    reorderPinnedWorksheet,
     reorderSheetSectionWorksheet,
     resetDragState,
   ]);
