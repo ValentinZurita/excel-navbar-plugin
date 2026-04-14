@@ -1,6 +1,6 @@
 import type { NavigatorView, WorksheetEntity } from '../../../domain/navigation/types';
 
-export type WorksheetContainerId = 'sheets' | `group:${string}`;
+export type WorksheetContainerId = 'sheets' | 'pinned' | `group:${string}`;
 
 export type WorksheetDropKind = 'row' | 'container-end' | 'group-header';
 
@@ -36,6 +36,7 @@ export interface WorksheetInitialLocation {
 
 export type WorksheetDragCommit =
   | { kind: 'reorder-sheet-section'; worksheetId: string; targetIndex: number }
+  | { kind: 'reorder-pinned'; worksheetId: string; targetIndex: number }
   | { kind: 'reorder-group'; worksheetId: string; groupId: string; targetIndex: number }
   | { kind: 'assign-to-group'; worksheetId: string; groupId: string; targetIndex: number }
   | { kind: 'remove-from-group'; worksheetId: string; targetIndex: number };
@@ -62,8 +63,12 @@ function clampInsertionIndex(index: number, length: number) {
   return Math.max(0, Math.min(index, length));
 }
 
-function isSheetContainer(containerId: WorksheetContainerId) {
+export function isSheetContainer(containerId: WorksheetContainerId) {
   return containerId === 'sheets';
+}
+
+export function isPinnedContainer(containerId: WorksheetContainerId) {
+  return containerId === 'pinned';
 }
 
 export function findWorksheetLocation(
@@ -183,6 +188,9 @@ function normalizeTargetIndex(
   return finalLocation.index;
 }
 
+/**
+ * @deprecated Use buildDragCommitWithPolicy from dndPolicies.ts instead for better policy enforcement
+ */
 export function buildDragCommit(
   worksheetId: string,
   initialLocation: WorksheetInitialLocation,
@@ -194,6 +202,25 @@ export function buildDragCommit(
     initialLocation.containerId === finalLocation.containerId &&
     initialLocation.index === normalizedTargetIndex
   ) {
+    return null;
+  }
+
+  // Reorder within pinned section
+  if (initialLocation.containerId === 'pinned' && finalLocation.containerId === 'pinned') {
+    return {
+      kind: 'reorder-pinned',
+      worksheetId,
+      targetIndex: normalizedTargetIndex,
+    };
+  }
+
+  // Prevent moving from pinned to other sections (must use policy for proper enforcement)
+  if (initialLocation.containerId === 'pinned' && finalLocation.containerId !== 'pinned') {
+    return null;
+  }
+
+  // Prevent moving to pinned from other sections (must use policy for proper enforcement)
+  if (finalLocation.containerId === 'pinned' && initialLocation.containerId !== 'pinned') {
     return null;
   }
 
