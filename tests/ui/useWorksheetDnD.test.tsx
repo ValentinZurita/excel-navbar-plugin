@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorksheetEntity } from '../../src/domain/navigation/types';
+import { pinnedSectionPolicy } from '../../src/ui/taskpane/dnd/dndPolicies';
 import { useWorksheetDnD } from '../../src/ui/taskpane/hooks/useWorksheetDnD';
 
 function createWorksheet(overrides: Partial<WorksheetEntity> = {}): WorksheetEntity {
@@ -32,11 +33,11 @@ function createDragStartEvent(worksheetId = 'sheet-1', containerId = 'group:grou
 }
 
 function createDropTargetEvent(
-  containerId: 'sheets' | `group:${string}`,
+  containerId: 'sheets' | 'pinned' | `group:${string}`,
   index: number,
   kind: 'row' | 'container-end' | 'group-header' = 'row',
   worksheetId = 'sheet-1',
-  sourceContainerId: 'sheets' | `group:${string}` = 'sheets',
+  sourceContainerId: 'sheets' | 'pinned' | `group:${string}` = 'sheets',
   sourceIndex = 0,
 ) {
   return {
@@ -155,5 +156,220 @@ describe('useWorksheetDnD', () => {
       vi.runAllTimers();
     });
     expect(clearTimeoutSpy).toHaveBeenCalledTimes(1);
+  });
+
+  describe('policy validation in onDragOver', () => {
+    it('suppresses visual feedback when policy prohibits the drop', () => {
+      const pinnedWorksheet = createWorksheet({
+        worksheetId: 'sheet-1',
+        isPinned: true,
+        groupId: null,
+      });
+
+      const { result } = renderHook(() =>
+        useWorksheetDnD({
+          assignWorksheetToGroup: vi.fn(),
+          removeWorksheetFromGroup: vi.fn(),
+          reorderGroupWorksheet: vi.fn(),
+          reorderSheetSectionWorksheet: vi.fn(),
+          policy: pinnedSectionPolicy,
+          policyState: {
+            worksheetsById: {
+              [pinnedWorksheet.worksheetId]: pinnedWorksheet,
+            },
+          },
+        }),
+      );
+
+      // Start dragging from pinned
+      act(() => {
+        result.current.onDragStart(
+          createDragStartEvent(pinnedWorksheet.worksheetId, 'pinned', 0),
+        );
+      });
+
+      expect(result.current.projectedDropTarget).toEqual({
+        containerId: 'pinned',
+        index: 0,
+        kind: 'row',
+      });
+
+      // Try to drag over sheets section (should be prohibited by policy)
+      act(() => {
+        result.current.onDragOver(
+          createDropTargetEvent('sheets', 0, 'row', pinnedWorksheet.worksheetId, 'pinned', 0),
+        );
+      });
+
+      // Visual feedback should be suppressed
+      expect(result.current.projectedDropTarget).toBeNull();
+    });
+
+    it('allows visual feedback when policy permits the drop', () => {
+      const pinnedWorksheet = createWorksheet({
+        worksheetId: 'sheet-1',
+        isPinned: true,
+        groupId: null,
+      });
+
+      const { result } = renderHook(() =>
+        useWorksheetDnD({
+          assignWorksheetToGroup: vi.fn(),
+          removeWorksheetFromGroup: vi.fn(),
+          reorderGroupWorksheet: vi.fn(),
+          reorderSheetSectionWorksheet: vi.fn(),
+          policy: pinnedSectionPolicy,
+          policyState: {
+            worksheetsById: {
+              [pinnedWorksheet.worksheetId]: pinnedWorksheet,
+            },
+          },
+        }),
+      );
+
+      // Start dragging from pinned
+      act(() => {
+        result.current.onDragStart(
+          createDragStartEvent(pinnedWorksheet.worksheetId, 'pinned', 0),
+        );
+      });
+
+      // Drag to another position within pinned (should be allowed)
+      act(() => {
+        result.current.onDragOver(
+          createDropTargetEvent('pinned', 2, 'row', pinnedWorksheet.worksheetId, 'pinned', 0),
+        );
+      });
+
+      // Visual feedback should be shown
+      expect(result.current.projectedDropTarget).toEqual({
+        containerId: 'pinned',
+        index: 2,
+        kind: 'row',
+      });
+    });
+
+    it('shows visual feedback when dragging from sheets to group', () => {
+      const worksheet = createWorksheet({
+        worksheetId: 'sheet-1',
+        isPinned: false,
+        groupId: null,
+      });
+
+      const { result } = renderHook(() =>
+        useWorksheetDnD({
+          assignWorksheetToGroup: vi.fn(),
+          removeWorksheetFromGroup: vi.fn(),
+          reorderGroupWorksheet: vi.fn(),
+          reorderSheetSectionWorksheet: vi.fn(),
+          policy: pinnedSectionPolicy,
+          policyState: {
+            worksheetsById: {
+              [worksheet.worksheetId]: worksheet,
+            },
+          },
+        }),
+      );
+
+      // Start dragging from sheets
+      act(() => {
+        result.current.onDragStart(
+          createDragStartEvent(worksheet.worksheetId, 'sheets', 0),
+        );
+      });
+
+      // Drag to group (should be allowed by policy)
+      act(() => {
+        result.current.onDragOver(
+          createDropTargetEvent('group:group-1', 0, 'row', worksheet.worksheetId, 'sheets', 0),
+        );
+      });
+
+      // Visual feedback should be shown
+      expect(result.current.projectedDropTarget).toEqual({
+        containerId: 'group:group-1',
+        index: 0,
+        kind: 'row',
+      });
+    });
+
+    it('suppresses feedback when dragging from sheets to pinned', () => {
+      const worksheet = createWorksheet({
+        worksheetId: 'sheet-1',
+        isPinned: false,
+        groupId: null,
+      });
+
+      const { result } = renderHook(() =>
+        useWorksheetDnD({
+          assignWorksheetToGroup: vi.fn(),
+          removeWorksheetFromGroup: vi.fn(),
+          reorderGroupWorksheet: vi.fn(),
+          reorderSheetSectionWorksheet: vi.fn(),
+          policy: pinnedSectionPolicy,
+          policyState: {
+            worksheetsById: {
+              [worksheet.worksheetId]: worksheet,
+            },
+          },
+        }),
+      );
+
+      // Start dragging from sheets
+      act(() => {
+        result.current.onDragStart(
+          createDragStartEvent(worksheet.worksheetId, 'sheets', 0),
+        );
+      });
+
+      // Try to drag to pinned (should be prohibited by policy)
+      act(() => {
+        result.current.onDragOver(
+          createDropTargetEvent('pinned', 0, 'row', worksheet.worksheetId, 'sheets', 0),
+        );
+      });
+
+      // Visual feedback should be suppressed
+      expect(result.current.projectedDropTarget).toBeNull();
+    });
+
+    it('works without policy (backward compatibility)', () => {
+      const worksheet = createWorksheet({
+        worksheetId: 'sheet-1',
+        isPinned: true,
+        groupId: null,
+      });
+
+      const { result } = renderHook(() =>
+        useWorksheetDnD({
+          assignWorksheetToGroup: vi.fn(),
+          removeWorksheetFromGroup: vi.fn(),
+          reorderGroupWorksheet: vi.fn(),
+          reorderSheetSectionWorksheet: vi.fn(),
+          // No policy provided
+        }),
+      );
+
+      // Start dragging
+      act(() => {
+        result.current.onDragStart(
+          createDragStartEvent(worksheet.worksheetId, 'pinned', 0),
+        );
+      });
+
+      // Drag anywhere - should show feedback since no policy restricts it
+      act(() => {
+        result.current.onDragOver(
+          createDropTargetEvent('sheets', 0, 'row', worksheet.worksheetId, 'pinned', 0),
+        );
+      });
+
+      // Visual feedback should be shown (no policy to restrict)
+      expect(result.current.projectedDropTarget).toEqual({
+        containerId: 'sheets',
+        index: 0,
+        kind: 'row',
+      });
+    });
   });
 });
