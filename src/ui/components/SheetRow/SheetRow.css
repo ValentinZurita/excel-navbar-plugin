@@ -38,6 +38,13 @@
   height: 20px;
 }
 
+/* Ensure smooth transition when icon content changes with subtle scale */
+.sheet-row-leading > * {
+  transition: 
+    opacity 150ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Icon displayed next to the row title, such as a sheet or grouped indicator. */
 .sheet-row-icon {
   width: 14px;
@@ -56,6 +63,36 @@
   height: 15px;
   color: var(--excel-muted);
   opacity: 0.45;
+}
+
+/* Base indicator container - always in DOM, visibility controlled by CSS */
+.sheet-row-base-indicator {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.9);
+  transition: 
+    opacity 120ms cubic-bezier(0.4, 0, 1, 1),
+    transform 120ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.sheet-row-base-indicator-visible {
+  opacity: 1;
+  transform: scale(1);
+  transition: 
+    opacity 150ms cubic-bezier(0, 0, 0.2, 1),
+    transform 150ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Pinned rows: keep base indicator visible even during unpin action
+   Prevents flash when unpin button overlays the pin icon */
+.sheet-row[data-leading-state='unpin-action'] .sheet-row-base-indicator {
+  opacity: 0.25;
+  transform: scale(0.95);
 }
 
 /* Invisible overlay element reserved for future hover or focus visuals. */
@@ -184,29 +221,47 @@
   box-shadow: none;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 160ms ease;
+  transform: scale(0.85);
+  transition: 
+    opacity 120ms cubic-bezier(0.4, 0, 1, 1),
+    transform 120ms cubic-bezier(0.4, 0, 1, 1);
   z-index: 2;
 }
 
 /* When the contextual pin action is visible, the button becomes interactive. */
-.sheet-row[data-leading-state='pin-action'] .sheet-pin-button,
-.sheet-row[data-leading-state='unpin-action'] .sheet-pin-button {
-  opacity: 0.45;
+.sheet-pin-button-visible {
+  opacity: 0.6;
+  transform: scale(1);
   pointer-events: auto;
+  transition: 
+    opacity 150ms cubic-bezier(0, 0, 0.2, 1),
+    transform 150ms cubic-bezier(0, 0, 0.2, 1);
 }
 
-@media (hover: hover) and (pointer: fine) {
-  /* ELIMINADO: Hover intentionally has no visual background
-  .sheet-row:hover:not([data-active='true']):not([data-interaction-suppressed='true']) {
-    background: var(--excel-nav-hover-bg);
-    border-color: transparent;
-    box-shadow: none;
-  }
-  */
+/* Pinned unpin action: button overlays pin base with higher contrast */
+.sheet-row[data-leading-state='unpin-action'] .sheet-pin-button-visible {
+  opacity: 0.7;
+}
 
-  .sheet-row .sheet-pin-button:hover,
-  .sheet-row .sheet-pin-button:focus-visible {
-    opacity: 0.75;
+/* Button hover and active states - only apply when button is already visible */
+@media (hover: hover) and (pointer: fine) {
+  /* Hover state - subtle lift */
+  .sheet-pin-button-visible:hover,
+  .sheet-pin-button-visible:focus-visible {
+    opacity: 0.9;
+    transform: scale(1.1);
+    transition: 
+      opacity 100ms cubic-bezier(0, 0, 0.2, 1),
+      transform 100ms cubic-bezier(0, 0, 0.2, 1);
+  }
+
+  /* Active/pressed state */
+  .sheet-pin-button-visible:active {
+    opacity: 0.95;
+    transform: scale(0.95);
+    transition: 
+      opacity 80ms cubic-bezier(0.4, 0, 1, 1),
+      transform 80ms cubic-bezier(0.4, 0, 1, 1);
   }
 }
 

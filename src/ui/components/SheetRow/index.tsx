@@ -1,10 +1,9 @@
-import type { CSSProperties, HTMLAttributes, Ref } from 'react';
+import { useState, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 import { InlineRenameInput } from '../InlineRenameInput';
+import { resolveLeadingState, type LeadingState } from './resolveLeadingState';
 import './SheetRow.css';
-
-type LeadingState = 'indicator' | 'pin-action' | 'unpin-action' | 'pinned-indicator';
 
 function hasNestedInteractiveTarget(target: EventTarget | null, currentTarget: HTMLElement) {
   if (!(target instanceof HTMLElement) || target === currentTarget) {
@@ -26,12 +25,10 @@ interface SheetRowProps {
   isContextMenuOpen?: boolean;
   isDragged?: boolean;
   isOverlay?: boolean;
-  isHovered?: boolean;
   isInteractionSuppressed?: boolean;
   containerRef?: Ref<HTMLElement>;
   containerStyle?: CSSProperties;
   containerProps?: HTMLAttributes<HTMLElement>;
-  onHoverChange?: (worksheetId: string | null) => void;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onTogglePin?: (worksheetId: string) => void;
   onOpenContextMenu: (args: {
@@ -51,12 +48,10 @@ export function SheetRow({
   isContextMenuOpen,
   isDragged,
   isOverlay,
-  isHovered,
   isInteractionSuppressed,
   containerRef,
   containerStyle,
   containerProps,
-  onHoverChange,
   onActivate,
   onTogglePin,
   onOpenContextMenu,
@@ -64,35 +59,33 @@ export function SheetRow({
   onRenameCancel,
 }: SheetRowProps) {
   const { onKeyDown: onContainerKeyDown, ...restContainerProps } = containerProps ?? {};
+  const [isLeadingHovered, setIsLeadingHovered] = useState(false);
+  const [isLeadingFocused, setIsLeadingFocused] = useState(false);
+
   const isInteractive = !isOverlay;
   const canTogglePin = worksheet.visibility === 'Visible' && Boolean(onTogglePin);
   const isToggleable = canTogglePin;
-  const isInteractiveHighlight = !isInteractionSuppressed && Boolean(isHovered);
-  const isHighlighted = isActive || Boolean(isContextMenuOpen) || isInteractiveHighlight;
-  const shouldShowPinAction =
-    !worksheet.isPinned &&
-    canTogglePin &&
-    !isOverlay &&
-    !isDragged &&
-    !isInteractionSuppressed &&
-    (Boolean(isContextMenuOpen) || isInteractiveHighlight);
-  const shouldShowUnpinAction =
-    worksheet.isPinned &&
-    canTogglePin &&
-    !isOverlay &&
-    !isDragged &&
-    !isInteractionSuppressed &&
-    (Boolean(isContextMenuOpen) || isInteractiveHighlight);
-  const leadingState: LeadingState = worksheet.isPinned
-    ? shouldShowUnpinAction
-      ? 'unpin-action'
-      : 'pinned-indicator'
-    : shouldShowPinAction
-      ? 'pin-action'
-      : 'indicator';
+
+  // Highlight state now only considers active/context, NOT hover for pin action
+  const isHighlighted = isActive || Boolean(isContextMenuOpen);
+
+  // Use pure function for leading state resolution
+  const leadingState: LeadingState = resolveLeadingState({
+    isPinned: worksheet.isPinned,
+    visibility: worksheet.visibility,
+    canTogglePin,
+    isOverlay: Boolean(isOverlay),
+    isDragged: Boolean(isDragged),
+    isInteractionSuppressed: Boolean(isInteractionSuppressed),
+    isContextMenuOpen: Boolean(isContextMenuOpen),
+    isLeadingHovered,
+    isLeadingFocused,
+  });
 
   function renderBaseIndicator() {
-    if (worksheet.isPinned && leadingState !== 'unpin-action') {
+    // Pinned sheets: always show pin icon as base, unpin button overlays it
+    // This prevents flash when swapping content during transition
+    if (worksheet.isPinned) {
       return (
         <span className="sheet-row-static-indicator" aria-hidden="true">
           <WorksheetPinIcon className="sheet-pin-icon sheet-pin-icon-active" />
@@ -113,7 +106,6 @@ export function SheetRow({
       className={`sheet-row ${isActive ? 'sheet-row-active' : ''} ${isContextMenuOpen ? 'sheet-row-context-open' : ''} ${isToggleable ? 'sheet-row-pin-toggleable' : ''} ${worksheet.groupId ? 'sheet-row-grouped' : 'sheet-row-standalone'} ${isDragged ? 'sheet-row-dragging' : ''} ${isOverlay ? 'sheet-row-overlay' : ''}`}
       data-active={isActive ? 'true' : 'false'}
       data-highlighted={isHighlighted ? 'true' : 'false'}
-      data-hovered={isHovered ? 'true' : 'false'}
       data-context-open={isContextMenuOpen ? 'true' : 'false'}
       data-pin-visible={(leadingState === 'pin-action' || leadingState === 'unpin-action') ? 'true' : 'false'}
       data-leading-state={leadingState}
@@ -123,16 +115,6 @@ export function SheetRow({
       tabIndex={isInteractive ? 0 : -1}
       aria-hidden={isInteractive ? undefined : true}
       aria-label={worksheet.name}
-      onPointerEnter={() => {
-        if (isInteractive && !isInteractionSuppressed) {
-          onHoverChange?.(worksheet.worksheetId);
-        }
-      }}
-      onPointerLeave={() => {
-        if (isInteractive) {
-          onHoverChange?.(null);
-        }
-      }}
       onClick={() => {
         if (isInteractive) {
           void onActivate(worksheet.worksheetId);
@@ -171,32 +153,45 @@ export function SheetRow({
       {...restContainerProps}
     >
       <div className="row-topline">
-        <span className="sheet-row-leading" aria-hidden="true">
-          {leadingState === 'pin-action' && canTogglePin ? (
+        <span
+          className="sheet-row-leading"
+          aria-hidden="true"
+          onPointerEnter={() => setIsLeadingHovered(true)}
+          onPointerLeave={(e) => {
+            // Only clear hover if leaving to outside the leading cluster (not to child button)
+            const relatedTarget = e.relatedTarget;
+            const currentTarget = e.currentTarget;
+            // Guard against invalid relatedTarget in jsdom/testing environments
+            if (!relatedTarget || !(relatedTarget instanceof Node)) {
+              setIsLeadingHovered(false);
+              return;
+            }
+            if (!currentTarget.contains(relatedTarget)) {
+              setIsLeadingHovered(false);
+            }
+          }}
+        >
+          {/* Base indicator - always rendered but visually hidden when action is shown */}
+          <span className={`sheet-row-base-indicator ${leadingState === 'indicator' || leadingState === 'pinned-indicator' ? 'sheet-row-base-indicator-visible' : ''}`}>
+            {renderBaseIndicator()}
+          </span>
+          
+          {/* Pin button - always rendered but visually hidden when not in action state */}
+          {canTogglePin && (
             <button
-              className="sheet-pin-button"
+              className={`sheet-pin-button ${leadingState === 'pin-action' || leadingState === 'unpin-action' ? 'sheet-pin-button-visible' : ''} ${leadingState === 'unpin-action' ? 'sheet-pin-button-active' : ''}`}
               type="button"
-              aria-label={`Pin ${worksheet.name}`}
+              aria-label={leadingState === 'unpin-action' ? `Unpin ${worksheet.name}` : `Pin ${worksheet.name}`}
               onClick={(event) => {
                 event.stopPropagation();
                 onTogglePin?.(worksheet.worksheetId);
               }}
+              onFocus={() => setIsLeadingFocused(true)}
+              onBlur={() => setIsLeadingFocused(false)}
             >
-              <WorksheetPinIcon className="sheet-pin-icon" />
+              <WorksheetPinIcon className={`sheet-pin-icon ${leadingState === 'unpin-action' ? 'sheet-pin-icon-active' : ''}`} />
             </button>
-          ) : leadingState === 'unpin-action' && canTogglePin ? (
-            <button
-              className="sheet-pin-button sheet-pin-button-active"
-              type="button"
-              aria-label={`Unpin ${worksheet.name}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                onTogglePin?.(worksheet.worksheetId);
-              }}
-            >
-              <WorksheetPinIcon className="sheet-pin-icon sheet-pin-icon-active" />
-            </button>
-          ) : renderBaseIndicator()}
+          )}
         </span>
 
         <div className="sheet-link">
