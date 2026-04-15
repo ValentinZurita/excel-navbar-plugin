@@ -347,7 +347,7 @@ function GroupContextMenu({
         />
       ) : isColorPickerOpen ? (
         <div className="context-menu-color-picker">
-          <div className="context-menu-color-picker-row">
+          <div className="context-menu-color-picker-grid">
             {selectableGroupColorTokens.map((color) => (
               isColorNone(color) ? (
                 <button

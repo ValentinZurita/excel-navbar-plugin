@@ -140,16 +140,17 @@
   padding: 8px;
 }
 
-/* Horizontal row of color chips, matching InlineGroupCreator layout */
-.context-menu-color-picker-row {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
+/* 2x3 grid of color chips, matching InlineGroupCreator layout */
+.context-menu-color-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  justify-items: center;
 }
 
 .context-menu-color-picker-item {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
