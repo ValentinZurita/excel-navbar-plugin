@@ -30,6 +30,7 @@
   box-shadow: none;
 }
 
+/* ELIMINADO: Hover no longer has visual background state
 .group-header:hover:not(.group-header-active),
 .group-header-context-open:not(.group-header-active) {
   background: var(--excel-nav-hover-bg);
@@ -37,6 +38,7 @@
   box-shadow: none;
   transform: none;
 }
+*/
 
 .group-list-drag-active .group-header:hover:not(.group-header-drop-active):not(.group-header-active) {
   background: transparent;
@@ -53,10 +55,16 @@
 }
 
 /* Active state for collapsed groups containing the active worksheet.
-   Shows the group header as selected when the active sheet is hidden inside a closed group. */
+   Shows the group header as selected when the active sheet is hidden inside a closed group.
+   Uses light gray background + Excel green text (consistent with SheetRow). */
 .group-header-active {
   background: var(--excel-nav-active-bg);
   border-color: transparent;
+}
+
+.group-header-active .group-title {
+  color: var(--excel-nav-active-fg);
+  font-weight: 500;
 }
 
 .group-toggle {
@@ -157,6 +165,7 @@
   font-size: 13px;
   font-weight: 400;
   color: var(--excel-body-fg);
+  transition: color 140ms ease;
 }
 
 .group-card .search-result {

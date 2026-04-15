@@ -70,7 +70,9 @@
   box-shadow: none;
 }
 
-/* Selected and highlighted row states. These are the visual cues for active navigation focus. */
+/* Active row state: light gray background + Excel green text.
+   Note: Hover intentionally has no visual background.
+   Only active state shows background color. */
 .sheet-row-active,
 .sheet-row[data-active='true'] {
   background: var(--excel-nav-active-bg);
@@ -79,12 +81,21 @@
   transform: none;
 }
 
+/* Active state text color - Excel green for emphasis */
+.sheet-row-active .sheet-title,
+.sheet-row[data-active='true'] .sheet-title {
+  color: var(--excel-nav-active-fg);
+  font-weight: 500;
+}
+
+/* ELIMINADO: Hover no longer has visual background state
 .sheet-row[data-highlighted='true']:not([data-active='true']) {
   background: var(--excel-nav-hover-bg);
   border-color: transparent;
   box-shadow: none;
   transform: none;
 }
+*/
 
 /* When drag mode is active, suppress row states so the drag overlay stays visible. */
 .sheet-list-drag-active .sheet-row[data-context-open='true'],
@@ -185,11 +196,13 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+  /* ELIMINADO: Hover intentionally has no visual background
   .sheet-row:hover:not([data-active='true']):not([data-interaction-suppressed='true']) {
     background: var(--excel-nav-hover-bg);
     border-color: transparent;
     box-shadow: none;
   }
+  */
 
   .sheet-row .sheet-pin-button:hover,
   .sheet-row .sheet-pin-button:focus-visible {
@@ -197,11 +210,11 @@
   }
 }
 
-/* Keyboard focus style for the entire row entry. Uses the same visual feedback as mouse hover. */
+/* Keyboard focus style: outline only, no background change.
+   Maintains accessibility without visual noise. */
 .sheet-row:focus-visible {
-  background: var(--excel-nav-hover-bg);
-  border-color: transparent;
-  box-shadow: none;
+  outline: 2px solid var(--excel-accent);
+  outline-offset: -2px;
 }
 
 /* Focus style for the pin button while still keeping it subtle. */
@@ -225,4 +238,9 @@
   display: flex;
   align-items: center;
   min-width: 0;
+}
+
+/* Sheet title with smooth color transition for active state change */
+.sheet-title {
+  transition: color 140ms ease;
 }
