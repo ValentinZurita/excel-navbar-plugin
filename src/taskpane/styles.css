@@ -33,12 +33,11 @@
   --excel-nav-drag-target-bg: color-mix(in srgb, var(--excel-body-fg) 10%, transparent);
 
   /* Group color tokens - subtle palette matching creator chips */
-  --group-color-gray: #a8a8a8;
   --group-color-green: #8eb892;
   --group-color-blue: #8faecd;
   --group-color-red: #cf8e8e;
   --group-color-purple: #aea7cd;
-  --group-color-orange: #cdb88e;
+  --group-color-yellow: #e6c875;
 
   background: var(--excel-body-bg);
   color: var(--excel-body-fg);
