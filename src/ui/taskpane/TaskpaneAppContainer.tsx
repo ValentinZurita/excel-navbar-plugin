@@ -17,7 +17,6 @@ export function TaskpaneAppContainer() {
   // The controller owns workbook operations and domain state transitions.
   const controller = useNavigationController();
   const [deleteGroupRequest, setDeleteGroupRequest] = useState<{ groupId: string; groupName: string } | null>(null);
-  const [hoveredWorksheetId, setHoveredWorksheetId] = useState<string | null>(null);
 
   // Inline rename state for worksheets and groups (replaces dialog-based rename).
   const [renamingWorksheetId, setRenamingWorksheetId] = useState<string | null>(null);
@@ -186,7 +185,6 @@ export function TaskpaneAppContainer() {
         searchResults={controller.navigatorView.searchResults}
         navigatorView={controller.navigatorView}
         activeWorksheetId={controller.state.activeWorksheetId}
-        hoveredWorksheetId={hoveredWorksheetId}
         isHiddenSectionCollapsed={controller.state.hiddenSectionCollapsed}
         contextMenuOpenSheetId={contextMenuOpenSheetId}
         contextMenuOpenGroupId={contextMenuOpenGroupId}
@@ -200,24 +198,14 @@ export function TaskpaneAppContainer() {
           flashedGroupId: dragAndDrop.flashedGroupId,
           isDragActive: Boolean(dragAndDrop.activeWorksheetId),
           shouldSuppressActivation: dragAndDrop.shouldSuppressActivation,
-          onDragStart: (event) => {
-            setHoveredWorksheetId(null);
-            dragAndDrop.onDragStart(event);
-          },
+          onDragStart: dragAndDrop.onDragStart,
           onDragOver: dragAndDrop.onDragOver,
-          onDragEnd: (event) => {
-            setHoveredWorksheetId(null);
-            dragAndDrop.onDragEnd(event);
-          },
-          onDragCancel: (event) => {
-            setHoveredWorksheetId(null);
-            dragAndDrop.onDragCancel(event);
-          },
+          onDragEnd: dragAndDrop.onDragEnd,
+          onDragCancel: dragAndDrop.onDragCancel,
         }}
         onChangeQuery={controller.setQuery}
         onSelectSearchResult={activateWorksheetFromSearch}
         onActivateWorksheet={controller.activateWorksheet}
-        onHoverWorksheet={setHoveredWorksheetId}
         onPinWorksheet={controller.pinWorksheet}
         onUnpinWorksheet={controller.unpinWorksheet}
         onToggleGroupCollapsed={controller.toggleGroupCollapsed}

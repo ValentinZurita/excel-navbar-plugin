@@ -14,10 +14,8 @@ interface SheetListProps {
   worksheets: WorksheetEntity[];
   activeWorksheetId: string | null;
   contextMenuOpenId?: string;
-  hoveredWorksheetId?: string | null;
   renamingWorksheetId?: string | null;
   onActivate: (worksheetId: string) => void | Promise<void>;
-  onHoverWorksheet?: (worksheetId: string | null) => void;
   onTogglePin?: (worksheetId: string) => void;
   onOpenContextMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: WorksheetEntity }) => void;
   dragConfig?: SheetListDragConfig;
@@ -90,10 +88,8 @@ export function SheetList(props: SheetListProps) {
             worksheet={worksheet}
             isActive={worksheet.worksheetId === props.activeWorksheetId}
             isContextMenuOpen={worksheet.worksheetId === props.contextMenuOpenId}
-            isHovered={worksheet.worksheetId === props.hoveredWorksheetId}
             isInteractionSuppressed={false}
             isRenaming={props.renamingWorksheetId === worksheet.worksheetId}
-            onHoverChange={props.onHoverWorksheet}
             onActivate={props.onActivate}
             onTogglePin={props.onTogglePin}
             onOpenContextMenu={props.onOpenContextMenu}
@@ -122,12 +118,10 @@ export function SheetList(props: SheetListProps) {
             index={index}
             isActive={worksheet.worksheetId === props.activeWorksheetId}
             isContextMenuOpen={worksheet.worksheetId === props.contextMenuOpenId}
-            isHovered={worksheet.worksheetId === props.hoveredWorksheetId}
             isInteractionSuppressed={dragConfig.isDragActive}
             isInsertionBefore={isInsertionBeforeIndex(dragConfig.projectedDropTarget, dragConfig.containerId, index)}
             shouldSuppressActivation={dragConfig.shouldSuppressActivation}
             isRenaming={props.renamingWorksheetId === worksheet.worksheetId}
-            onHoverChange={props.onHoverWorksheet}
             onActivate={props.onActivate}
             onTogglePin={props.onTogglePin}
             onOpenContextMenu={props.onOpenContextMenu}

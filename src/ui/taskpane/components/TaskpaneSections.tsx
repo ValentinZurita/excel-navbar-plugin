@@ -38,7 +38,6 @@ interface TaskpaneSectionsProps {
   searchResults: NavigatorView['searchResults'];
   navigatorView: NavigatorView;
   activeWorksheetId: string | null;
-  hoveredWorksheetId: string | null;
   isHiddenSectionCollapsed: boolean;
   contextMenuOpenSheetId?: string;
   contextMenuOpenGroupId?: string;
@@ -49,7 +48,6 @@ interface TaskpaneSectionsProps {
   onChangeQuery: (query: string) => void;
   onSelectSearchResult: (worksheetId: string) => void | Promise<void>;
   onActivateWorksheet: (worksheetId: string) => void | Promise<void>;
-  onHoverWorksheet: (worksheetId: string | null) => void;
   onPinWorksheet: (worksheetId: string) => void;
   onUnpinWorksheet: (worksheetId: string) => void;
   onToggleGroupCollapsed: (groupId: string) => void;
@@ -126,7 +124,6 @@ export function TaskpaneSections({
   searchResults,
   navigatorView,
   activeWorksheetId,
-  hoveredWorksheetId,
   isHiddenSectionCollapsed,
   contextMenuOpenSheetId,
   contextMenuOpenGroupId,
@@ -137,7 +134,6 @@ export function TaskpaneSections({
   onChangeQuery,
   onSelectSearchResult,
   onActivateWorksheet,
-  onHoverWorksheet,
   onPinWorksheet,
   onUnpinWorksheet,
   onToggleGroupCollapsed,
@@ -215,11 +211,9 @@ export function TaskpaneSections({
               worksheets={navigatorView.pinned}
               activeWorksheetId={activeWorksheetId}
               contextMenuOpenId={contextMenuOpenSheetId}
-              hoveredWorksheetId={hoveredWorksheetId}
               dragConfig={buildPinnedDragConfig(dragConfig, 'pinned')}
               renamingWorksheetId={renamingWorksheetId}
               onActivate={onActivateWorksheet}
-              onHoverWorksheet={onHoverWorksheet}
               onTogglePin={onUnpinWorksheet}
               onOpenContextMenu={onOpenSheetMenu}
               onRenameSubmit={onRenameWorksheetSubmit}
@@ -235,11 +229,9 @@ export function TaskpaneSections({
               activeWorksheetId={activeWorksheetId}
               contextMenuOpenId={contextMenuOpenSheetId}
               groupMenuOpenId={contextMenuOpenGroupId}
-              hoveredWorksheetId={hoveredWorksheetId}
               dragConfig={buildGroupDragConfig(dragConfig)}
               renamingGroupId={renamingGroupId}
               onActivate={onActivateWorksheet}
-              onHoverWorksheet={onHoverWorksheet}
               onToggleCollapsed={onToggleGroupCollapsed}
               onTogglePin={onPinWorksheet}
               onOpenGroupMenu={onOpenGroupMenu}
@@ -257,11 +249,9 @@ export function TaskpaneSections({
                 worksheets={navigatorView.ungrouped}
                 activeWorksheetId={activeWorksheetId}
                 contextMenuOpenId={contextMenuOpenSheetId}
-                hoveredWorksheetId={hoveredWorksheetId}
                 dragConfig={buildSheetListDragConfig(dragConfig, 'sheets')}
                 renamingWorksheetId={renamingWorksheetId}
                 onActivate={onActivateWorksheet}
-                onHoverWorksheet={onHoverWorksheet}
                 onTogglePin={onPinWorksheet}
                 onOpenContextMenu={onOpenSheetMenu}
                 onRenameSubmit={onRenameWorksheetSubmit}

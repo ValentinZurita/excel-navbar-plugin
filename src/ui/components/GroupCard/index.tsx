@@ -15,11 +15,9 @@ interface GroupCardProps {
   activeWorksheetId: string | null;
   contextMenuOpenId?: string;
   groupMenuOpenId?: string;
-  hoveredWorksheetId?: string | null;
   dragConfig?: GroupDragConfig;
   isRenaming?: boolean;
   onActivate: (worksheetId: string) => void | Promise<void>;
-  onHoverWorksheet?: (worksheetId: string | null) => void;
   onToggleCollapsed: (groupId: string) => void;
   onOpenGroupMenu: (args: { target: HTMLElement; x: number; y: number; groupId: string; groupName: string; colorToken: GroupColorToken }) => void;
   onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
@@ -118,10 +116,8 @@ export function GroupCard({
           worksheets={group.worksheets}
           activeWorksheetId={rest.activeWorksheetId}
           contextMenuOpenId={rest.contextMenuOpenId}
-          hoveredWorksheetId={rest.hoveredWorksheetId}
           dragConfig={sheetListDragConfig}
           onActivate={rest.onActivate}
-          onHoverWorksheet={rest.onHoverWorksheet}
           onTogglePin={rest.onTogglePin}
           onOpenContextMenu={onOpenSheetMenu}
         />
