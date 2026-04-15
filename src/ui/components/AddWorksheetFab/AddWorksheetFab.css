@@ -1,0 +1,56 @@
+.add-worksheet-fab {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 12;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: none;
+  background: var(--excel-accent);
+  color: #ffffff;
+  cursor: pointer;
+  transition:
+    color 140ms ease,
+    border-color 140ms ease,
+    background-color 140ms ease,
+    transform 120ms ease;
+}
+
+.add-worksheet-fab:hover,
+.add-worksheet-fab:focus-visible {
+  color: #ffffff;
+  background: color-mix(in srgb, var(--excel-accent) 86%, black);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.add-worksheet-fab:active {
+  transform: translateY(0);
+}
+
+.add-worksheet-fab:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+}
+
+.add-worksheet-fab-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+:root[data-office-theme-mode='dark'] .add-worksheet-fab {
+  background: color-mix(in srgb, var(--excel-accent) 92%, black);
+  color: #ffffff;
+}
+
+:root[data-office-theme-mode='dark'] .add-worksheet-fab:hover,
+:root[data-office-theme-mode='dark'] .add-worksheet-fab:focus-visible {
+  color: #ffffff;
+  background: color-mix(in srgb, var(--excel-accent) 82%, black);
+}

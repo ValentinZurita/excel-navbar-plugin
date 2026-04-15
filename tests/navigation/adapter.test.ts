@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OfficeWorkbookAdapter } from '../../src/infrastructure/office/OfficeWorkbookAdapter';
-import { WorksheetDeleteError } from '../../src/infrastructure/office/WorkbookAdapter';
+import { WorksheetCreateError, WorksheetDeleteError } from '../../src/infrastructure/office/WorkbookAdapter';
 
 describe('OfficeWorkbookAdapter.hideWorksheet', () => {
   afterEach(() => {
@@ -314,6 +314,78 @@ describe('OfficeWorkbookAdapter.deleteWorksheet', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith('[Mock] Deleting worksheet:', 'sheet-1');
 
+    consoleSpy.mockRestore();
+  });
+});
+
+describe('OfficeWorkbookAdapter.createWorksheet', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    // @ts-expect-error test cleanup for globals
+    delete globalThis.Office;
+    // @ts-expect-error test cleanup for globals
+    delete globalThis.Excel;
+  });
+
+  it('creates a worksheet and activates it', async () => {
+    const addedWorksheet = { activate: vi.fn() };
+    const add = vi.fn(() => addedWorksheet);
+    const sync = vi.fn(async () => undefined);
+
+    globalThis.Office = {} as any;
+    globalThis.Excel = {
+      run: vi.fn(async (callback: (context: any) => Promise<void>) => {
+        const context = {
+          workbook: {
+            worksheets: {
+              add,
+            },
+          },
+          sync,
+        };
+        await callback(context);
+      }),
+    } as any;
+
+    const adapter = new OfficeWorkbookAdapter();
+    await adapter.createWorksheet();
+
+    expect(add).toHaveBeenCalledOnce();
+    expect(addedWorksheet.activate).toHaveBeenCalledOnce();
+    expect(sync).toHaveBeenCalledOnce();
+  });
+
+  it('throws WorksheetCreateError when Office creation fails', async () => {
+    globalThis.Office = {} as any;
+    globalThis.Excel = {
+      run: vi.fn(async () => {
+        throw new Error('Excel create failed');
+      }),
+    } as any;
+
+    const adapter = new OfficeWorkbookAdapter();
+
+    await expect(adapter.createWorksheet()).rejects.toThrow(WorksheetCreateError);
+
+    try {
+      await adapter.createWorksheet();
+    } catch (error) {
+      expect(error).toBeInstanceOf(WorksheetCreateError);
+      expect((error as WorksheetCreateError).code).toBe('CREATE_FAILED');
+    }
+  });
+
+  it('succeeds in mock mode when Office runtime is not available', async () => {
+    // @ts-expect-error test setup
+    globalThis.Office = undefined;
+    // @ts-expect-error test setup
+    globalThis.Excel = undefined;
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    const adapter = new OfficeWorkbookAdapter();
+    await expect(adapter.createWorksheet()).resolves.not.toThrow();
+
+    expect(consoleSpy).toHaveBeenCalledWith('[Mock] Creating worksheet');
     consoleSpy.mockRestore();
   });
 });

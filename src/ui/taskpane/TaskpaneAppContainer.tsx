@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigationController } from '../../application/navigation/useNavigationController';
 import { TaskpaneShell } from '../components/TaskpaneShell';
+import { AddWorksheetFab } from '../components/AddWorksheetFab';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { TextPromptDialog } from '../components/TextPromptDialog';
 import type { WorksheetEntity } from '../../domain/navigation/types';
@@ -220,6 +221,13 @@ export function TaskpaneAppContainer() {
           handleRenameGroupCancel();
         }}
       />
+
+      {!dragAndDrop.activeWorksheetId ? (
+        <AddWorksheetFab
+          onClick={controller.createWorksheet}
+          disabled={controller.isBusy}
+        />
+      ) : null}
 
       {/* Right-click context menus for worksheet and group actions. */}
       <TaskpaneMenus

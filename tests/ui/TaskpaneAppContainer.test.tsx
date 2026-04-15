@@ -1,15 +1,20 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BannerState, WorksheetEntity } from '../../src/domain/navigation/types';
 import { TaskpaneAppContainer } from '../../src/ui/taskpane/TaskpaneAppContainer';
 
-const { useNavigationControllerMock } = vi.hoisted(() => ({
+const { useNavigationControllerMock, useWorksheetDnDMock } = vi.hoisted(() => ({
   useNavigationControllerMock: vi.fn(),
+  useWorksheetDnDMock: vi.fn(),
 }));
 
 vi.mock('../../src/application/navigation/useNavigationController', () => ({
   useNavigationController: useNavigationControllerMock,
+}));
+
+vi.mock('../../src/ui/taskpane/hooks/useWorksheetDnD', () => ({
+  useWorksheetDnD: useWorksheetDnDMock,
 }));
 
 function createWorksheet(overrides: Partial<WorksheetEntity> = {}): WorksheetEntity {
@@ -61,8 +66,10 @@ function createControllerMock() {
     removeWorksheetFromGroup: vi.fn(),
     reorderGroupWorksheet: vi.fn(),
     reorderSheetSectionWorksheet: vi.fn(),
+    reorderPinnedWorksheet: vi.fn(),
     pinWorksheet: vi.fn(),
     unpinWorksheet: vi.fn(),
+    createWorksheet: vi.fn().mockResolvedValue(undefined),
     activateWorksheet: vi.fn().mockResolvedValue(undefined),
     renameWorksheet: vi.fn().mockResolvedValue(undefined),
     unhideWorksheet: vi.fn().mockResolvedValue(undefined),
@@ -74,6 +81,25 @@ function createControllerMock() {
 }
 
 describe('TaskpaneAppContainer', () => {
+  function createDnDMock(overrides: Record<string, unknown> = {}) {
+    return {
+      sensors: [],
+      activeWorksheetId: null,
+      projectedDropTarget: null,
+      flashedGroupId: null,
+      shouldSuppressActivation: () => false,
+      onDragStart: vi.fn(),
+      onDragOver: vi.fn(),
+      onDragEnd: vi.fn(),
+      onDragCancel: vi.fn(),
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => {
+    useWorksheetDnDMock.mockReturnValue(createDnDMock());
+  });
+
   it('starts inline rename from worksheet context menu', async () => {
     const user = userEvent.setup();
     useNavigationControllerMock.mockReturnValue(createControllerMock());
@@ -255,5 +281,27 @@ describe('TaskpaneAppContainer', () => {
     expect(screen.getByRole('button', {
       name: 'This workbook has not been saved yet. Group changes persist only for this session.',
     })).toBeInTheDocument();
+  });
+
+  it('creates worksheet from floating add button', async () => {
+    const user = userEvent.setup();
+    const controller = createControllerMock();
+    useNavigationControllerMock.mockReturnValue(controller);
+    useWorksheetDnDMock.mockReturnValue(createDnDMock());
+
+    render(<TaskpaneAppContainer />);
+
+    await user.click(screen.getByRole('button', { name: 'Add worksheet' }));
+
+    expect(controller.createWorksheet).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides floating add button while dragging worksheet', () => {
+    useNavigationControllerMock.mockReturnValue(createControllerMock());
+    useWorksheetDnDMock.mockReturnValue(createDnDMock({ activeWorksheetId: 'sheet-1' }));
+
+    render(<TaskpaneAppContainer />);
+
+    expect(screen.queryByRole('button', { name: 'Add worksheet' })).not.toBeInTheDocument();
   });
 });

@@ -13,10 +13,12 @@ const { adapterMock, persistenceMock } = vi.hoisted(() => ({
   adapterMock: {
     getWorkbookSnapshot: vi.fn(),
     getPersistenceContext: vi.fn(),
+    createWorksheet: vi.fn(),
     activateWorksheet: vi.fn(),
     renameWorksheet: vi.fn(),
     unhideWorksheet: vi.fn(),
     hideWorksheet: vi.fn(),
+    deleteWorksheet: vi.fn(),
   },
   persistenceMock: {
     load: vi.fn(),
@@ -89,6 +91,8 @@ describe('useNavigationController', () => {
     adapterMock.renameWorksheet.mockReset();
     adapterMock.unhideWorksheet.mockReset();
     adapterMock.hideWorksheet.mockReset();
+    adapterMock.createWorksheet.mockReset();
+    adapterMock.deleteWorksheet.mockReset();
   });
 
   afterEach(() => {
@@ -197,5 +201,38 @@ describe('useNavigationController', () => {
     );
     expect(result.current.isSessionOnlyPersistence).toBe(false);
     expect(result.current.banner).toBeNull();
+  });
+
+  it('creates and activates worksheet by rehydrating workbook snapshot', async () => {
+    adapterMock.getWorkbookSnapshot
+      .mockResolvedValueOnce(createSnapshot())
+      .mockResolvedValueOnce(createSnapshot({
+        worksheets: [
+          { worksheetId: 'sheet-1', name: 'Overview', visibility: 'Visible', workbookOrder: 0 },
+          { worksheetId: 'sheet-2', name: 'Sheet2', visibility: 'Visible', workbookOrder: 1 },
+        ],
+        activeWorksheetId: 'sheet-2',
+      }));
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    adapterMock.createWorksheet.mockResolvedValue(undefined);
+    persistenceMock.load.mockResolvedValue({
+      model: createModel(),
+      status: createStatus(),
+    });
+    persistenceMock.save.mockResolvedValue(createStatus());
+
+    const { result } = renderHook(() => useNavigationController(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.state.isReady).toBe(true);
+    });
+
+    await act(async () => {
+      await result.current.createWorksheet();
+    });
+
+    expect(adapterMock.createWorksheet).toHaveBeenCalledTimes(1);
+    expect(result.current.state.activeWorksheetId).toBe('sheet-2');
+    expect(result.current.state.worksheetsById['sheet-2']?.name).toBe('Sheet2');
   });
 });

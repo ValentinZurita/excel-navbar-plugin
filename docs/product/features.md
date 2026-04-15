@@ -26,3 +26,7 @@ Hidden sheets do not participate in drag-and-drop ordering.
 
 ## Rename Worksheet
 Rename is a contextual utility action.
+
+## Add Worksheet
+A floating "+" action in the bottom-right corner creates a new worksheet using Excel naming behavior and activates it immediately.
+The action hides while drag-and-drop is active to avoid interaction conflicts.

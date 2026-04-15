@@ -2,6 +2,14 @@ import type { ComponentPropsWithoutRef } from 'react';
 
 type SvgIconProps = ComponentPropsWithoutRef<'svg'>;
 
+export function PlusIcon(props: SvgIconProps) {
+  return (
+    <svg viewBox="0 0 16 16" fill="currentColor" {...props}>
+      <path d="M8 2C8.3866 2 8.7 2.3134 8.7 2.7V7.3H13.3C13.6866 7.3 14 7.6134 14 8C14 8.3866 13.6866 8.7 13.3 8.7H8.7V13.3C8.7 13.6866 8.3866 14 8 14C7.6134 14 7.3 13.6866 7.3 13.3V8.7H2.7C2.3134 8.7 2 8.3866 2 8C2 7.6134 2.3134 7.3 2.7 7.3H7.3V2.7C7.3 2.3134 7.6134 2 8 2Z" />
+    </svg>
+  );
+}
+
 export function SearchIcon(props: SvgIconProps) {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" {...props}>

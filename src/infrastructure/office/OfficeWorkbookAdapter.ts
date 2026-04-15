@@ -1,6 +1,6 @@
 import type { WorkbookPersistenceContext, WorkbookSnapshot, WorksheetVisibility } from '../../domain/navigation/types';
 import type { WorkbookAdapter } from './WorkbookAdapter';
-import { WorksheetDeleteError } from './WorkbookAdapter';
+import { WorksheetCreateError, WorksheetDeleteError } from './WorkbookAdapter';
 
 export function hasOfficeRuntime() {
   return typeof Office !== 'undefined' && typeof Excel !== 'undefined';
@@ -104,6 +104,27 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
       mode: 'session-only',
       source: 'none',
     };
+  }
+
+  async createWorksheet(): Promise<void> {
+    if (!hasOfficeRuntime()) {
+      // Mock mode: simulate success for development
+      console.warn('[Mock] Creating worksheet');
+      return;
+    }
+
+    try {
+      await Excel.run(async (context) => {
+        const worksheet = context.workbook.worksheets.add();
+        worksheet.activate();
+        await context.sync();
+      });
+    } catch (error) {
+      throw new WorksheetCreateError(
+        error instanceof Error ? error.message : 'Failed to create worksheet.',
+        'CREATE_FAILED',
+      );
+    }
   }
 
   async activateWorksheet(worksheetId: string): Promise<void> {

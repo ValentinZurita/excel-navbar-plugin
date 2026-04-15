@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { NavigationPersistence } from '../../infrastructure/persistence/NavigationPersistence';
 import { OfficeWorkbookAdapter } from '../../infrastructure/office/OfficeWorkbookAdapter';
-import { WorksheetDeleteError } from '../../infrastructure/office/WorkbookAdapter';
+import { WorksheetCreateError, WorksheetDeleteError } from '../../infrastructure/office/WorkbookAdapter';
 import { toPersistedModel } from '../../domain/navigation/persistenceModel';
 import { useNavigationContext } from '../../ui/navigation/NavigationProvider';
 import type { BannerState, GroupColorToken, WorkbookPersistenceContext } from '../../domain/navigation/types';
@@ -149,6 +149,29 @@ export function useNavigationController() {
     },
     reorderPinnedWorksheet(worksheetId: string, targetIndex: number) {
       dispatch({ type: 'reorderPinnedWorksheet', worksheetId, targetIndex });
+    },
+    async createWorksheet() {
+      try {
+        setIsBusy(true);
+        await adapter.createWorksheet();
+        const snapshot = await adapter.getWorkbookSnapshot();
+        dispatch({ type: 'hydrateFromWorkbook', snapshot });
+      } catch (error) {
+        if (error instanceof WorksheetCreateError) {
+          setBanner({
+            tone: 'error',
+            message: error.message,
+          });
+        } else {
+          setBanner({
+            tone: 'error',
+            message: 'Failed to create worksheet. Please try again.',
+          });
+        }
+        throw error;
+      } finally {
+        setIsBusy(false);
+      }
     },
     pinWorksheet(worksheetId: string) {
       dispatch({ type: 'pinWorksheet', worksheetId });
