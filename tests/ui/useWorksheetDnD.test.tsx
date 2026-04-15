@@ -82,6 +82,7 @@ describe('useWorksheetDnD', () => {
         removeWorksheetFromGroup: vi.fn(),
         reorderGroupWorksheet: vi.fn(),
         reorderSheetSectionWorksheet: vi.fn(),
+        reorderPinnedWorksheet: vi.fn(),
       }),
     );
 
@@ -111,6 +112,7 @@ describe('useWorksheetDnD', () => {
         removeWorksheetFromGroup: vi.fn(),
         reorderGroupWorksheet: vi.fn(),
         reorderSheetSectionWorksheet: vi.fn(),
+        reorderPinnedWorksheet: vi.fn(),
       }),
     );
 
@@ -138,6 +140,7 @@ describe('useWorksheetDnD', () => {
         removeWorksheetFromGroup: vi.fn(),
         reorderGroupWorksheet: vi.fn(),
         reorderSheetSectionWorksheet: vi.fn(),
+        reorderPinnedWorksheet: vi.fn(),
       }),
     );
 
@@ -172,6 +175,7 @@ describe('useWorksheetDnD', () => {
           removeWorksheetFromGroup: vi.fn(),
           reorderGroupWorksheet: vi.fn(),
           reorderSheetSectionWorksheet: vi.fn(),
+          reorderPinnedWorksheet: vi.fn(),
           policy: pinnedSectionPolicy,
           policyState: {
             worksheetsById: {
@@ -218,6 +222,7 @@ describe('useWorksheetDnD', () => {
           removeWorksheetFromGroup: vi.fn(),
           reorderGroupWorksheet: vi.fn(),
           reorderSheetSectionWorksheet: vi.fn(),
+          reorderPinnedWorksheet: vi.fn(),
           policy: pinnedSectionPolicy,
           policyState: {
             worksheetsById: {
@@ -262,6 +267,7 @@ describe('useWorksheetDnD', () => {
           removeWorksheetFromGroup: vi.fn(),
           reorderGroupWorksheet: vi.fn(),
           reorderSheetSectionWorksheet: vi.fn(),
+          reorderPinnedWorksheet: vi.fn(),
           policy: pinnedSectionPolicy,
           policyState: {
             worksheetsById: {
@@ -306,6 +312,7 @@ describe('useWorksheetDnD', () => {
           removeWorksheetFromGroup: vi.fn(),
           reorderGroupWorksheet: vi.fn(),
           reorderSheetSectionWorksheet: vi.fn(),
+          reorderPinnedWorksheet: vi.fn(),
           policy: pinnedSectionPolicy,
           policyState: {
             worksheetsById: {
@@ -346,6 +353,7 @@ describe('useWorksheetDnD', () => {
           removeWorksheetFromGroup: vi.fn(),
           reorderGroupWorksheet: vi.fn(),
           reorderSheetSectionWorksheet: vi.fn(),
+          reorderPinnedWorksheet: vi.fn(),
           // No policy provided
         }),
       );

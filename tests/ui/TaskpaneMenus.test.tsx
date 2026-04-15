@@ -70,6 +70,13 @@ describe('TaskpaneMenus', () => {
         isCreatingGroup={false}
         onCancelCreatingGroup={vi.fn()}
         onConfirmCreatingGroup={vi.fn()}
+        isConfirmingDelete={false}
+        worksheetToDelete={null}
+        onStartDeleteConfirmation={vi.fn()}
+        onCancelDeleteConfirmation={vi.fn()}
+        onConfirmDelete={vi.fn().mockResolvedValue(undefined)}
+        isDeleting={false}
+        deleteError={null}
       />,
     );
 
@@ -99,6 +106,13 @@ describe('TaskpaneMenus', () => {
         isCreatingGroup={false}
         onCancelCreatingGroup={vi.fn()}
         onConfirmCreatingGroup={vi.fn()}
+        isConfirmingDelete={false}
+        worksheetToDelete={null}
+        onStartDeleteConfirmation={vi.fn()}
+        onCancelDeleteConfirmation={vi.fn()}
+        onConfirmDelete={vi.fn().mockResolvedValue(undefined)}
+        isDeleting={false}
+        deleteError={null}
       />,
     );
 
@@ -151,6 +165,13 @@ describe('TaskpaneMenus', () => {
         isCreatingGroup={false}
         onCancelCreatingGroup={vi.fn()}
         onConfirmCreatingGroup={vi.fn()}
+        isConfirmingDelete={false}
+        worksheetToDelete={null}
+        onStartDeleteConfirmation={vi.fn()}
+        onCancelDeleteConfirmation={vi.fn()}
+        onConfirmDelete={vi.fn().mockResolvedValue(undefined)}
+        isDeleting={false}
+        deleteError={null}
       />,
     );
 

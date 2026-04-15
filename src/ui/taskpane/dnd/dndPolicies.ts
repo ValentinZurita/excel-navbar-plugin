@@ -98,7 +98,7 @@ export const pinnedSectionPolicy: DnDPolicy = {
 
     // If dropping into pinned, only allow if already in pinned (reordering)
     if (toContainer === 'pinned') {
-      return fromContainer === 'pinned';
+      return false;
     }
 
     // All other combinations are allowed
