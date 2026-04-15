@@ -18,7 +18,7 @@ describe('InlineGroupCreator', () => {
 
     const colorContainer = screen.getByLabelText('Color options');
     const colorButtons = colorContainer.querySelectorAll('button');
-    expect(colorButtons).toHaveLength(7);
+    expect(colorButtons).toHaveLength(6);
   });
 
   it('focuses input on mount', async () => {
