@@ -84,6 +84,7 @@ export interface SearchResultItem {
   name: string;
   visibility: WorksheetVisibility;
   isPinned: boolean;
+  isGrouped: boolean;
   groupName: string | null;
 }
 

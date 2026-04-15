@@ -100,6 +100,7 @@ export function buildNavigatorView(state: NavigationState): NavigatorView {
           name: worksheet.name,
           visibility: worksheet.visibility,
           isPinned: worksheet.isPinned,
+          isGrouped: worksheet.groupId !== null,
           groupName: worksheet.groupId ? state.groupsById[worksheet.groupId]?.name ?? null : null,
         }))
     : [];

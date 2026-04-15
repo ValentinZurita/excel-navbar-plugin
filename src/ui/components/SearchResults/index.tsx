@@ -1,5 +1,5 @@
 import type { SearchResultItem } from '../../../domain/navigation/types';
-import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
+import { EyeOffIcon, GroupFolderIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 
 interface SearchResultsProps {
   results: SearchResultItem[];
@@ -9,14 +9,18 @@ interface SearchResultsProps {
 export function SearchResults({ results, onSelect }: SearchResultsProps) {
   function renderResultIcon(result: SearchResultItem) {
     if (result.visibility !== 'Visible') {
-      return <EyeOffIcon className="search-result-icon" />;
+      return <EyeOffIcon className="search-result-icon search-result-icon-hidden" />;
+    }
+
+    if (result.isGrouped) {
+      return <GroupFolderIcon className="search-result-icon search-result-icon-group" />;
     }
 
     if (result.isPinned) {
-      return <WorksheetPinIcon className="search-result-icon" />;
+      return <WorksheetPinIcon className="search-result-icon search-result-icon-pinned" />;
     }
 
-    return <WorksheetIcon className="search-result-icon" />;
+    return <WorksheetIcon className="search-result-icon search-result-icon-worksheet" />;
   }
 
   return (

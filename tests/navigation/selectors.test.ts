@@ -78,6 +78,7 @@ describe('buildNavigatorView', () => {
         name: 'Revenue',
         visibility: 'Visible',
         isPinned: false,
+        isGrouped: true,
         groupName: 'Finance',
       },
     ]);

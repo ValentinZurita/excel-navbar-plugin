@@ -15,6 +15,7 @@ Clicking a visible sheet activates it immediately.
 
 ## Search
 Search filters by sheet name and can show subtle group context.
+Grouped results use folder icon in result row for visual coherence with Groups section.
 
 ## Pinning
 Only ungrouped sheets can be pinned, and pinned sheets do not participate in drag-and-drop ordering.
