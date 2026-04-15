@@ -35,7 +35,8 @@ export type NavigationAction =
   | { type: 'unpinWorksheet'; worksheetId: string }
   | { type: 'markWorksheetUnhidden'; worksheetId: string }
   | { type: 'markWorksheetHidden'; worksheetId: string }
-  | { type: 'renameWorksheetLocally'; worksheetId: string; name: string };
+  | { type: 'renameWorksheetLocally'; worksheetId: string; name: string }
+  | { type: 'deleteWorksheet'; worksheetId: string };
 
 function nextGroupColor(index: number): GroupColorToken {
   return groupColorTokens[index % groupColorTokens.length];
@@ -467,6 +468,39 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
           [action.worksheetId]: { ...worksheet, name: action.name },
         },
       };
+    }
+    case 'deleteWorksheet': {
+      const worksheet = state.worksheetsById[action.worksheetId];
+      if (!worksheet) {
+        return state;
+      }
+
+      const nextState = cloneState(state);
+
+      // 1. Remove from any group first
+      removeWorksheetFromAnyGroup(nextState, action.worksheetId);
+
+      // 2. Clean up from pinned order
+      nextState.pinnedWorksheetOrder = nextState.pinnedWorksheetOrder.filter(
+        (id) => id !== action.worksheetId,
+      );
+
+      // 3. Clean up from sheet section order
+      nextState.sheetSectionOrder = nextState.sheetSectionOrder.filter(
+        (id) => id !== action.worksheetId,
+      );
+
+      // 4. Clean up from all groups (in case any reference remains)
+      Object.values(nextState.groupsById).forEach((group) => {
+        group.worksheetOrder = group.worksheetOrder.filter(
+          (id) => id !== action.worksheetId,
+        );
+      });
+
+      // 5. Finally remove from the dictionary
+      delete nextState.worksheetsById[action.worksheetId];
+
+      return nextState;
     }
     default:
       return state;

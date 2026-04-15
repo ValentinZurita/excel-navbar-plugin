@@ -433,4 +433,213 @@ describe('navigationReducer', () => {
       expect(nextState.pinnedWorksheetOrder).toEqual(['sheet-1', 'sheet-3']);
     });
   });
+
+  describe('deleteWorksheet', () => {
+    it('removes worksheet from worksheetsById', () => {
+      const state = createDefaultNavigationState();
+      state.worksheetsById = {
+        'sheet-1': {
+          worksheetId: 'sheet-1',
+          name: 'Revenue',
+          visibility: 'Visible',
+          workbookOrder: 0,
+          isPinned: false,
+          groupId: null,
+          lastKnownStructuralState: null,
+        },
+        'sheet-2': {
+          worksheetId: 'sheet-2',
+          name: 'Expenses',
+          visibility: 'Visible',
+          workbookOrder: 1,
+          isPinned: false,
+          groupId: null,
+          lastKnownStructuralState: null,
+        },
+      };
+      state.sheetSectionOrder = ['sheet-1', 'sheet-2'];
+
+      const nextState = navigationReducer(state, {
+        type: 'deleteWorksheet',
+        worksheetId: 'sheet-1',
+      });
+
+      expect(nextState.worksheetsById['sheet-1']).toBeUndefined();
+      expect(nextState.worksheetsById['sheet-2']).toBeDefined();
+    });
+
+    it('removes worksheet from pinnedWorksheetOrder', () => {
+      const state = createDefaultNavigationState();
+      state.worksheetsById = {
+        'sheet-1': {
+          worksheetId: 'sheet-1',
+          name: 'Revenue',
+          visibility: 'Visible',
+          workbookOrder: 0,
+          isPinned: true,
+          groupId: null,
+          lastKnownStructuralState: { kind: 'pinned' },
+        },
+      };
+      state.pinnedWorksheetOrder = ['sheet-1'];
+
+      const nextState = navigationReducer(state, {
+        type: 'deleteWorksheet',
+        worksheetId: 'sheet-1',
+      });
+
+      expect(nextState.pinnedWorksheetOrder).not.toContain('sheet-1');
+      expect(nextState.pinnedWorksheetOrder).toHaveLength(0);
+    });
+
+    it('removes worksheet from its group', () => {
+      const state = createDefaultNavigationState();
+      state.groupOrder = ['group-1'];
+      state.groupsById = {
+        'group-1': {
+          groupId: 'group-1',
+          name: 'Finance',
+          colorToken: 'blue',
+          isCollapsed: false,
+          worksheetOrder: ['sheet-1', 'sheet-2'],
+          createdAt: 1000,
+        },
+      };
+      state.worksheetsById = {
+        'sheet-1': {
+          worksheetId: 'sheet-1',
+          name: 'Revenue',
+          visibility: 'Visible',
+          workbookOrder: 0,
+          isPinned: false,
+          groupId: 'group-1',
+          lastKnownStructuralState: { kind: 'group', groupId: 'group-1' },
+        },
+        'sheet-2': {
+          worksheetId: 'sheet-2',
+          name: 'Expenses',
+          visibility: 'Visible',
+          workbookOrder: 1,
+          isPinned: false,
+          groupId: 'group-1',
+          lastKnownStructuralState: { kind: 'group', groupId: 'group-1' },
+        },
+      };
+
+      const nextState = navigationReducer(state, {
+        type: 'deleteWorksheet',
+        worksheetId: 'sheet-1',
+      });
+
+      expect(nextState.groupsById['group-1'].worksheetOrder).not.toContain('sheet-1');
+      expect(nextState.groupsById['group-1'].worksheetOrder).toContain('sheet-2');
+    });
+
+    it('removes worksheet from sheetSectionOrder', () => {
+      const state = createDefaultNavigationState();
+      state.worksheetsById = {
+        'sheet-1': {
+          worksheetId: 'sheet-1',
+          name: 'Revenue',
+          visibility: 'Visible',
+          workbookOrder: 0,
+          isPinned: false,
+          groupId: null,
+          lastKnownStructuralState: null,
+        },
+        'sheet-2': {
+          worksheetId: 'sheet-2',
+          name: 'Expenses',
+          visibility: 'Visible',
+          workbookOrder: 1,
+          isPinned: false,
+          groupId: null,
+          lastKnownStructuralState: null,
+        },
+      };
+      state.sheetSectionOrder = ['sheet-1', 'sheet-2'];
+
+      const nextState = navigationReducer(state, {
+        type: 'deleteWorksheet',
+        worksheetId: 'sheet-1',
+      });
+
+      expect(nextState.sheetSectionOrder).not.toContain('sheet-1');
+      expect(nextState.sheetSectionOrder).toContain('sheet-2');
+    });
+
+    it('handles non-existent worksheet gracefully', () => {
+      const state = createDefaultNavigationState();
+      state.worksheetsById = {
+        'sheet-1': {
+          worksheetId: 'sheet-1',
+          name: 'Revenue',
+          visibility: 'Visible',
+          workbookOrder: 0,
+          isPinned: false,
+          groupId: null,
+          lastKnownStructuralState: null,
+        },
+      };
+
+      // Should not throw error
+      expect(() =>
+        navigationReducer(state, {
+          type: 'deleteWorksheet',
+          worksheetId: 'non-existent',
+        }),
+      ).not.toThrow();
+
+      // State should remain unchanged
+      const nextState = navigationReducer(state, {
+        type: 'deleteWorksheet',
+        worksheetId: 'non-existent',
+      });
+
+      expect(nextState.worksheetsById['sheet-1']).toBeDefined();
+    });
+
+    it('cleans up worksheet from multiple groups if somehow referenced', () => {
+      const state = createDefaultNavigationState();
+      state.groupOrder = ['group-1', 'group-2'];
+      state.groupsById = {
+        'group-1': {
+          groupId: 'group-1',
+          name: 'Finance',
+          colorToken: 'blue',
+          isCollapsed: false,
+          worksheetOrder: ['sheet-1'],
+          createdAt: 1000,
+        },
+        'group-2': {
+          groupId: 'group-2',
+          name: 'Sales',
+          colorToken: 'green',
+          isCollapsed: false,
+          worksheetOrder: ['sheet-1'], // Same sheet erroneously in both groups
+          createdAt: 2000,
+        },
+      };
+      state.worksheetsById = {
+        'sheet-1': {
+          worksheetId: 'sheet-1',
+          name: 'Revenue',
+          visibility: 'Visible',
+          workbookOrder: 0,
+          isPinned: false,
+          groupId: 'group-1',
+          lastKnownStructuralState: { kind: 'group', groupId: 'group-1' },
+        },
+      };
+
+      const nextState = navigationReducer(state, {
+        type: 'deleteWorksheet',
+        worksheetId: 'sheet-1',
+      });
+
+      // Should clean up from all groups
+      expect(nextState.groupsById['group-1'].worksheetOrder).not.toContain('sheet-1');
+      expect(nextState.groupsById['group-2'].worksheetOrder).not.toContain('sheet-1');
+    });
+  });
 });

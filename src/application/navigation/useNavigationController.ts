@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { NavigationPersistence } from '../../infrastructure/persistence/NavigationPersistence';
 import { OfficeWorkbookAdapter } from '../../infrastructure/office/OfficeWorkbookAdapter';
+import { WorksheetDeleteError } from '../../infrastructure/office/WorkbookAdapter';
 import { toPersistedModel } from '../../domain/navigation/persistenceModel';
 import { useNavigationContext } from '../../ui/navigation/NavigationProvider';
 import type { BannerState, GroupColorToken, WorkbookPersistenceContext } from '../../domain/navigation/types';
@@ -171,6 +172,38 @@ export function useNavigationController() {
     async hideWorksheet(worksheetId: string) {
       await adapter.hideWorksheet(worksheetId);
       dispatch({ type: 'markWorksheetHidden', worksheetId });
+    },
+    async deleteWorksheet(worksheetId: string) {
+      try {
+        setIsBusy(true);
+
+        // 1. Execute deletion in Excel
+        await adapter.deleteWorksheet(worksheetId);
+
+        // 2. Update local state
+        dispatch({ type: 'deleteWorksheet', worksheetId });
+
+        // 3. Re-hydrate from Excel to sync state
+        // (This captures changes like the new active worksheet)
+        const snapshot = await adapter.getWorkbookSnapshot();
+        dispatch({ type: 'hydrateFromWorkbook', snapshot });
+      } catch (error) {
+        // Handle specific error types with clear messages
+        if (error instanceof WorksheetDeleteError) {
+          setBanner({
+            tone: 'error',
+            message: error.message,
+          });
+        } else {
+          setBanner({
+            tone: 'error',
+            message: 'Failed to delete worksheet. Please try again.',
+          });
+        }
+        throw error; // Re-throw so caller can react
+      } finally {
+        setIsBusy(false);
+      }
     },
     reload: load,
   }), [dispatch, load]);
