@@ -30,6 +30,7 @@ interface TaskpaneMenusProps {
   onRenameWorksheet: (worksheet: WorksheetEntity) => void;
   onRemoveFromGroup: (worksheetId: string) => void;
   onStartCreatingGroup: (initialWorksheetId?: string) => void;
+  onDeleteWorksheet: (worksheet: WorksheetEntity) => void;
   onRenameGroup: (groupId: string, groupName: string) => void;
   onDeleteGroup: (groupId: string, groupName: string) => void;
   onSetGroupColor: (groupId: string, colorToken: GroupColorToken) => void;
@@ -91,7 +92,7 @@ function buildSheetMenuActions(
   sheetMenu: SheetMenuState,
   handlers: Pick<
     TaskpaneMenusProps,
-    'onCloseMenus' | 'onTogglePin' | 'onToggleVisibility' | 'onRenameWorksheet' | 'onRemoveFromGroup' | 'onStartCreatingGroup'
+    'onCloseMenus' | 'onTogglePin' | 'onToggleVisibility' | 'onRenameWorksheet' | 'onRemoveFromGroup' | 'onStartCreatingGroup' | 'onDeleteWorksheet'
   >,
 ): MenuAction[] {
   const actions: MenuAction[] = [
@@ -149,6 +150,17 @@ function buildSheetMenuActions(
     label: 'New group',
     onSelect: () => {
       handlers.onStartCreatingGroup(sheetMenu.worksheet.worksheetId);
+    },
+  });
+
+  // Destructive action at the end
+  actions.push({
+    key: 'delete-sheet',
+    icon: <DeleteMenuIcon className="context-menu-icon-svg" />,
+    label: 'Delete sheet',
+    onSelect: () => {
+      handlers.onDeleteWorksheet(sheetMenu.worksheet);
+      handlers.onCloseMenus();
     },
   });
 
@@ -218,6 +230,7 @@ function SheetContextMenu({
   onRenameWorksheet,
   onRemoveFromGroup,
   onStartCreatingGroup,
+  onDeleteWorksheet,
   isCreatingGroup,
   onCancelCreatingGroup,
   onConfirmCreatingGroup,
@@ -229,6 +242,7 @@ function SheetContextMenu({
   onRenameWorksheet: (worksheet: WorksheetEntity) => void;
   onRemoveFromGroup: (worksheetId: string) => void;
   onStartCreatingGroup: (initialWorksheetId?: string) => void;
+  onDeleteWorksheet: (worksheet: WorksheetEntity) => void;
   isCreatingGroup: boolean;
   onCancelCreatingGroup: () => void;
   onConfirmCreatingGroup: (name: string, colorToken: GroupColorToken) => void;
@@ -240,6 +254,7 @@ function SheetContextMenu({
     onRenameWorksheet,
     onRemoveFromGroup,
     onStartCreatingGroup,
+    onDeleteWorksheet,
   });
 
   return (
@@ -347,6 +362,7 @@ export function TaskpaneMenus({
   onRenameWorksheet,
   onRemoveFromGroup,
   onStartCreatingGroup,
+  onDeleteWorksheet,
   onRenameGroup,
   onDeleteGroup,
   onSetGroupColor,
@@ -368,6 +384,7 @@ export function TaskpaneMenus({
         onRenameWorksheet={onRenameWorksheet}
         onRemoveFromGroup={onRemoveFromGroup}
         onStartCreatingGroup={onStartCreatingGroup}
+        onDeleteWorksheet={onDeleteWorksheet}
         isCreatingGroup={isCreatingGroup}
         onCancelCreatingGroup={onCancelCreatingGroup}
         onConfirmCreatingGroup={onConfirmCreatingGroup}

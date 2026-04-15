@@ -209,6 +209,7 @@ export function TaskpaneAppContainer() {
         onRenameWorksheet={handleRenameWorksheetStart}
         onRemoveFromGroup={controller.removeWorksheetFromGroup}
         onStartCreatingGroup={startCreatingGroup}
+        onDeleteWorksheet={(worksheet) => void controller.deleteWorksheet(worksheet.worksheetId)}
         onRenameGroup={handleRenameGroupStart}
         onDeleteGroup={handleDeleteGroup}
         onSetGroupColor={controller.setGroupColor}
@@ -242,6 +243,7 @@ export function TaskpaneAppContainer() {
         onCancel={closeDeleteGroupDialog}
         onConfirm={confirmDeleteGroup}
       />
+
     </TaskpaneShell>
   );
 }

@@ -27,6 +27,7 @@ function renderSheetMenu(overrides: Partial<React.ComponentProps<typeof Taskpane
       onRenameWorksheet={vi.fn()}
       onRemoveFromGroup={vi.fn()}
       onStartCreatingGroup={vi.fn()}
+      onDeleteWorksheet={vi.fn()}
       onRenameGroup={vi.fn()}
       onDeleteGroup={vi.fn()}
       onSetGroupColor={vi.fn()}
@@ -251,5 +252,46 @@ describe('TaskpaneMenus', () => {
     await user.click(document.querySelector('.context-menu-layer') as HTMLElement);
 
     expect(onCloseMenus).toHaveBeenCalled();
+  });
+
+  describe('Delete sheet action', () => {
+    it('renders delete sheet button in sheet menu', () => {
+      renderSheetMenu();
+
+      expect(screen.getByRole('button', { name: 'Delete sheet' })).toBeInTheDocument();
+    });
+
+    it('calls onDeleteWorksheet and closes menu when delete is clicked', async () => {
+      const user = userEvent.setup();
+      const worksheet = createWorksheet();
+      const onDeleteWorksheet = vi.fn();
+      const onCloseMenus = vi.fn();
+
+      renderSheetMenu({ onDeleteWorksheet, onCloseMenus });
+
+      await user.click(screen.getByRole('button', { name: 'Delete sheet' }));
+
+      expect(onDeleteWorksheet).toHaveBeenCalledWith(worksheet);
+      expect(onCloseMenus).toHaveBeenCalled();
+    });
+
+    it('positions delete action at the end of the menu', () => {
+      renderSheetMenu();
+
+      const buttons = screen.getAllByRole('button');
+      const deleteButton = screen.getByRole('button', { name: 'Delete sheet' });
+
+      // The last button should be Delete sheet
+      expect(buttons[buttons.length - 1]).toBe(deleteButton);
+    });
+
+    it('uses DeleteMenuIcon for the delete action', () => {
+      renderSheetMenu();
+
+      const deleteButton = screen.getByRole('button', { name: 'Delete sheet' });
+      expect(deleteButton).toBeInTheDocument();
+      // Icon is rendered as SVG inside the button
+      expect(deleteButton.querySelector('svg')).toBeInTheDocument();
+    });
   });
 });
