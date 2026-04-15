@@ -139,7 +139,7 @@ export function GroupCard({
           aria-expanded={!group.isCollapsed}
           onClick={handleToggleCollapsed}
         >
-          <span className={`group-leading group-leading-${group.colorToken} ${isFolderFlashing ? 'group-leading-flash' : ''} ${isEmptyFeedbackActive ? 'group-leading-empty-feedback' : ''}`} aria-hidden="true">
+          <span className={`group-leading group-leading-${group.colorToken} ${isFolderFlashing ? 'group-leading-flash' : ''}`} aria-hidden="true">
             <GroupFolderIcon className="group-folder-icon" />
           </span>
           <span className="group-copy">

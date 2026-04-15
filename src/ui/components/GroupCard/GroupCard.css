@@ -101,14 +101,6 @@
   animation: group-folder-pulse 240ms ease-out;
 }
 
-.group-leading-empty-feedback .group-folder-icon {
-  animation: group-folder-empty-soft-highlight 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.group-leading-empty-feedback::before {
-  animation: group-folder-empty-soft-halo 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
 /* Brief ghost row shown for empty groups to communicate no inner sheets. */
 .group-empty-ghost {
   margin-left: 12px;
@@ -209,34 +201,6 @@
   }
 }
 
-@keyframes group-folder-empty-soft-highlight {
-  0% {
-    opacity: 0.45;
-  }
-
-  45% {
-    opacity: 0.62;
-  }
-
-  100% {
-    opacity: 0.45;
-  }
-}
-
-@keyframes group-folder-empty-soft-halo {
-  0% {
-    opacity: 0.28;
-  }
-
-  45% {
-    opacity: 0.4;
-  }
-
-  100% {
-    opacity: 0.28;
-  }
-}
-
 @keyframes group-empty-ghost-open-close {
   0% {
     height: 0;
@@ -264,8 +228,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .group-leading-empty-feedback .group-folder-icon,
-  .group-leading-empty-feedback::before,
   .group-leading-flash {
     animation: none;
   }

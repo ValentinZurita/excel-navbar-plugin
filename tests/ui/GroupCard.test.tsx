@@ -179,13 +179,11 @@ describe('GroupCard', () => {
     act(() => {
       vi.advanceTimersByTime(1);
     });
-    expect(container.querySelector('.group-leading-empty-feedback')).toBeInTheDocument();
     expect(container.querySelector('.group-empty-ghost')).toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(600);
     });
-    expect(container.querySelector('.group-leading-empty-feedback')).not.toBeInTheDocument();
     expect(container.querySelector('.group-empty-ghost')).not.toBeInTheDocument();
     rafSpy.mockRestore();
   });
@@ -210,7 +208,6 @@ describe('GroupCard', () => {
     act(() => {
       vi.advanceTimersByTime(20);
     });
-    expect(container.querySelector('.group-leading-empty-feedback')).not.toBeInTheDocument();
     expect(container.querySelector('.group-empty-ghost')).not.toBeInTheDocument();
   });
 
@@ -241,7 +238,6 @@ describe('GroupCard', () => {
     act(() => {
       vi.advanceTimersByTime(20);
     });
-    expect(container.querySelector('.group-leading-empty-feedback')).not.toBeInTheDocument();
     expect(container.querySelector('.group-empty-ghost')).not.toBeInTheDocument();
   });
 
