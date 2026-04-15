@@ -13,6 +13,7 @@ import {
   RenameMenuIcon,
 } from '../../icons';
 import { InlineGroupCreator } from '../../components/InlineGroupCreator';
+import { InlineDeleteConfirmation } from '../../components/InlineDeleteConfirmation';
 import '../styles/TaskpaneMenus.css';
 
 interface MenuAction {
@@ -30,7 +31,6 @@ interface TaskpaneMenusProps {
   onRenameWorksheet: (worksheet: WorksheetEntity) => void;
   onRemoveFromGroup: (worksheetId: string) => void;
   onStartCreatingGroup: (initialWorksheetId?: string) => void;
-  onDeleteWorksheet: (worksheet: WorksheetEntity) => void;
   onRenameGroup: (groupId: string, groupName: string) => void;
   onDeleteGroup: (groupId: string, groupName: string) => void;
   onSetGroupColor: (groupId: string, colorToken: GroupColorToken) => void;
@@ -38,6 +38,14 @@ interface TaskpaneMenusProps {
   isCreatingGroup: boolean;
   onCancelCreatingGroup: () => void;
   onConfirmCreatingGroup: (name: string, colorToken: GroupColorToken) => void;
+  // Inline delete confirmation state
+  isConfirmingDelete: boolean;
+  worksheetToDelete: WorksheetEntity | null;
+  onStartDeleteConfirmation: (worksheet: WorksheetEntity) => void;
+  onCancelDeleteConfirmation: () => void;
+  onConfirmDelete: () => Promise<void>;
+  isDeleting: boolean;
+  deleteError: string | null;
 }
 
 function MenuItem({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
@@ -92,7 +100,7 @@ function buildSheetMenuActions(
   sheetMenu: SheetMenuState,
   handlers: Pick<
     TaskpaneMenusProps,
-    'onCloseMenus' | 'onTogglePin' | 'onToggleVisibility' | 'onRenameWorksheet' | 'onRemoveFromGroup' | 'onStartCreatingGroup' | 'onDeleteWorksheet'
+    'onCloseMenus' | 'onTogglePin' | 'onToggleVisibility' | 'onRenameWorksheet' | 'onRemoveFromGroup' | 'onStartCreatingGroup' | 'onStartDeleteConfirmation'
   >,
 ): MenuAction[] {
   const actions: MenuAction[] = [
@@ -159,8 +167,8 @@ function buildSheetMenuActions(
     icon: <DeleteMenuIcon className="context-menu-icon-svg" />,
     label: 'Delete sheet',
     onSelect: () => {
-      handlers.onDeleteWorksheet(sheetMenu.worksheet);
-      handlers.onCloseMenus();
+      handlers.onStartDeleteConfirmation(sheetMenu.worksheet);
+      // Don't close menu - show inline confirmation instead
     },
   });
 
@@ -230,10 +238,16 @@ function SheetContextMenu({
   onRenameWorksheet,
   onRemoveFromGroup,
   onStartCreatingGroup,
-  onDeleteWorksheet,
+  onStartDeleteConfirmation,
   isCreatingGroup,
   onCancelCreatingGroup,
   onConfirmCreatingGroup,
+  isConfirmingDelete,
+  worksheetToDelete,
+  onCancelDeleteConfirmation,
+  onConfirmDelete,
+  isDeleting,
+  deleteError,
 }: {
   sheetMenu: SheetMenuState;
   onCloseMenus: () => void;
@@ -242,10 +256,16 @@ function SheetContextMenu({
   onRenameWorksheet: (worksheet: WorksheetEntity) => void;
   onRemoveFromGroup: (worksheetId: string) => void;
   onStartCreatingGroup: (initialWorksheetId?: string) => void;
-  onDeleteWorksheet: (worksheet: WorksheetEntity) => void;
+  onStartDeleteConfirmation: (worksheet: WorksheetEntity) => void;
   isCreatingGroup: boolean;
   onCancelCreatingGroup: () => void;
   onConfirmCreatingGroup: (name: string, colorToken: GroupColorToken) => void;
+  isConfirmingDelete: boolean;
+  worksheetToDelete: WorksheetEntity | null;
+  onCancelDeleteConfirmation: () => void;
+  onConfirmDelete: () => Promise<void>;
+  isDeleting: boolean;
+  deleteError: string | null;
 }) {
   const actions = buildSheetMenuActions(sheetMenu, {
     onCloseMenus,
@@ -254,12 +274,21 @@ function SheetContextMenu({
     onRenameWorksheet,
     onRemoveFromGroup,
     onStartCreatingGroup,
-    onDeleteWorksheet,
+    onStartDeleteConfirmation,
   });
 
   return (
     <ContextMenuLayer menu={sheetMenu} onCloseMenus={onCloseMenus}>
-      {isCreatingGroup ? (
+      {isConfirmingDelete && worksheetToDelete ? (
+        <InlineDeleteConfirmation
+          worksheetName={worksheetToDelete.name}
+          onConfirm={onConfirmDelete}
+          onCancel={onCancelDeleteConfirmation}
+          onCloseMenu={onCloseMenus}
+          isDeleting={isDeleting}
+          error={deleteError}
+        />
+      ) : isCreatingGroup ? (
         <InlineGroupCreator
           onCreate={onConfirmCreatingGroup}
           onCancel={onCancelCreatingGroup}
@@ -362,13 +391,19 @@ export function TaskpaneMenus({
   onRenameWorksheet,
   onRemoveFromGroup,
   onStartCreatingGroup,
-  onDeleteWorksheet,
   onRenameGroup,
   onDeleteGroup,
   onSetGroupColor,
   isCreatingGroup,
   onCancelCreatingGroup,
   onConfirmCreatingGroup,
+  isConfirmingDelete,
+  worksheetToDelete,
+  onStartDeleteConfirmation,
+  onCancelDeleteConfirmation,
+  onConfirmDelete,
+  isDeleting,
+  deleteError,
 }: TaskpaneMenusProps) {
   if (!activeMenu) {
     return null;
@@ -384,10 +419,16 @@ export function TaskpaneMenus({
         onRenameWorksheet={onRenameWorksheet}
         onRemoveFromGroup={onRemoveFromGroup}
         onStartCreatingGroup={onStartCreatingGroup}
-        onDeleteWorksheet={onDeleteWorksheet}
+        onStartDeleteConfirmation={onStartDeleteConfirmation}
         isCreatingGroup={isCreatingGroup}
         onCancelCreatingGroup={onCancelCreatingGroup}
         onConfirmCreatingGroup={onConfirmCreatingGroup}
+        isConfirmingDelete={isConfirmingDelete}
+        worksheetToDelete={worksheetToDelete}
+        onCancelDeleteConfirmation={onCancelDeleteConfirmation}
+        onConfirmDelete={onConfirmDelete}
+        isDeleting={isDeleting}
+        deleteError={deleteError}
       />
     );
   }

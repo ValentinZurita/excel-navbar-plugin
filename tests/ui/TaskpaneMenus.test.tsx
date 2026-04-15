@@ -27,13 +27,19 @@ function renderSheetMenu(overrides: Partial<React.ComponentProps<typeof Taskpane
       onRenameWorksheet={vi.fn()}
       onRemoveFromGroup={vi.fn()}
       onStartCreatingGroup={vi.fn()}
-      onDeleteWorksheet={vi.fn()}
       onRenameGroup={vi.fn()}
       onDeleteGroup={vi.fn()}
       onSetGroupColor={vi.fn()}
       isCreatingGroup={false}
       onCancelCreatingGroup={vi.fn()}
       onConfirmCreatingGroup={vi.fn()}
+      isConfirmingDelete={false}
+      worksheetToDelete={null}
+      onStartDeleteConfirmation={vi.fn()}
+      onCancelDeleteConfirmation={vi.fn()}
+      onConfirmDelete={vi.fn()}
+      isDeleting={false}
+      deleteError={null}
       {...overrides}
     />,
   );
@@ -261,18 +267,18 @@ describe('TaskpaneMenus', () => {
       expect(screen.getByRole('button', { name: 'Delete sheet' })).toBeInTheDocument();
     });
 
-    it('calls onDeleteWorksheet and closes menu when delete is clicked', async () => {
+    it('calls onStartDeleteConfirmation and does NOT close menu when delete is clicked', async () => {
       const user = userEvent.setup();
       const worksheet = createWorksheet();
-      const onDeleteWorksheet = vi.fn();
+      const onStartDeleteConfirmation = vi.fn();
       const onCloseMenus = vi.fn();
 
-      renderSheetMenu({ onDeleteWorksheet, onCloseMenus });
+      renderSheetMenu({ onStartDeleteConfirmation, onCloseMenus });
 
       await user.click(screen.getByRole('button', { name: 'Delete sheet' }));
 
-      expect(onDeleteWorksheet).toHaveBeenCalledWith(worksheet);
-      expect(onCloseMenus).toHaveBeenCalled();
+      expect(onStartDeleteConfirmation).toHaveBeenCalledWith(worksheet);
+      expect(onCloseMenus).not.toHaveBeenCalled();
     });
 
     it('positions delete action at the end of the menu', () => {
@@ -292,6 +298,92 @@ describe('TaskpaneMenus', () => {
       expect(deleteButton).toBeInTheDocument();
       // Icon is rendered as SVG inside the button
       expect(deleteButton.querySelector('svg')).toBeInTheDocument();
+    });
+
+    it('shows inline delete confirmation when isConfirmingDelete is true', () => {
+      const worksheet = createWorksheet();
+
+      renderSheetMenu({
+        isConfirmingDelete: true,
+        worksheetToDelete: worksheet,
+      });
+
+      // Should show confirmation message
+      expect(screen.getByText("Delete 'Revenue'?")).toBeInTheDocument();
+      // Should show Cancel and Delete buttons
+      expect(screen.getByRole('button', { name: 'Cancel deletion' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Confirm deletion/ })).toBeInTheDocument();
+    });
+
+    it('shows delete confirmation instead of menu actions when confirming', () => {
+      const worksheet = createWorksheet();
+
+      renderSheetMenu({
+        isConfirmingDelete: true,
+        worksheetToDelete: worksheet,
+      });
+
+      // Menu actions should not be visible
+      expect(screen.queryByRole('button', { name: 'Pin tab' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Hide sheet' })).not.toBeInTheDocument();
+    });
+
+    it('calls onCancelDeleteConfirmation when Cancel is clicked in confirmation', async () => {
+      const user = userEvent.setup();
+      const worksheet = createWorksheet();
+      const onCancelDeleteConfirmation = vi.fn();
+
+      renderSheetMenu({
+        isConfirmingDelete: true,
+        worksheetToDelete: worksheet,
+        onCancelDeleteConfirmation,
+      });
+
+      await user.click(screen.getByRole('button', { name: 'Cancel deletion' }));
+
+      expect(onCancelDeleteConfirmation).toHaveBeenCalled();
+    });
+
+    it('calls onConfirmDelete when Delete is clicked in confirmation', async () => {
+      const user = userEvent.setup();
+      const worksheet = createWorksheet();
+      const onConfirmDelete = vi.fn().mockResolvedValue(undefined);
+
+      renderSheetMenu({
+        isConfirmingDelete: true,
+        worksheetToDelete: worksheet,
+        onConfirmDelete,
+      });
+
+      await user.click(screen.getByRole('button', { name: /Confirm deletion/ }));
+
+      expect(onConfirmDelete).toHaveBeenCalled();
+    });
+
+    it('displays error message when deleteError is provided', () => {
+      const worksheet = createWorksheet();
+
+      renderSheetMenu({
+        isConfirmingDelete: true,
+        worksheetToDelete: worksheet,
+        deleteError: 'Cannot delete last sheet',
+      });
+
+      expect(screen.getByText('Cannot delete last sheet')).toBeInTheDocument();
+    });
+
+    it('shows deleting state when isDeleting is true', () => {
+      const worksheet = createWorksheet();
+
+      renderSheetMenu({
+        isConfirmingDelete: true,
+        worksheetToDelete: worksheet,
+        isDeleting: true,
+      });
+
+      expect(screen.getByText('Deleting...')).toBeInTheDocument();
+      // Buttons should be disabled
+      expect(screen.getByRole('button', { name: 'Cancel deletion' })).toBeDisabled();
     });
   });
 });

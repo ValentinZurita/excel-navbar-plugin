@@ -10,6 +10,7 @@ import { useContextMenus } from './hooks/useContextMenus';
 import { useWorksheetDnD } from './hooks/useWorksheetDnD';
 import { useTextPromptState } from './hooks/useTextPromptState';
 import { useGroupCreationState } from './hooks/useGroupCreationState';
+import { useDeleteConfirmationState } from './hooks/useDeleteConfirmationState';
 import { pinnedSectionPolicy } from './dnd/dndPolicies';
 
 export function TaskpaneAppContainer() {
@@ -54,12 +55,44 @@ export function TaskpaneAppContainer() {
     confirmCreating: confirmCreatingGroup,
   } = useGroupCreationState({ onCreateGroup: controller.createGroup, onSuccess: closeMenus });
 
-  // Close menus and reset creation state when closing from outside.
+  // Inline delete confirmation state.
+  const {
+    isConfirming: isConfirmingDelete,
+    worksheetToDelete,
+    startConfirmation: startDeleteConfirmation,
+    cancelConfirmation: cancelDeleteConfirmation,
+    confirmDeletion: confirmDelete,
+    isDeleting,
+    error: deleteError,
+  } = useDeleteConfirmationState({
+    onDelete: controller.deleteWorksheet,
+    onSuccess: closeMenus,
+  });
+
+  // Close menus and reset creation/confirmation state when closing from outside.
   function handleCloseMenus() {
     closeMenus();
     if (isCreating) {
       cancelCreatingGroup();
     }
+    if (isConfirmingDelete) {
+      cancelDeleteConfirmation();
+    }
+  }
+
+  // Mutually exclusive: starting one cancels the other
+  function handleStartCreatingGroup(worksheetId?: string) {
+    if (isConfirmingDelete) {
+      cancelDeleteConfirmation();
+    }
+    startCreatingGroup(worksheetId);
+  }
+
+  function handleStartDeleteConfirmation(worksheet: WorksheetEntity) {
+    if (isCreating) {
+      cancelCreatingGroup();
+    }
+    startDeleteConfirmation(worksheet);
   }
 
   const dragAndDrop = useWorksheetDnD({
@@ -208,14 +241,20 @@ export function TaskpaneAppContainer() {
         onToggleVisibility={handleToggleVisibility}
         onRenameWorksheet={handleRenameWorksheetStart}
         onRemoveFromGroup={controller.removeWorksheetFromGroup}
-        onStartCreatingGroup={startCreatingGroup}
-        onDeleteWorksheet={(worksheet) => void controller.deleteWorksheet(worksheet.worksheetId)}
+        onStartCreatingGroup={handleStartCreatingGroup}
         onRenameGroup={handleRenameGroupStart}
         onDeleteGroup={handleDeleteGroup}
         onSetGroupColor={controller.setGroupColor}
         isCreatingGroup={isCreating}
         onCancelCreatingGroup={cancelCreatingGroup}
         onConfirmCreatingGroup={confirmCreatingGroup}
+        isConfirmingDelete={isConfirmingDelete}
+        worksheetToDelete={worksheetToDelete}
+        onStartDeleteConfirmation={handleStartDeleteConfirmation}
+        onCancelDeleteConfirmation={cancelDeleteConfirmation}
+        onConfirmDelete={confirmDelete}
+        isDeleting={isDeleting}
+        deleteError={deleteError}
       />
 
       {/* Shared dialog used by create group and rename flows. */}
