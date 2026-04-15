@@ -13,10 +13,9 @@ export function buildScopedLocalCacheKey(stableWorkbookKey: string) {
 export const groupColorTokens: GroupColorToken[] = [
   'blue',
   'green',
-  'orange',
+  'yellow',
   'purple',
   'red',
-  'gray',
 ];
 
 // All colors the user can explicitly pick, including the "no color" option.
@@ -24,8 +23,7 @@ export const selectableGroupColorTokens: GroupColorToken[] = [
   'none',
   'blue',
   'green',
-  'orange',
+  'yellow',
   'purple',
   'red',
-  'gray',
 ];

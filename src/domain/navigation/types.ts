@@ -4,10 +4,9 @@ export type GroupColorToken =
   | 'none'
   | 'blue'
   | 'green'
-  | 'orange'
+  | 'yellow'
   | 'purple'
-  | 'red'
-  | 'gray';
+  | 'red';
 
 export interface WorksheetEntity {
   worksheetId: string;
