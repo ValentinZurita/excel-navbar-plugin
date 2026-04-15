@@ -65,6 +65,74 @@ describe('SheetRow', () => {
     expect(container.querySelector('.sheet-row')).toHaveAttribute('data-leading-state', 'pinned-indicator');
   });
 
+  it('renders an unpin button when hovering a pinned sheet', () => {
+    const worksheet = { ...baseWorksheet, isPinned: true };
+    const { container } = render(
+      <SheetRow
+        worksheet={worksheet}
+        isActive={false}
+        isHovered
+        onActivate={vi.fn()}
+        onTogglePin={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+      />,
+    );
+
+    const row = container.querySelector('.sheet-row');
+    expect(row).toHaveAttribute('data-highlighted', 'true');
+    expect(row).toHaveAttribute('data-pin-visible', 'true');
+    expect(row).toHaveAttribute('data-leading-state', 'unpin-action');
+
+    const button = container.querySelector('.sheet-pin-button');
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveClass('sheet-pin-button-active');
+    expect(button).toHaveAttribute('aria-label', 'Unpin Revenue');
+  });
+
+  it('calls onTogglePin when clicking unpin button on pinned sheet', () => {
+    const worksheet = { ...baseWorksheet, isPinned: true };
+    const onTogglePin = vi.fn();
+    const { container } = render(
+      <SheetRow
+        worksheet={worksheet}
+        isActive={false}
+        isHovered
+        onActivate={vi.fn()}
+        onTogglePin={onTogglePin}
+        onOpenContextMenu={vi.fn()}
+      />,
+    );
+
+    const button = container.querySelector('.sheet-pin-button');
+    expect(button).toBeInTheDocument();
+
+    fireEvent.click(button!);
+
+    expect(onTogglePin).toHaveBeenCalledWith('sheet-1');
+  });
+
+  it('calls onTogglePin when clicking pin button on unpinned sheet', () => {
+    const onTogglePin = vi.fn();
+    const { container } = render(
+      <SheetRow
+        worksheet={baseWorksheet}
+        isActive={false}
+        isHovered
+        onActivate={vi.fn()}
+        onTogglePin={onTogglePin}
+        onOpenContextMenu={vi.fn()}
+      />,
+    );
+
+    const button = container.querySelector('.sheet-pin-button');
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveAttribute('aria-label', 'Pin Revenue');
+
+    fireEvent.click(button!);
+
+    expect(onTogglePin).toHaveBeenCalledWith('sheet-1');
+  });
+
   it('marks the row as highlighted and pin-visible when hover is controlled explicitly', () => {
     const { container } = render(
       <SheetRow

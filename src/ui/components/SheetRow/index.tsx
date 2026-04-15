@@ -4,7 +4,7 @@ import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 import { InlineRenameInput } from '../InlineRenameInput';
 import './SheetRow.css';
 
-type LeadingState = 'indicator' | 'pin-action' | 'pinned-indicator';
+type LeadingState = 'indicator' | 'pin-action' | 'unpin-action' | 'pinned-indicator';
 
 function hasNestedInteractiveTarget(target: EventTarget | null, currentTarget: HTMLElement) {
   if (!(target instanceof HTMLElement) || target === currentTarget) {
@@ -76,14 +76,23 @@ export function SheetRow({
     !isDragged &&
     !isInteractionSuppressed &&
     (Boolean(isContextMenuOpen) || isInteractiveHighlight);
+  const shouldShowUnpinAction =
+    worksheet.isPinned &&
+    canTogglePin &&
+    !isOverlay &&
+    !isDragged &&
+    !isInteractionSuppressed &&
+    (Boolean(isContextMenuOpen) || isInteractiveHighlight);
   const leadingState: LeadingState = worksheet.isPinned
-    ? 'pinned-indicator'
+    ? shouldShowUnpinAction
+      ? 'unpin-action'
+      : 'pinned-indicator'
     : shouldShowPinAction
       ? 'pin-action'
       : 'indicator';
 
   function renderBaseIndicator() {
-    if (worksheet.isPinned) {
+    if (worksheet.isPinned && leadingState !== 'unpin-action') {
       return (
         <span className="sheet-row-static-indicator" aria-hidden="true">
           <WorksheetPinIcon className="sheet-pin-icon sheet-pin-icon-active" />
@@ -106,7 +115,7 @@ export function SheetRow({
       data-highlighted={isHighlighted ? 'true' : 'false'}
       data-hovered={isHovered ? 'true' : 'false'}
       data-context-open={isContextMenuOpen ? 'true' : 'false'}
-      data-pin-visible={leadingState === 'pin-action' ? 'true' : 'false'}
+      data-pin-visible={(leadingState === 'pin-action' || leadingState === 'unpin-action') ? 'true' : 'false'}
       data-leading-state={leadingState}
       data-interaction-suppressed={isInteractionSuppressed ? 'true' : 'false'}
       style={containerStyle}
@@ -174,6 +183,18 @@ export function SheetRow({
               }}
             >
               <WorksheetPinIcon className="sheet-pin-icon" />
+            </button>
+          ) : leadingState === 'unpin-action' && canTogglePin ? (
+            <button
+              className="sheet-pin-button sheet-pin-button-active"
+              type="button"
+              aria-label={`Unpin ${worksheet.name}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                onTogglePin?.(worksheet.worksheetId);
+              }}
+            >
+              <WorksheetPinIcon className="sheet-pin-icon sheet-pin-icon-active" />
             </button>
           ) : renderBaseIndicator()}
         </span>

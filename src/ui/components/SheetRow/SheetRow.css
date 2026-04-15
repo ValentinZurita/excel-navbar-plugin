@@ -178,7 +178,8 @@
 }
 
 /* When the contextual pin action is visible, the button becomes interactive. */
-.sheet-row[data-leading-state='pin-action'] .sheet-pin-button {
+.sheet-row[data-leading-state='pin-action'] .sheet-pin-button,
+.sheet-row[data-leading-state='unpin-action'] .sheet-pin-button {
   opacity: 0.45;
   pointer-events: auto;
 }
