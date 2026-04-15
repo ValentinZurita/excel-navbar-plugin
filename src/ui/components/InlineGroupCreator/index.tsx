@@ -6,12 +6,11 @@ import './InlineGroupCreator.css';
 // Token-to-CSS class map for the color chips.
 const colorChipClasses: Record<GroupColorToken, string> = {
   none: 'inline-group-creator-color-none',
-  gray: 'inline-group-creator-color-gray',
   green: 'inline-group-creator-color-green',
   blue: 'inline-group-creator-color-blue',
   red: 'inline-group-creator-color-red',
   purple: 'inline-group-creator-color-purple',
-  orange: 'inline-group-creator-color-orange',
+  yellow: 'inline-group-creator-color-yellow',
 };
 
 interface InlineGroupCreatorProps {

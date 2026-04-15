@@ -46,17 +46,18 @@
   background: #1a1a1a;
 }
 
-/* Color chips row shown below the input; chooses a default palette for group styling. */
+/* Color chips grid shown below the input; 2x3 layout for six color options. */
 .inline-group-creator-colors {
-  display: flex;
-  gap: 10px;
-  padding: 6px 0;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 8px;
+  justify-items: center;
 }
 
 .inline-group-creator-color {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   flex-shrink: 0;
   cursor: pointer;
@@ -107,11 +108,7 @@
   opacity: 1;
 }
 
-/* Each color chip represents a preset group accent - original palette */
-.inline-group-creator-color-gray {
-  background: #a8a8a8;
-}
-
+/* Each color chip represents a preset group accent - muted Excel-aligned palette. */
 .inline-group-creator-color-green {
   background: #8eb892;
 }
@@ -128,6 +125,6 @@
   background: #aea7cd;
 }
 
-.inline-group-creator-color-orange {
-  background: #cdb88e;
+.inline-group-creator-color-yellow {
+  background: #e6c875;
 }
