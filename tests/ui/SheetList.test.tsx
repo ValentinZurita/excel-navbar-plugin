@@ -91,13 +91,12 @@ describe('SheetList', () => {
     expect(container.querySelector('.sheet-list-drag-active')).toBeInTheDocument();
   });
 
-  it('keeps dragged-list rows in their base leading state even if hover state exists', () => {
+  it('keeps dragged-list rows in their base leading state even if interaction suppressed', () => {
     render(
       <DndContext>
         <SheetList
           worksheets={[{ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible', workbookOrder: 1, isPinned: false, groupId: 'group-1', lastKnownStructuralState: null }]}
           activeWorksheetId={null}
-          hoveredWorksheetId="sheet-1"
           onActivate={vi.fn()}
           onOpenContextMenu={vi.fn()}
           onTogglePin={vi.fn()}
@@ -179,40 +178,34 @@ describe('SheetList', () => {
     expect(container.querySelector('.row-insertion-line.worksheet-insertion-line-active')).toBeInTheDocument();
   });
 
-  it('keeps hover highlight to a single worksheet when hover state is controlled explicitly', async () => {
+  it('does not track row hover state - pin only shows on leading area hover', async () => {
     const user = userEvent.setup();
     const worksheets: WorksheetEntity[] = [
       { worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible', workbookOrder: 1, isPinned: false, groupId: null, lastKnownStructuralState: null },
       { worksheetId: 'sheet-2', name: 'Budget', visibility: 'Visible', workbookOrder: 2, isPinned: false, groupId: null, lastKnownStructuralState: null },
     ];
 
-    function HoverHarness() {
-      const [hoveredWorksheetId, setHoveredWorksheetId] = useState<string | null>(null);
-
-      return (
-        <SheetList
-          worksheets={worksheets}
-          activeWorksheetId={null}
-          hoveredWorksheetId={hoveredWorksheetId}
-          onHoverWorksheet={setHoveredWorksheetId}
-          onActivate={vi.fn()}
-          onOpenContextMenu={vi.fn()}
-          onTogglePin={vi.fn()}
-        />
-      );
-    }
-
-    render(<HoverHarness />);
+    render(
+      <SheetList
+        worksheets={worksheets}
+        activeWorksheetId={null}
+        onActivate={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+        onTogglePin={vi.fn()}
+      />
+    );
 
     const revenueRow = screen.getByRole('button', { name: 'Revenue' });
     const budgetRow = screen.getByRole('button', { name: 'Budget' });
 
+    // Hover row - should NOT show pin (pin only shows on leading area hover)
+    // The row hover tracking was removed as part of icon-only interaction refactor
     await user.hover(revenueRow);
-    expect(revenueRow).toHaveAttribute('data-highlighted', 'true');
-    expect(budgetRow).toHaveAttribute('data-highlighted', 'false');
+    expect(revenueRow).toHaveAttribute('data-leading-state', 'indicator');
+    expect(revenueRow).not.toHaveAttribute('data-hovered');
 
     await user.hover(budgetRow);
-    expect(revenueRow).toHaveAttribute('data-highlighted', 'false');
-    expect(budgetRow).toHaveAttribute('data-highlighted', 'true');
+    expect(budgetRow).toHaveAttribute('data-leading-state', 'indicator');
+    expect(budgetRow).not.toHaveAttribute('data-hovered');
   });
 });
