@@ -101,6 +101,33 @@
   animation: group-folder-pulse 240ms ease-out;
 }
 
+.group-leading-empty-feedback .group-folder-icon {
+  animation: group-folder-empty-soft-highlight 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.group-leading-empty-feedback::before {
+  animation: group-folder-empty-soft-halo 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Brief ghost row shown for empty groups to communicate no inner sheets. */
+.group-empty-ghost {
+  margin-left: 12px;
+  margin-right: 2px;
+  border-radius: 4px;
+  border: none;
+  background: color-mix(in srgb, var(--excel-control-bg) 88%, transparent);
+  pointer-events: none;
+  overflow: hidden;
+  will-change: height, opacity, transform;
+  opacity: 0;
+  height: 0;
+  animation: group-empty-ghost-open-close 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:root[data-office-theme-mode='dark'] .group-empty-ghost {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 /* Colored background circle behind the outlined icon - larger and subtler */
 .group-leading::before {
   content: '';
@@ -179,5 +206,74 @@
 
   100% {
     transform: scale(1);
+  }
+}
+
+@keyframes group-folder-empty-soft-highlight {
+  0% {
+    opacity: 0.45;
+  }
+
+  45% {
+    opacity: 0.62;
+  }
+
+  100% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes group-folder-empty-soft-halo {
+  0% {
+    opacity: 0.28;
+  }
+
+  45% {
+    opacity: 0.4;
+  }
+
+  100% {
+    opacity: 0.28;
+  }
+}
+
+@keyframes group-empty-ghost-open-close {
+  0% {
+    height: 0;
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+
+  40% {
+    height: 18px;
+    opacity: 0.52;
+    transform: translateY(0);
+  }
+
+  74% {
+    height: 18px;
+    opacity: 0.42;
+    transform: translateY(0);
+  }
+
+  100% {
+    height: 0;
+    opacity: 0;
+    transform: translateY(-1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group-leading-empty-feedback .group-folder-icon,
+  .group-leading-empty-feedback::before,
+  .group-leading-flash {
+    animation: none;
+  }
+
+  .group-empty-ghost {
+    animation: none;
+    height: 14px;
+    opacity: 0.35;
+    transform: none;
   }
 }

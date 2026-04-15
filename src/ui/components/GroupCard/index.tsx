@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import type { GroupColorToken, NavigatorGroupView } from '../../../domain/navigation/types';
 import type { WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
@@ -45,6 +46,34 @@ export function GroupCard({
   onRenameCancel,
   ...rest
 }: GroupCardProps) {
+  const [isEmptyFeedbackActive, setIsEmptyFeedbackActive] = useState(false);
+  const emptyFeedbackTimeoutRef = useRef<number | null>(null);
+
+  const clearEmptyFeedbackTimeout = useCallback(() => {
+    if (emptyFeedbackTimeoutRef.current !== null) {
+      window.clearTimeout(emptyFeedbackTimeoutRef.current);
+      emptyFeedbackTimeoutRef.current = null;
+    }
+  }, []);
+
+  const triggerEmptyFeedback = useCallback(() => {
+    clearEmptyFeedbackTimeout();
+    setIsEmptyFeedbackActive(false);
+    window.requestAnimationFrame(() => {
+      setIsEmptyFeedbackActive(true);
+      emptyFeedbackTimeoutRef.current = window.setTimeout(() => {
+        setIsEmptyFeedbackActive(false);
+        emptyFeedbackTimeoutRef.current = null;
+      }, 520);
+    });
+  }, [clearEmptyFeedbackTimeout]);
+
+  useEffect(() => {
+    return () => {
+      clearEmptyFeedbackTimeout();
+    };
+  }, [clearEmptyFeedbackTimeout]);
+
   const containerId = toGroupContainerId(group.groupId);
   const dragConfig = rest.dragConfig;
   const sheetListDragConfig = dragConfig
@@ -73,6 +102,17 @@ export function GroupCard({
     (w) => w.worksheetId === rest.activeWorksheetId
   );
   const isActiveGroupHeader = group.isCollapsed && containsActiveWorksheet;
+  const shouldShowEmptyGhost = isEmptyFeedbackActive && group.worksheets.length === 0;
+
+  function handleToggleCollapsed() {
+    onToggleCollapsed(group.groupId);
+
+    if (dragConfig?.isDragActive || isRenaming || group.worksheets.length > 0) {
+      return;
+    }
+
+    triggerEmptyFeedback();
+  }
 
   return (
     <section
@@ -93,8 +133,13 @@ export function GroupCard({
         ref={setNodeRef}
         className={`group-header ${group.groupId === rest.groupMenuOpenId ? 'group-header-context-open' : ''} ${isDropActive ? 'group-header-drop-active' : ''} ${isActiveGroupHeader ? 'group-header-active' : ''}`}
       >
-        <button className="group-toggle" type="button" onClick={() => onToggleCollapsed(group.groupId)}>
-          <span className={`group-leading group-leading-${group.colorToken} ${isFolderFlashing ? 'group-leading-flash' : ''}`} aria-hidden="true">
+        <button
+          className="group-toggle"
+          type="button"
+          aria-expanded={!group.isCollapsed}
+          onClick={handleToggleCollapsed}
+        >
+          <span className={`group-leading group-leading-${group.colorToken} ${isFolderFlashing ? 'group-leading-flash' : ''} ${isEmptyFeedbackActive ? 'group-leading-empty-feedback' : ''}`} aria-hidden="true">
             <GroupFolderIcon className="group-folder-icon" />
           </span>
           <span className="group-copy">
@@ -110,6 +155,8 @@ export function GroupCard({
           </span>
         </button>
       </header>
+
+      {shouldShowEmptyGhost ? <div className="group-empty-ghost" aria-hidden="true" /> : null}
 
       {!group.isCollapsed ? (
         <SheetList

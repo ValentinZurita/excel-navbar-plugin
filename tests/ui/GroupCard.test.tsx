@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { act } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DndContext } from '@dnd-kit/core';
 import { GroupCard } from '../../src/ui/components/GroupCard';
 import type { NavigatorGroupView, WorksheetEntity } from '../../src/domain/navigation/types';
@@ -29,6 +30,10 @@ function createGroup(overrides: Partial<NavigatorGroupView> = {}): NavigatorGrou
 }
 
 describe('GroupCard', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('opens only worksheet menu when right-clicking a worksheet row inside a group', () => {
     const onOpenGroupMenu = vi.fn();
     const onOpenSheetMenu = vi.fn();
@@ -144,5 +149,131 @@ describe('GroupCard', () => {
 
     const leading = document.querySelector('.group-leading-none');
     expect(leading).toBeInTheDocument();
+  });
+
+  it('triggers empty feedback animation on empty group click and clears it', () => {
+    vi.useFakeTimers();
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    });
+    const onToggleCollapsed = vi.fn();
+    const group = createGroup({ worksheets: [] });
+    const { container } = render(
+      <DndContext>
+        <GroupCard
+          group={group}
+          activeWorksheetId={null}
+          onActivate={vi.fn()}
+          onToggleCollapsed={onToggleCollapsed}
+          onOpenGroupMenu={vi.fn()}
+          onOpenSheetMenu={vi.fn()}
+        />
+      </DndContext>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Finance' }));
+
+    expect(onToggleCollapsed).toHaveBeenCalledWith('group-1');
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(container.querySelector('.group-leading-empty-feedback')).toBeInTheDocument();
+    expect(container.querySelector('.group-empty-ghost')).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+    expect(container.querySelector('.group-leading-empty-feedback')).not.toBeInTheDocument();
+    expect(container.querySelector('.group-empty-ghost')).not.toBeInTheDocument();
+    rafSpy.mockRestore();
+  });
+
+  it('does not trigger empty feedback for non-empty groups', () => {
+    vi.useFakeTimers();
+    const { container } = render(
+      <DndContext>
+        <GroupCard
+          group={createGroup()}
+          activeWorksheetId={null}
+          onActivate={vi.fn()}
+          onToggleCollapsed={vi.fn()}
+          onOpenGroupMenu={vi.fn()}
+          onOpenSheetMenu={vi.fn()}
+        />
+      </DndContext>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Finance' }));
+
+    act(() => {
+      vi.advanceTimersByTime(20);
+    });
+    expect(container.querySelector('.group-leading-empty-feedback')).not.toBeInTheDocument();
+    expect(container.querySelector('.group-empty-ghost')).not.toBeInTheDocument();
+  });
+
+  it('does not trigger empty feedback while drag is active', () => {
+    vi.useFakeTimers();
+    const group = createGroup({ worksheets: [] });
+    const { container } = render(
+      <DndContext>
+        <GroupCard
+          group={group}
+          activeWorksheetId={null}
+          dragConfig={{
+            projectedDropTarget: null,
+            flashedGroupId: null,
+            isDragActive: true,
+            shouldSuppressActivation: () => false,
+          }}
+          onActivate={vi.fn()}
+          onToggleCollapsed={vi.fn()}
+          onOpenGroupMenu={vi.fn()}
+          onOpenSheetMenu={vi.fn()}
+        />
+      </DndContext>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Finance' }));
+
+    act(() => {
+      vi.advanceTimersByTime(20);
+    });
+    expect(container.querySelector('.group-leading-empty-feedback')).not.toBeInTheDocument();
+    expect(container.querySelector('.group-empty-ghost')).not.toBeInTheDocument();
+  });
+
+  it('sets aria-expanded from group collapsed state', () => {
+    const { rerender } = render(
+      <DndContext>
+        <GroupCard
+          group={createGroup({ isCollapsed: false })}
+          activeWorksheetId={null}
+          onActivate={vi.fn()}
+          onToggleCollapsed={vi.fn()}
+          onOpenGroupMenu={vi.fn()}
+          onOpenSheetMenu={vi.fn()}
+        />
+      </DndContext>,
+    );
+
+    expect(screen.getByRole('button', { name: 'Finance' })).toHaveAttribute('aria-expanded', 'true');
+
+    rerender(
+      <DndContext>
+        <GroupCard
+          group={createGroup({ isCollapsed: true })}
+          activeWorksheetId={null}
+          onActivate={vi.fn()}
+          onToggleCollapsed={vi.fn()}
+          onOpenGroupMenu={vi.fn()}
+          onOpenSheetMenu={vi.fn()}
+        />
+      </DndContext>,
+    );
+
+    expect(screen.getByRole('button', { name: 'Finance' })).toHaveAttribute('aria-expanded', 'false');
   });
 });
