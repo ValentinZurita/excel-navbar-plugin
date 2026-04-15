@@ -1,5 +1,6 @@
 import type { WorkbookPersistenceContext, WorkbookSnapshot, WorksheetVisibility } from '../../domain/navigation/types';
 import type { WorkbookAdapter } from './WorkbookAdapter';
+import { WorksheetDeleteError } from './WorkbookAdapter';
 
 export function hasOfficeRuntime() {
   return typeof Office !== 'undefined' && typeof Excel !== 'undefined';
@@ -173,6 +174,47 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
         return;
       }
       worksheet.visibility = 'Hidden';
+      await context.sync();
+    });
+  }
+
+  async deleteWorksheet(worksheetId: string): Promise<void> {
+    if (!hasOfficeRuntime()) {
+      // Mock mode: simulate success for development
+      console.warn('[Mock] Deleting worksheet:', worksheetId);
+      return;
+    }
+
+    return Excel.run(async (context) => {
+      // Load all worksheets for validation
+      const worksheets = context.workbook.worksheets;
+      worksheets.load('items/id,items/visibility');
+      await context.sync();
+
+      // Find target worksheet
+      const targetWorksheet = worksheets.items.find((candidate) => candidate.id === worksheetId);
+
+      if (!targetWorksheet) {
+        throw new WorksheetDeleteError(
+          'Worksheet not found',
+          'WORKSHEET_NOT_FOUND',
+        );
+      }
+
+      // Pre-validation: cannot delete the last visible sheet
+      const visibleSheets = worksheets.items.filter(
+        (ws) => ws.visibility === 'Visible',
+      );
+
+      if (visibleSheets.length <= 1 && targetWorksheet.visibility === 'Visible') {
+        throw new WorksheetDeleteError(
+          'Cannot delete the last visible sheet. Excel requires at least one visible sheet.',
+          'LAST_VISIBLE_SHEET',
+        );
+      }
+
+      // Execute deletion
+      targetWorksheet.delete();
       await context.sync();
     });
   }
