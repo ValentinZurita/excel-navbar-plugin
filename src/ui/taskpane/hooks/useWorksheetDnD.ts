@@ -18,7 +18,7 @@ import {
   type WorksheetDropTargetData,
   type WorksheetProjectedDropTarget,
 } from '../dnd/worksheetDndModel';
-import type { DnDPolicy, PolicyEvaluationState } from '../dnd/dndPolicies';
+import { buildDragCommitWithPolicy, type DnDPolicy, type PolicyEvaluationState } from '../dnd/dndPolicies';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 
 interface UseWorksheetDnDParams {
@@ -82,6 +82,23 @@ function getProjectedDropTarget(data: unknown): WorksheetProjectedDropTarget | n
   return null;
 }
 
+function areProjectedDropTargetsEqual(
+  left: WorksheetProjectedDropTarget | null,
+  right: WorksheetProjectedDropTarget | null,
+) {
+  if (left === right) {
+    return true;
+  }
+
+  if (!left || !right) {
+    return false;
+  }
+
+  return left.containerId === right.containerId
+    && left.index === right.index
+    && left.kind === right.kind;
+}
+
 export function useWorksheetDnD({
   assignWorksheetToGroup,
   removeWorksheetFromGroup,
@@ -124,11 +141,19 @@ export function useWorksheetDnD({
     }
   }, []);
 
+  const updateProjectedDropTarget = useCallback((nextProjectedDropTarget: WorksheetProjectedDropTarget | null) => {
+    setProjectedDropTarget((currentProjectedDropTarget) => (
+      areProjectedDropTargetsEqual(currentProjectedDropTarget, nextProjectedDropTarget)
+        ? currentProjectedDropTarget
+        : nextProjectedDropTarget
+    ));
+  }, []);
+
   const resetDragState = useCallback(() => {
     setActiveWorksheetId(null);
-    setProjectedDropTarget(null);
+    updateProjectedDropTarget(null);
     initialLocationRef.current = null;
-  }, []);
+  }, [updateProjectedDropTarget]);
 
   // Drag start captures the source location and seeds the initial preview state.
   const onDragStart = useCallback((event: DragStartEvent) => {
@@ -138,7 +163,7 @@ export function useWorksheetDnD({
     }
 
     setActiveWorksheetId(activeData.worksheetId);
-    setProjectedDropTarget({
+    updateProjectedDropTarget({
       containerId: activeData.containerId,
       index: activeData.index,
       kind: 'row',
@@ -148,7 +173,7 @@ export function useWorksheetDnD({
       containerId: activeData.containerId,
       index: activeData.index,
     };
-  }, []);
+  }, [updateProjectedDropTarget]);
 
   // Drag over is preview-only: it updates the highlighted drop target without committing.
   // Validates against policy before showing visual feedback to prevent misleading UX.
@@ -157,7 +182,7 @@ export function useWorksheetDnD({
     const initialLocation = initialLocationRef.current;
 
     if (!nextProjectedDropTarget) {
-      setProjectedDropTarget(null);
+      updateProjectedDropTarget(null);
       return;
     }
 
@@ -174,14 +199,14 @@ export function useWorksheetDnD({
 
         if (!isDropAllowed) {
           // Drop violates policy - hide visual feedback
-          setProjectedDropTarget(null);
+          updateProjectedDropTarget(null);
           return;
         }
       }
     }
 
-    setProjectedDropTarget(nextProjectedDropTarget);
-  }, [policy, policyState]);
+    updateProjectedDropTarget(nextProjectedDropTarget);
+  }, [policy, policyState, updateProjectedDropTarget]);
 
   // Group flashes are time-based UI affordances, so they need explicit cleanup on unmount.
   useEffect(() => {
@@ -226,7 +251,15 @@ export function useWorksheetDnD({
       return;
     }
 
-    const commit = buildDragCommit(activeData.worksheetId, initialLocation, finalLocation);
+    const commit = policy && policyState
+      ? buildDragCommitWithPolicy(
+          activeData.worksheetId,
+          initialLocation,
+          finalLocation,
+          policy,
+          policyState,
+        )
+      : buildDragCommit(activeData.worksheetId, initialLocation, finalLocation);
 
     if (commit) {
       switch (commit.kind) {
@@ -263,6 +296,8 @@ export function useWorksheetDnD({
     reorderPinnedWorksheet,
     reorderSheetSectionWorksheet,
     resetDragState,
+    policy,
+    policyState,
   ]);
 
   const shouldSuppressActivation = useCallback((worksheetId: string) => {

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import type { WorksheetContainerId } from '../../taskpane/dnd/worksheetDndModel';
@@ -24,7 +25,27 @@ function shouldBlockActivation(isDragging: boolean, shouldSuppressActivation: (w
   return isDragging || shouldSuppressActivation(worksheetId);
 }
 
-export function SortableWorksheetRow({
+function areSortableWorksheetRowPropsEqual(
+  left: SortableWorksheetRowProps,
+  right: SortableWorksheetRowProps,
+) {
+  return left.worksheet === right.worksheet
+    && left.containerId === right.containerId
+    && left.index === right.index
+    && left.isActive === right.isActive
+    && left.isContextMenuOpen === right.isContextMenuOpen
+    && left.isInsertionBefore === right.isInsertionBefore
+    && left.isInteractionSuppressed === right.isInteractionSuppressed
+    && left.isRenaming === right.isRenaming
+    && left.shouldSuppressActivation === right.shouldSuppressActivation
+    && left.onActivate === right.onActivate
+    && left.onTogglePin === right.onTogglePin
+    && left.onOpenContextMenu === right.onOpenContextMenu
+    && left.onRenameSubmit === right.onRenameSubmit
+    && left.onRenameCancel === right.onRenameCancel;
+}
+
+function SortableWorksheetRowComponent({
   worksheet,
   containerId,
   index,
@@ -90,3 +111,8 @@ export function SortableWorksheetRow({
     </div>
   );
 }
+
+export const SortableWorksheetRow = memo(
+  SortableWorksheetRowComponent,
+  areSortableWorksheetRowPropsEqual,
+);

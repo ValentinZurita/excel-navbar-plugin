@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import type { GroupColorToken, NavigatorGroupView } from '../../../domain/navigation/types';
 import type { WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
@@ -36,7 +36,81 @@ function isGroupHeaderDropActive(
   );
 }
 
-export function GroupCard({
+function areWorksheetListsEqual(
+  left: NavigatorGroupView['worksheets'],
+  right: NavigatorGroupView['worksheets'],
+) {
+  if (left === right) {
+    return true;
+  }
+
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((worksheet, index) => worksheet === right[index]);
+}
+
+function areGroupViewsEqual(left: NavigatorGroupView, right: NavigatorGroupView) {
+  return left.groupId === right.groupId
+    && left.name === right.name
+    && left.colorToken === right.colorToken
+    && left.isCollapsed === right.isCollapsed
+    && areWorksheetListsEqual(left.worksheets, right.worksheets);
+}
+
+function areProjectedDropTargetsEqual(
+  left: WorksheetProjectedDropTarget | null | undefined,
+  right: WorksheetProjectedDropTarget | null | undefined,
+) {
+  if (left === right) {
+    return true;
+  }
+
+  if (!left || !right) {
+    return false;
+  }
+
+  return left.containerId === right.containerId
+    && left.index === right.index
+    && left.kind === right.kind;
+}
+
+function areGroupDragConfigsEqual(
+  left: GroupDragConfig | undefined,
+  right: GroupDragConfig | undefined,
+) {
+  if (left === right) {
+    return true;
+  }
+
+  if (!left || !right) {
+    return false;
+  }
+
+  return areProjectedDropTargetsEqual(left.projectedDropTarget, right.projectedDropTarget)
+    && left.flashedGroupId === right.flashedGroupId
+    && left.isDragActive === right.isDragActive
+    && left.shouldSuppressActivation === right.shouldSuppressActivation;
+}
+
+function areGroupCardPropsEqual(left: GroupCardProps, right: GroupCardProps) {
+  return areGroupViewsEqual(left.group, right.group)
+    && left.activeWorksheetId === right.activeWorksheetId
+    && left.contextMenuOpenId === right.contextMenuOpenId
+    && left.groupMenuOpenId === right.groupMenuOpenId
+    && areGroupDragConfigsEqual(left.dragConfig, right.dragConfig)
+    && left.isRenaming === right.isRenaming
+    && left.onActivate === right.onActivate
+    && left.onToggleCollapsed === right.onToggleCollapsed
+    && left.onOpenGroupMenu === right.onOpenGroupMenu
+    && left.onOpenSheetMenu === right.onOpenSheetMenu
+    && left.onTogglePin === right.onTogglePin
+    && left.onRenameSubmit === right.onRenameSubmit
+    && left.onRenameCancel === right.onRenameCancel;
+}
+
+function GroupCardComponent({
   group,
   onToggleCollapsed,
   onOpenGroupMenu,
@@ -172,3 +246,5 @@ export function GroupCard({
     </section>
   );
 }
+
+export const GroupCard = memo(GroupCardComponent, areGroupCardPropsEqual);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigationController } from '../../application/navigation/useNavigationController';
 import { TaskpaneShell } from '../components/TaskpaneShell';
 import { AddWorksheetFab } from '../components/AddWorksheetFab';
@@ -38,8 +38,6 @@ export function TaskpaneAppContainer() {
     textPrompt,
     textPromptConfig,
     closeTextPrompt,
-    openRenameWorksheetPrompt,
-    openRenameGroupPrompt,
     submitTextPrompt,
   } = useTextPromptState({
     closeMenus,
@@ -70,7 +68,7 @@ export function TaskpaneAppContainer() {
   });
 
   // Close menus and reset creation/confirmation state when closing from outside.
-  function handleCloseMenus() {
+  const handleCloseMenus = useCallback(() => {
     closeMenus();
     if (isCreating) {
       cancelCreatingGroup();
@@ -78,22 +76,26 @@ export function TaskpaneAppContainer() {
     if (isConfirmingDelete) {
       cancelDeleteConfirmation();
     }
-  }
+  }, [cancelCreatingGroup, cancelDeleteConfirmation, closeMenus, isConfirmingDelete, isCreating]);
 
   // Mutually exclusive: starting one cancels the other
-  function handleStartCreatingGroup(worksheetId?: string) {
+  const handleStartCreatingGroup = useCallback((worksheetId?: string) => {
     if (isConfirmingDelete) {
       cancelDeleteConfirmation();
     }
     startCreatingGroup(worksheetId);
-  }
+  }, [cancelDeleteConfirmation, isConfirmingDelete, startCreatingGroup]);
 
-  function handleStartDeleteConfirmation(worksheet: WorksheetEntity) {
+  const handleStartDeleteConfirmation = useCallback((worksheet: WorksheetEntity) => {
     if (isCreating) {
       cancelCreatingGroup();
     }
     startDeleteConfirmation(worksheet);
-  }
+  }, [cancelCreatingGroup, isCreating, startDeleteConfirmation]);
+
+  const dragPolicyState = useMemo(() => ({
+    worksheetsById: controller.state.worksheetsById,
+  }), [controller.state.worksheetsById]);
 
   const dragAndDrop = useWorksheetDnD({
     assignWorksheetToGroup: controller.assignWorksheetToGroup,
@@ -102,81 +104,110 @@ export function TaskpaneAppContainer() {
     reorderSheetSectionWorksheet: controller.reorderSheetSectionWorksheet,
     reorderPinnedWorksheet: controller.reorderPinnedWorksheet,
     policy: pinnedSectionPolicy,
-    policyState: { worksheetsById: controller.state.worksheetsById },
+    policyState: dragPolicyState,
   });
   const activeDragWorksheet = dragAndDrop.activeWorksheetId
     ? controller.state.worksheetsById[dragAndDrop.activeWorksheetId] ?? null
     : null;
 
-  async function activateWorksheetFromSearch(worksheetId: string) {
+  const activateWorksheetFromSearch = useCallback(async (worksheetId: string) => {
     await controller.activateWorksheet(worksheetId);
     controller.setQuery('');
-  }
+  }, [controller.activateWorksheet, controller.setQuery]);
 
-  function handleTogglePin(worksheet: WorksheetEntity) {
+  const handleTogglePin = useCallback((worksheet: WorksheetEntity) => {
     if (worksheet.isPinned) {
       controller.unpinWorksheet(worksheet.worksheetId);
       return;
     }
 
     controller.pinWorksheet(worksheet.worksheetId);
-  }
+  }, [controller.pinWorksheet, controller.unpinWorksheet]);
 
-  function handleToggleVisibility(worksheet: WorksheetEntity) {
+  const handleToggleVisibility = useCallback((worksheet: WorksheetEntity) => {
     if (worksheet.visibility === 'Visible') {
       void controller.hideWorksheet(worksheet.worksheetId);
       return;
     }
 
     void controller.unhideWorksheet(worksheet.worksheetId);
-  }
+  }, [controller.hideWorksheet, controller.unhideWorksheet]);
 
-  function handleDeleteGroup(groupId: string, groupName: string) {
+  const handleDeleteGroup = useCallback((groupId: string, groupName: string) => {
     setDeleteGroupRequest({ groupId, groupName });
-  }
+  }, []);
 
-  function closeDeleteGroupDialog() {
+  const closeDeleteGroupDialog = useCallback(() => {
     setDeleteGroupRequest(null);
-  }
+  }, []);
 
-  function confirmDeleteGroup() {
+  const confirmDeleteGroup = useCallback(() => {
     if (!deleteGroupRequest) {
       return;
     }
 
     controller.deleteGroup(deleteGroupRequest.groupId);
     setDeleteGroupRequest(null);
-  }
+  }, [controller.deleteGroup, deleteGroupRequest]);
 
   // Inline rename handlers for worksheets.
-  function handleRenameWorksheetStart(worksheet: WorksheetEntity) {
+  const handleRenameWorksheetStart = useCallback((worksheet: WorksheetEntity) => {
     closeMenus();
     setRenamingWorksheetId(worksheet.worksheetId);
-  }
+  }, [closeMenus]);
 
-  async function handleRenameWorksheetSubmit(worksheetId: string, newName: string) {
+  const handleRenameWorksheetSubmit = useCallback(async (worksheetId: string, newName: string) => {
     await controller.renameWorksheet(worksheetId, newName);
     setRenamingWorksheetId(null);
-  }
+  }, [controller.renameWorksheet]);
 
-  function handleRenameWorksheetCancel() {
+  const handleRenameWorksheetCancel = useCallback(() => {
     setRenamingWorksheetId(null);
-  }
+  }, []);
 
   // Inline rename handlers for groups.
-  function handleRenameGroupStart(groupId: string, groupName: string) {
+  const handleRenameGroupStart = useCallback((groupId: string, _groupName: string) => {
     closeMenus();
     setRenamingGroupId(groupId);
-  }
+  }, [closeMenus]);
 
-  function handleRenameGroupSubmit(groupId: string, newName: string) {
+  const handleRenameGroupSubmit = useCallback((groupId: string, newName: string) => {
     controller.renameGroup(groupId, newName);
     setRenamingGroupId(null);
-  }
+  }, [controller.renameGroup]);
 
-  function handleRenameGroupCancel() {
+  const handleRenameGroupCancel = useCallback(() => {
     setRenamingGroupId(null);
-  }
+  }, []);
+
+  const handleRenameCancel = useCallback(() => {
+    handleRenameWorksheetCancel();
+    handleRenameGroupCancel();
+  }, [handleRenameGroupCancel, handleRenameWorksheetCancel]);
+
+  const dragConfig = useMemo(() => ({
+    activeDragWorksheet,
+    sensors: dragAndDrop.sensors,
+    projectedDropTarget: dragAndDrop.projectedDropTarget,
+    flashedGroupId: dragAndDrop.flashedGroupId,
+    isDragActive: Boolean(dragAndDrop.activeWorksheetId),
+    shouldSuppressActivation: dragAndDrop.shouldSuppressActivation,
+    onDragStart: dragAndDrop.onDragStart,
+    onDragOver: dragAndDrop.onDragOver,
+    onDragEnd: dragAndDrop.onDragEnd,
+    onDragCancel: dragAndDrop.onDragCancel,
+  }), [
+    activeDragWorksheet,
+    dragAndDrop.activeWorksheetId,
+    dragAndDrop.flashedGroupId,
+    dragAndDrop.onDragCancel,
+    dragAndDrop.onDragEnd,
+    dragAndDrop.onDragOver,
+    dragAndDrop.onDragStart,
+    dragAndDrop.projectedDropTarget,
+    dragAndDrop.sensors,
+    dragAndDrop.shouldSuppressActivation,
+  ]);
 
   return (
     <TaskpaneShell banner={controller.banner}>
@@ -192,18 +223,7 @@ export function TaskpaneAppContainer() {
         renamingWorksheetId={renamingWorksheetId}
         renamingGroupId={renamingGroupId}
         isSessionOnlyPersistence={controller.isSessionOnlyPersistence}
-        dragConfig={{
-          activeDragWorksheet,
-          sensors: dragAndDrop.sensors,
-          projectedDropTarget: dragAndDrop.projectedDropTarget,
-          flashedGroupId: dragAndDrop.flashedGroupId,
-          isDragActive: Boolean(dragAndDrop.activeWorksheetId),
-          shouldSuppressActivation: dragAndDrop.shouldSuppressActivation,
-          onDragStart: dragAndDrop.onDragStart,
-          onDragOver: dragAndDrop.onDragOver,
-          onDragEnd: dragAndDrop.onDragEnd,
-          onDragCancel: dragAndDrop.onDragCancel,
-        }}
+        dragConfig={dragConfig}
         onChangeQuery={controller.setQuery}
         onSelectSearchResult={activateWorksheetFromSearch}
         onActivateWorksheet={controller.activateWorksheet}
@@ -216,10 +236,7 @@ export function TaskpaneAppContainer() {
         onOpenGroupMenu={openGroupMenu}
         onRenameWorksheetSubmit={handleRenameWorksheetSubmit}
         onRenameGroupSubmit={handleRenameGroupSubmit}
-        onRenameCancel={() => {
-          handleRenameWorksheetCancel();
-          handleRenameGroupCancel();
-        }}
+        onRenameCancel={handleRenameCancel}
       />
 
       {!dragAndDrop.activeWorksheetId ? (

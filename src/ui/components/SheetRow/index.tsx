@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
+import { memo, useState, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 import { InlineRenameInput } from '../InlineRenameInput';
@@ -41,7 +41,25 @@ interface SheetRowProps {
   onRenameCancel?: () => void;
 }
 
-export function SheetRow({
+function areSheetRowPropsEqual(left: SheetRowProps, right: SheetRowProps) {
+  return left.worksheet === right.worksheet
+    && left.isActive === right.isActive
+    && left.isRenaming === right.isRenaming
+    && left.isContextMenuOpen === right.isContextMenuOpen
+    && left.isDragged === right.isDragged
+    && left.isOverlay === right.isOverlay
+    && left.isInteractionSuppressed === right.isInteractionSuppressed
+    && left.containerRef === right.containerRef
+    && left.containerStyle === right.containerStyle
+    && left.containerProps === right.containerProps
+    && left.onActivate === right.onActivate
+    && left.onTogglePin === right.onTogglePin
+    && left.onOpenContextMenu === right.onOpenContextMenu
+    && left.onRenameSubmit === right.onRenameSubmit
+    && left.onRenameCancel === right.onRenameCancel;
+}
+
+function SheetRowComponent({
   worksheet,
   isActive,
   isRenaming,
@@ -209,3 +227,5 @@ export function SheetRow({
     </article>
   );
 }
+
+export const SheetRow = memo(SheetRowComponent, areSheetRowPropsEqual);

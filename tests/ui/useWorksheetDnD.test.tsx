@@ -131,6 +131,34 @@ describe('useWorksheetDnD', () => {
     expect(assignWorksheetToGroup).toHaveBeenCalledWith('sheet-1', 'group-1', 0);
   });
 
+  it('reuses the same projected target object when the semantic drop target is unchanged', () => {
+    const worksheet = createWorksheet({ worksheetId: 'sheet-1', groupId: null });
+    const { result } = renderHook(() =>
+      useWorksheetDnD({
+        assignWorksheetToGroup: vi.fn(),
+        removeWorksheetFromGroup: vi.fn(),
+        reorderGroupWorksheet: vi.fn(),
+        reorderSheetSectionWorksheet: vi.fn(),
+        reorderPinnedWorksheet: vi.fn(),
+      }),
+    );
+
+    act(() => {
+      result.current.onDragStart(createDragStartEvent(worksheet.worksheetId, 'sheets', 0));
+    });
+
+    act(() => {
+      result.current.onDragOver(createDropTargetEvent('group:group-1', 0, 'row', worksheet.worksheetId, 'sheets', 0));
+    });
+    const firstProjectedTarget = result.current.projectedDropTarget;
+
+    act(() => {
+      result.current.onDragOver(createDropTargetEvent('group:group-1', 0, 'row', worksheet.worksheetId, 'sheets', 0));
+    });
+
+    expect(result.current.projectedDropTarget).toBe(firstProjectedTarget);
+  });
+
   it('cleans up the flash timeout on unmount', () => {
     const worksheet = createWorksheet({ groupId: null });
     const clearTimeoutSpy = vi.spyOn(window, 'clearTimeout');
@@ -338,6 +366,47 @@ describe('useWorksheetDnD', () => {
 
       // Visual feedback should be suppressed
       expect(result.current.projectedDropTarget).toBeNull();
+    });
+
+    it('does not commit an invalid pinned-to-sheets drop when policy rejects it', () => {
+      const reorderPinnedWorksheet = vi.fn();
+      const removeWorksheetFromGroup = vi.fn();
+      const pinnedWorksheet = createWorksheet({
+        worksheetId: 'sheet-1',
+        isPinned: true,
+        groupId: null,
+      });
+
+      const { result } = renderHook(() =>
+        useWorksheetDnD({
+          assignWorksheetToGroup: vi.fn(),
+          removeWorksheetFromGroup,
+          reorderGroupWorksheet: vi.fn(),
+          reorderSheetSectionWorksheet: vi.fn(),
+          reorderPinnedWorksheet,
+          policy: pinnedSectionPolicy,
+          policyState: {
+            worksheetsById: {
+              [pinnedWorksheet.worksheetId]: pinnedWorksheet,
+            },
+          },
+        }),
+      );
+
+      act(() => {
+        result.current.onDragStart(
+          createDragStartEvent(pinnedWorksheet.worksheetId, 'pinned', 0),
+        );
+      });
+
+      act(() => {
+        result.current.onDragEnd(
+          createDropTargetEvent('sheets', 0, 'row', pinnedWorksheet.worksheetId, 'pinned', 0),
+        );
+      });
+
+      expect(reorderPinnedWorksheet).not.toHaveBeenCalled();
+      expect(removeWorksheetFromGroup).not.toHaveBeenCalled();
     });
 
     it('works without policy (backward compatibility)', () => {
