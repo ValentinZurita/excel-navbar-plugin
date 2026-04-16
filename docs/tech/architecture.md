@@ -4,16 +4,25 @@
 - Adapter/service layer outside UI
 - Container/presentational split
 - Single workbook navigation store
-- Hybrid persistence: workbook settings first, workbook-scoped local cache second
+- Workbook-first persistence: Custom XML first, settings metadata second, workbook-scoped local cache as degraded recovery
 - Small focused components and low cognitive complexity
 
 ## Persistence contract
 
-- `Office.context.document.settings` is the canonical store for the current workbook
+- `CustomXmlParts` is the canonical store for the current workbook when the host supports it
+- `Office.context.document.settings` stores metadata, migration state, and compatibility fallback payloads for hosts without Custom XML support
 - Local cache is scoped by stable workbook identity and never shared globally across workbooks
-- Unsaved or identity-less workbooks run in session-only persistence mode
+- Worksheet identity prefers plugin-owned worksheet custom properties and falls back to native Excel worksheet IDs only when host capabilities require it
+- Unsaved or identity-less workbooks still avoid local recovery and surface session-only messaging until the file is saved
 - The legacy global cache key is ignored and cleaned so one workbook cannot hydrate another workbook's groups
-- Persistence degradation is surfaced through a subtle task pane banner instead of silent failure
+- Persistence degradation is capability-driven and surfaced through a subtle task pane banner instead of silent failure
+
+## Sync contract
+
+- The task pane rehydrates from workbook snapshots through a sync coordinator
+- Workbook events are used when available; lightweight polling remains as resilience fallback
+- Persistence writes are dirty-checked and idempotent
+- Reconciliation is pure-domain logic that cleans stale worksheet references before the next save
 
 ## Worksheet drag-and-drop guardrails
 

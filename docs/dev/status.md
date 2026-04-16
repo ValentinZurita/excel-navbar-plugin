@@ -9,13 +9,14 @@ Implemented and documented so far:
 - Excel manifest with ribbon button + task pane entry
 - React + TypeScript project structure
 - Office adapter boundary
-- Hybrid persistence service with workbook-scoped local backup
+- Workbook-first persistence with Custom XML canonical storage, settings metadata fallback, worksheet identity hardening, and workbook-scoped local recovery
 - Single navigation store
 - Modular task pane UI with folder-per-component structure
 - Core navigation rules for groups, pinning, hidden sheets, rename, and delete-group confirmation
 - Product-owned dialog flows for create, rename, and delete-group actions
 - Sidebar drag-and-drop for visible unpinned sheets across Sheets and Groups
 - Local persisted ordering for the Sheets section without changing Excel workbook tab order
+- Workbook sync coordinator with event-aware refresh plus polling fallback
 - Design baseline + next-phase docs aligned with the current product direction
 - Quality gates for TypeScript, component import boundaries, CSS, and Markdown
 - Test coverage for navigation behavior and core task pane interactions
@@ -157,4 +158,5 @@ This project has moved beyond the initial scaffold stage, with interaction owner
 ## Persistence Notes
 
 - The legacy global cache key `sheetNavigator.navigation.cache` is now considered unsafe because it can leak state across workbooks
-- New persistence behavior must prefer workbook settings, then workbook-scoped local cache, then session-only mode when no stable workbook identity exists
+- New persistence behavior must prefer Custom XML as the canonical workbook store, then settings metadata / compatibility fallback, then workbook-scoped local recovery only when canonical writes fail
+- Worksheet identity now prefers plugin-owned worksheet custom properties and falls back to native worksheet IDs only on hosts that lack that capability
