@@ -1,4 +1,5 @@
 export type WorksheetVisibility = 'Visible' | 'Hidden' | 'VeryHidden';
+export type NavigationIdentityMode = 'plugin-sheet-id' | 'native-id';
 
 export type GroupColorToken =
   | 'none'
@@ -10,6 +11,8 @@ export type GroupColorToken =
 
 export interface WorksheetEntity {
   worksheetId: string;
+  stableWorksheetId?: string;
+  nativeWorksheetId?: string;
   name: string;
   visibility: WorksheetVisibility;
   workbookOrder: number;
@@ -32,19 +35,26 @@ export type StructuralState =
   | { kind: 'group'; groupId: string }
   | { kind: 'ungrouped' };
 
-export interface WorkbookSnapshot {
-  worksheets: Array<Pick<WorksheetEntity, 'worksheetId' | 'name' | 'visibility' | 'workbookOrder'>>;
-  activeWorksheetId: string | null;
+export interface WorkbookCapabilities {
+  supportsCustomXml: boolean;
+  supportsWorksheetCustomProperties: boolean;
+  supportsWorkbookEvents: boolean;
 }
 
-export interface WorkbookPersistenceContext {
+export interface WorkbookSnapshot {
+  worksheets: Array<Pick<WorksheetEntity, 'worksheetId' | 'stableWorksheetId' | 'nativeWorksheetId' | 'name' | 'visibility' | 'workbookOrder'>>;
+  activeWorksheetId: string | null;
+  identityMode?: NavigationIdentityMode;
+}
+
+export interface WorkbookPersistenceContext extends WorkbookCapabilities {
   documentSettingsAvailable: boolean;
   stableWorkbookKey: string | null;
   mode: 'stable' | 'session-only';
   source: 'document-url' | 'file-properties-url' | 'none';
 }
 
-export interface PersistedNavigationModel {
+export interface LegacyPersistedNavigationModel {
   metadataVersion: 1;
   groups: GroupEntity[];
   sheetSectionOrder: string[];
@@ -54,15 +64,45 @@ export interface PersistedNavigationModel {
   priorStructuralStateByWorksheetId: Record<string, StructuralState | null>;
 }
 
+export interface PersistedNavigationModel {
+  schemaVersion: 2;
+  identityMode: NavigationIdentityMode;
+  groups: GroupEntity[];
+  sheetSectionOrder: string[];
+  pinnedWorksheetOrder: string[];
+  hiddenSectionCollapsed: boolean;
+  priorStructuralStateByStableWorksheetId: Record<string, StructuralState | null>;
+  updatedAt: number;
+}
+
+export interface PersistenceMetadata {
+  schemaVersion: 2;
+  canonicalStore: 'custom-xml' | 'settings-fallback';
+  migratedFrom?: 1;
+  identityMode: NavigationIdentityMode;
+  updatedAt: number;
+}
+
+export type PersistenceDiagnosticCode =
+  | 'migrated_from_settings_v1'
+  | 'fallback_to_native_identity'
+  | 'repaired_stale_group_refs'
+  | 'repaired_duplicate_group_membership'
+  | 'dropped_unknown_pinned_ref'
+  | 'recovered_from_local_cache'
+  | 'custom_xml_unavailable'
+  | 'custom_xml_corrupt';
+
 export interface BannerState {
   tone: 'error' | 'warning' | 'info';
   message: string;
 }
 
 export interface PersistenceStatus {
-  mode: 'document+local-cache' | 'document-only' | 'session-only' | 'degraded';
+  mode: 'custom-xml' | 'settings-fallback' | 'session-only' | 'degraded';
   banner: BannerState | null;
-  lastSource: 'document-settings' | 'scoped-local-cache' | 'none';
+  lastSource: 'custom-xml' | 'settings-fallback' | 'legacy-settings' | 'scoped-local-cache' | 'none';
+  diagnostics: PersistenceDiagnosticCode[];
   lastError?: string;
 }
 
@@ -77,6 +117,7 @@ export interface NavigationState {
   activeWorksheetId: string | null;
   lastSyncAt: number | null;
   isReady: boolean;
+  identityMode: NavigationIdentityMode;
 }
 
 export interface SearchResultItem {

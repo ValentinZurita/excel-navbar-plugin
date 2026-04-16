@@ -14,6 +14,7 @@ import type {
   WorkbookSnapshot,
   WorksheetEntity,
 } from './types';
+import { normalizeNavigationState } from './reconciliation';
 
 export type NavigationAction =
   | { type: 'hydrateFromWorkbook'; snapshot: WorkbookSnapshot }
@@ -46,8 +47,13 @@ function toWorksheetEntity(
   snapshotWorksheet: WorkbookSnapshot['worksheets'][number],
   existing: WorksheetEntity | undefined,
 ): WorksheetEntity {
+  const stableWorksheetId = snapshotWorksheet.stableWorksheetId ?? snapshotWorksheet.worksheetId;
+  const nativeWorksheetId = snapshotWorksheet.nativeWorksheetId ?? snapshotWorksheet.worksheetId;
+
   return {
-    worksheetId: snapshotWorksheet.worksheetId,
+    worksheetId: stableWorksheetId,
+    stableWorksheetId,
+    nativeWorksheetId,
     name: snapshotWorksheet.name,
     visibility: snapshotWorksheet.visibility,
     workbookOrder: snapshotWorksheet.workbookOrder,
@@ -57,7 +63,8 @@ function toWorksheetEntity(
   };
 }
 
-function applyPinnedState(state: NavigationState, pinnedWorksheetIds: string[], pinnedWorksheetOrder?: string[]) {
+function applyPinnedState(state: NavigationState, pinnedWorksheetOrder: string[]) {
+  const pinnedWorksheetIds = dedupeWorksheetIds(pinnedWorksheetOrder);
   Object.values(state.worksheetsById).forEach((worksheet) => {
     worksheet.isPinned = pinnedWorksheetIds.includes(worksheet.worksheetId) && worksheet.groupId === null;
     if (worksheet.isPinned) {
@@ -65,21 +72,13 @@ function applyPinnedState(state: NavigationState, pinnedWorksheetIds: string[], 
     }
   });
 
-  // Initialize or reconcile pinnedWorksheetOrder
-  if (pinnedWorksheetOrder && pinnedWorksheetOrder.length > 0) {
-    // Use persisted order, filtered to only include currently pinned worksheets
-    const pinnedIds = new Set(pinnedWorksheetIds);
-    state.pinnedWorksheetOrder = dedupeWorksheetIds(pinnedWorksheetOrder).filter((id) => pinnedIds.has(id));
-  } else {
-    // Fallback: derive from pinnedWorksheetIds
-    state.pinnedWorksheetOrder = [...pinnedWorksheetIds];
-  }
+  state.pinnedWorksheetOrder = [...pinnedWorksheetIds];
 }
 
 function applyPersistence(state: NavigationState, model: PersistedNavigationModel | null) {
   if (!model) {
     state.sheetSectionOrder = reconcileSheetSectionOrder(state.sheetSectionOrder, state.worksheetsById);
-    return state;
+    return normalizeNavigationState(state);
   }
 
   state.groupsById = model.groups.reduce<Record<string, GroupEntity>>((accumulator, group) => {
@@ -89,9 +88,10 @@ function applyPersistence(state: NavigationState, model: PersistedNavigationMode
   state.groupOrder = model.groups.map((group) => group.groupId);
   state.sheetSectionOrder = reconcileSheetSectionOrder(model.sheetSectionOrder ?? [], state.worksheetsById);
   state.hiddenSectionCollapsed = model.hiddenSectionCollapsed;
+  state.identityMode = model.identityMode;
 
   Object.values(state.worksheetsById).forEach((worksheet) => {
-    worksheet.lastKnownStructuralState = model.priorStructuralStateByWorksheetId[worksheet.worksheetId] ?? null;
+    worksheet.lastKnownStructuralState = model.priorStructuralStateByStableWorksheetId[worksheet.worksheetId] ?? null;
   });
 
   for (const group of model.groups) {
@@ -106,8 +106,8 @@ function applyPersistence(state: NavigationState, model: PersistedNavigationMode
     }
   }
 
-  applyPinnedState(state, model.pinnedWorksheetIds, model.pinnedWorksheetOrder);
-  return state;
+  applyPinnedState(state, model.pinnedWorksheetOrder);
+  return normalizeNavigationState(state);
 }
 
 function cloneState(state: NavigationState): NavigationState {
@@ -147,18 +147,23 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
   switch (action.type) {
     case 'hydrateFromWorkbook': {
       const nextWorksheetsById = action.snapshot.worksheets.reduce<Record<string, WorksheetEntity>>((accumulator, worksheet) => {
-        accumulator[worksheet.worksheetId] = toWorksheetEntity(worksheet, state.worksheetsById[worksheet.worksheetId]);
+        const nextWorksheet = toWorksheetEntity(
+          worksheet,
+          state.worksheetsById[worksheet.stableWorksheetId ?? worksheet.worksheetId],
+        );
+        accumulator[nextWorksheet.worksheetId] = nextWorksheet;
         return accumulator;
       }, {});
 
-      return {
+      return normalizeNavigationState({
         ...state,
         worksheetsById: nextWorksheetsById,
         sheetSectionOrder: reconcileSheetSectionOrder(state.sheetSectionOrder, nextWorksheetsById),
         activeWorksheetId: action.snapshot.activeWorksheetId,
         lastSyncAt: Date.now(),
         isReady: true,
-      };
+        identityMode: action.snapshot.identityMode ?? state.identityMode,
+      });
     }
     case 'hydrateFromPersistence': {
       const draft = cloneState(state);

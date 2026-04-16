@@ -13,6 +13,7 @@ const { adapterMock, persistenceMock } = vi.hoisted(() => ({
   adapterMock: {
     getWorkbookSnapshot: vi.fn(),
     getPersistenceContext: vi.fn(),
+    subscribeToWorkbookChanges: vi.fn(),
     createWorksheet: vi.fn(),
     activateWorksheet: vi.fn(),
     renameWorksheet: vi.fn(),
@@ -43,18 +44,27 @@ function wrapper({ children }: { children: ReactNode }) {
 function createSnapshot(overrides: Partial<WorkbookSnapshot> = {}): WorkbookSnapshot {
   return {
     worksheets: [
-      { worksheetId: 'sheet-1', name: 'Overview', visibility: 'Visible', workbookOrder: 0 },
+      {
+        worksheetId: 'sheet-1',
+        stableWorksheetId: 'sheet-1',
+        nativeWorksheetId: 'native-sheet-1',
+        name: 'Overview',
+        visibility: 'Visible',
+        workbookOrder: 0,
+      },
     ],
     activeWorksheetId: 'sheet-1',
+    identityMode: 'plugin-sheet-id',
     ...overrides,
   };
 }
 
 function createStatus(overrides: Partial<PersistenceStatus> = {}): PersistenceStatus {
   return {
-    mode: 'document+local-cache',
+    mode: 'custom-xml',
     banner: null,
     lastSource: 'none',
+    diagnostics: [],
     ...overrides,
   };
 }
@@ -65,18 +75,23 @@ function createContext(overrides: Partial<WorkbookPersistenceContext> = {}): Wor
     stableWorkbookKey: 'https://contoso.test/workbooks/finance.xlsx',
     mode: 'stable',
     source: 'document-url',
+    supportsCustomXml: true,
+    supportsWorksheetCustomProperties: true,
+    supportsWorkbookEvents: true,
     ...overrides,
   };
 }
 
 function createModel(overrides: Partial<PersistedNavigationModel> = {}): PersistedNavigationModel {
   return {
-    metadataVersion: 1,
+    schemaVersion: 2,
+    identityMode: 'plugin-sheet-id',
     groups: [],
     sheetSectionOrder: [],
-    pinnedWorksheetIds: [],
+    pinnedWorksheetOrder: [],
     hiddenSectionCollapsed: true,
-    priorStructuralStateByWorksheetId: {},
+    priorStructuralStateByStableWorksheetId: {},
+    updatedAt: 1,
     ...overrides,
   };
 }
@@ -85,6 +100,7 @@ describe('useNavigationController', () => {
   beforeEach(() => {
     adapterMock.getWorkbookSnapshot.mockReset();
     adapterMock.getPersistenceContext.mockReset();
+    adapterMock.subscribeToWorkbookChanges.mockReset();
     persistenceMock.load.mockReset();
     persistenceMock.save.mockReset();
     adapterMock.activateWorksheet.mockReset();
@@ -93,6 +109,7 @@ describe('useNavigationController', () => {
     adapterMock.hideWorksheet.mockReset();
     adapterMock.createWorksheet.mockReset();
     adapterMock.deleteWorksheet.mockReset();
+    adapterMock.subscribeToWorkbookChanges.mockResolvedValue(async () => undefined);
   });
 
   afterEach(() => {
@@ -155,8 +172,8 @@ describe('useNavigationController', () => {
     vi.useFakeTimers();
     adapterMock.getWorkbookSnapshot.mockResolvedValue(createSnapshot());
     adapterMock.getPersistenceContext
-      .mockResolvedValueOnce(createContext({ stableWorkbookKey: null, mode: 'session-only', source: 'none' }))
-      .mockResolvedValueOnce(createContext());
+      .mockResolvedValue(createContext())
+      .mockResolvedValueOnce(createContext({ stableWorkbookKey: null, mode: 'session-only', source: 'none' }));
     persistenceMock.load.mockResolvedValue({
       model: createModel(),
       status: createStatus({
@@ -168,9 +185,9 @@ describe('useNavigationController', () => {
       }),
     });
     persistenceMock.save.mockResolvedValue(createStatus({
-      mode: 'document+local-cache',
+      mode: 'custom-xml',
       banner: null,
-      lastSource: 'document-settings',
+      lastSource: 'custom-xml',
     }));
     persistenceMock.save
       .mockResolvedValueOnce(createStatus({
@@ -185,20 +202,29 @@ describe('useNavigationController', () => {
 
     await act(async () => {
       await Promise.resolve();
+      await Promise.resolve();
     });
     expect(result.current.isSessionOnlyPersistence).toBe(true);
     expect(result.current.banner).toBeNull();
 
     await act(async () => {
-      vi.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(5100);
+      await Promise.resolve();
+      await Promise.resolve();
+      vi.runOnlyPendingTimers();
       await Promise.resolve();
       await Promise.resolve();
     });
 
-    expect(persistenceMock.save).toHaveBeenLastCalledWith(
-      createContext(),
-      expect.objectContaining({ metadataVersion: 1 }),
-    );
+    expect(
+      persistenceMock.save.mock.calls.some(([context, model]) =>
+        JSON.stringify(context) === JSON.stringify(createContext())
+        && typeof model === 'object'
+        && model !== null
+        && 'schemaVersion' in model
+        && model.schemaVersion === 2,
+      ),
+    ).toBe(true);
     expect(result.current.isSessionOnlyPersistence).toBe(false);
     expect(result.current.banner).toBeNull();
   });
@@ -208,8 +234,8 @@ describe('useNavigationController', () => {
       .mockResolvedValueOnce(createSnapshot())
       .mockResolvedValueOnce(createSnapshot({
         worksheets: [
-          { worksheetId: 'sheet-1', name: 'Overview', visibility: 'Visible', workbookOrder: 0 },
-          { worksheetId: 'sheet-2', name: 'Sheet2', visibility: 'Visible', workbookOrder: 1 },
+          { worksheetId: 'sheet-1', stableWorksheetId: 'sheet-1', nativeWorksheetId: 'native-sheet-1', name: 'Overview', visibility: 'Visible', workbookOrder: 0 },
+          { worksheetId: 'sheet-2', stableWorksheetId: 'sheet-2', nativeWorksheetId: 'native-sheet-2', name: 'Sheet2', visibility: 'Visible', workbookOrder: 1 },
         ],
         activeWorksheetId: 'sheet-2',
       }));

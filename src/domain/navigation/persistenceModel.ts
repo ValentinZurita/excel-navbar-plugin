@@ -1,5 +1,5 @@
-import { metadataVersion } from './constants';
-import { dedupeWorksheetIds } from './utils';
+import { persistedSchemaVersion } from './constants';
+import { dedupeWorksheetIds, getStableWorksheetId } from './utils';
 import type { NavigationState, PersistedNavigationModel, StructuralState } from './types';
 
 export function toPersistedModel(state: NavigationState): PersistedNavigationModel {
@@ -7,27 +7,27 @@ export function toPersistedModel(state: NavigationState): PersistedNavigationMod
     Record<string, StructuralState | null>
   >(
     (accumulator, worksheet) => {
-      accumulator[worksheet.worksheetId] = worksheet.lastKnownStructuralState;
+      accumulator[getStableWorksheetId(worksheet)] = worksheet.lastKnownStructuralState;
       return accumulator;
     },
     {},
   );
 
-  // Use custom pinned order if available, otherwise fallback to workbookOrder
-  const pinnedWorksheetIds = state.pinnedWorksheetOrder.length
+  const pinnedWorksheetOrder = state.pinnedWorksheetOrder.length
     ? dedupeWorksheetIds(state.pinnedWorksheetOrder).filter((id) => state.worksheetsById[id]?.isPinned)
     : Object.values(state.worksheetsById)
         .filter((worksheet) => worksheet.isPinned)
         .sort((left, right) => left.workbookOrder - right.workbookOrder)
-        .map((worksheet) => worksheet.worksheetId);
+        .map((worksheet) => getStableWorksheetId(worksheet));
 
   return {
-    metadataVersion,
+    schemaVersion: persistedSchemaVersion,
+    identityMode: state.identityMode,
     groups: state.groupOrder.map((groupId) => state.groupsById[groupId]).filter(Boolean),
     sheetSectionOrder: state.sheetSectionOrder,
-    pinnedWorksheetIds,
-    pinnedWorksheetOrder: state.pinnedWorksheetOrder.length ? state.pinnedWorksheetOrder : undefined,
+    pinnedWorksheetOrder,
     hiddenSectionCollapsed: state.hiddenSectionCollapsed,
-    priorStructuralStateByWorksheetId,
+    priorStructuralStateByStableWorksheetId: priorStructuralStateByWorksheetId,
+    updatedAt: 0,
   };
 }

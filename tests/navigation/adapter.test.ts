@@ -96,6 +96,9 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
       stableWorkbookKey: 'https://contoso.test/workbooks/finance.xlsx',
       mode: 'stable',
       source: 'document-url',
+      supportsCustomXml: false,
+      supportsWorksheetCustomProperties: false,
+      supportsWorkbookEvents: false,
     });
   });
 
@@ -123,6 +126,9 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
       stableWorkbookKey: 'https://contoso.test/workbooks/budget.xlsx',
       mode: 'stable',
       source: 'file-properties-url',
+      supportsCustomXml: false,
+      supportsWorksheetCustomProperties: false,
+      supportsWorkbookEvents: false,
     });
   });
 
@@ -150,6 +156,9 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
       stableWorkbookKey: null,
       mode: 'session-only',
       source: 'none',
+      supportsCustomXml: false,
+      supportsWorksheetCustomProperties: false,
+      supportsWorkbookEvents: false,
     });
   });
 });

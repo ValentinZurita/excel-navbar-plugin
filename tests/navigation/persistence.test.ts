@@ -40,15 +40,17 @@ describe('toPersistedModel', () => {
     };
 
     expect(toPersistedModel(state)).toEqual({
-      metadataVersion: 1,
+      schemaVersion: 2,
+      identityMode: 'native-id',
       groups: [state.groupsById['group-1']],
       sheetSectionOrder: ['sheet-2', 'sheet-1'],
-      pinnedWorksheetIds: ['sheet-1'],
+      pinnedWorksheetOrder: ['sheet-1'],
       hiddenSectionCollapsed: false,
-      priorStructuralStateByWorksheetId: {
+      priorStructuralStateByStableWorksheetId: {
         'sheet-1': { kind: 'pinned' },
         'sheet-2': { kind: 'group', groupId: 'group-1' },
       },
+      updatedAt: 0,
     });
   });
 });

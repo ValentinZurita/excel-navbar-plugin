@@ -12,5 +12,6 @@ export function createDefaultNavigationState(): NavigationState {
     activeWorksheetId: null,
     lastSyncAt: null,
     isReady: false,
+    identityMode: 'native-id',
   };
 }

@@ -3,6 +3,7 @@ import type { WorkbookPersistenceContext, WorkbookSnapshot } from '../../domain/
 export interface WorkbookAdapter {
   getWorkbookSnapshot(): Promise<WorkbookSnapshot>;
   getPersistenceContext(): Promise<WorkbookPersistenceContext>;
+  subscribeToWorkbookChanges?(listener: () => void): Promise<() => Promise<void> | void>;
   createWorksheet(): Promise<void>;
   activateWorksheet(worksheetId: string): Promise<void>;
   renameWorksheet(worksheetId: string, name: string): Promise<void>;
