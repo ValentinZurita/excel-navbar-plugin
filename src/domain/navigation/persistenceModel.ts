@@ -31,3 +31,8 @@ export function toPersistedModel(state: NavigationState): PersistedNavigationMod
     updatedAt: 0,
   };
 }
+
+export function createPersistedModelFingerprint(model: PersistedNavigationModel) {
+  const { updatedAt: _updatedAt, ...rest } = model;
+  return JSON.stringify(rest);
+}

@@ -1,10 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPersistedModelFingerprint, toPersistedModel } from '../../domain/navigation/persistenceModel';
 import { NavigationPersistence } from '../../infrastructure/persistence/NavigationPersistence';
 import { OfficeWorkbookAdapter } from '../../infrastructure/office/OfficeWorkbookAdapter';
 import { WorksheetCreateError, WorksheetDeleteError } from '../../infrastructure/office/WorkbookAdapter';
-import { toPersistedModel } from '../../domain/navigation/persistenceModel';
 import { useNavigationContext } from '../../ui/navigation/NavigationProvider';
-import type { BannerState, GroupColorToken, WorkbookPersistenceContext } from '../../domain/navigation/types';
+import type {
+  BannerState,
+  GroupColorToken,
+  PersistenceStatus,
+  WorkbookPersistenceContext,
+} from '../../domain/navigation/types';
 import { WorkbookSyncCoordinator } from './WorkbookSyncCoordinator';
 
 const adapter = new OfficeWorkbookAdapter();
@@ -18,41 +23,103 @@ export function useNavigationController() {
   const hasLoaded = useRef(false);
   const latestStateRef = useRef(state);
   const persistenceContextRef = useRef<WorkbookPersistenceContext | null>(null);
+  const latestPersistedModelRef = useRef(toPersistedModel(state));
+  const syncStateRef = useRef({ inFlight: false, pendingRerun: false });
+
+  const persistedModel = useMemo(() => toPersistedModel(state), [
+    state.worksheetsById,
+    state.groupsById,
+    state.groupOrder,
+    state.sheetSectionOrder,
+    state.pinnedWorksheetOrder,
+    state.hiddenSectionCollapsed,
+    state.identityMode,
+  ]);
+  const persistedFingerprint = useMemo(
+    () => createPersistedModelFingerprint(persistedModel),
+    [persistedModel],
+  );
 
   useEffect(() => {
     latestStateRef.current = state;
-  }, [state]);
+    latestPersistedModelRef.current = persistedModel;
+  }, [persistedModel, state]);
 
-  const syncFromWorkbook = useCallback(async () => {
+  const applyPersistenceStatus = useCallback((status: Pick<PersistenceStatus, 'mode' | 'banner'>) => {
+    setIsSessionOnlyPersistence(status.mode === 'session-only');
+    setBanner(status.banner?.tone === 'info' ? null : status.banner);
+  }, []);
+
+  const resolvePersistenceContext = useCallback(async (options?: { forceRefresh?: boolean }) => {
+    const shouldForceRefresh = options?.forceRefresh ?? false;
+    const currentContext = persistenceContextRef.current;
+
+    if (
+      !shouldForceRefresh
+      && currentContext?.mode === 'stable'
+      && Boolean(currentContext.stableWorkbookKey)
+    ) {
+      return currentContext;
+    }
+
+    const nextContext = await adapter.getPersistenceContext();
+    persistenceContextRef.current = nextContext;
+    return nextContext;
+  }, []);
+
+  const performWorkbookSync = useCallback(async () => {
+    const previousContext = persistenceContextRef.current;
     const [snapshot, persistenceContext] = await Promise.all([
       adapter.getWorkbookSnapshot(),
-      adapter.getPersistenceContext(),
+      resolvePersistenceContext(),
     ]);
+
     dispatch({ type: 'hydrateFromWorkbook', snapshot });
 
-    const previousContext = persistenceContextRef.current;
     const transitionedToStable = previousContext?.mode === 'session-only'
       && persistenceContext.mode === 'stable'
       && Boolean(persistenceContext.stableWorkbookKey);
 
-    persistenceContextRef.current = persistenceContext;
-
     if (transitionedToStable) {
-      const status = await persistence.save(persistenceContext, toPersistedModel(latestStateRef.current));
-      setIsSessionOnlyPersistence(status.mode === 'session-only');
-      setBanner(status.banner?.tone === 'info' ? null : status.banner);
+      const status = await persistence.save(persistenceContext, latestPersistedModelRef.current);
+      applyPersistenceStatus(status);
       return;
     }
 
     if (persistenceContext.mode === 'session-only') {
       setIsSessionOnlyPersistence(true);
-      setBanner((currentBanner) => (currentBanner?.tone === 'warning' || currentBanner?.tone === 'error' ? currentBanner : null));
+      setBanner((currentBanner) => (
+        currentBanner?.tone === 'warning' || currentBanner?.tone === 'error'
+          ? currentBanner
+          : null
+      ));
       return;
     }
 
     setIsSessionOnlyPersistence(false);
     setBanner((currentBanner) => (currentBanner?.tone === 'warning' ? currentBanner : null));
-  }, [dispatch]);
+  }, [applyPersistenceStatus, dispatch, resolvePersistenceContext]);
+
+  const syncFromWorkbook = useCallback(async () => {
+    if (syncStateRef.current.inFlight) {
+      syncStateRef.current.pendingRerun = true;
+      return;
+    }
+
+    syncStateRef.current.inFlight = true;
+
+    try {
+      await performWorkbookSync();
+
+      if (syncStateRef.current.pendingRerun) {
+        syncStateRef.current.pendingRerun = false;
+        await performWorkbookSync();
+      }
+    } finally {
+      syncStateRef.current.inFlight = false;
+      syncStateRef.current.pendingRerun = false;
+    }
+  }, [performWorkbookSync]);
 
   const load = useCallback(async () => {
     setIsBusy(true);
@@ -61,14 +128,12 @@ export function useNavigationController() {
     try {
       const [snapshot, persistenceContext] = await Promise.all([
         adapter.getWorkbookSnapshot(),
-        adapter.getPersistenceContext(),
+        resolvePersistenceContext({ forceRefresh: true }),
       ]);
-      const { model: persistedModel, status } = await persistence.load(persistenceContext, snapshot);
+      const { model: loadedPersistedModel, status } = await persistence.load(persistenceContext, snapshot);
       dispatch({ type: 'hydrateFromWorkbook', snapshot });
-      dispatch({ type: 'hydrateFromPersistence', model: persistedModel });
-      persistenceContextRef.current = persistenceContext;
-      setIsSessionOnlyPersistence(status.mode === 'session-only');
-      setBanner(status.banner?.tone === 'info' ? null : status.banner);
+      dispatch({ type: 'hydrateFromPersistence', model: loadedPersistedModel });
+      applyPersistenceStatus(status);
       hasLoaded.current = true;
     } catch (error) {
       setIsSessionOnlyPersistence(false);
@@ -79,7 +144,7 @@ export function useNavigationController() {
     } finally {
       setIsBusy(false);
     }
-  }, [dispatch]);
+  }, [applyPersistenceStatus, dispatch, resolvePersistenceContext]);
 
   useEffect(() => {
     void load();
@@ -89,31 +154,35 @@ export function useNavigationController() {
     if (!hasLoaded.current) {
       return;
     }
+
     const persistenceContext = persistenceContextRef.current;
     if (!persistenceContext) {
       return;
     }
 
-    void persistence.save(persistenceContext, toPersistedModel(state)).then((status) => {
-      setIsSessionOnlyPersistence(status.mode === 'session-only');
-      setBanner(status.banner?.tone === 'info' ? null : status.banner);
-    }).catch((error) => {
-      setIsSessionOnlyPersistence(false);
-      setBanner({
-        tone: 'warning',
-        message: error instanceof Error ? error.message : 'Unable to save workbook state.',
+    void persistence.save(persistenceContext, latestPersistedModelRef.current)
+      .then((status) => {
+        applyPersistenceStatus(status);
+      })
+      .catch((error) => {
+        setIsSessionOnlyPersistence(false);
+        setBanner({
+          tone: 'warning',
+          message: error instanceof Error ? error.message : 'Unable to save workbook state.',
+        });
       });
-    });
-  }, [state]);
+  }, [applyPersistenceStatus, persistedFingerprint]);
 
   useEffect(() => {
     if (!hasLoaded.current) {
       return;
     }
 
+    const intervalMs = persistenceContextRef.current?.supportsWorkbookEvents ? 15000 : 5000;
     const coordinator = new WorkbookSyncCoordinator({
       adapter,
       onSync: syncFromWorkbook,
+      intervalMs,
     });
 
     void coordinator.start();

@@ -83,4 +83,33 @@ describe('buildNavigatorView', () => {
       },
     ]);
   });
+
+  it('honors persisted pinned order while keeping workbook order as the tie-breaker', () => {
+    const state = createDefaultNavigationState();
+    state.pinnedWorksheetOrder = ['three', 'one'];
+    state.worksheetsById = {
+      one: worksheet({ worksheetId: 'one', name: 'Overview', isPinned: true, workbookOrder: 0 }),
+      two: worksheet({ worksheetId: 'two', name: 'Revenue', isPinned: true, workbookOrder: 1 }),
+      three: worksheet({ worksheetId: 'three', name: 'Draft', isPinned: true, workbookOrder: 2 }),
+    };
+
+    const view = buildNavigatorView(state);
+
+    expect(view.pinned.map((item) => item.worksheetId)).toEqual(['three', 'one', 'two']);
+  });
+
+  it('appends grouped worksheets missing from persisted order using workbook order', () => {
+    const state = createDefaultNavigationState();
+    state.worksheetsById = {
+      one: worksheet({ worksheetId: 'one', name: 'Overview', groupId: 'group-1', workbookOrder: 0 }),
+      two: worksheet({ worksheetId: 'two', name: 'Revenue', groupId: 'group-1', workbookOrder: 2 }),
+      three: worksheet({ worksheetId: 'three', name: 'Budget', groupId: 'group-1', workbookOrder: 1 }),
+    };
+    state.groupsById = { 'group-1': group({ worksheetOrder: ['two'] }) };
+    state.groupOrder = ['group-1'];
+
+    const view = buildNavigatorView(state);
+
+    expect(view.groups[0].worksheets.map((item) => item.worksheetId)).toEqual(['two', 'one', 'three']);
+  });
 });

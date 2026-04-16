@@ -96,6 +96,21 @@ function createModel(overrides: Partial<PersistedNavigationModel> = {}): Persist
   };
 }
 
+function createDeferred<T>() {
+  let resolvePromise!: (value: T | PromiseLike<T>) => void;
+  let rejectPromise!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolve, reject) => {
+    resolvePromise = resolve;
+    rejectPromise = reject;
+  });
+
+  return {
+    promise,
+    resolve: resolvePromise,
+    reject: rejectPromise,
+  };
+}
+
 describe('useNavigationController', () => {
   beforeEach(() => {
     adapterMock.getWorkbookSnapshot.mockReset();
@@ -208,10 +223,7 @@ describe('useNavigationController', () => {
     expect(result.current.banner).toBeNull();
 
     await act(async () => {
-      vi.advanceTimersByTime(5100);
-      await Promise.resolve();
-      await Promise.resolve();
-      vi.runOnlyPendingTimers();
+      vi.advanceTimersByTime(15100);
       await Promise.resolve();
       await Promise.resolve();
     });
@@ -260,5 +272,172 @@ describe('useNavigationController', () => {
     expect(adapterMock.createWorksheet).toHaveBeenCalledTimes(1);
     expect(result.current.state.activeWorksheetId).toBe('sheet-2');
     expect(result.current.state.worksheetsById['sheet-2']?.name).toBe('Sheet2');
+  });
+
+  it('does not persist again when only the search query changes', async () => {
+    adapterMock.getWorkbookSnapshot.mockResolvedValue(createSnapshot());
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    persistenceMock.load.mockResolvedValue({
+      model: createModel(),
+      status: createStatus(),
+    });
+    persistenceMock.save.mockResolvedValue(createStatus());
+
+    const { result } = renderHook(() => useNavigationController(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.state.isReady).toBe(true);
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    const saveCallCount = persistenceMock.save.mock.calls.length;
+
+    act(() => {
+      result.current.setQuery('rev');
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(persistenceMock.save).toHaveBeenCalledTimes(saveCallCount);
+  });
+
+  it('does not persist again when only the active worksheet changes', async () => {
+    const initialSnapshot = createSnapshot({
+      worksheets: [
+        { worksheetId: 'sheet-1', stableWorksheetId: 'sheet-1', nativeWorksheetId: 'native-sheet-1', name: 'Overview', visibility: 'Visible', workbookOrder: 0 },
+        { worksheetId: 'sheet-2', stableWorksheetId: 'sheet-2', nativeWorksheetId: 'native-sheet-2', name: 'Revenue', visibility: 'Visible', workbookOrder: 1 },
+      ],
+      activeWorksheetId: 'sheet-1',
+    });
+    const activatedSnapshot = createSnapshot({
+      worksheets: initialSnapshot.worksheets,
+      activeWorksheetId: 'sheet-2',
+    });
+
+    adapterMock.getWorkbookSnapshot
+      .mockResolvedValueOnce(initialSnapshot)
+      .mockResolvedValueOnce(activatedSnapshot);
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    adapterMock.activateWorksheet.mockResolvedValue(undefined);
+    persistenceMock.load.mockResolvedValue({
+      model: createModel({ sheetSectionOrder: ['sheet-1', 'sheet-2'] }),
+      status: createStatus(),
+    });
+    persistenceMock.save.mockResolvedValue(createStatus());
+
+    const { result } = renderHook(() => useNavigationController(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.state.isReady).toBe(true);
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    const saveCallCount = persistenceMock.save.mock.calls.length;
+
+    await act(async () => {
+      await result.current.activateWorksheet('sheet-2');
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(adapterMock.activateWorksheet).toHaveBeenCalledWith('sheet-2');
+    expect(result.current.state.activeWorksheetId).toBe('sheet-2');
+    expect(persistenceMock.save).toHaveBeenCalledTimes(saveCallCount);
+  });
+
+  it('reuses stable persistence context for polling syncs', async () => {
+    vi.useFakeTimers();
+    adapterMock.getWorkbookSnapshot
+      .mockResolvedValueOnce(createSnapshot())
+      .mockResolvedValueOnce(createSnapshot());
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    persistenceMock.load.mockResolvedValue({
+      model: createModel(),
+      status: createStatus(),
+    });
+    persistenceMock.save.mockResolvedValue(createStatus());
+
+    renderHook(() => useNavigationController(), { wrapper });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(15000);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(adapterMock.getPersistenceContext).toHaveBeenCalledTimes(1);
+  });
+
+  it('coalesces overlapping polling and workbook events into a single rerun', async () => {
+    vi.useFakeTimers();
+    const deferredSnapshot = createDeferred<WorkbookSnapshot>();
+    let workbookChangeListener: (() => void) | null = null;
+
+    adapterMock.subscribeToWorkbookChanges.mockImplementation(async (listener: () => void) => {
+      workbookChangeListener = listener;
+      return async () => undefined;
+    });
+    adapterMock.getWorkbookSnapshot
+      .mockResolvedValueOnce(createSnapshot())
+      .mockImplementationOnce(() => deferredSnapshot.promise)
+      .mockResolvedValue(createSnapshot());
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    persistenceMock.load.mockResolvedValue({
+      model: createModel(),
+      status: createStatus(),
+    });
+    persistenceMock.save.mockResolvedValue(createStatus());
+
+    renderHook(() => useNavigationController(), { wrapper });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(workbookChangeListener).not.toBeNull();
+
+    await act(async () => {
+      vi.advanceTimersByTime(15000);
+      await Promise.resolve();
+    });
+
+    expect(adapterMock.getWorkbookSnapshot).toHaveBeenCalledTimes(2);
+
+    act(() => {
+      workbookChangeListener?.();
+      workbookChangeListener?.();
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(100);
+      await Promise.resolve();
+    });
+
+    expect(adapterMock.getWorkbookSnapshot).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      deferredSnapshot.resolve(createSnapshot());
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(adapterMock.getWorkbookSnapshot).toHaveBeenCalledTimes(3);
   });
 });

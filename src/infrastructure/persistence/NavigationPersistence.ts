@@ -1,4 +1,5 @@
 import { migrateLegacyPersistedNavigationModel } from '../../domain/navigation/migration';
+import { createPersistedModelFingerprint } from '../../domain/navigation/persistenceModel';
 import { reconcilePersistedNavigationModel } from '../../domain/navigation/reconciliation';
 import type {
   PersistedNavigationModel,
@@ -100,11 +101,6 @@ function buildMetadata(model: PersistedNavigationModel, canonicalStore: Persiste
 
 function mergeDiagnostics(...diagnosticGroups: PersistenceDiagnosticCode[][]) {
   return [...new Set(diagnosticGroups.flat())];
-}
-
-function createFingerprint(model: PersistedNavigationModel) {
-  const { updatedAt: _updatedAt, ...rest } = model;
-  return JSON.stringify(rest);
 }
 
 export class NavigationPersistence {
@@ -278,7 +274,7 @@ export class NavigationPersistence {
     this.localCacheRepository.cleanupLegacyGlobalCache();
 
     const diagnostics = this.decorateDiagnostics(context, []);
-    const fingerprint = createFingerprint(model);
+    const fingerprint = createPersistedModelFingerprint(model);
     const workbookKey = context.stableWorkbookKey ?? 'session-only';
 
     if (this.lastSavedFingerprint === fingerprint && this.lastSavedWorkbookKey === workbookKey) {
