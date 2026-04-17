@@ -25,6 +25,14 @@ interface GroupCardProps {
   onTogglePin?: (worksheetId: string) => void;
   onRenameSubmit?: (groupId: string, newName: string) => void;
   onRenameCancel?: () => void;
+  /** Optional: ID for keyboard navigation on the group header */
+  navigableId?: string;
+  /** Whether this group header has keyboard focus */
+  isFocused?: boolean;
+  /** Handler for group header keyboard navigation (ArrowRight/Left, Enter) */
+  onGroupHeaderKeyDown?: (event: React.KeyboardEvent<HTMLElement>, groupId: string, isCollapsed: boolean) => void;
+  /** Register DOM element for focus management */
+  registerElement?: (id: string, element: HTMLElement | null) => void;
 }
 
 function isGroupHeaderDropActive(
@@ -107,7 +115,11 @@ function areGroupCardPropsEqual(left: GroupCardProps, right: GroupCardProps) {
     && left.onOpenSheetMenu === right.onOpenSheetMenu
     && left.onTogglePin === right.onTogglePin
     && left.onRenameSubmit === right.onRenameSubmit
-    && left.onRenameCancel === right.onRenameCancel;
+    && left.onRenameCancel === right.onRenameCancel
+    && left.navigableId === right.navigableId
+    && left.isFocused === right.isFocused
+    && left.onGroupHeaderKeyDown === right.onGroupHeaderKeyDown
+    && left.registerElement === right.registerElement;
 }
 
 function GroupCardComponent({
@@ -118,10 +130,15 @@ function GroupCardComponent({
   isRenaming,
   onRenameSubmit,
   onRenameCancel,
+  navigableId,
+  isFocused = false,
+  onGroupHeaderKeyDown,
+  registerElement,
   ...rest
 }: GroupCardProps) {
   const [isEmptyFeedbackActive, setIsEmptyFeedbackActive] = useState(false);
   const emptyFeedbackTimeoutRef = useRef<number | null>(null);
+  const headerButtonRef = useRef<HTMLButtonElement>(null);
 
   const clearEmptyFeedbackTimeout = useCallback(() => {
     if (emptyFeedbackTimeoutRef.current !== null) {
@@ -147,6 +164,19 @@ function GroupCardComponent({
       clearEmptyFeedbackTimeout();
     };
   }, [clearEmptyFeedbackTimeout]);
+
+  // Register DOM element for focus management
+  useEffect(() => {
+    if (!navigableId || !registerElement) {
+      return undefined;
+    }
+
+    registerElement(navigableId, headerButtonRef.current);
+
+    return () => {
+      registerElement(navigableId, null);
+    };
+  }, [navigableId, registerElement]);
 
   const containerId = toGroupContainerId(group.groupId);
   const dragConfig = rest.dragConfig;
@@ -188,6 +218,9 @@ function GroupCardComponent({
     triggerEmptyFeedback();
   }
 
+  // Determine tabIndex: use roving tabindex when navigableId is provided
+  const tabIndex = navigableId ? (isFocused ? 0 : -1) : 0;
+
   return (
     <section
       className="group-card"
@@ -206,12 +239,21 @@ function GroupCardComponent({
       <header
         ref={setNodeRef}
         className={`group-header ${group.groupId === rest.groupMenuOpenId ? 'group-header-context-open' : ''} ${isDropActive ? 'group-header-drop-active' : ''} ${isActiveGroupHeader ? 'group-header-active' : ''}`}
+        data-navigable-id={navigableId}
+        data-focused={navigableId ? isFocused : undefined}
       >
         <button
+          ref={headerButtonRef}
           className="group-toggle"
           type="button"
           aria-expanded={!group.isCollapsed}
+          tabIndex={tabIndex}
           onClick={handleToggleCollapsed}
+          onKeyDown={(event) => {
+            if (navigableId && onGroupHeaderKeyDown) {
+              onGroupHeaderKeyDown(event, group.groupId, group.isCollapsed);
+            }
+          }}
         >
           <span className={`group-leading group-leading-${group.colorToken} ${isFolderFlashing ? 'group-leading-flash' : ''}`} aria-hidden="true">
             <GroupFolderIcon className="group-folder-icon" />
