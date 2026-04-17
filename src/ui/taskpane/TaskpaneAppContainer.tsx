@@ -237,6 +237,9 @@ export function TaskpaneAppContainer() {
         onRenameWorksheetSubmit={handleRenameWorksheetSubmit}
         onRenameGroupSubmit={handleRenameGroupSubmit}
         onRenameCancel={handleRenameCancel}
+        isDialogOpen={Boolean(textPrompt || deleteGroupRequest)}
+        isRenaming={renamingWorksheetId !== null || renamingGroupId !== null}
+        isContextMenuOpen={activeMenu !== null}
       />
 
       {!dragAndDrop.activeWorksheetId ? (
