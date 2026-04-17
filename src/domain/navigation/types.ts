@@ -144,3 +144,23 @@ export interface NavigatorView {
   hidden: WorksheetEntity[];
   searchResults: SearchResultItem[];
 }
+
+/**
+ * Represents an item that can receive keyboard focus in the taskpane navigator.
+ * These items form a linear list for keyboard navigation (ArrowDown/ArrowUp).
+ * IDs are prefixed to ensure uniqueness across different kinds of items.
+ */
+export interface NavigableItem {
+  id: string;
+  kind: 'search-result' | 'worksheet' | 'group-header';
+  worksheetId?: string;
+  groupId?: string;
+  isGroupCollapsed?: boolean;
+  name: string;
+}
+
+/**
+ * Sentinel ID for representing the search input when navigating from first result back up.
+ * Not a real DOM element ID, used as a return value from navigation functions.
+ */
+export const SEARCH_INPUT_SENTINEL_ID = '__search_input__';
