@@ -18,6 +18,12 @@ interface GroupSectionProps {
   onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
   onRenameSubmit?: (groupId: string, newName: string) => void;
   onRenameCancel?: () => void;
+  /** Current focused item ID for keyboard navigation */
+  focusedItemId?: string | null;
+  /** Handler for group header keyboard navigation */
+  onGroupHeaderKeyDown?: (event: React.KeyboardEvent<HTMLElement>, groupId: string, isCollapsed: boolean) => void;
+  /** Register DOM element for focus management */
+  registerElement?: (id: string, element: HTMLElement | null) => void;
 }
 
 export function GroupSection({
@@ -34,29 +40,41 @@ export function GroupSection({
   onOpenSheetMenu,
   onRenameSubmit,
   onRenameCancel,
+  focusedItemId,
+  onGroupHeaderKeyDown,
+  registerElement,
 }: GroupSectionProps) {
   const className = dragConfig?.isDragActive ? 'group-list group-list-drag-active' : 'group-list';
 
   return (
     <div className={className}>
-      {groups.map((group) => (
-        <GroupCard
-          key={group.groupId}
-          group={group}
-          activeWorksheetId={activeWorksheetId}
-          contextMenuOpenId={contextMenuOpenId}
-          groupMenuOpenId={groupMenuOpenId}
-          dragConfig={dragConfig}
-          isRenaming={renamingGroupId === group.groupId}
-          onActivate={onActivate}
-          onToggleCollapsed={onToggleCollapsed}
-          onTogglePin={onTogglePin}
-          onOpenGroupMenu={onOpenGroupMenu}
-          onOpenSheetMenu={onOpenSheetMenu}
-          onRenameSubmit={onRenameSubmit}
-          onRenameCancel={onRenameCancel}
-        />
-      ))}
+      {groups.map((group) => {
+        const navigableId = `group-header:${group.groupId}`;
+        const isFocused = focusedItemId === navigableId;
+
+        return (
+          <GroupCard
+            key={group.groupId}
+            group={group}
+            activeWorksheetId={activeWorksheetId}
+            contextMenuOpenId={contextMenuOpenId}
+            groupMenuOpenId={groupMenuOpenId}
+            dragConfig={dragConfig}
+            isRenaming={renamingGroupId === group.groupId}
+            navigableId={navigableId}
+            isFocused={isFocused}
+            onActivate={onActivate}
+            onToggleCollapsed={onToggleCollapsed}
+            onTogglePin={onTogglePin}
+            onOpenGroupMenu={onOpenGroupMenu}
+            onOpenSheetMenu={onOpenSheetMenu}
+            onRenameSubmit={onRenameSubmit}
+            onRenameCancel={onRenameCancel}
+            onGroupHeaderKeyDown={onGroupHeaderKeyDown}
+            registerElement={registerElement}
+          />
+        );
+      })}
     </div>
   );
 }
