@@ -177,11 +177,13 @@
 /* Group header focused state */
 .group-header[data-focused="true"] {
   outline: none;
+  background: var(--excel-nav-active-bg);
+  border-color: transparent;
 }
 
 /* Group toggle button within focused header */
 .group-header[data-focused="true"] .group-toggle {
-  background: var(--excel-nav-active-bg);
+  background: transparent;
 }
 
 /* When drag is active, suppress focus styles */
