@@ -272,4 +272,31 @@ describe('GroupCard', () => {
 
     expect(screen.getByRole('button', { name: 'Finance' })).toHaveAttribute('aria-expanded', 'false');
   });
+
+  it('propagates keyboard navigation handlers to worksheets in expanded groups', () => {
+    const onItemKeyDown = vi.fn();
+    const registerElement = vi.fn();
+
+    render(
+      <DndContext>
+        <GroupCard
+          group={createGroup({ isCollapsed: false, worksheets: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' })] })}
+          activeWorksheetId={null}
+          focusedItemId={'worksheet:sheet-1'}
+          onItemKeyDown={onItemKeyDown}
+          registerElement={registerElement}
+          onActivate={vi.fn()}
+          onToggleCollapsed={vi.fn()}
+          onOpenGroupMenu={vi.fn()}
+          onOpenSheetMenu={vi.fn()}
+        />
+      </DndContext>,
+    );
+
+    const worksheetRow = screen.getByRole('button', { name: 'Revenue' });
+    fireEvent.keyDown(worksheetRow, { key: 'ArrowDown' });
+
+    expect(onItemKeyDown).toHaveBeenCalled();
+    expect(registerElement).toHaveBeenCalledWith('worksheet:sheet-1', expect.any(HTMLElement));
+  });
 });

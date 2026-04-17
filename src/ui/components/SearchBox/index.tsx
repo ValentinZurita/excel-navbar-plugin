@@ -15,6 +15,10 @@ interface SearchBoxProps {
   onSearchKeyDown: KeyboardEventHandler<HTMLInputElement>;
   /** Currently focused item ID for visual focus indicator */
   focusedItemId: string | null;
+  /** Handler for keyboard navigation on search results */
+  onResultKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>, itemId: string) => void;
+  /** Register DOM element for focus management */
+  registerElement?: (id: string, element: HTMLElement | null) => void;
 }
 
 /**
@@ -33,6 +37,8 @@ export function SearchBox({
   inputRef,
   onSearchKeyDown,
   focusedItemId,
+  onResultKeyDown,
+  registerElement,
 }: SearchBoxProps) {
   const searchBoxRef = useRef<HTMLDivElement | null>(null);
 
@@ -67,7 +73,13 @@ export function SearchBox({
       <SearchBar ref={inputRef} value={value} onChange={onChange} onKeyDown={onSearchKeyDown} />
       {value ? (
         <div className="search-results-wrapper">
-          <SearchResults results={results} onSelect={onSelect} focusedItemId={focusedItemId} />
+          <SearchResults
+            results={results}
+            onSelect={onSelect}
+            focusedItemId={focusedItemId}
+            onItemKeyDown={onResultKeyDown}
+            registerElement={registerElement}
+          />
         </div>
       ) : null}
     </div>

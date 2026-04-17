@@ -22,6 +22,8 @@ interface GroupSectionProps {
   focusedItemId?: string | null;
   /** Handler for group header keyboard navigation */
   onGroupHeaderKeyDown?: (event: React.KeyboardEvent<HTMLElement>, groupId: string, isCollapsed: boolean) => void;
+  /** Handler for worksheet keyboard navigation inside expanded groups */
+  onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
   /** Register DOM element for focus management */
   registerElement?: (id: string, element: HTMLElement | null) => void;
 }
@@ -42,6 +44,7 @@ export function GroupSection({
   onRenameCancel,
   focusedItemId,
   onGroupHeaderKeyDown,
+  onItemKeyDown,
   registerElement,
 }: GroupSectionProps) {
   const className = dragConfig?.isDragActive ? 'group-list group-list-drag-active' : 'group-list';
@@ -71,6 +74,8 @@ export function GroupSection({
             onRenameSubmit={onRenameSubmit}
             onRenameCancel={onRenameCancel}
             onGroupHeaderKeyDown={onGroupHeaderKeyDown}
+            focusedItemId={focusedItemId}
+            onItemKeyDown={onItemKeyDown}
             registerElement={registerElement}
           />
         );

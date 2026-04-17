@@ -1,4 +1,5 @@
 import {
+  KeyboardCode,
   KeyboardSensor,
   MouseSensor,
   TouchSensor,
@@ -121,6 +122,12 @@ export function useWorksheetDnD({
       },
     }),
     useSensor(KeyboardSensor, {
+      keyboardCodes: {
+        // Start drag ONLY with Space. Keep Enter free for worksheet activation.
+        start: [KeyboardCode.Space],
+        cancel: [KeyboardCode.Esc],
+        end: [KeyboardCode.Space],
+      },
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );

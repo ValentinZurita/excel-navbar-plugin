@@ -33,6 +33,10 @@ interface GroupCardProps {
   onGroupHeaderKeyDown?: (event: React.KeyboardEvent<HTMLElement>, groupId: string, isCollapsed: boolean) => void;
   /** Register DOM element for focus management */
   registerElement?: (id: string, element: HTMLElement | null) => void;
+  /** Current focused item ID for child worksheets in this group */
+  focusedItemId?: string | null;
+  /** Handler for keyboard navigation on child worksheets */
+  onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
 }
 
 function isGroupHeaderDropActive(
@@ -119,7 +123,9 @@ function areGroupCardPropsEqual(left: GroupCardProps, right: GroupCardProps) {
     && left.navigableId === right.navigableId
     && left.isFocused === right.isFocused
     && left.onGroupHeaderKeyDown === right.onGroupHeaderKeyDown
-    && left.registerElement === right.registerElement;
+    && left.registerElement === right.registerElement
+    && left.focusedItemId === right.focusedItemId
+    && left.onItemKeyDown === right.onItemKeyDown;
 }
 
 function GroupCardComponent({
@@ -251,7 +257,18 @@ function GroupCardComponent({
           onClick={handleToggleCollapsed}
           onKeyDown={(event) => {
             if (navigableId && onGroupHeaderKeyDown) {
-              onGroupHeaderKeyDown(event, group.groupId, group.isCollapsed);
+              const managedNavigationKey = event.key === 'ArrowDown'
+                || event.key === 'ArrowUp'
+                || event.key === 'ArrowRight'
+                || event.key === 'ArrowLeft'
+                || event.key === 'Enter'
+                || event.key === 'Home'
+                || event.key === 'End';
+
+              if (managedNavigationKey) {
+                onGroupHeaderKeyDown(event, group.groupId, group.isCollapsed);
+                return;
+              }
             }
           }}
         >
@@ -280,9 +297,12 @@ function GroupCardComponent({
           activeWorksheetId={rest.activeWorksheetId}
           contextMenuOpenId={rest.contextMenuOpenId}
           dragConfig={sheetListDragConfig}
+          focusedItemId={rest.focusedItemId}
           onActivate={rest.onActivate}
           onTogglePin={rest.onTogglePin}
           onOpenContextMenu={onOpenSheetMenu}
+          onItemKeyDown={rest.onItemKeyDown}
+          registerElement={registerElement}
         />
       ) : null}
     </section>

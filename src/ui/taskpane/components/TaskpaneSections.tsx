@@ -214,7 +214,6 @@ export function TaskpaneSections({
     >
       <TaskpaneSectionsContent
         query={query}
-        isSearchActive={isSearchActive}
         searchResults={searchResults}
         navigatorView={navigatorView}
         activeWorksheetId={activeWorksheetId}
@@ -230,6 +229,7 @@ export function TaskpaneSections({
         shouldShowGroupsSection={shouldShowGroupsSection}
         shouldShowUngroupedSection={shouldShowUngroupedSection}
         shouldShowHiddenSection={shouldShowHiddenSection}
+        searchInputRef={searchInputRef}
         onChangeQuery={onChangeQuery}
         onSelectSearchResult={onSelectSearchResult}
         onActivateWorksheet={onActivateWorksheet}
@@ -252,18 +252,17 @@ export function TaskpaneSections({
 import { useKeyboardNavContext } from '../../navigation/KeyboardNavigationProvider';
 
 interface TaskpaneSectionsContentProps extends Omit<TaskpaneSectionsProps, 'isDialogOpen' | 'isRenaming' | 'isContextMenuOpen'> {
-  isSearchActive: boolean;
   groupsSessionOnlyHint: React.ReactNode;
   shouldShowPinnedSection: boolean;
   shouldShowGroupsSection: boolean;
   shouldShowUngroupedSection: boolean;
   shouldShowHiddenSection: boolean;
+  searchInputRef: React.RefObject<HTMLInputElement>;
 }
 
 function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
   const {
     query,
-    isSearchActive,
     searchResults,
     navigatorView,
     activeWorksheetId,
@@ -279,6 +278,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     shouldShowGroupsSection,
     shouldShowUngroupedSection,
     shouldShowHiddenSection,
+    searchInputRef,
     onChangeQuery,
     onSelectSearchResult,
     onActivateWorksheet,
@@ -301,7 +301,6 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     handleItemKeyDown,
     handleGroupHeaderKeyDown,
     registerElement,
-    searchInputRef,
   } = useKeyboardNavContext();
 
   return (
@@ -314,6 +313,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
         inputRef={searchInputRef}
         onSearchKeyDown={handleSearchKeyDown}
         focusedItemId={focusedItemId}
+        onResultKeyDown={handleItemKeyDown}
+        registerElement={registerElement}
       />
 
       <DndContext
@@ -385,6 +386,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
               onRenameSubmit={onRenameGroupSubmit}
               onRenameCancel={onRenameCancel}
               onGroupHeaderKeyDown={handleGroupHeaderKeyDown}
+              onItemKeyDown={handleItemKeyDown}
               registerElement={registerElement}
             />
           </Section>

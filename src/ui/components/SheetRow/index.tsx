@@ -192,16 +192,37 @@ function SheetRowComponent({
           return;
         }
 
-        onContainerKeyDown?.(event);
-
-        if (event.defaultPrevented || hasNestedInteractiveTarget(event.target, event.currentTarget)) {
+        if (hasNestedInteractiveTarget(event.target, event.currentTarget)) {
           return;
         }
 
-        // If we have keyboard navigation context, use that handler first
-        if (navigableId && onItemKeyDown) {
+        const managedNavigationKey = event.key === 'ArrowDown'
+          || event.key === 'ArrowUp'
+          || event.key === 'Enter'
+          || event.key === 'Home'
+          || event.key === 'End'
+          || event.key === 'ArrowLeft'
+          || event.key === 'ArrowRight';
+
+        // If we have keyboard navigation context, prioritize it for navigation keys.
+        // This prevents dnd-kit sortable listeners from stealing Arrow/Enter events.
+        if (navigableId && onItemKeyDown && managedNavigationKey) {
           onItemKeyDown(event, navigableId);
           return;
+        }
+
+        onContainerKeyDown?.(event);
+
+        if (event.defaultPrevented) {
+          return;
+        }
+
+        // If we have keyboard navigation context for non-managed keys, delegate now.
+        if (navigableId && onItemKeyDown) {
+          onItemKeyDown(event, navigableId);
+          if (event.defaultPrevented) {
+            return;
+          }
         }
 
         // Fallback to default behavior (Enter/Space to activate)

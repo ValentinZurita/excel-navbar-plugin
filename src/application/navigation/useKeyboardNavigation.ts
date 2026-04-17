@@ -198,6 +198,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
       if (event.key === 'ArrowDown') {
         event.preventDefault();
+        event.stopPropagation();
         const firstItem = getFirstItem(items);
         if (firstItem) {
           setFocusedItemId(firstItem.id);
@@ -219,6 +220,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       switch (event.key) {
         case 'ArrowDown': {
           event.preventDefault();
+          event.stopPropagation();
           const next = getNextItem(itemId, items);
           if (next) {
             setFocusedItemId(next.id);
@@ -228,6 +230,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
         case 'ArrowUp': {
           event.preventDefault();
+          event.stopPropagation();
           const prev = getPrevItem(itemId, items, isSearchActive);
           if (prev) {
             if (prev.id === SEARCH_INPUT_SENTINEL_ID) {
@@ -241,12 +244,14 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
         case 'Enter': {
           event.preventDefault();
+          event.stopPropagation();
           onActivate(itemId);
           break;
         }
 
         case 'Home': {
           event.preventDefault();
+          event.stopPropagation();
           const first = getFirstItem(items);
           if (first) {
             setFocusedItemId(first.id);
@@ -256,6 +261,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
         case 'End': {
           event.preventDefault();
+          event.stopPropagation();
           const last = getLastItem(items);
           if (last) {
             setFocusedItemId(last.id);
@@ -288,6 +294,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       switch (event.key) {
         case 'ArrowRight': {
           event.preventDefault();
+          event.stopPropagation();
           if (isCollapsed) {
             onExpandGroup(groupId);
           }
@@ -296,6 +303,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
         case 'ArrowLeft': {
           event.preventDefault();
+          event.stopPropagation();
           if (!isCollapsed) {
             onCollapseGroup(groupId);
           }
@@ -304,6 +312,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
         case 'Enter': {
           event.preventDefault();
+          event.stopPropagation();
           // Toggle collapse state
           if (isCollapsed) {
             onExpandGroup(groupId);
