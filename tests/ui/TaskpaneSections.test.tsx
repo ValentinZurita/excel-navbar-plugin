@@ -1,7 +1,7 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ComponentProps, ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NavigatorView, WorksheetEntity } from '../../src/domain/navigation/types';
 import { TaskpaneSections } from '../../src/ui/taskpane/components/TaskpaneSections';
 
@@ -80,6 +80,10 @@ function createBaseProps(overrides: Partial<ComponentProps<typeof TaskpaneSectio
 }
 
 describe('TaskpaneSections', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('renders a drag overlay for the active dragged worksheet', () => {
     const worksheet = createWorksheet();
 
@@ -325,4 +329,73 @@ describe('TaskpaneSections', () => {
     // There should be exactly one focused navigable item.
     expect(container.querySelectorAll('[data-focused="true"]').length).toBe(1);
   });
+
+  it('clears keyboard navigation focus when pressing Escape', async () => {
+    const user = userEvent.setup();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' }),
+        createWorksheet({ worksheetId: 'sheet-2', name: 'Forecast' }),
+      ],
+      hidden: [],
+      searchResults: [],
+    };
+
+    const { container } = render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+        })}
+      />,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    revenueRow.focus();
+    await user.keyboard('{ArrowDown}');
+
+    expect(container.querySelectorAll('[data-focused="true"]').length).toBe(1);
+
+    await user.keyboard('{Escape}');
+
+    expect(container.querySelectorAll('[data-focused="true"]').length).toBe(0);
+  });
+
+  it('clears keyboard navigation focus after inactivity timeout', async () => {
+    vi.useFakeTimers();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' }),
+        createWorksheet({ worksheetId: 'sheet-2', name: 'Forecast' }),
+      ],
+      hidden: [],
+      searchResults: [],
+    };
+
+    const { container } = render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+        })}
+      />,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    revenueRow.focus();
+    fireEvent.keyDown(revenueRow, { key: 'ArrowDown', code: 'ArrowDown' });
+
+    expect(container.querySelectorAll('[data-focused="true"]').length).toBe(1);
+
+    // 5 seconds idle timeout for keyboard focus clear
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+
+    expect(container.querySelectorAll('[data-focused="true"]').length).toBe(0);
+  }, 10000);
 });

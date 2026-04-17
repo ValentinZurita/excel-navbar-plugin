@@ -9,6 +9,8 @@ import {
   SEARCH_INPUT_SENTINEL_ID,
 } from '../../domain/navigation/navigableItems';
 
+const KEYBOARD_FOCUS_IDLE_TIMEOUT_MS = 5000;
+
 export interface UseKeyboardNavigationArgs {
   /** Current list of navigable items, in visual order */
   items: NavigableItem[];
@@ -91,6 +93,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
   // Track previous items to detect when focused item disappears
   const prevItemsRef = useRef<NavigableItem[]>(items);
+  const idleClearTimeoutRef = useRef<number | null>(null);
 
   // Check if navigation should be suppressed
   const isSuppressed = isDragActive || isDialogOpen || isRenaming || isContextMenuOpen;
@@ -125,12 +128,38 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     setFocusedItemId(itemId);
   }, [items]);
 
+  const clearIdleTimeout = useCallback(() => {
+    if (idleClearTimeoutRef.current !== null) {
+      window.clearTimeout(idleClearTimeoutRef.current);
+      idleClearTimeoutRef.current = null;
+    }
+  }, []);
+
+  const scheduleIdleClear = useCallback(() => {
+    clearIdleTimeout();
+    idleClearTimeoutRef.current = window.setTimeout(() => {
+      setFocusedItemId(null);
+      idleClearTimeoutRef.current = null;
+    }, KEYBOARD_FOCUS_IDLE_TIMEOUT_MS);
+  }, [clearIdleTimeout]);
+
+  const markKeyboardActivity = useCallback(() => {
+    scheduleIdleClear();
+  }, [scheduleIdleClear]);
+
   /**
    * Clear focus entirely.
    */
   const clearFocus = useCallback(() => {
+    clearIdleTimeout();
     setFocusedItemId(null);
-  }, []);
+  }, [clearIdleTimeout]);
+
+  useEffect(() => {
+    return () => {
+      clearIdleTimeout();
+    };
+  }, [clearIdleTimeout]);
 
   /**
    * Effect: when focusedItemId changes, focus the corresponding DOM element.
@@ -239,10 +268,19 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         const firstItem = getFirstItem(items);
         if (firstItem) {
           setFocusedItemId(firstItem.id);
+          markKeyboardActivity();
         }
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        clearIdleTimeout();
+        setFocusedItemId(null);
       }
     },
-    [isSuppressed, items],
+    [isSuppressed, items, markKeyboardActivity, clearIdleTimeout],
   );
 
   /**
@@ -263,6 +301,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
           const next = getNextItem(itemId, items);
           if (next) {
             setFocusedItemId(next.id);
+            markKeyboardActivity();
           }
           break;
         }
@@ -277,6 +316,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
             } else {
               setFocusedItemId(prev.id);
             }
+            markKeyboardActivity();
           }
           break;
         }
@@ -294,6 +334,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
           const first = getFirstItem(items);
           if (first) {
             setFocusedItemId(first.id);
+            markKeyboardActivity();
           }
           break;
         }
@@ -304,6 +345,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
           const last = getLastItem(items);
           if (last) {
             setFocusedItemId(last.id);
+            markKeyboardActivity();
           }
           break;
         }
@@ -316,12 +358,30 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
             // after the worksheet row disappears from the expanded list.
             setFocusedItemId(`group-header:${currentItem.groupId}`);
             onCollapseGroup(currentItem.groupId);
+            markKeyboardActivity();
           }
+          break;
+        }
+
+        case 'Escape': {
+          event.preventDefault();
+          event.stopPropagation();
+          clearIdleTimeout();
+          setFocusedItemId(null);
           break;
         }
       }
     },
-    [isSuppressed, items, isSearchActive, onActivate, onFocusSearchInput, onCollapseGroup],
+    [
+      isSuppressed,
+      items,
+      isSearchActive,
+      onActivate,
+      onFocusSearchInput,
+      onCollapseGroup,
+      markKeyboardActivity,
+      clearIdleTimeout,
+    ],
   );
 
   /**
@@ -348,6 +408,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
           event.stopPropagation();
           if (isCollapsed) {
             onExpandGroup(groupId);
+            markKeyboardActivity();
           }
           break;
         }
@@ -357,6 +418,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
           event.stopPropagation();
           if (!isCollapsed) {
             onCollapseGroup(groupId);
+            markKeyboardActivity();
           }
           break;
         }
@@ -370,11 +432,27 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
           } else {
             onCollapseGroup(groupId);
           }
+          markKeyboardActivity();
+          break;
+        }
+
+        case 'Escape': {
+          event.preventDefault();
+          event.stopPropagation();
+          clearIdleTimeout();
+          setFocusedItemId(null);
           break;
         }
       }
     },
-    [isSuppressed, onExpandGroup, onCollapseGroup, handleItemKeyDown],
+    [
+      isSuppressed,
+      onExpandGroup,
+      onCollapseGroup,
+      handleItemKeyDown,
+      markKeyboardActivity,
+      clearIdleTimeout,
+    ],
   );
 
   return {
