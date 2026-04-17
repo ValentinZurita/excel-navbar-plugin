@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { createDefaultNavigationState } from '../../src/domain/navigation/defaultState';
-import { buildNavigatorView } from '../../src/domain/navigation/selectors';
+import {
+  buildNavigatorStructure,
+  buildNavigatorView,
+  buildSearchResults,
+} from '../../src/domain/navigation/selectors';
 import type { GroupEntity, WorksheetEntity } from '../../src/domain/navigation/types';
 
 function worksheet(partial: Partial<WorksheetEntity>): WorksheetEntity {
@@ -82,6 +86,50 @@ describe('buildNavigatorView', () => {
         groupName: 'Finance',
       },
     ]);
+  });
+
+  it('builds structural sections without depending on query changes', () => {
+    const state = createDefaultNavigationState();
+    state.sheetSectionOrder = ['two', 'one'];
+    state.worksheetsById = {
+      one: worksheet({ worksheetId: 'one', name: 'Overview', workbookOrder: 0 }),
+      two: worksheet({ worksheetId: 'two', name: 'Revenue', workbookOrder: 1, isPinned: true }),
+      three: worksheet({ worksheetId: 'three', name: 'Archive', visibility: 'Hidden', workbookOrder: 2 }),
+    };
+
+    const structureWithoutQuery = buildNavigatorStructure(state);
+    state.query = 'rev';
+    const structureWithQuery = buildNavigatorStructure(state);
+
+    expect(structureWithQuery).toEqual(structureWithoutQuery);
+  });
+
+  it('returns empty search results when the query is blank after trimming', () => {
+    const state = createDefaultNavigationState();
+    state.query = '   ';
+    state.worksheetsById = {
+      one: worksheet({ worksheetId: 'one', name: 'Overview', workbookOrder: 0 }),
+    };
+
+    expect(buildSearchResults(state)).toEqual([]);
+  });
+
+  it('keeps buildNavigatorView output aligned with split structure and search selectors', () => {
+    const state = createDefaultNavigationState();
+    state.query = 'rev';
+    state.pinnedWorksheetOrder = ['one'];
+    state.worksheetsById = {
+      one: worksheet({ worksheetId: 'one', name: 'Overview', isPinned: true, workbookOrder: 0 }),
+      two: worksheet({ worksheetId: 'two', name: 'Revenue', groupId: 'group-1', workbookOrder: 1 }),
+      three: worksheet({ worksheetId: 'three', name: 'Archive', visibility: 'Hidden', workbookOrder: 2 }),
+    };
+    state.groupsById = { 'group-1': group({ name: 'Finance', worksheetOrder: ['two'] }) };
+    state.groupOrder = ['group-1'];
+
+    expect(buildNavigatorView(state)).toEqual({
+      ...buildNavigatorStructure(state),
+      searchResults: buildSearchResults(state),
+    });
   });
 
   it('honors persisted pinned order while keeping workbook order as the tie-breaker', () => {

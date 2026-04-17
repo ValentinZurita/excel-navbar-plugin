@@ -15,8 +15,9 @@ function matchesSearch(query: string, worksheet: WorksheetEntity) {
   return normalizeSearchValue(worksheet.name).includes(query);
 }
 
-export function buildNavigatorView(state: NavigationState): NavigatorView {
-  const query = normalizeSearchValue(state.query);
+export type NavigatorStructureView = Omit<NavigatorView, 'searchResults'>;
+
+function splitWorksheets(state: NavigationState) {
   const worksheets = Object.values(state.worksheetsById);
   const visibleWorksheets: WorksheetEntity[] = [];
   const hidden: WorksheetEntity[] = [];
@@ -46,6 +47,24 @@ export function buildNavigatorView(state: NavigationState): NavigatorView {
 
     ungroupedVisibleWorksheets.push(worksheet);
   }
+
+  return {
+    visibleWorksheets,
+    hidden,
+    groupedVisibleWorksheetsByGroupId,
+    pinnedVisibleWorksheets,
+    ungroupedVisibleWorksheets,
+  };
+}
+
+export function buildNavigatorStructure(state: NavigationState): NavigatorStructureView {
+  const {
+    visibleWorksheets,
+    hidden,
+    groupedVisibleWorksheetsByGroupId,
+    pinnedVisibleWorksheets,
+    ungroupedVisibleWorksheets,
+  } = splitWorksheets(state);
 
   const sheetSectionOrder = state.sheetSectionOrder.length
     ? state.sheetSectionOrder
@@ -117,19 +136,36 @@ export function buildNavigatorView(state: NavigationState): NavigatorView {
 
   hidden.sort(byWorkbookOrder);
 
-  const searchResults = query
-    ? visibleWorksheets
-        .filter((worksheet) => matchesSearch(query, worksheet))
-        .sort(byWorkbookOrder)
-        .map<SearchResultItem>((worksheet) => ({
-          worksheetId: worksheet.worksheetId,
-          name: worksheet.name,
-          visibility: worksheet.visibility,
-          isPinned: worksheet.isPinned,
-          isGrouped: worksheet.groupId !== null,
-          groupName: worksheet.groupId ? state.groupsById[worksheet.groupId]?.name ?? null : null,
-        }))
-    : [];
+  return { pinned, groups, ungrouped, hidden };
+}
 
-  return { pinned, groups, ungrouped, hidden, searchResults };
+export function buildSearchResults(state: NavigationState): SearchResultItem[] {
+  const query = normalizeSearchValue(state.query);
+
+  if (!query) {
+    return [];
+  }
+
+  const { visibleWorksheets } = splitWorksheets(state);
+
+  const searchResults = visibleWorksheets
+    .filter((worksheet) => matchesSearch(query, worksheet))
+    .sort(byWorkbookOrder)
+    .map<SearchResultItem>((worksheet) => ({
+      worksheetId: worksheet.worksheetId,
+      name: worksheet.name,
+      visibility: worksheet.visibility,
+      isPinned: worksheet.isPinned,
+      isGrouped: worksheet.groupId !== null,
+      groupName: worksheet.groupId ? state.groupsById[worksheet.groupId]?.name ?? null : null,
+    }));
+
+  return searchResults;
+}
+
+export function buildNavigatorView(state: NavigationState): NavigatorView {
+  return {
+    ...buildNavigatorStructure(state),
+    searchResults: buildSearchResults(state),
+  };
 }
