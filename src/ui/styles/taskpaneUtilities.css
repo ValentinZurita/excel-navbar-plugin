@@ -151,3 +151,61 @@
 .primary-tabs .search-result {
   margin-left: 0;
 }
+
+/* ==========================================================================
+   Keyboard Navigation Focus Styles
+   Visual indicators for items focused via arrow key navigation.
+   Uses data-focused attribute from KeyboardNavigationProvider.
+   ========================================================================== */
+
+/* Base focus indicator for all navigable items */
+[data-navigable-id][data-focused="true"] {
+  outline: 2px solid var(--excel-accent);
+  outline-offset: -2px;
+}
+
+/* Search result focused state */
+.search-result[data-focused="true"] {
+  background: var(--excel-nav-active-bg);
+  border-radius: 4px;
+}
+
+/* Sheet row focused state (not active) */
+.sheet-row[data-focused="true"]:not(.sheet-row-active):not([data-active="true"]) {
+  background: var(--excel-nav-active-bg);
+}
+
+/* Group header focused state */
+.group-header[data-focused="true"] {
+  outline: 2px solid var(--excel-accent);
+  outline-offset: -2px;
+}
+
+/* Group toggle button within focused header */
+.group-header[data-focused="true"] .group-toggle {
+  background: var(--excel-nav-active-bg);
+}
+
+/* Ensure focused item is visually distinct even without hover */
+[data-navigable-id][data-focused="true"]:hover {
+  outline-color: var(--excel-accent);
+}
+
+/* When drag is active, suppress focus styles */
+.sheet-list-drag-active [data-navigable-id][data-focused="true"] {
+  outline: none;
+  background: transparent;
+}
+
+/* Focused state in dark mode */
+:root[data-office-theme-mode="dark"] [data-navigable-id][data-focused="true"] {
+  outline-color: var(--excel-accent);
+}
+
+:root[data-office-theme-mode="dark"] .search-result[data-focused="true"] {
+  background: var(--excel-nav-active-bg);
+}
+
+:root[data-office-theme-mode="dark"] .sheet-row[data-focused="true"]:not(.sheet-row-active):not([data-active="true"]) {
+  background: var(--excel-nav-active-bg);
+}
