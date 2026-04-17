@@ -138,18 +138,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     }
   }, []);
 
-  const scheduleIdleClear = useCallback(() => {
-    clearIdleTimeout();
-    idleClearTimeoutRef.current = window.setTimeout(() => {
-      setFocusedItemId(null);
-      idleClearTimeoutRef.current = null;
-    }, KEYBOARD_FOCUS_IDLE_TIMEOUT_MS);
-  }, [clearIdleTimeout]);
-
-  const markKeyboardActivity = useCallback(() => {
-    scheduleIdleClear();
-  }, [scheduleIdleClear]);
-
   const getKeyboardAnchorItemId = useCallback((fallbackItemId: string): string | null => {
     if (focusedItemId && hasItem(focusedItemId, items)) {
       return focusedItemId;
@@ -176,7 +164,24 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   const clearFocus = useCallback(() => {
     clearIdleTimeout();
     setFocusedItemId(null);
+    // Remove native focus ring from previously focused element to avoid
+    // residual browser/host focus outline after keyboard highlight clears.
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
   }, [clearIdleTimeout]);
+
+  const scheduleIdleClear = useCallback(() => {
+    clearIdleTimeout();
+    idleClearTimeoutRef.current = window.setTimeout(() => {
+      clearFocus();
+      idleClearTimeoutRef.current = null;
+    }, KEYBOARD_FOCUS_IDLE_TIMEOUT_MS);
+  }, [clearIdleTimeout, clearFocus]);
+
+  const markKeyboardActivity = useCallback(() => {
+    scheduleIdleClear();
+  }, [scheduleIdleClear]);
 
   useEffect(() => {
     return () => {
@@ -297,11 +302,10 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       }
 
       if (event.key === 'Escape') {
-        clearIdleTimeout();
-        setFocusedItemId(null);
+        clearFocus();
       }
     },
-    [isSuppressed, items, markKeyboardActivity, clearIdleTimeout],
+    [isSuppressed, items, markKeyboardActivity, clearFocus],
   );
 
   /**
@@ -398,8 +402,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         case 'Escape': {
           event.preventDefault();
           event.stopPropagation();
-          clearIdleTimeout();
-          setFocusedItemId(null);
+          clearFocus();
           break;
         }
       }
@@ -413,7 +416,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       onFocusSearchInput,
       onCollapseGroup,
       markKeyboardActivity,
-      clearIdleTimeout,
+      clearFocus,
     ],
   );
 
@@ -472,8 +475,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         case 'Escape': {
           event.preventDefault();
           event.stopPropagation();
-          clearIdleTimeout();
-          setFocusedItemId(null);
+          clearFocus();
           break;
         }
       }
@@ -484,7 +486,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       onCollapseGroup,
       handleItemKeyDown,
       markKeyboardActivity,
-      clearIdleTimeout,
+      clearFocus,
     ],
   );
 

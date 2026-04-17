@@ -361,6 +361,7 @@ describe('TaskpaneSections', () => {
     await user.keyboard('{Escape}');
 
     expect(container.querySelectorAll('[data-focused="true"]').length).toBe(0);
+    expect(document.activeElement).toBe(document.body);
   });
 
   it('clears keyboard navigation focus after inactivity timeout', async () => {
@@ -397,6 +398,7 @@ describe('TaskpaneSections', () => {
     });
 
     expect(container.querySelectorAll('[data-focused="true"]').length).toBe(0);
+    expect(document.activeElement).toBe(document.body);
   }, 10000);
 
   it('restarts keyboard navigation from active worksheet after idle clear', () => {
