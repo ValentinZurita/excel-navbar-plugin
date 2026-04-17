@@ -1,12 +1,33 @@
+import { useEffect, useRef } from 'react';
 import type { SearchResultItem } from '../../../domain/navigation/types';
 import { EyeOffIcon, GroupFolderIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 
 interface SearchResultsProps {
   results: SearchResultItem[];
   onSelect: (worksheetId: string) => void | Promise<void>;
+  /** Currently focused item ID for visual focus indicator */
+  focusedItemId: string | null;
+  /** Handler for keyboard navigation on individual results */
+  onItemKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>, itemId: string) => void;
+  /** Register DOM element for focus management */
+  registerElement?: (id: string, element: HTMLElement | null) => void;
 }
 
-export function SearchResults({ results, onSelect }: SearchResultsProps) {
+/**
+ * Renders search results as a list of buttons.
+ *
+ * Each result is a navigable item that:
+ * - Has data-navigable-id for keyboard navigation
+ * - Shows visual focus indicator when focusedItemId matches
+ * - Registers its DOM element for programmatic focus
+ */
+export function SearchResults({
+  results,
+  onSelect,
+  focusedItemId,
+  onItemKeyDown,
+  registerElement,
+}: SearchResultsProps) {
   function renderResultIcon(result: SearchResultItem) {
     if (result.visibility !== 'Visible') {
       return <EyeOffIcon className="search-result-icon search-result-icon-hidden" />;
@@ -26,19 +47,81 @@ export function SearchResults({ results, onSelect }: SearchResultsProps) {
   return (
     <section className="section-card search-results">
       <div className="sheet-list">
-        {results.map((result) => (
-          <button key={result.worksheetId} className="search-result" type="button" onClick={() => onSelect(result.worksheetId)}>
-            <span className="search-result-leading" aria-hidden="true">
-              {renderResultIcon(result)}
-            </span>
-            <span className="search-result-copy">
-              <span className="sheet-title">{result.name}</span>
-              {result.groupName ? <small className="search-result-meta">{result.groupName}</small> : null}
-            </span>
-          </button>
-        ))}
+        {results.map((result) => {
+          const itemId = `search:${result.worksheetId}`;
+          const isFocused = focusedItemId === itemId;
+
+          return (
+            <SearchResultItemComponent
+              key={result.worksheetId}
+              result={result}
+              itemId={itemId}
+              isFocused={isFocused}
+              onSelect={onSelect}
+              onItemKeyDown={onItemKeyDown}
+              registerElement={registerElement}
+              renderIcon={renderResultIcon}
+            />
+          );
+        })}
         {!results.length ? <p className="empty-state">No results</p> : null}
       </div>
     </section>
+  );
+}
+
+interface SearchResultItemComponentProps {
+  result: SearchResultItem;
+  itemId: string;
+  isFocused: boolean;
+  onSelect: (worksheetId: string) => void | Promise<void>;
+  onItemKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>, itemId: string) => void;
+  registerElement?: (id: string, element: HTMLElement | null) => void;
+  renderIcon: (result: SearchResultItem) => React.ReactNode;
+}
+
+function SearchResultItemComponent({
+  result,
+  itemId,
+  isFocused,
+  onSelect,
+  onItemKeyDown,
+  registerElement,
+  renderIcon,
+}: SearchResultItemComponentProps) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Register DOM element for focus management
+  useEffect(() => {
+    if (registerElement) {
+      registerElement(itemId, buttonRef.current);
+    }
+
+    return () => {
+      if (registerElement) {
+        registerElement(itemId, null);
+      }
+    };
+  }, [itemId, registerElement]);
+
+  return (
+    <button
+      ref={buttonRef}
+      className="search-result"
+      type="button"
+      data-navigable-id={itemId}
+      data-focused={isFocused}
+      tabIndex={isFocused ? 0 : -1}
+      onClick={() => onSelect(result.worksheetId)}
+      onKeyDown={(event) => onItemKeyDown?.(event, itemId)}
+    >
+      <span className="search-result-leading" aria-hidden="true">
+        {renderIcon(result)}
+      </span>
+      <span className="search-result-copy">
+        <span className="sheet-title">{result.name}</span>
+        {result.groupName ? <small className="search-result-meta">{result.groupName}</small> : null}
+      </span>
+    </button>
   );
 }

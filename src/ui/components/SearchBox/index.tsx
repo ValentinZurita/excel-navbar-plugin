@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type KeyboardEventHandler, type RefObject } from 'react';
 import type { SearchResultItem } from '../../../domain/navigation/types';
 import { SearchBar } from '../SearchBar';
 import { SearchResults } from '../SearchResults';
@@ -9,9 +9,31 @@ interface SearchBoxProps {
   onChange: (value: string) => void;
   results: SearchResultItem[];
   onSelect: (worksheetId: string) => void | Promise<void>;
+  /** Ref to the search input for programmatic focus */
+  inputRef: RefObject<HTMLInputElement | null>;
+  /** Handler for keyboard navigation from search input */
+  onSearchKeyDown: KeyboardEventHandler<HTMLInputElement>;
+  /** Currently focused item ID for visual focus indicator */
+  focusedItemId: string | null;
 }
 
-export function SearchBox({ value, onChange, results, onSelect }: SearchBoxProps) {
+/**
+ * Search box with dropdown results.
+ *
+ * Integrates with keyboard navigation:
+ * - ArrowDown from input moves focus to first result
+ * - Escape clears search
+ * - Click outside closes dropdown
+ */
+export function SearchBox({
+  value,
+  onChange,
+  results,
+  onSelect,
+  inputRef,
+  onSearchKeyDown,
+  focusedItemId,
+}: SearchBoxProps) {
   const searchBoxRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -42,10 +64,10 @@ export function SearchBox({ value, onChange, results, onSelect }: SearchBoxProps
 
   return (
     <div className="search-box" ref={searchBoxRef}>
-      <SearchBar value={value} onChange={onChange} />
+      <SearchBar ref={inputRef} value={value} onChange={onChange} onKeyDown={onSearchKeyDown} />
       {value ? (
         <div className="search-results-wrapper">
-          <SearchResults results={results} onSelect={onSelect} />
+          <SearchResults results={results} onSelect={onSelect} focusedItemId={focusedItemId} />
         </div>
       ) : null}
     </div>
