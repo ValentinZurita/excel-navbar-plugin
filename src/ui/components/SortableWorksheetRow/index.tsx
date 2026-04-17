@@ -19,6 +19,14 @@ interface SortableWorksheetRowProps {
   onOpenContextMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: WorksheetEntity }) => void;
   onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameCancel?: () => void;
+  /** Optional: ID for keyboard navigation */
+  navigableId?: string;
+  /** Whether this row has keyboard focus */
+  isFocused?: boolean;
+  /** Handler for keyboard navigation */
+  onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
+  /** Register DOM element for focus management */
+  registerElement?: (id: string, element: HTMLElement | null) => void;
 }
 
 function shouldBlockActivation(isDragging: boolean, shouldSuppressActivation: (worksheetId: string) => boolean, worksheetId: string) {
@@ -42,7 +50,11 @@ function areSortableWorksheetRowPropsEqual(
     && left.onTogglePin === right.onTogglePin
     && left.onOpenContextMenu === right.onOpenContextMenu
     && left.onRenameSubmit === right.onRenameSubmit
-    && left.onRenameCancel === right.onRenameCancel;
+    && left.onRenameCancel === right.onRenameCancel
+    && left.navigableId === right.navigableId
+    && left.isFocused === right.isFocused
+    && left.onItemKeyDown === right.onItemKeyDown
+    && left.registerElement === right.registerElement;
 }
 
 function SortableWorksheetRowComponent({
@@ -60,6 +72,10 @@ function SortableWorksheetRowComponent({
   onOpenContextMenu,
   onRenameSubmit,
   onRenameCancel,
+  navigableId,
+  isFocused,
+  onItemKeyDown,
+  registerElement,
 }: SortableWorksheetRowProps) {
   const isRenameActive = Boolean(isRenaming);
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({
@@ -97,6 +113,8 @@ function SortableWorksheetRowComponent({
         isDragged={isDragging}
         isInteractionSuppressed={isInteractionSuppressed}
         isRenaming={isRenaming}
+        navigableId={navigableId}
+        isFocused={isFocused}
         containerRef={setNodeRef}
         containerProps={{
           ...attributes,
@@ -107,6 +125,8 @@ function SortableWorksheetRowComponent({
         onOpenContextMenu={onOpenContextMenu}
         onRenameSubmit={onRenameSubmit}
         onRenameCancel={onRenameCancel}
+        onItemKeyDown={onItemKeyDown}
+        registerElement={registerElement}
       />
     </div>
   );

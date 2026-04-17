@@ -1,4 +1,4 @@
-import { useEffect, useRef, type KeyboardEventHandler, type RefObject } from 'react';
+import { useEffect, useRef, type KeyboardEventHandler } from 'react';
 import type { SearchResultItem } from '../../../domain/navigation/types';
 import { SearchBar } from '../SearchBar';
 import { SearchResults } from '../SearchResults';
@@ -10,7 +10,7 @@ interface SearchBoxProps {
   results: SearchResultItem[];
   onSelect: (worksheetId: string) => void | Promise<void>;
   /** Ref to the search input for programmatic focus */
-  inputRef: RefObject<HTMLInputElement | null>;
+  inputRef: React.RefObject<HTMLInputElement>;
   /** Handler for keyboard navigation from search input */
   onSearchKeyDown: KeyboardEventHandler<HTMLInputElement>;
   /** Currently focused item ID for visual focus indicator */

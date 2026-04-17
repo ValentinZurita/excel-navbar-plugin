@@ -110,6 +110,11 @@ export function getNextItem(currentId: string, items: NavigableItem[]): Navigabl
 }
 
 /**
+ * Sentinel ID for representing the search input when navigating from first result back up.
+ */
+export const SEARCH_INPUT_SENTINEL_ID = '__search_input__';
+
+/**
  * Returns the previous item before the given currentId.
  * Returns null if currentId is the first item or not found.
  * If searchActive is true and currentId is the first item, returns the sentinel

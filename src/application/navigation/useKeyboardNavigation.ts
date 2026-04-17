@@ -9,7 +9,7 @@ import {
   SEARCH_INPUT_SENTINEL_ID,
 } from '../../domain/navigation/navigableItems';
 
-interface UseKeyboardNavigationArgs {
+export interface UseKeyboardNavigationArgs {
   /** Current list of navigable items, in visual order */
   items: NavigableItem[];
   /** Called when user presses Enter on a navigable item */

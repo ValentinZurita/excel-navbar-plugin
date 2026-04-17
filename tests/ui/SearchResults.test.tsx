@@ -12,6 +12,7 @@ describe('SearchResults', () => {
       <SearchResults
         results={[{ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible', isPinned: false, isGrouped: true, groupName: 'Finance' }]}
         onSelect={onSelect}
+        focusedItemId={null}
       />,
     );
 
@@ -25,6 +26,7 @@ describe('SearchResults', () => {
       <SearchResults
         results={[{ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible', isPinned: false, isGrouped: true, groupName: 'Finance' }]}
         onSelect={() => undefined}
+        focusedItemId={null}
       />,
     );
 
@@ -36,6 +38,7 @@ describe('SearchResults', () => {
       <SearchResults
         results={[{ worksheetId: 'sheet-2', name: 'Overview', visibility: 'Visible', isPinned: true, isGrouped: false, groupName: null }]}
         onSelect={() => undefined}
+        focusedItemId={null}
       />,
     );
 
@@ -47,6 +50,7 @@ describe('SearchResults', () => {
       <SearchResults
         results={[{ worksheetId: 'sheet-3', name: 'Inputs', visibility: 'Visible', isPinned: false, isGrouped: false, groupName: null }]}
         onSelect={() => undefined}
+        focusedItemId={null}
       />,
     );
 
@@ -67,6 +71,7 @@ describe('SearchResults', () => {
           },
         ]}
         onSelect={() => undefined}
+        focusedItemId={null}
       />,
     );
 
