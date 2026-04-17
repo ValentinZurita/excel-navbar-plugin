@@ -186,6 +186,43 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   }, [items, focusedItemId]);
 
   /**
+   * Keep keyboard focus state in sync with pointer interactions.
+   *
+   * If user clicks a different navigable item with mouse/touch, move focusedItemId
+   * to that item so the previous keyboard-highlighted item loses focus state.
+   */
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      const navigableElement = target.closest<HTMLElement>('[data-navigable-id]');
+      if (!navigableElement) {
+        return;
+      }
+
+      const navigableId = navigableElement.getAttribute('data-navigable-id');
+      if (!navigableId) {
+        return;
+      }
+
+      if (hasItem(navigableId, items)) {
+        setFocusedItemId(navigableId);
+      } else {
+        setFocusedItemId(null);
+      }
+    };
+
+    // Capture phase helps us synchronize focus state before bubbling handlers.
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown, true);
+    };
+  }, [items]);
+
+  /**
    * Handler for keydown events on the search input.
    * ArrowDown: move focus to first result
    * Escape: handled by caller (clears search)
