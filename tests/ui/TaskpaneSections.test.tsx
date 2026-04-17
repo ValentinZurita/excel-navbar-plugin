@@ -238,6 +238,46 @@ describe('TaskpaneSections', () => {
     expect(screen.getByRole('button', { name: 'Summary' })).toHaveFocus();
   });
 
+  it('collapses parent group when pressing ArrowLeft on worksheet inside that group', async () => {
+    const user = userEvent.setup();
+    const onToggleGroupCollapsed = vi.fn();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [
+        {
+          groupId: 'group-1',
+          name: 'Finance',
+          colorToken: 'green',
+          isCollapsed: false,
+          worksheets: [
+            createWorksheet({ worksheetId: 'group-1-sheet-1', name: 'Budget', groupId: 'group-1' }),
+            createWorksheet({ worksheetId: 'group-1-sheet-2', name: 'Forecast', groupId: 'group-1' }),
+          ],
+        },
+      ],
+      ungrouped: [createWorksheet({ worksheetId: 'sheet-ungrouped-1', name: 'Summary', groupId: null })],
+      hidden: [],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          onToggleGroupCollapsed,
+        })}
+      />,
+    );
+
+    const budgetRow = screen.getByRole('button', { name: 'Budget' });
+    budgetRow.focus();
+
+    await user.keyboard('{ArrowLeft}');
+
+    expect(onToggleGroupCollapsed).toHaveBeenCalledWith('group-1');
+  });
+
   it('keeps keyboard highlight in sync with mouse selection (no stale focused row)', async () => {
     const user = userEvent.setup();
     const onActivateWorksheet = vi.fn().mockResolvedValue(undefined);

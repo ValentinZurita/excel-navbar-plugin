@@ -254,6 +254,8 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         return;
       }
 
+      const currentItem = items.find((item) => item.id === itemId);
+
       switch (event.key) {
         case 'ArrowDown': {
           event.preventDefault();
@@ -305,9 +307,21 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
           }
           break;
         }
+
+        case 'ArrowLeft': {
+          if (currentItem?.kind === 'worksheet' && currentItem.groupId) {
+            event.preventDefault();
+            event.stopPropagation();
+            // Move focus to the group header before collapsing so focus remains stable
+            // after the worksheet row disappears from the expanded list.
+            setFocusedItemId(`group-header:${currentItem.groupId}`);
+            onCollapseGroup(currentItem.groupId);
+          }
+          break;
+        }
       }
     },
-    [isSuppressed, items, isSearchActive, onActivate, onFocusSearchInput],
+    [isSuppressed, items, isSearchActive, onActivate, onFocusSearchInput, onCollapseGroup],
   );
 
   /**
