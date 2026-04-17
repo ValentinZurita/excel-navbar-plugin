@@ -391,11 +391,53 @@ describe('TaskpaneSections', () => {
 
     expect(container.querySelectorAll('[data-focused="true"]').length).toBe(1);
 
-    // 5 seconds idle timeout for keyboard focus clear
+    // 3 seconds idle timeout for keyboard focus clear
     act(() => {
-      vi.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(3000);
     });
 
     expect(container.querySelectorAll('[data-focused="true"]').length).toBe(0);
   }, 10000);
+
+  it('restarts keyboard navigation from active worksheet after idle clear', () => {
+    vi.useFakeTimers();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' }),
+        createWorksheet({ worksheetId: 'sheet-2', name: 'Forecast' }),
+        createWorksheet({ worksheetId: 'sheet-3', name: 'Summary' }),
+      ],
+      hidden: [],
+      searchResults: [],
+    };
+
+    const { container } = render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          activeWorksheetId: 'sheet-2',
+        })}
+      />,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    revenueRow.focus();
+    fireEvent.keyDown(revenueRow, { key: 'ArrowDown', code: 'ArrowDown' });
+
+    // Idle clear removes transient keyboard focus state
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(container.querySelectorAll('[data-focused="true"]').length).toBe(0);
+
+    // Next arrow key should anchor from active worksheet (Forecast) and move to Summary.
+    const activeRow = screen.getByRole('button', { name: 'Forecast' });
+    fireEvent.keyDown(activeRow, { key: 'ArrowDown', code: 'ArrowDown' });
+
+    const summaryArticle = screen.getByRole('button', { name: 'Summary' }).closest('[data-navigable-id="worksheet:sheet-3"]');
+    expect(summaryArticle).toHaveAttribute('data-focused', 'true');
+  });
 });

@@ -9,11 +9,13 @@ import {
   SEARCH_INPUT_SENTINEL_ID,
 } from '../../domain/navigation/navigableItems';
 
-const KEYBOARD_FOCUS_IDLE_TIMEOUT_MS = 5000;
+const KEYBOARD_FOCUS_IDLE_TIMEOUT_MS = 3000;
 
 export interface UseKeyboardNavigationArgs {
   /** Current list of navigable items, in visual order */
   items: NavigableItem[];
+  /** Current active worksheet in workbook (used as keyboard restart anchor) */
+  activeWorksheetId: string | null;
   /** Called when user presses Enter on a navigable item */
   onActivate: (itemId: string) => void;
   /** Called when ArrowRight is pressed on a collapsed group header */
@@ -74,6 +76,7 @@ interface UseKeyboardNavigationReturn {
 export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeyboardNavigationReturn {
   const {
     items,
+    activeWorksheetId,
     onActivate,
     onExpandGroup,
     onCollapseGroup,
@@ -146,6 +149,26 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   const markKeyboardActivity = useCallback(() => {
     scheduleIdleClear();
   }, [scheduleIdleClear]);
+
+  const getKeyboardAnchorItemId = useCallback((fallbackItemId: string): string | null => {
+    if (focusedItemId && hasItem(focusedItemId, items)) {
+      return focusedItemId;
+    }
+
+    if (activeWorksheetId) {
+      const activeWorksheetItemId = `worksheet:${activeWorksheetId}`;
+      if (hasItem(activeWorksheetItemId, items)) {
+        return activeWorksheetItemId;
+      }
+    }
+
+    if (hasItem(fallbackItemId, items)) {
+      return fallbackItemId;
+    }
+
+    const firstItem = getFirstItem(items);
+    return firstItem?.id ?? null;
+  }, [focusedItemId, activeWorksheetId, items]);
 
   /**
    * Clear focus entirely.
@@ -274,8 +297,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       }
 
       if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
         clearIdleTimeout();
         setFocusedItemId(null);
       }
@@ -292,13 +313,20 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         return;
       }
 
-      const currentItem = items.find((item) => item.id === itemId);
+      const anchorItemId = getKeyboardAnchorItemId(itemId);
+      const currentItem = anchorItemId
+        ? items.find((item) => item.id === anchorItemId)
+        : undefined;
 
       switch (event.key) {
         case 'ArrowDown': {
+          if (!anchorItemId) {
+            break;
+          }
+
           event.preventDefault();
           event.stopPropagation();
-          const next = getNextItem(itemId, items);
+          const next = getNextItem(anchorItemId, items);
           if (next) {
             setFocusedItemId(next.id);
             markKeyboardActivity();
@@ -307,9 +335,13 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         }
 
         case 'ArrowUp': {
+          if (!anchorItemId) {
+            break;
+          }
+
           event.preventDefault();
           event.stopPropagation();
-          const prev = getPrevItem(itemId, items, isSearchActive);
+          const prev = getPrevItem(anchorItemId, items, isSearchActive);
           if (prev) {
             if (prev.id === SEARCH_INPUT_SENTINEL_ID) {
               onFocusSearchInput();
@@ -324,7 +356,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         case 'Enter': {
           event.preventDefault();
           event.stopPropagation();
-          onActivate(itemId);
+          onActivate(anchorItemId ?? itemId);
           break;
         }
 
@@ -375,6 +407,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     [
       isSuppressed,
       items,
+      getKeyboardAnchorItemId,
       isSearchActive,
       onActivate,
       onFocusSearchInput,

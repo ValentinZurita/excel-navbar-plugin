@@ -193,6 +193,7 @@ export function TaskpaneSections({
   return (
     <KeyboardNavigationProvider
       items={navigableItems}
+      activeWorksheetId={activeWorksheetId}
       onActivate={(itemId) => {
         // Extract worksheetId from the itemId (format: 'worksheet:{id}' or 'search:{id}')
         const worksheetId = itemId.split(':')[1];
