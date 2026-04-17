@@ -315,14 +315,8 @@ describe('useNavigationController', () => {
       ],
       activeWorksheetId: 'sheet-1',
     });
-    const activatedSnapshot = createSnapshot({
-      worksheets: initialSnapshot.worksheets,
-      activeWorksheetId: 'sheet-2',
-    });
 
-    adapterMock.getWorkbookSnapshot
-      .mockResolvedValueOnce(initialSnapshot)
-      .mockResolvedValueOnce(activatedSnapshot);
+    adapterMock.getWorkbookSnapshot.mockResolvedValue(initialSnapshot);
     adapterMock.getPersistenceContext.mockResolvedValue(createContext());
     adapterMock.activateWorksheet.mockResolvedValue(undefined);
     persistenceMock.load.mockResolvedValue({
@@ -354,7 +348,37 @@ describe('useNavigationController', () => {
 
     expect(adapterMock.activateWorksheet).toHaveBeenCalledWith('sheet-2');
     expect(result.current.state.activeWorksheetId).toBe('sheet-2');
+    expect(adapterMock.getWorkbookSnapshot).toHaveBeenCalledTimes(1);
     expect(persistenceMock.save).toHaveBeenCalledTimes(saveCallCount);
+  });
+
+  it('does not change the active worksheet locally when activation fails', async () => {
+    const initialSnapshot = createSnapshot({
+      worksheets: [
+        { worksheetId: 'sheet-1', stableWorksheetId: 'sheet-1', nativeWorksheetId: 'native-sheet-1', name: 'Overview', visibility: 'Visible', workbookOrder: 0 },
+        { worksheetId: 'sheet-2', stableWorksheetId: 'sheet-2', nativeWorksheetId: 'native-sheet-2', name: 'Revenue', visibility: 'Visible', workbookOrder: 1 },
+      ],
+      activeWorksheetId: 'sheet-1',
+    });
+
+    adapterMock.getWorkbookSnapshot.mockResolvedValue(initialSnapshot);
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    adapterMock.activateWorksheet.mockRejectedValue(new Error('Activation failed'));
+    persistenceMock.load.mockResolvedValue({
+      model: createModel({ sheetSectionOrder: ['sheet-1', 'sheet-2'] }),
+      status: createStatus(),
+    });
+    persistenceMock.save.mockResolvedValue(createStatus());
+
+    const { result } = renderHook(() => useNavigationController(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.state.isReady).toBe(true);
+    });
+
+    await expect(result.current.activateWorksheet('sheet-2')).rejects.toThrow('Activation failed');
+    expect(result.current.state.activeWorksheetId).toBe('sheet-1');
+    expect(adapterMock.getWorkbookSnapshot).toHaveBeenCalledTimes(1);
   });
 
   it('reuses stable persistence context for polling syncs', async () => {

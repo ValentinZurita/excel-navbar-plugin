@@ -19,6 +19,7 @@ import { normalizeNavigationState } from './reconciliation';
 export type NavigationAction =
   | { type: 'hydrateFromWorkbook'; snapshot: WorkbookSnapshot }
   | { type: 'hydrateFromPersistence'; model: PersistedNavigationModel | null }
+  | { type: 'setActiveWorksheetLocally'; worksheetId: string }
   | { type: 'setQuery'; query: string }
   | { type: 'toggleGroupCollapsed'; groupId: string }
   | { type: 'setGroupCollapsed'; groupId: string; isCollapsed: boolean }
@@ -169,6 +170,15 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       const draft = cloneState(state);
       return applyPersistence(draft, action.model);
     }
+    case 'setActiveWorksheetLocally':
+      if (state.activeWorksheetId === action.worksheetId) {
+        return state;
+      }
+
+      return {
+        ...state,
+        activeWorksheetId: action.worksheetId,
+      };
     case 'setQuery':
       return { ...state, query: action.query };
     case 'toggleGroupCollapsed': {

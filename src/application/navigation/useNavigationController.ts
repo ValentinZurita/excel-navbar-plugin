@@ -263,8 +263,7 @@ export function useNavigationController() {
     },
     async activateWorksheet(worksheetId: string) {
       await adapter.activateWorksheet(worksheetId);
-      const snapshot = await adapter.getWorkbookSnapshot();
-      dispatch({ type: 'hydrateFromWorkbook', snapshot });
+      dispatch({ type: 'setActiveWorksheetLocally', worksheetId });
     },
     async renameWorksheet(worksheetId: string, name: string) {
       await adapter.renameWorksheet(worksheetId, name);
