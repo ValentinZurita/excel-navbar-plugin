@@ -1,4 +1,4 @@
-import { memo, useState, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
+import { memo, useEffect, useState, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 import { InlineRenameInput } from '../InlineRenameInput';
@@ -39,6 +39,14 @@ interface SheetRowProps {
   }) => void;
   onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameCancel?: () => void;
+  /** Optional: ID for keyboard navigation. When provided, participates in arrow key navigation. */
+  navigableId?: string;
+  /** Whether this row has keyboard focus (from navigation context) */
+  isFocused?: boolean;
+  /** Handler for keyboard navigation (from navigation context) */
+  onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
+  /** Register DOM element for focus management (from navigation context) */
+  registerElement?: (id: string, element: HTMLElement | null) => void;
 }
 
 function areSheetRowPropsEqual(left: SheetRowProps, right: SheetRowProps) {
@@ -56,7 +64,11 @@ function areSheetRowPropsEqual(left: SheetRowProps, right: SheetRowProps) {
     && left.onTogglePin === right.onTogglePin
     && left.onOpenContextMenu === right.onOpenContextMenu
     && left.onRenameSubmit === right.onRenameSubmit
-    && left.onRenameCancel === right.onRenameCancel;
+    && left.onRenameCancel === right.onRenameCancel
+    && left.navigableId === right.navigableId
+    && left.isFocused === right.isFocused
+    && left.onItemKeyDown === right.onItemKeyDown
+    && left.registerElement === right.registerElement;
 }
 
 function SheetRowComponent({
@@ -75,10 +87,27 @@ function SheetRowComponent({
   onOpenContextMenu,
   onRenameSubmit,
   onRenameCancel,
+  navigableId,
+  isFocused = false,
+  onItemKeyDown,
+  registerElement,
 }: SheetRowProps) {
   const { onKeyDown: onContainerKeyDown, ...restContainerProps } = containerProps ?? {};
   const [isLeadingHovered, setIsLeadingHovered] = useState(false);
   const [isLeadingFocused, setIsLeadingFocused] = useState(false);
+
+  // Register DOM element for focus management when navigableId is provided
+  useEffect(() => {
+    if (!navigableId || !registerElement) {
+      return undefined;
+    }
+
+    // We need to find the article element. Since containerRef is passed from parent,
+    // we need a different approach. We'll use a callback ref pattern.
+    return () => {
+      registerElement(navigableId, null);
+    };
+  }, [navigableId, registerElement]);
 
   const isInteractive = !isOverlay;
   const canTogglePin = worksheet.visibility === 'Visible' && Boolean(onTogglePin);
@@ -118,9 +147,27 @@ function SheetRowComponent({
     return <WorksheetIcon className="sheet-row-icon" />;
   }
 
+  // Create a combined ref callback that handles both containerRef and element registration
+  const setArticleRef = (element: HTMLElement | null) => {
+    // Handle containerRef if it's a callback ref
+    if (typeof containerRef === 'function') {
+      containerRef(element);
+    } else if (containerRef && 'current' in containerRef) {
+      (containerRef as React.MutableRefObject<HTMLElement | null>).current = element;
+    }
+
+    // Register element for keyboard navigation
+    if (navigableId && registerElement) {
+      registerElement(navigableId, element);
+    }
+  };
+
+  // Determine tabIndex: use roving tabindex when navigableId is provided
+  const tabIndex = navigableId ? (isFocused ? 0 : -1) : isInteractive ? 0 : -1;
+
   return (
     <article
-      ref={containerRef}
+      ref={setArticleRef}
       className={`sheet-row ${isActive ? 'sheet-row-active' : ''} ${isContextMenuOpen ? 'sheet-row-context-open' : ''} ${isToggleable ? 'sheet-row-pin-toggleable' : ''} ${worksheet.groupId ? 'sheet-row-grouped' : 'sheet-row-standalone'} ${isDragged ? 'sheet-row-dragging' : ''} ${isOverlay ? 'sheet-row-overlay' : ''}`}
       data-active={isActive ? 'true' : 'false'}
       data-highlighted={isHighlighted ? 'true' : 'false'}
@@ -128,9 +175,11 @@ function SheetRowComponent({
       data-pin-visible={(leadingState === 'pin-action' || leadingState === 'unpin-action') ? 'true' : 'false'}
       data-leading-state={leadingState}
       data-interaction-suppressed={isInteractionSuppressed ? 'true' : 'false'}
+      data-navigable-id={navigableId}
+      data-focused={navigableId ? isFocused : undefined}
       style={containerStyle}
       role={isInteractive ? 'button' : undefined}
-      tabIndex={isInteractive ? 0 : -1}
+      tabIndex={tabIndex}
       aria-hidden={isInteractive ? undefined : true}
       aria-label={worksheet.name}
       onClick={() => {
@@ -149,6 +198,13 @@ function SheetRowComponent({
           return;
         }
 
+        // If we have keyboard navigation context, use that handler first
+        if (navigableId && onItemKeyDown) {
+          onItemKeyDown(event, navigableId);
+          return;
+        }
+
+        // Fallback to default behavior (Enter/Space to activate)
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           void onActivate(worksheet.worksheetId);
