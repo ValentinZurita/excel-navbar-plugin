@@ -14,7 +14,7 @@ interface SearchBarProps {
  * Supports ref forwarding for programmatic focus management
  * and onKeyDown for keyboard navigation handling (e.g., ArrowDown to results).
  */
-export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(
+export const SearchBar = forwardRef<HTMLInputElement | null, SearchBarProps>(
   ({ value, onChange, onKeyDown }, ref) => {
     return (
       // This field drives both local search filtering and dropdown visibility.

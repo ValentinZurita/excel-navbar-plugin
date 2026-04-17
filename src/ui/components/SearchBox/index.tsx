@@ -10,7 +10,7 @@ interface SearchBoxProps {
   results: SearchResultItem[];
   onSelect: (worksheetId: string) => void | Promise<void>;
   /** Ref to the search input for programmatic focus */
-  inputRef: React.RefObject<HTMLInputElement>;
+  inputRef: React.RefObject<HTMLInputElement | null>;
   /** Handler for keyboard navigation from search input */
   onSearchKeyDown: KeyboardEventHandler<HTMLInputElement>;
   /** Currently focused item ID for visual focus indicator */

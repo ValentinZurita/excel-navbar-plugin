@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, useContext, type ReactNode, type RefObject } from 'react';
 import { useKeyboardNavigation, type UseKeyboardNavigationArgs } from '../../application/navigation/useKeyboardNavigation';
 
 interface KeyboardNavContextValue {
@@ -20,6 +20,8 @@ interface KeyboardNavContextValue {
   clearFocus: () => void;
   /** Set focus to a specific item */
   focusItem: (itemId: string) => void;
+  /** Ref to the search input for programmatic focus */
+  searchInputRef: RefObject<HTMLInputElement | null>;
 }
 
 const KeyboardNavContext = createContext<KeyboardNavContextValue | null>(null);
@@ -53,6 +55,7 @@ export function KeyboardNavigationProvider(props: KeyboardNavigationProviderProp
     handleGroupHeaderKeyDown: navigation.handleGroupHeaderKeyDown,
     clearFocus: navigation.clearFocus,
     focusItem: navigation.focusItem,
+    searchInputRef: hookArgs.searchInputRef,
   };
 
   return (

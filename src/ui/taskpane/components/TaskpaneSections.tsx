@@ -301,6 +301,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     handleItemKeyDown,
     handleGroupHeaderKeyDown,
     registerElement,
+    searchInputRef,
   } = useKeyboardNavContext();
 
   return (
@@ -310,7 +311,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
         onChange={onChangeQuery}
         results={searchResults}
         onSelect={onSelectSearchResult}
-        inputRef={{ current: null }} // Will be set by the provider internally
+        inputRef={searchInputRef}
         onSearchKeyDown={handleSearchKeyDown}
         focusedItemId={focusedItemId}
       />
