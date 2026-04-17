@@ -1,3 +1,4 @@
+import { useMemo, useRef } from 'react';
 import {
   type CollisionDetection,
   DndContext,
@@ -14,6 +15,8 @@ import {
 } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import type { NavigatorView } from '../../../domain/navigation/types';
+import { buildNavigableItems } from '../../../domain/navigation/navigableItems';
+import { KeyboardNavigationProvider } from '../../navigation/KeyboardNavigationProvider';
 import { GroupSection } from '../../components/GroupSection';
 import { HiddenSection } from '../../components/HiddenSection';
 import { SearchBox } from '../../components/SearchBox';
@@ -58,6 +61,10 @@ interface TaskpaneSectionsProps {
   onRenameWorksheetSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameGroupSubmit?: (groupId: string, newName: string) => void;
   onRenameCancel?: () => void;
+  /** Suppression flags for keyboard navigation */
+  isDialogOpen?: boolean;
+  isRenaming?: boolean;
+  isContextMenuOpen?: boolean;
 }
 
 const worksheetCollisionDetection: CollisionDetection = (args) => {
@@ -144,12 +151,30 @@ export function TaskpaneSections({
   onRenameWorksheetSubmit,
   onRenameGroupSubmit,
   onRenameCancel,
+  isDialogOpen = false,
+  isRenaming = false,
+  isContextMenuOpen = false,
 }: TaskpaneSectionsProps) {
+  // Ref to the search input for focus management
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Build the linear list of navigable items for keyboard navigation
+  const navigableItems = useMemo(() => {
+    return buildNavigableItems({
+      query,
+      searchResults,
+      pinned: navigatorView.pinned,
+      groups: navigatorView.groups,
+      ungrouped: navigatorView.ungrouped,
+    });
+  }, [query, searchResults, navigatorView.pinned, navigatorView.groups, navigatorView.ungrouped]);
+
   const shouldShowPinnedSection = navigatorView.pinned.length > 0;
   const shouldShowGroupsSection = navigatorView.groups.length > 0;
   const shouldShowUngroupedSection = shouldRenderUngroupedSection(navigatorView, dragConfig.isDragActive);
   const shouldShowHiddenSection = navigatorView.hidden.length > 0;
   const shouldShowSessionOnlyGroupsHint = shouldShowGroupsSection && isSessionOnlyPersistence;
+  const isSearchActive = Boolean(query.trim());
   const groupsSessionOnlyHint = shouldShowSessionOnlyGroupsHint ? (
     <button
       className="section-hint-button"
@@ -166,12 +191,128 @@ export function TaskpaneSections({
   ) : null;
 
   return (
+    <KeyboardNavigationProvider
+      items={navigableItems}
+      onActivate={(itemId) => {
+        // Extract worksheetId from the itemId (format: 'worksheet:{id}' or 'search:{id}')
+        const worksheetId = itemId.split(':')[1];
+        if (worksheetId) {
+          void onActivateWorksheet(worksheetId);
+        }
+      }}
+      onExpandGroup={onToggleGroupCollapsed}
+      onCollapseGroup={onToggleGroupCollapsed}
+      onFocusSearchInput={() => {
+        searchInputRef.current?.focus();
+      }}
+      searchInputRef={searchInputRef}
+      isSearchActive={isSearchActive}
+      isDragActive={dragConfig.isDragActive}
+      isDialogOpen={isDialogOpen}
+      isRenaming={isRenaming}
+      isContextMenuOpen={isContextMenuOpen}
+    >
+      <TaskpaneSectionsContent
+        query={query}
+        isSearchActive={isSearchActive}
+        searchResults={searchResults}
+        navigatorView={navigatorView}
+        activeWorksheetId={activeWorksheetId}
+        isHiddenSectionCollapsed={isHiddenSectionCollapsed}
+        contextMenuOpenSheetId={contextMenuOpenSheetId}
+        contextMenuOpenGroupId={contextMenuOpenGroupId}
+        renamingWorksheetId={renamingWorksheetId}
+        renamingGroupId={renamingGroupId}
+        isSessionOnlyPersistence={isSessionOnlyPersistence}
+        dragConfig={dragConfig}
+        groupsSessionOnlyHint={groupsSessionOnlyHint}
+        shouldShowPinnedSection={shouldShowPinnedSection}
+        shouldShowGroupsSection={shouldShowGroupsSection}
+        shouldShowUngroupedSection={shouldShowUngroupedSection}
+        shouldShowHiddenSection={shouldShowHiddenSection}
+        onChangeQuery={onChangeQuery}
+        onSelectSearchResult={onSelectSearchResult}
+        onActivateWorksheet={onActivateWorksheet}
+        onPinWorksheet={onPinWorksheet}
+        onUnpinWorksheet={onUnpinWorksheet}
+        onToggleGroupCollapsed={onToggleGroupCollapsed}
+        onToggleHiddenSection={onToggleHiddenSection}
+        onUnhideWorksheet={onUnhideWorksheet}
+        onOpenSheetMenu={onOpenSheetMenu}
+        onOpenGroupMenu={onOpenGroupMenu}
+        onRenameWorksheetSubmit={onRenameWorksheetSubmit}
+        onRenameGroupSubmit={onRenameGroupSubmit}
+        onRenameCancel={onRenameCancel}
+      />
+    </KeyboardNavigationProvider>
+  );
+}
+
+// Internal component that consumes the keyboard navigation context
+import { useKeyboardNavContext } from '../../navigation/KeyboardNavigationProvider';
+
+interface TaskpaneSectionsContentProps extends Omit<TaskpaneSectionsProps, 'isDialogOpen' | 'isRenaming' | 'isContextMenuOpen'> {
+  isSearchActive: boolean;
+  groupsSessionOnlyHint: React.ReactNode;
+  shouldShowPinnedSection: boolean;
+  shouldShowGroupsSection: boolean;
+  shouldShowUngroupedSection: boolean;
+  shouldShowHiddenSection: boolean;
+}
+
+function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
+  const {
+    query,
+    isSearchActive,
+    searchResults,
+    navigatorView,
+    activeWorksheetId,
+    isHiddenSectionCollapsed,
+    contextMenuOpenSheetId,
+    contextMenuOpenGroupId,
+    renamingWorksheetId,
+    renamingGroupId,
+    isSessionOnlyPersistence,
+    dragConfig,
+    groupsSessionOnlyHint,
+    shouldShowPinnedSection,
+    shouldShowGroupsSection,
+    shouldShowUngroupedSection,
+    shouldShowHiddenSection,
+    onChangeQuery,
+    onSelectSearchResult,
+    onActivateWorksheet,
+    onPinWorksheet,
+    onUnpinWorksheet,
+    onToggleGroupCollapsed,
+    onToggleHiddenSection,
+    onUnhideWorksheet,
+    onOpenSheetMenu,
+    onOpenGroupMenu,
+    onRenameWorksheetSubmit,
+    onRenameGroupSubmit,
+    onRenameCancel,
+  } = props;
+
+  // Get keyboard navigation context
+  const {
+    focusedItemId,
+    handleSearchKeyDown,
+    handleItemKeyDown,
+    handleGroupHeaderKeyDown,
+    registerElement,
+  } = useKeyboardNavContext();
+
+  return (
     <>
       <SearchBox
         value={query}
         onChange={onChangeQuery}
         results={searchResults}
         onSelect={onSelectSearchResult}
+        inputRef={{ current: null }} // Will be set by the provider internally
+        onSearchKeyDown={handleSearchKeyDown}
+        focusedItemId={focusedItemId}
       />
 
       <DndContext
@@ -213,11 +354,14 @@ export function TaskpaneSections({
               contextMenuOpenId={contextMenuOpenSheetId}
               dragConfig={buildPinnedDragConfig(dragConfig, 'pinned')}
               renamingWorksheetId={renamingWorksheetId}
+              focusedItemId={focusedItemId}
               onActivate={onActivateWorksheet}
               onTogglePin={onUnpinWorksheet}
               onOpenContextMenu={onOpenSheetMenu}
               onRenameSubmit={onRenameWorksheetSubmit}
               onRenameCancel={onRenameCancel}
+              onItemKeyDown={handleItemKeyDown}
+              registerElement={registerElement}
             />
           </Section>
         ) : null}
@@ -231,6 +375,7 @@ export function TaskpaneSections({
               groupMenuOpenId={contextMenuOpenGroupId}
               dragConfig={buildGroupDragConfig(dragConfig)}
               renamingGroupId={renamingGroupId}
+              focusedItemId={focusedItemId}
               onActivate={onActivateWorksheet}
               onToggleCollapsed={onToggleGroupCollapsed}
               onTogglePin={onPinWorksheet}
@@ -238,6 +383,8 @@ export function TaskpaneSections({
               onOpenSheetMenu={onOpenSheetMenu}
               onRenameSubmit={onRenameGroupSubmit}
               onRenameCancel={onRenameCancel}
+              onGroupHeaderKeyDown={handleGroupHeaderKeyDown}
+              registerElement={registerElement}
             />
           </Section>
         ) : null}
@@ -251,11 +398,14 @@ export function TaskpaneSections({
                 contextMenuOpenId={contextMenuOpenSheetId}
                 dragConfig={buildSheetListDragConfig(dragConfig, 'sheets')}
                 renamingWorksheetId={renamingWorksheetId}
+                focusedItemId={focusedItemId}
                 onActivate={onActivateWorksheet}
                 onTogglePin={onPinWorksheet}
                 onOpenContextMenu={onOpenSheetMenu}
                 onRenameSubmit={onRenameWorksheetSubmit}
                 onRenameCancel={onRenameCancel}
+                onItemKeyDown={handleItemKeyDown}
+                registerElement={registerElement}
               />
             </div>
           </Section>
