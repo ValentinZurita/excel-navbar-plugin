@@ -100,6 +100,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   const [navigationInputMode, setNavigationInputMode] = useState<NavigationInputMode>(null);
+  const [searchFocusedItemId, setSearchFocusedItemId] = useState<string | null>(null);
 
   // Registry of DOM elements by navigable item ID
   const elementRegistryRef = useRef<Map<string, HTMLElement>>(new Map());
@@ -126,19 +127,21 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   }, []);
 
   const setPointerFocusItem = useCallback((itemId: string) => {
-    if (!hasItem(itemId, items) || focusedItemId === itemId) {
+    const currentFocused = isSearchActive ? searchFocusedItemId : focusedItemId;
+    if (!hasItem(itemId, items) || currentFocused === itemId) {
       return;
     }
 
     // Pointer hover should update keyboard anchor/visual row without stealing
     // text-input focus from the search field.
     suppressNextDomFocusRef.current = true;
-    setFocusedItemId(itemId);
+    setSearchFocusedItemId(itemId);
     setNavigationInputMode('pointer');
-  }, [items, focusedItemId]);
+  }, [items, focusedItemId, searchFocusedItemId, isSearchActive]);
 
   const setKeyboardFocusedItem = useCallback((itemId: string) => {
     setFocusedItemId(itemId);
+    setSearchFocusedItemId(itemId);
     setNavigationInputMode('keyboard');
   }, []);
 
@@ -149,6 +152,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   const focusItem = useCallback((itemId: string | null) => {
     if (itemId === null) {
       setFocusedItemId(null);
+      setSearchFocusedItemId(null);
       setNavigationInputMode(null);
       return;
     }
@@ -169,19 +173,28 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   }, []);
 
   const getKeyboardAnchorItemId = useCallback((fallbackItemId: string): string | null => {
-    if (focusedItemId && hasItem(focusedItemId, items)) {
-      return focusedItemId;
-    }
-
     // In search mode there is no active worksheet concept for navigation anchoring.
-    // Anchor from the interacted result (fallback) or list bounds only.
+    // Prefer latest search-focused item (pointer/keyboard), then focusedItemId,
+    // then fallback/list bounds.
     if (isSearchActive) {
+      if (searchFocusedItemId && hasItem(searchFocusedItemId, items)) {
+        return searchFocusedItemId;
+      }
+
+      if (focusedItemId && hasItem(focusedItemId, items)) {
+        return focusedItemId;
+      }
+
       if (hasItem(fallbackItemId, items)) {
         return fallbackItemId;
       }
 
       const firstSearchItem = getFirstItem(items);
       return firstSearchItem?.id ?? null;
+    }
+
+    if (focusedItemId && hasItem(focusedItemId, items)) {
+      return focusedItemId;
     }
 
     if (activeWorksheetId) {
@@ -197,7 +210,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
     const firstItem = getFirstItem(items);
     return firstItem?.id ?? null;
-  }, [focusedItemId, activeWorksheetId, items, isSearchActive]);
+  }, [searchFocusedItemId, focusedItemId, activeWorksheetId, items, isSearchActive]);
 
   /**
    * Clear focus entirely.
@@ -205,6 +218,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   const clearFocus = useCallback(() => {
     clearIdleTimeout();
     setFocusedItemId(null);
+    setSearchFocusedItemId(null);
     setNavigationInputMode(null);
     // Remove native focus ring from previously focused element to avoid
     // residual browser/host focus outline after keyboard highlight clears.
@@ -237,7 +251,9 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
    * Also handles the special case of focusing the search input.
    */
   useEffect(() => {
-    if (focusedItemId === null) {
+    const targetFocusedItemId = isSearchActive ? searchFocusedItemId : focusedItemId;
+
+    if (targetFocusedItemId === null) {
       return;
     }
 
@@ -247,33 +263,58 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     }
 
     // Special sentinel: focus the search input
-    if (focusedItemId === SEARCH_INPUT_SENTINEL_ID) {
+    if (targetFocusedItemId === SEARCH_INPUT_SENTINEL_ID) {
       searchInputRef.current?.focus();
       return;
     }
 
-    const element = elementRegistryRef.current.get(focusedItemId);
+    const element = elementRegistryRef.current.get(targetFocusedItemId);
     if (element && document.contains(element)) {
       element.focus();
     }
-  }, [focusedItemId, searchInputRef]);
+  }, [focusedItemId, searchFocusedItemId, isSearchActive, searchInputRef]);
 
   /**
    * Effect: when items change, if the focused item no longer exists,
    * clear focus or move to first available item.
    */
   useEffect(() => {
-    if (focusedItemId === null || focusedItemId === SEARCH_INPUT_SENTINEL_ID) {
+    const currentFocusedId = isSearchActive ? searchFocusedItemId : focusedItemId;
+    const wasSearchList = prevItemsRef.current.length > 0
+      && prevItemsRef.current.every((item) => item.kind === 'search-result');
+    const isSearchList = items.length > 0 && items.every((item) => item.kind === 'search-result');
+    const searchJustClosed = wasSearchList && !isSearchList;
+
+    if (searchJustClosed && pendingFocusRestoreAfterSearchClearRef.current) {
+      pendingFocusRestoreAfterSearchClearRef.current = false;
+
+      const activeItemId = activeWorksheetId ? `worksheet:${activeWorksheetId}` : null;
+      if (activeItemId && hasItem(activeItemId, items)) {
+        setKeyboardFocusedItem(activeItemId);
+      } else {
+        const firstItem = getFirstItem(items);
+        if (firstItem) {
+          setKeyboardFocusedItem(firstItem.id);
+        } else {
+          setFocusedItemId(null);
+          setSearchFocusedItemId(null);
+          setNavigationInputMode(null);
+        }
+      }
+
+      prevItemsRef.current = items;
+      return;
+    }
+
+    if (currentFocusedId === null || currentFocusedId === SEARCH_INPUT_SENTINEL_ID) {
       prevItemsRef.current = items;
       return;
     }
 
     // Check if focused item still exists
-    if (!hasItem(focusedItemId, items)) {
-      // If search was just cleared, focus first item
-      const wasSearchCleared = prevItemsRef.current.length > 0 && items.length > 0 &&
-        prevItemsRef.current.every(item => item.kind === 'search-result') &&
-        !items.every(item => item.kind === 'search-result');
+    if (!hasItem(currentFocusedId, items)) {
+      // If search was just cleared without explicit pending restore, focus first item.
+      const wasSearchCleared = searchJustClosed;
 
       if (wasSearchCleared) {
         if (pendingFocusRestoreAfterSearchClearRef.current) {
@@ -288,6 +329,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
               setKeyboardFocusedItem(firstItem.id);
             } else {
               setFocusedItemId(null);
+              setSearchFocusedItemId(null);
               setNavigationInputMode(null);
             }
           }
@@ -297,17 +339,19 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
             setKeyboardFocusedItem(firstItem.id);
           } else {
             setFocusedItemId(null);
+            setSearchFocusedItemId(null);
             setNavigationInputMode(null);
           }
         }
       } else {
         setFocusedItemId(null);
+        setSearchFocusedItemId(null);
         setNavigationInputMode(null);
       }
     }
 
     prevItemsRef.current = items;
-  }, [items, focusedItemId, activeWorksheetId, setKeyboardFocusedItem]);
+  }, [items, focusedItemId, searchFocusedItemId, isSearchActive, activeWorksheetId, setKeyboardFocusedItem]);
 
   /**
    * Keep keyboard focus state in sync with pointer interactions.
@@ -332,12 +376,16 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         return;
       }
 
-      if (hasItem(navigableId, items)) {
-        setFocusedItemId(navigableId);
-        setNavigationInputMode('pointer');
-      } else {
-        setFocusedItemId(null);
-        setNavigationInputMode(null);
+      // Pointer down global synchronization should only affect taskpane mode.
+      // Search mode uses dedicated pointer focus handling at row level.
+      if (!isSearchActive) {
+        if (hasItem(navigableId, items)) {
+          setFocusedItemId(navigableId);
+          setNavigationInputMode('pointer');
+        } else {
+          setFocusedItemId(null);
+          setNavigationInputMode(null);
+        }
       }
     };
 
@@ -346,7 +394,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown, true);
     };
-  }, [items]);
+  }, [items, isSearchActive]);
 
   /**
    * Handler for keydown events on the search input.
@@ -362,7 +410,10 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       if (event.key === 'ArrowDown') {
         event.preventDefault();
         event.stopPropagation();
-        const anchorItemId = focusedItemId && hasItem(focusedItemId, items) ? focusedItemId : null;
+        const searchAnchorItemId = searchFocusedItemId && hasItem(searchFocusedItemId, items)
+          ? searchFocusedItemId
+          : null;
+        const anchorItemId = searchAnchorItemId ?? (focusedItemId && hasItem(focusedItemId, items) ? focusedItemId : null);
         const nextItem = anchorItemId ? getNextItem(anchorItemId, items) : getFirstItem(items);
         if (nextItem) {
           setKeyboardFocusedItem(nextItem.id);
@@ -375,7 +426,10 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         event.preventDefault();
         event.stopPropagation();
 
-        const anchorItemId = focusedItemId && hasItem(focusedItemId, items) ? focusedItemId : null;
+        const searchAnchorItemId = searchFocusedItemId && hasItem(searchFocusedItemId, items)
+          ? searchFocusedItemId
+          : null;
+        const anchorItemId = searchAnchorItemId ?? (focusedItemId && hasItem(focusedItemId, items) ? focusedItemId : null);
         if (!anchorItemId) {
           const lastItem = getLastItem(items);
           if (lastItem) {
@@ -403,6 +457,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         if (shouldExitSearchMode) {
           pendingFocusRestoreAfterSearchClearRef.current = true;
           onClearSearch();
+          onFocusSearchInput();
         }
       }
     },
@@ -410,11 +465,13 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       isSuppressed,
       items,
       focusedItemId,
+      searchFocusedItemId,
       isSearchActive,
       markKeyboardActivity,
       clearFocus,
       setKeyboardFocusedItem,
       onClearSearch,
+      onFocusSearchInput,
     ],
   );
 
@@ -518,6 +575,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
           if (shouldExitSearchMode) {
             pendingFocusRestoreAfterSearchClearRef.current = true;
             onClearSearch();
+            onFocusSearchInput();
           }
           break;
         }
@@ -533,6 +591,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       onCollapseGroup,
       setKeyboardFocusedItem,
       onClearSearch,
+      onFocusSearchInput,
       markKeyboardActivity,
       clearFocus,
     ],
@@ -599,6 +658,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
           if (shouldExitSearchMode) {
             pendingFocusRestoreAfterSearchClearRef.current = true;
             onClearSearch();
+            onFocusSearchInput();
           }
           break;
         }
@@ -611,13 +671,14 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       handleItemKeyDown,
       isSearchActive,
       onClearSearch,
+      onFocusSearchInput,
       markKeyboardActivity,
       clearFocus,
     ],
   );
 
   return {
-    focusedItemId,
+    focusedItemId: isSearchActive ? searchFocusedItemId : focusedItemId,
     navigationInputMode,
     registerElement,
     setPointerFocusItem,

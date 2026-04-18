@@ -170,6 +170,12 @@
   border-radius: 0;
 }
 
+/* Avoid visual double-highlight when pointer-mode is active:
+   mouse hover should be the only visible highlight in that state. */
+.search-result[data-focused="true"][data-pointer-mode-active="true"] {
+  background: transparent;
+}
+
 /* Sheet row focused state (not active) */
 .sheet-row[data-focused="true"]:not(.sheet-row-active):not([data-active="true"]) {
   background: var(--excel-nav-active-bg);
@@ -195,6 +201,10 @@
 
 :root[data-office-theme-mode="dark"] .search-result[data-focused="true"]:not([data-pointer-mode-active="true"]) {
   background: color-mix(in srgb, var(--excel-body-fg) 12%, transparent);
+}
+
+:root[data-office-theme-mode="dark"] .search-result[data-focused="true"][data-pointer-mode-active="true"] {
+  background: transparent;
 }
 
 :root[data-office-theme-mode="dark"] .sheet-row[data-focused="true"]:not(.sheet-row-active):not([data-active="true"]) {

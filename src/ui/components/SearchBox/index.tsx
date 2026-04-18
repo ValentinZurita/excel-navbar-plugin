@@ -78,7 +78,7 @@ export function SearchBox({
     <div className="search-box" ref={searchBoxRef}>
       <SearchBar ref={inputRef} value={value} onChange={onChange} onKeyDown={onSearchKeyDown} />
       {value ? (
-        <div className="search-results-wrapper">
+        <div className="search-results-wrapper" data-navigation-input-mode={navigationInputMode ?? 'none'}>
           <SearchResults
             results={results}
             onSelect={onSelect}

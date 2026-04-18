@@ -520,12 +520,14 @@ describe('TaskpaneSections', () => {
     expect(forecastItem).toHaveAttribute('data-focused', 'true');
     expect(forecastItem).toHaveAttribute('data-pointer-mode-active', 'true');
     expect(revenueItem).toHaveAttribute('data-focused', 'false');
+    expect(container.querySelectorAll('.search-result[data-focused="true"]').length).toBe(1);
 
     // ArrowDown should continue from Forecast and move to Summary.
     await user.keyboard('{ArrowDown}');
     expect(summaryItem).toHaveAttribute('data-focused', 'true');
     expect(summaryItem).toHaveAttribute('data-pointer-mode-active', 'false');
     expect(forecastItem).toHaveAttribute('data-focused', 'false');
+    expect(document.querySelector('.search-results-wrapper')?.getAttribute('data-navigation-input-mode')).toBe('keyboard');
 
     // Only one focused search result at any time.
     expect(container.querySelectorAll('.search-result[data-focused="true"]').length).toBe(1);
@@ -588,9 +590,11 @@ describe('TaskpaneSections', () => {
     // Search results dropdown should close after Escape.
     expect(document.querySelector('.search-results-wrapper .search-results')).toBeNull();
 
+    // After leaving search mode, focus should restore to active worksheet row.
+    const activeForecastRow = screen.getByRole('button', { name: 'Forecast' });
+    expect(activeForecastRow).toHaveFocus();
+
     // Next arrow movement should continue from active worksheet (Forecast) -> Summary.
-    const forecastRow = screen.getByRole('button', { name: 'Forecast' });
-    forecastRow.focus();
     await user.keyboard('{ArrowDown}');
 
     const summaryRow = screen.getByRole('button', { name: 'Summary' });
