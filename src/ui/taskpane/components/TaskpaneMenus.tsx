@@ -219,14 +219,6 @@ function buildGroupMenuActions(
         handlers.onCloseMenus();
       },
     },
-    {
-      key: 'new-group',
-      icon: <AddGroupMenuIcon className="context-menu-icon-svg" />,
-      label: 'New group',
-      onSelect: () => {
-        handlers.onStartCreatingGroup();
-      },
-    },
   ];
 }
 

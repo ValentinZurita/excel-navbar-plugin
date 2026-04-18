@@ -84,6 +84,35 @@ describe('TaskpaneMenus', () => {
     expect(screen.getByRole('button', { name: 'Delete group' })).toBeInTheDocument();
   });
 
+  it('does not show New group action in group menu', () => {
+    render(
+      <TaskpaneMenus
+        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
+        onCloseMenus={vi.fn()}
+        onTogglePin={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        onRenameWorksheet={vi.fn()}
+        onRemoveFromGroup={vi.fn()}
+        onStartCreatingGroup={vi.fn()}
+        onRenameGroup={vi.fn()}
+        onDeleteGroup={vi.fn()}
+        onSetGroupColor={vi.fn()}
+        isCreatingGroup={false}
+        onCancelCreatingGroup={vi.fn()}
+        onConfirmCreatingGroup={vi.fn()}
+        isConfirmingDelete={false}
+        worksheetToDelete={null}
+        onStartDeleteConfirmation={vi.fn()}
+        onCancelDeleteConfirmation={vi.fn()}
+        onConfirmDelete={vi.fn().mockResolvedValue(undefined)}
+        isDeleting={false}
+        deleteError={null}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'New group' })).not.toBeInTheDocument();
+  });
+
   it('shows remove-from-group only for grouped worksheets', () => {
     const { rerender } = renderSheetMenu({
       activeMenu: { kind: 'sheet', x: 10, y: 20, worksheet: createWorksheet({ groupId: 'group-1' }) },
