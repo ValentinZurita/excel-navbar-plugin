@@ -5,7 +5,8 @@ Pinned sheets, groups, ungrouped sheets, and hidden sheets render in a single ta
 
 ## Groups
 Manual, single-membership groups that do not change workbook order.
-Empty groups show brief ghost row on click (opens then closes) so users understand group has no sheets.
+When local user actions remove the last sheet from a group, that group is removed automatically for cleaner navigation.
+Groups can still appear empty after external workbook edits remove their member sheets.
 
 ## Sidebar Ordering
 Visible ungrouped sheets can be reordered inside the sidebar without changing the real Excel tab order.

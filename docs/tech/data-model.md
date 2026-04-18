@@ -6,7 +6,8 @@
 - Groups persist their own worksheet order
 - The Sheets section persists its own local sidebar order after the initial workbook hydration
 - Workbook reconciliation preserves local sidebar order, removes deleted worksheet IDs, and appends newly discovered worksheets using Excel workbook order
-- Groups keep existing empty containers when external workbook edits remove all of their worksheets
+- Local reducer actions prune groups that become empty after explicit user-driven worksheet moves/removals
+- Workbook reconciliation keeps existing empty group containers when external workbook edits remove all of their worksheets
 - Persist only meaningful workbook UI state
 - Persist a schema version and identity mode from day one
 - Canonical persistence is a versioned workbook-scoped Custom XML payload; settings only carry metadata and compatibility fallback data

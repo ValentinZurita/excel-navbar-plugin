@@ -81,7 +81,8 @@ describe('navigationReducer', () => {
     });
 
     expect(nextState.worksheetsById.two.groupId).toBeNull();
-    expect(nextState.groupsById['group-1'].worksheetOrder).toEqual([]);
+    expect(nextState.groupsById['group-1']).toBeUndefined();
+    expect(nextState.groupOrder).toEqual([]);
     expect(nextState.sheetSectionOrder).toEqual(['one', 'two', 'three']);
   });
 
@@ -115,7 +116,8 @@ describe('navigationReducer', () => {
     expect(nextState.worksheetsById.one.isPinned).toBe(true);
     expect(nextState.worksheetsById.one.groupId).toBeNull();
     expect(nextState.worksheetsById.one.lastKnownStructuralState).toEqual({ kind: 'pinned' });
-    expect(nextState.groupsById['group-1'].worksheetOrder).toEqual([]);
+    expect(nextState.groupsById['group-1']).toBeUndefined();
+    expect(nextState.groupOrder).toEqual([]);
   });
 
   it('returns grouped sheets to ungrouped when a group is deleted', () => {
@@ -171,6 +173,48 @@ describe('navigationReducer', () => {
     });
 
     expect(nextState.groupsById['group-1'].isCollapsed).toBe(false);
+  });
+
+  it('keeps empty groups when hydrating persisted model with stale worksheet references', () => {
+    const state = createDefaultNavigationState();
+    state.worksheetsById = {
+      one: {
+        worksheetId: 'one',
+        name: 'Overview',
+        visibility: 'Visible',
+        workbookOrder: 0,
+        isPinned: false,
+        groupId: null,
+        lastKnownStructuralState: null,
+      },
+    };
+
+    const nextState = navigationReducer(state, {
+      type: 'hydrateFromPersistence',
+      model: {
+        schemaVersion: 2,
+        identityMode: 'plugin-sheet-id',
+        groups: [
+          {
+            groupId: 'group-stale',
+            name: 'Stale',
+            colorToken: 'blue',
+            isCollapsed: true,
+            worksheetOrder: ['missing-sheet'],
+            createdAt: 1,
+          },
+        ],
+        sheetSectionOrder: ['one'],
+        pinnedWorksheetOrder: [],
+        hiddenSectionCollapsed: false,
+        priorStructuralStateByStableWorksheetId: {},
+        updatedAt: 1,
+      },
+    });
+
+    expect(nextState.groupOrder).toEqual(['group-stale']);
+    expect(nextState.groupsById['group-stale']).toBeDefined();
+    expect(nextState.groupsById['group-stale'].worksheetOrder).toEqual([]);
   });
 
   it('creates a group with no color when colorToken is none', () => {
@@ -638,8 +682,9 @@ describe('navigationReducer', () => {
       });
 
       // Should clean up from all groups
-      expect(nextState.groupsById['group-1'].worksheetOrder).not.toContain('sheet-1');
-      expect(nextState.groupsById['group-2'].worksheetOrder).not.toContain('sheet-1');
+      expect(nextState.groupsById['group-1']).toBeUndefined();
+      expect(nextState.groupsById['group-2']).toBeUndefined();
+      expect(nextState.groupOrder).toEqual([]);
     });
   });
 });

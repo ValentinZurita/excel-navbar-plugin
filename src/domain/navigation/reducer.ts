@@ -142,6 +142,21 @@ function removeWorksheetFromAnyGroup(state: NavigationState, worksheetId: string
 
   worksheet.groupId = null;
   worksheet.lastKnownStructuralState = { kind: 'ungrouped' };
+
+  const emptyGroupIds = state.groupOrder.filter((groupId) => {
+    const candidate = state.groupsById[groupId];
+    return candidate ? candidate.worksheetOrder.length === 0 : false;
+  });
+
+  if (emptyGroupIds.length === 0) {
+    return;
+  }
+
+  const emptyGroupIdSet = new Set(emptyGroupIds);
+  emptyGroupIds.forEach((groupId) => {
+    delete state.groupsById[groupId];
+  });
+  state.groupOrder = state.groupOrder.filter((groupId) => !emptyGroupIdSet.has(groupId));
 }
 
 export function navigationReducer(state: NavigationState, action: NavigationAction): NavigationState {
@@ -511,6 +526,18 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
           (id) => id !== action.worksheetId,
         );
       });
+
+      const emptyGroupIds = nextState.groupOrder.filter((groupId) => {
+        const candidate = nextState.groupsById[groupId];
+        return candidate ? candidate.worksheetOrder.length === 0 : false;
+      });
+      if (emptyGroupIds.length > 0) {
+        const emptyGroupIdSet = new Set(emptyGroupIds);
+        emptyGroupIds.forEach((groupId) => {
+          delete nextState.groupsById[groupId];
+        });
+        nextState.groupOrder = nextState.groupOrder.filter((groupId) => !emptyGroupIdSet.has(groupId));
+      }
 
       // 5. Finally remove from the dictionary
       delete nextState.worksheetsById[action.worksheetId];
