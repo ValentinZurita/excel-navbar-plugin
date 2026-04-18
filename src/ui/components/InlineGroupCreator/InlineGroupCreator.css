@@ -73,6 +73,13 @@
   opacity: 1;
 }
 
+/* Focus state for keyboard navigation */
+.inline-group-creator-color:focus {
+  outline: 2px solid var(--excel-accent);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
 /* Selected state with focus ring */
 .inline-group-creator-color-selected {
   opacity: 1;

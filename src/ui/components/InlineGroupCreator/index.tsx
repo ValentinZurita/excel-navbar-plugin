@@ -62,6 +62,22 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
     setSelectedColor(color);
   }
 
+  function handleColorKeyDown(event: ReactKeyboardEvent<HTMLButtonElement>, color: GroupColorToken) {
+    // Ignore Enter while the user is composing IME input.
+    if (event.nativeEvent.isComposing) {
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      const trimmed = name.trim();
+      if (trimmed) {
+        event.preventDefault();
+        // Use the color of the focused chip, not the selectedColor state
+        onCreate(trimmed, color);
+      }
+    }
+  }
+
   return (
     <div className="inline-group-creator">
       <input
@@ -86,12 +102,14 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
           <button
             key={color}
             type="button"
+            tabIndex={0}
             className={`inline-group-creator-color ${colorChipClasses[color]} ${
               selectedColor === color ? 'inline-group-creator-color-selected' : ''
             }`}
             aria-label={color === 'none' ? 'No color' : `Color ${color}`}
             aria-pressed={selectedColor === color}
             onClick={() => handleColorClick(color)}
+            onKeyDown={(event) => handleColorKeyDown(event, color)}
           />
         ))}
       </div>
