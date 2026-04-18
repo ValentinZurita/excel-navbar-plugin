@@ -58,7 +58,7 @@
    Shows the group header as selected when the active sheet is hidden inside a closed group.
    Uses light gray background + Excel green text (consistent with SheetRow). */
 .group-header-active {
-  background: var(--excel-nav-active-bg);
+  background: var(--excel-nav-resting-bg);
   border-color: transparent;
 }
 
