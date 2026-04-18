@@ -164,7 +164,7 @@
 }
 
 /* Search result focused state */
-.search-result[data-focused="true"] {
+.search-result[data-focused="true"]:not([data-pointer-mode-active="true"]) {
   /* Keep keyboard and pointer selection style consistent with search hover. */
   background: color-mix(in srgb, var(--excel-body-fg) 7%, transparent);
   border-radius: 0;
@@ -193,7 +193,7 @@
   background: transparent;
 }
 
-:root[data-office-theme-mode="dark"] .search-result[data-focused="true"] {
+:root[data-office-theme-mode="dark"] .search-result[data-focused="true"]:not([data-pointer-mode-active="true"]) {
   background: color-mix(in srgb, var(--excel-body-fg) 12%, transparent);
 }
 

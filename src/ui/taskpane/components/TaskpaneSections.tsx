@@ -207,6 +207,7 @@ export function TaskpaneSections({
         searchInputRef.current?.focus();
       }}
       searchInputRef={searchInputRef}
+      onClearSearch={() => onChangeQuery('')}
       isSearchActive={isSearchActive}
       isDragActive={dragConfig.isDragActive}
       isDialogOpen={isDialogOpen}
@@ -298,6 +299,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
   // Get keyboard navigation context
   const {
     focusedItemId,
+    navigationInputMode,
     setPointerFocusItem,
     handleSearchKeyDown,
     handleItemKeyDown,
@@ -315,6 +317,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
         inputRef={searchInputRef}
         onSearchKeyDown={handleSearchKeyDown}
         focusedItemId={focusedItemId}
+        navigationInputMode={navigationInputMode}
         onResultKeyDown={handleItemKeyDown}
         onResultPointerFocus={setPointerFocusItem}
         registerElement={registerElement}

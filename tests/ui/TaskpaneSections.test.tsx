@@ -1,6 +1,6 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ComponentProps, ReactNode } from 'react';
+import { useState, type ComponentProps, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NavigatorView, WorksheetEntity } from '../../src/domain/navigation/types';
 import { TaskpaneSections } from '../../src/ui/taskpane/components/TaskpaneSections';
@@ -77,6 +77,18 @@ function createBaseProps(overrides: Partial<ComponentProps<typeof TaskpaneSectio
     onOpenGroupMenu: vi.fn(),
     ...overrides,
   };
+}
+
+function SearchQueryHarness(props: Omit<ComponentProps<typeof TaskpaneSections>, 'query' | 'onChangeQuery'>) {
+  const [query, setQuery] = useState(props.searchResults.length > 0 ? 're' : '');
+
+  return (
+    <TaskpaneSections
+      {...props}
+      query={query}
+      onChangeQuery={setQuery}
+    />
+  );
 }
 
 describe('TaskpaneSections', () => {
@@ -506,14 +518,82 @@ describe('TaskpaneSections', () => {
     // Pointer move should transfer active row to Forecast.
     fireEvent.mouseMove(forecastResult);
     expect(forecastItem).toHaveAttribute('data-focused', 'true');
+    expect(forecastItem).toHaveAttribute('data-pointer-mode-active', 'true');
     expect(revenueItem).toHaveAttribute('data-focused', 'false');
 
     // ArrowDown should continue from Forecast and move to Summary.
     await user.keyboard('{ArrowDown}');
     expect(summaryItem).toHaveAttribute('data-focused', 'true');
+    expect(summaryItem).toHaveAttribute('data-pointer-mode-active', 'false');
     expect(forecastItem).toHaveAttribute('data-focused', 'false');
 
     // Only one focused search result at any time.
     expect(container.querySelectorAll('.search-result[data-focused="true"]').length).toBe(1);
+  });
+
+  it('clears search and restores taskpane keyboard anchor on Escape from search result', async () => {
+    const user = userEvent.setup();
+
+    const searchResults = [
+      {
+        worksheetId: 'sheet-1',
+        name: 'Revenue',
+        visibility: 'Visible' as const,
+        isPinned: false,
+        isGrouped: false,
+        groupName: null,
+      },
+      {
+        worksheetId: 'sheet-2',
+        name: 'Forecast',
+        visibility: 'Visible' as const,
+        isPinned: false,
+        isGrouped: false,
+        groupName: null,
+      },
+    ];
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' }),
+        createWorksheet({ worksheetId: 'sheet-2', name: 'Forecast' }),
+        createWorksheet({ worksheetId: 'sheet-3', name: 'Summary' }),
+      ],
+      hidden: [],
+      searchResults,
+    };
+
+    render(
+      <SearchQueryHarness
+        {...createBaseProps({
+          searchResults,
+          navigatorView,
+          activeWorksheetId: 'sheet-2',
+        })}
+      />,
+    );
+
+    const searchInput = screen.getByRole('textbox', { name: 'Search worksheets' });
+    searchInput.focus();
+    await user.keyboard('{ArrowDown}');
+
+    const searchResultsPanel = document.querySelector('.search-results');
+    expect(searchResultsPanel).toBeTruthy();
+    const revenueResult = within(searchResultsPanel as HTMLElement).getByRole('button', { name: /Revenue/i });
+    revenueResult.focus();
+    await user.keyboard('{Escape}');
+
+    // Search results dropdown should close after Escape.
+    expect(document.querySelector('.search-results-wrapper .search-results')).toBeNull();
+
+    // Next arrow movement should continue from active worksheet (Forecast) -> Summary.
+    const forecastRow = screen.getByRole('button', { name: 'Forecast' });
+    forecastRow.focus();
+    await user.keyboard('{ArrowDown}');
+
+    const summaryRow = screen.getByRole('button', { name: 'Summary' });
+    expect(summaryRow).toHaveAttribute('data-focused', 'true');
   });
 });

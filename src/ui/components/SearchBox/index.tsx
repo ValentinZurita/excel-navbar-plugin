@@ -15,6 +15,8 @@ interface SearchBoxProps {
   onSearchKeyDown: KeyboardEventHandler<HTMLInputElement>;
   /** Currently focused item ID for visual focus indicator */
   focusedItemId: string | null;
+  /** Current focus source to avoid visual double-highlight in search rows */
+  navigationInputMode?: 'keyboard' | 'pointer' | null;
   /** Handler for keyboard navigation on search results */
   onResultKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>, itemId: string) => void;
   /** Register DOM element for focus management */
@@ -39,6 +41,7 @@ export function SearchBox({
   inputRef,
   onSearchKeyDown,
   focusedItemId,
+  navigationInputMode = null,
   onResultKeyDown,
   registerElement,
   onResultPointerFocus,
@@ -80,6 +83,7 @@ export function SearchBox({
             results={results}
             onSelect={onSelect}
             focusedItemId={focusedItemId}
+            navigationInputMode={navigationInputMode}
             onItemKeyDown={onResultKeyDown}
             registerElement={registerElement}
             onPointerFocus={onResultPointerFocus}

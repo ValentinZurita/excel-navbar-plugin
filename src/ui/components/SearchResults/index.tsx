@@ -7,6 +7,8 @@ interface SearchResultsProps {
   onSelect: (worksheetId: string) => void | Promise<void>;
   /** Currently focused item ID for visual focus indicator */
   focusedItemId: string | null;
+  /** Current focus source to avoid double highlight with pointer hover */
+  navigationInputMode?: 'keyboard' | 'pointer' | null;
   /** Handler for keyboard navigation on individual results */
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>, itemId: string) => void;
   /** Register DOM element for focus management */
@@ -27,6 +29,7 @@ export function SearchResults({
   results,
   onSelect,
   focusedItemId,
+  navigationInputMode = null,
   onItemKeyDown,
   registerElement,
   onPointerFocus,
@@ -60,6 +63,7 @@ export function SearchResults({
               result={result}
               itemId={itemId}
               isFocused={isFocused}
+              isPointerModeActive={navigationInputMode === 'pointer'}
               onSelect={onSelect}
               onItemKeyDown={onItemKeyDown}
               registerElement={registerElement}
@@ -78,6 +82,7 @@ interface SearchResultItemComponentProps {
   result: SearchResultItem;
   itemId: string;
   isFocused: boolean;
+  isPointerModeActive: boolean;
   onSelect: (worksheetId: string) => void | Promise<void>;
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>, itemId: string) => void;
   registerElement?: (id: string, element: HTMLElement | null) => void;
@@ -89,6 +94,7 @@ function SearchResultItemComponent({
   result,
   itemId,
   isFocused,
+  isPointerModeActive,
   onSelect,
   onItemKeyDown,
   registerElement,
@@ -117,6 +123,7 @@ function SearchResultItemComponent({
       type="button"
       data-navigable-id={itemId}
       data-focused={isFocused}
+      data-pointer-mode-active={isPointerModeActive}
       tabIndex={isFocused ? 0 : -1}
       onClick={() => onSelect(result.worksheetId)}
       onKeyDown={(event) => onItemKeyDown?.(event, itemId)}

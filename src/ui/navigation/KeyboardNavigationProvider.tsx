@@ -4,6 +4,8 @@ import { useKeyboardNavigation, type UseKeyboardNavigationArgs } from '../../app
 interface KeyboardNavContextValue {
   /** Currently focused item ID, or null if no focus */
   focusedItemId: string | null;
+  /** Source of current focused row (keyboard or pointer) */
+  navigationInputMode: 'keyboard' | 'pointer' | null;
   /** Register a DOM element for the given navigable item ID */
   registerElement: (id: string, element: HTMLElement | null) => void;
   /** Update focused item from pointer interaction without stealing DOM focus */
@@ -51,6 +53,7 @@ export function KeyboardNavigationProvider(props: KeyboardNavigationProviderProp
 
   const contextValue: KeyboardNavContextValue = {
     focusedItemId: navigation.focusedItemId,
+    navigationInputMode: navigation.navigationInputMode,
     registerElement: navigation.registerElement,
     setPointerFocusItem: navigation.setPointerFocusItem,
     handleSearchKeyDown: navigation.handleSearchKeyDown,

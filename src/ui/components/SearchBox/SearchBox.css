@@ -84,6 +84,13 @@
   border-radius: 0;
 }
 
+/* When pointer mode is active and row is keyboard-focused, use the same style
+   as hover/focus to avoid a second conflicting highlight. */
+.search-results-wrapper .search-result[data-focused='true'][data-pointer-mode-active='true'] {
+  background: color-mix(in srgb, var(--excel-body-fg) 7%, transparent);
+  border-radius: 0;
+}
+
 /* Icon container for the left-side state icon.
    Starts subtle and brightens on hover. */
 .search-results-wrapper .search-result-leading {
@@ -155,6 +162,10 @@
 
 :root[data-office-theme-mode='dark'] .search-results-wrapper .search-result:hover,
 :root[data-office-theme-mode='dark'] .search-results-wrapper .search-result:focus-visible {
+  background: color-mix(in srgb, var(--excel-body-fg) 12%, transparent);
+}
+
+:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result[data-focused='true'][data-pointer-mode-active='true'] {
   background: color-mix(in srgb, var(--excel-body-fg) 12%, transparent);
 }
 
