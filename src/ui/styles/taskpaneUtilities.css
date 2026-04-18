@@ -165,8 +165,9 @@
 
 /* Search result focused state */
 .search-result[data-focused="true"] {
-  background: var(--excel-nav-active-bg);
-  border-radius: 4px;
+  /* Keep keyboard and pointer selection style consistent with search hover. */
+  background: color-mix(in srgb, var(--excel-body-fg) 7%, transparent);
+  border-radius: 0;
 }
 
 /* Sheet row focused state (not active) */
@@ -193,7 +194,7 @@
 }
 
 :root[data-office-theme-mode="dark"] .search-result[data-focused="true"] {
-  background: var(--excel-nav-active-bg);
+  background: color-mix(in srgb, var(--excel-body-fg) 12%, transparent);
 }
 
 :root[data-office-theme-mode="dark"] .sheet-row[data-focused="true"]:not(.sheet-row-active):not([data-active="true"]) {

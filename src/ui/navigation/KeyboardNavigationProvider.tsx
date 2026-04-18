@@ -6,6 +6,8 @@ interface KeyboardNavContextValue {
   focusedItemId: string | null;
   /** Register a DOM element for the given navigable item ID */
   registerElement: (id: string, element: HTMLElement | null) => void;
+  /** Update focused item from pointer interaction without stealing DOM focus */
+  setPointerFocusItem: (itemId: string) => void;
   /** Handler for keydown events on the search input */
   handleSearchKeyDown: (event: React.KeyboardEvent<HTMLInputElement>) => void;
   /** Handler for keydown events on individual items */
@@ -50,6 +52,7 @@ export function KeyboardNavigationProvider(props: KeyboardNavigationProviderProp
   const contextValue: KeyboardNavContextValue = {
     focusedItemId: navigation.focusedItemId,
     registerElement: navigation.registerElement,
+    setPointerFocusItem: navigation.setPointerFocusItem,
     handleSearchKeyDown: navigation.handleSearchKeyDown,
     handleItemKeyDown: navigation.handleItemKeyDown,
     handleGroupHeaderKeyDown: navigation.handleGroupHeaderKeyDown,

@@ -442,4 +442,78 @@ describe('TaskpaneSections', () => {
     const summaryArticle = screen.getByRole('button', { name: 'Summary' }).closest('[data-navigable-id="worksheet:sheet-3"]');
     expect(summaryArticle).toHaveAttribute('data-focused', 'true');
   });
+
+  it('keeps search result pointer and keyboard navigation in sync', async () => {
+    const user = userEvent.setup();
+
+    const searchResults = [
+      {
+        worksheetId: 'sheet-1',
+        name: 'Revenue',
+        visibility: 'Visible' as const,
+        isPinned: false,
+        isGrouped: false,
+        groupName: null,
+      },
+      {
+        worksheetId: 'sheet-2',
+        name: 'Forecast',
+        visibility: 'Visible' as const,
+        isPinned: false,
+        isGrouped: false,
+        groupName: null,
+      },
+      {
+        worksheetId: 'sheet-3',
+        name: 'Summary',
+        visibility: 'Visible' as const,
+        isPinned: false,
+        isGrouped: false,
+        groupName: null,
+      },
+    ];
+
+    const { container } = render(
+      <TaskpaneSections
+        {...createBaseProps({
+          query: 're',
+          searchResults,
+          navigatorView: {
+            pinned: [],
+            groups: [],
+            ungrouped: [],
+            hidden: [],
+            searchResults,
+          },
+        })}
+      />,
+    );
+
+    const searchInput = screen.getByRole('textbox', { name: 'Search worksheets' });
+    searchInput.focus();
+
+    await user.keyboard('{ArrowDown}');
+    const revenueResult = screen.getByRole('button', { name: /Revenue/i });
+    const forecastResult = screen.getByRole('button', { name: /Forecast/i });
+    const summaryResult = screen.getByRole('button', { name: /Summary/i });
+
+    const revenueItem = revenueResult.closest('[data-navigable-id="search:sheet-1"]');
+    const forecastItem = forecastResult.closest('[data-navigable-id="search:sheet-2"]');
+    const summaryItem = summaryResult.closest('[data-navigable-id="search:sheet-3"]');
+
+    expect(revenueItem).toHaveAttribute('data-focused', 'true');
+
+    // Pointer move should transfer active row to Forecast.
+    fireEvent.mouseMove(forecastResult);
+    expect(forecastItem).toHaveAttribute('data-focused', 'true');
+    expect(revenueItem).toHaveAttribute('data-focused', 'false');
+
+    // ArrowDown should continue from Forecast and move to Summary.
+    await user.keyboard('{ArrowDown}');
+    expect(summaryItem).toHaveAttribute('data-focused', 'true');
+    expect(forecastItem).toHaveAttribute('data-focused', 'false');
+
+    // Only one focused search result at any time.
+    expect(container.querySelectorAll('.search-result[data-focused="true"]').length).toBe(1);
+  });
 });

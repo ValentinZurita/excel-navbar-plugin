@@ -19,6 +19,8 @@ interface SearchBoxProps {
   onResultKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>, itemId: string) => void;
   /** Register DOM element for focus management */
   registerElement?: (id: string, element: HTMLElement | null) => void;
+  /** Update focused result from mouse hover/pointer movement */
+  onResultPointerFocus?: (itemId: string) => void;
 }
 
 /**
@@ -39,6 +41,7 @@ export function SearchBox({
   focusedItemId,
   onResultKeyDown,
   registerElement,
+  onResultPointerFocus,
 }: SearchBoxProps) {
   const searchBoxRef = useRef<HTMLDivElement | null>(null);
 
@@ -79,6 +82,7 @@ export function SearchBox({
             focusedItemId={focusedItemId}
             onItemKeyDown={onResultKeyDown}
             registerElement={registerElement}
+            onPointerFocus={onResultPointerFocus}
           />
         </div>
       ) : null}

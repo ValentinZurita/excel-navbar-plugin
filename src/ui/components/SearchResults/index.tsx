@@ -11,6 +11,8 @@ interface SearchResultsProps {
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>, itemId: string) => void;
   /** Register DOM element for focus management */
   registerElement?: (id: string, element: HTMLElement | null) => void;
+  /** Update focused result from mouse hover/pointer movement */
+  onPointerFocus?: (itemId: string) => void;
 }
 
 /**
@@ -27,6 +29,7 @@ export function SearchResults({
   focusedItemId,
   onItemKeyDown,
   registerElement,
+  onPointerFocus,
 }: SearchResultsProps) {
   function renderResultIcon(result: SearchResultItem) {
     if (result.visibility !== 'Visible') {
@@ -60,6 +63,7 @@ export function SearchResults({
               onSelect={onSelect}
               onItemKeyDown={onItemKeyDown}
               registerElement={registerElement}
+              onPointerFocus={onPointerFocus}
               renderIcon={renderResultIcon}
             />
           );
@@ -77,6 +81,7 @@ interface SearchResultItemComponentProps {
   onSelect: (worksheetId: string) => void | Promise<void>;
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>, itemId: string) => void;
   registerElement?: (id: string, element: HTMLElement | null) => void;
+  onPointerFocus?: (itemId: string) => void;
   renderIcon: (result: SearchResultItem) => React.ReactNode;
 }
 
@@ -87,6 +92,7 @@ function SearchResultItemComponent({
   onSelect,
   onItemKeyDown,
   registerElement,
+  onPointerFocus,
   renderIcon,
 }: SearchResultItemComponentProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -114,6 +120,8 @@ function SearchResultItemComponent({
       tabIndex={isFocused ? 0 : -1}
       onClick={() => onSelect(result.worksheetId)}
       onKeyDown={(event) => onItemKeyDown?.(event, itemId)}
+      onMouseMove={() => onPointerFocus?.(itemId)}
+      onMouseEnter={() => onPointerFocus?.(itemId)}
     >
       <span className="search-result-leading" aria-hidden="true">
         {renderIcon(result)}

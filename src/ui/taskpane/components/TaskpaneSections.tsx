@@ -298,6 +298,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
   // Get keyboard navigation context
   const {
     focusedItemId,
+    setPointerFocusItem,
     handleSearchKeyDown,
     handleItemKeyDown,
     handleGroupHeaderKeyDown,
@@ -315,6 +316,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
         onSearchKeyDown={handleSearchKeyDown}
         focusedItemId={focusedItemId}
         onResultKeyDown={handleItemKeyDown}
+        onResultPointerFocus={setPointerFocusItem}
         registerElement={registerElement}
       />
 
