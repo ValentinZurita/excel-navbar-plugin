@@ -84,8 +84,9 @@
   border-radius: 0;
 }
 
-/* When keyboard mode is active, avoid a second highlighted row caused by pointer hover. */
-.search-results-wrapper[data-navigation-input-mode='keyboard'] .search-result:hover {
+/* When keyboard mode is active, only suppress hover on the focused item
+   to avoid double highlight. Other rows still respond to hover normally. */
+.search-results-wrapper[data-navigation-input-mode='keyboard'] .search-result[data-focused="true"]:hover {
   background: transparent;
 }
 
@@ -163,7 +164,7 @@
   background: color-mix(in srgb, var(--excel-body-fg) 12%, transparent);
 }
 
-:root[data-office-theme-mode='dark'] .search-results-wrapper[data-navigation-input-mode='keyboard'] .search-result:hover {
+:root[data-office-theme-mode='dark'] .search-results-wrapper[data-navigation-input-mode='keyboard'] .search-result[data-focused="true"]:hover {
   background: transparent;
 }
 

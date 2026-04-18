@@ -127,8 +127,17 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   }, []);
 
   const setPointerFocusItem = useCallback((itemId: string) => {
+    if (!hasItem(itemId, items)) {
+      return;
+    }
+
+    // Pointer interaction always switches mode to pointer, even when hovering
+    // the same item that keyboard focused. This ensures CSS hover styles are
+    // restored after keyboard navigation.
+    setNavigationInputMode('pointer');
+
     const currentFocused = isSearchActive ? searchFocusedItemId : focusedItemId;
-    if (!hasItem(itemId, items) || currentFocused === itemId) {
+    if (currentFocused === itemId) {
       return;
     }
 
@@ -136,7 +145,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     // text-input focus from the search field.
     suppressNextDomFocusRef.current = true;
     setSearchFocusedItemId(itemId);
-    setNavigationInputMode('pointer');
   }, [items, focusedItemId, searchFocusedItemId, isSearchActive]);
 
   const setKeyboardFocusedItem = useCallback((itemId: string) => {
