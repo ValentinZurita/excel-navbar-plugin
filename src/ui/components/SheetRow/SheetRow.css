@@ -107,12 +107,11 @@
   box-shadow: none;
 }
 
-/* Active row state: light gray background + Excel green text.
-   Note: Hover intentionally has no visual background.
-   Only active state shows background color. */
+/* Active row state: subtle ghost background + Excel green text.
+   This prevents fighting with the heavy keyboard navigation focus state. */
 .sheet-row-active,
 .sheet-row[data-active='true'] {
-  background: var(--excel-nav-active-bg);
+  background: var(--excel-nav-resting-bg);
   border-color: transparent;
   box-shadow: none;
   transform: none;

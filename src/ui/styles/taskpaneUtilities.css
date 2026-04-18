@@ -176,8 +176,9 @@
   background: transparent;
 }
 
-/* Sheet row focused state (not active) */
-.sheet-row[data-focused="true"]:not(.sheet-row-active):not([data-active="true"]) {
+/* Sheet row focused state */
+.sheet-row[data-focused="true"],
+.sheet-row[data-active="true"][data-focused="true"] {
   background: var(--excel-nav-active-bg);
 }
 
@@ -207,6 +208,7 @@
   background: transparent;
 }
 
-:root[data-office-theme-mode="dark"] .sheet-row[data-focused="true"]:not(.sheet-row-active):not([data-active="true"]) {
+:root[data-office-theme-mode="dark"] .sheet-row[data-focused="true"],
+:root[data-office-theme-mode="dark"] .sheet-row[data-active="true"][data-focused="true"] {
   background: var(--excel-nav-active-bg);
 }

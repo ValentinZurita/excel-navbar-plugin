@@ -28,7 +28,8 @@
      REVERSIBLE: To restore hover background:
      --excel-nav-hover-bg: color-mix(in srgb, var(--excel-body-fg) 5%, transparent);
   */
-  --excel-nav-active-bg: color-mix(in srgb, var(--excel-body-fg) 3.5%, transparent);
+  --excel-nav-resting-bg: color-mix(in srgb, var(--excel-body-fg) 2.5%, transparent);
+  --excel-nav-active-bg: color-mix(in srgb, var(--excel-body-fg) 7%, transparent);
   --excel-nav-active-fg: var(--excel-accent);
   --excel-nav-drag-target-bg: color-mix(in srgb, var(--excel-body-fg) 10%, transparent);
 
