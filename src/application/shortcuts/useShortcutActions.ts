@@ -7,7 +7,7 @@ import { ShortcutActionId } from './ShortcutRegistry';
  * Matches Ctrl+Alt+<key> on Windows and Cmd+Option+<key> on Mac.
  */
 const SHORTCUT_KEY_MAP: Record<string, string> = {
-  [ShortcutActionId.TOGGLE_TASKPANE]: 'k',
+  [ShortcutActionId.TOGGLE_TASKPANE]: 'p',
   [ShortcutActionId.FOCUS_SEARCH]: 'f',
   [ShortcutActionId.CREATE_WORKSHEET]: 'n',
 };

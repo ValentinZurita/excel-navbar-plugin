@@ -224,8 +224,16 @@ export function TaskpaneAppContainer() {
     {
       id: ShortcutActionId.FOCUS_SEARCH,
       description: 'Focus the search field',
-      handler: () => {
-        searchInputRef.current?.focus();
+      handler: async () => {
+        try {
+          await Office.addin.showAsTaskpane();
+        } catch {
+          // Ignore if unsupported on current platform
+        }
+        // Give the taskpane a moment to open and render before focusing
+        setTimeout(() => {
+          searchInputRef.current?.focus();
+        }, 100);
       },
     },
     {

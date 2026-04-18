@@ -20,8 +20,8 @@
     {
       "action": "toggleTaskpane",
       "key": {
-        "default": "Ctrl+Alt+K",
-        "mac": "Command+Option+K"
+        "default": "Ctrl+Alt+P",
+        "mac": "Command+Option+P"
       }
     },
     {
