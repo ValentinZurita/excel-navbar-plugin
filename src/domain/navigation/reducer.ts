@@ -27,6 +27,7 @@ export type NavigationAction =
   | { type: 'createGroup'; name: string; colorToken: GroupColorToken; initialWorksheetId?: string }
   | { type: 'renameGroup'; groupId: string; name: string }
   | { type: 'deleteGroup'; groupId: string }
+  | { type: 'restoreGroup'; group: GroupEntity; worksheetId: string; orderIndex: number }
   | { type: 'setGroupColor'; groupId: string; colorToken: GroupColorToken }
   | { type: 'assignWorksheetToGroup'; worksheetId: string; groupId: string; targetIndex?: number }
   | { type: 'removeWorksheetFromGroup'; worksheetId: string; targetIndex?: number }
@@ -286,6 +287,38 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       return {
         ...nextState,
         groupOrder: nextState.groupOrder.filter((groupId) => groupId !== action.groupId),
+        sheetSectionOrder: reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById),
+      };
+    }
+    case 'restoreGroup': {
+      if (state.groupsById[action.group.groupId]) {
+        return state;
+      }
+
+      const nextState = cloneState(state);
+      const insertIndex = Math.max(0, Math.min(action.orderIndex, nextState.groupOrder.length));
+
+      nextState.groupsById[action.group.groupId] = {
+        ...action.group,
+        worksheetOrder: [...action.group.worksheetOrder],
+      };
+      nextState.groupOrder = [
+        ...nextState.groupOrder.slice(0, insertIndex),
+        action.group.groupId,
+        ...nextState.groupOrder.slice(insertIndex),
+      ];
+
+      const worksheet = nextState.worksheetsById[action.worksheetId];
+      if (worksheet) {
+        removeWorksheetFromAnyGroup(nextState, action.worksheetId);
+        worksheet.groupId = action.group.groupId;
+        worksheet.isPinned = false;
+        worksheet.lastKnownStructuralState = { kind: 'group', groupId: action.group.groupId };
+        nextState.groupsById[action.group.groupId].worksheetOrder = [action.worksheetId];
+      }
+
+      return {
+        ...nextState,
         sheetSectionOrder: reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById),
       };
     }

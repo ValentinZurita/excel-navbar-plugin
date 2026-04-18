@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BannerState, WorksheetEntity } from '../../src/domain/navigation/types';
@@ -74,6 +74,7 @@ function createControllerMock() {
     renameWorksheet: vi.fn().mockResolvedValue(undefined),
     unhideWorksheet: vi.fn().mockResolvedValue(undefined),
     hideWorksheet: vi.fn().mockResolvedValue(undefined),
+    restoreGroup: vi.fn(),
     reload: vi.fn().mockResolvedValue(undefined),
   };
 
@@ -194,7 +195,7 @@ describe('TaskpaneAppContainer', () => {
     expect(screen.queryByRole('button', { name: 'Rename' })).not.toBeInTheDocument();
   });
 
-  it('confirms group deletion through product-owned dialog instead of browser confirm', async () => {
+  it('confirms group deletion through inline group menu confirmation', async () => {
     const user = userEvent.setup();
     const controller = createControllerMock() as any;
     const group = {
@@ -230,11 +231,8 @@ describe('TaskpaneAppContainer', () => {
 
     await user.click(screen.getByRole('button', { name: 'Ungroup' }));
 
-    expect(screen.getByRole('heading', { name: 'Ungroup' })).toBeInTheDocument();
-    expect(screen.getByText('Ungroup Finance? Sheets will become independent.')).toBeInTheDocument();
-
-    const confirmDialog = screen.getByRole('dialog', { name: 'Ungroup' });
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Ungroup' }));
+    expect(screen.getByText("Ungroup 'Finance'? Sheets become independent.")).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Confirm ungroup Finance' }));
 
     expect(controller.deleteGroup).toHaveBeenCalledWith('group-1');
   });
@@ -294,6 +292,47 @@ describe('TaskpaneAppContainer', () => {
     await user.click(screen.getByRole('button', { name: 'Add worksheet' }));
 
     expect(controller.createWorksheet).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows undo toast when removing last sheet from group and restores on undo', async () => {
+    const user = userEvent.setup();
+    const controller = createControllerMock() as any;
+    const groupedWorksheet = createWorksheet({ groupId: 'group-1' });
+    controller.state.worksheetsById = { [groupedWorksheet.worksheetId]: groupedWorksheet };
+    controller.state.groupsById = {
+      'group-1': {
+        groupId: 'group-1',
+        name: 'Finance',
+        colorToken: 'green',
+        isCollapsed: false,
+        worksheetOrder: ['sheet-1'],
+        createdAt: 1,
+      },
+    };
+    controller.state.groupOrder = ['group-1'];
+    controller.navigatorView.ungrouped = [groupedWorksheet];
+
+    useNavigationControllerMock.mockReturnValue(controller);
+
+    render(<TaskpaneAppContainer />);
+
+    const worksheetButton = screen.getByRole('button', { name: 'Revenue' });
+    const worksheetRow = worksheetButton.closest('article');
+    expect(worksheetRow).not.toBeNull();
+    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+
+    await user.click(screen.getByRole('button', { name: 'Remove from group' }));
+
+    expect(controller.removeWorksheetFromGroup).toHaveBeenCalledWith('sheet-1', undefined);
+    expect(screen.getByText('Group Finance removed.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Undo' }));
+
+    expect(controller.restoreGroup).toHaveBeenCalledWith(
+      expect.objectContaining({ groupId: 'group-1', name: 'Finance' }),
+      'sheet-1',
+      0,
+    );
   });
 
   it('hides floating add button while dragging worksheet', () => {

@@ -1,10 +1,10 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigationController } from '../../application/navigation/useNavigationController';
 import { TaskpaneShell } from '../components/TaskpaneShell';
+import { UndoToast } from '../components/UndoToast';
 import { AddWorksheetFab } from '../components/AddWorksheetFab';
-import { ConfirmDialog } from '../components/ConfirmDialog';
 import { TextPromptDialog } from '../components/TextPromptDialog';
-import type { WorksheetEntity } from '../../domain/navigation/types';
+import type { GroupEntity, WorksheetEntity } from '../../domain/navigation/types';
 import { TaskpaneMenus } from './components/TaskpaneMenus';
 import { TaskpaneSections } from './components/TaskpaneSections';
 import { useContextMenus } from './hooks/useContextMenus';
@@ -21,6 +21,46 @@ export function TaskpaneAppContainer() {
   // The controller owns workbook operations and domain state transitions.
   const controller = useNavigationController();
   const [deleteGroupRequest, setDeleteGroupRequest] = useState<{ groupId: string; groupName: string } | null>(null);
+  const [undoToast, setUndoToast] = useState<{
+    group: GroupEntity;
+    worksheetId: string;
+    orderIndex: number;
+    message: string;
+  } | null>(null);
+  const undoTimerRef = useRef<number | null>(null);
+
+  const dismissUndoToast = useCallback(() => {
+    setUndoToast(null);
+    if (undoTimerRef.current !== null) {
+      window.clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleUndoToast = useCallback((payload: {
+    group: GroupEntity;
+    worksheetId: string;
+    orderIndex: number;
+    message: string;
+  }) => {
+    if (undoTimerRef.current !== null) {
+      window.clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+    setUndoToast(payload);
+    undoTimerRef.current = window.setTimeout(() => {
+      setUndoToast(null);
+      undoTimerRef.current = null;
+    }, 7000);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current !== null) {
+        window.clearTimeout(undoTimerRef.current);
+      }
+    };
+  }, []);
 
   // Search input ref lifted here so shortcuts can focus it programmatically.
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -76,6 +116,7 @@ export function TaskpaneAppContainer() {
   // Close menus and reset creation/confirmation state when closing from outside.
   const handleCloseMenus = useCallback(() => {
     closeMenus();
+    setDeleteGroupRequest(null);
     if (isCreating) {
       cancelCreatingGroup();
     }
@@ -99,13 +140,70 @@ export function TaskpaneAppContainer() {
     startDeleteConfirmation(worksheet);
   }, [cancelCreatingGroup, isCreating, startDeleteConfirmation]);
 
+  const handleAssignWorksheetToGroup = useCallback((worksheetId: string, groupId: string, targetIndex?: number) => {
+    const worksheet = controller.state.worksheetsById[worksheetId];
+    if (worksheet?.groupId) {
+      const previousGroup = controller.state.groupsById[worksheet.groupId];
+      if (previousGroup && previousGroup.worksheetOrder.length === 1) {
+        const groupOrderIndex = controller.state.groupOrder.findIndex((candidateId) => candidateId === previousGroup.groupId);
+        scheduleUndoToast({
+          group: {
+            ...previousGroup,
+            worksheetOrder: [...previousGroup.worksheetOrder],
+          },
+          worksheetId,
+          orderIndex: groupOrderIndex >= 0 ? groupOrderIndex : 0,
+          message: `Group ${previousGroup.name} removed.`,
+        });
+      }
+    }
+
+    controller.assignWorksheetToGroup(worksheetId, groupId, targetIndex);
+  }, [
+    controller.assignWorksheetToGroup,
+    controller.state.groupOrder,
+    controller.state.groupsById,
+    controller.state.worksheetsById,
+    scheduleUndoToast,
+  ]);
+
+  const handleRemoveFromGroup = useCallback((worksheetId: string, targetIndex?: number) => {
+    const worksheet = controller.state.worksheetsById[worksheetId];
+    if (!worksheet?.groupId) {
+      controller.removeWorksheetFromGroup(worksheetId, targetIndex);
+      return;
+    }
+
+    const group = controller.state.groupsById[worksheet.groupId];
+    if (group && group.worksheetOrder.length === 1) {
+      const groupOrderIndex = controller.state.groupOrder.findIndex((groupId) => groupId === group.groupId);
+      scheduleUndoToast({
+        group: {
+          ...group,
+          worksheetOrder: [...group.worksheetOrder],
+        },
+        worksheetId,
+        orderIndex: groupOrderIndex >= 0 ? groupOrderIndex : 0,
+        message: `Group ${group.name} removed.`,
+      });
+    }
+
+    controller.removeWorksheetFromGroup(worksheetId, targetIndex);
+  }, [
+    controller.removeWorksheetFromGroup,
+    controller.state.groupOrder,
+    controller.state.groupsById,
+    controller.state.worksheetsById,
+    scheduleUndoToast,
+  ]);
+
   const dragPolicyState = useMemo(() => ({
     worksheetsById: controller.state.worksheetsById,
   }), [controller.state.worksheetsById]);
 
   const dragAndDrop = useWorksheetDnD({
-    assignWorksheetToGroup: controller.assignWorksheetToGroup,
-    removeWorksheetFromGroup: controller.removeWorksheetFromGroup,
+    assignWorksheetToGroup: handleAssignWorksheetToGroup,
+    removeWorksheetFromGroup: handleRemoveFromGroup,
     reorderGroupWorksheet: controller.reorderGroupWorksheet,
     reorderSheetSectionWorksheet: controller.reorderSheetSectionWorksheet,
     reorderPinnedWorksheet: controller.reorderPinnedWorksheet,
@@ -122,13 +220,66 @@ export function TaskpaneAppContainer() {
   }, [controller.activateWorksheet, controller.setQuery]);
 
   const handleTogglePin = useCallback((worksheet: WorksheetEntity) => {
+    if (worksheet.groupId) {
+      const group = controller.state.groupsById[worksheet.groupId];
+      if (group && group.worksheetOrder.length === 1) {
+        const groupOrderIndex = controller.state.groupOrder.findIndex((groupId) => groupId === group.groupId);
+        scheduleUndoToast({
+          group: {
+            ...group,
+            worksheetOrder: [...group.worksheetOrder],
+          },
+          worksheetId: worksheet.worksheetId,
+          orderIndex: groupOrderIndex >= 0 ? groupOrderIndex : 0,
+          message: `Group ${group.name} removed.`,
+        });
+      }
+    }
+
     if (worksheet.isPinned) {
       controller.unpinWorksheet(worksheet.worksheetId);
       return;
     }
 
     controller.pinWorksheet(worksheet.worksheetId);
-  }, [controller.pinWorksheet, controller.unpinWorksheet]);
+  }, [
+    controller.pinWorksheet,
+    controller.state.groupOrder,
+    controller.state.groupsById,
+    controller.unpinWorksheet,
+    scheduleUndoToast,
+  ]);
+
+  const handlePinWorksheet = useCallback((worksheetId: string) => {
+    const worksheet = controller.state.worksheetsById[worksheetId];
+    if (!worksheet) {
+      return;
+    }
+
+    if (worksheet.groupId) {
+      const group = controller.state.groupsById[worksheet.groupId];
+      if (group && group.worksheetOrder.length === 1) {
+        const groupOrderIndex = controller.state.groupOrder.findIndex((groupId) => groupId === group.groupId);
+        scheduleUndoToast({
+          group: {
+            ...group,
+            worksheetOrder: [...group.worksheetOrder],
+          },
+          worksheetId,
+          orderIndex: groupOrderIndex >= 0 ? groupOrderIndex : 0,
+          message: `Group ${group.name} removed.`,
+        });
+      }
+    }
+
+    controller.pinWorksheet(worksheetId);
+  }, [
+    controller.pinWorksheet,
+    controller.state.groupOrder,
+    controller.state.groupsById,
+    controller.state.worksheetsById,
+    scheduleUndoToast,
+  ]);
 
   const handleToggleVisibility = useCallback((worksheet: WorksheetEntity) => {
     if (worksheet.visibility === 'Visible') {
@@ -143,10 +294,6 @@ export function TaskpaneAppContainer() {
     setDeleteGroupRequest({ groupId, groupName });
   }, []);
 
-  const closeDeleteGroupDialog = useCallback(() => {
-    setDeleteGroupRequest(null);
-  }, []);
-
   const confirmDeleteGroup = useCallback(() => {
     if (!deleteGroupRequest) {
       return;
@@ -154,7 +301,12 @@ export function TaskpaneAppContainer() {
 
     controller.deleteGroup(deleteGroupRequest.groupId);
     setDeleteGroupRequest(null);
-  }, [controller.deleteGroup, deleteGroupRequest]);
+    closeMenus();
+  }, [closeMenus, controller.deleteGroup, deleteGroupRequest]);
+
+  const cancelDeleteGroup = useCallback(() => {
+    setDeleteGroupRequest(null);
+  }, []);
 
   // Inline rename handlers for worksheets.
   const handleRenameWorksheetStart = useCallback((worksheet: WorksheetEntity) => {
@@ -250,8 +402,27 @@ export function TaskpaneAppContainer() {
     isSuppressed: isShortcutsSuppressed,
   });
 
+  const handleUndoRestoreGroup = useCallback(() => {
+    if (!undoToast) {
+      return;
+    }
+
+    controller.restoreGroup(undoToast.group, undoToast.worksheetId, undoToast.orderIndex);
+    dismissUndoToast();
+  }, [controller, dismissUndoToast, undoToast]);
+
   return (
-    <TaskpaneShell banner={controller.banner}>
+    <TaskpaneShell
+      banner={controller.banner}
+      toast={undoToast ? (
+        <UndoToast
+          message={undoToast.message}
+          actionLabel="Undo"
+          onUndo={handleUndoRestoreGroup}
+          onDismiss={dismissUndoToast}
+        />
+      ) : null}
+    >
       {/* Main taskpane navigation sections (search, pinned, groups, hidden). */}
       <TaskpaneSections
         query={controller.state.query}
@@ -268,7 +439,7 @@ export function TaskpaneAppContainer() {
         onChangeQuery={controller.setQuery}
         onSelectSearchResult={activateWorksheetFromSearch}
         onActivateWorksheet={controller.activateWorksheet}
-        onPinWorksheet={controller.pinWorksheet}
+        onPinWorksheet={handlePinWorksheet}
         onUnpinWorksheet={controller.unpinWorksheet}
         onToggleGroupCollapsed={controller.toggleGroupCollapsed}
         onToggleHiddenSection={controller.toggleHiddenSection}
@@ -298,10 +469,13 @@ export function TaskpaneAppContainer() {
         onTogglePin={handleTogglePin}
         onToggleVisibility={handleToggleVisibility}
         onRenameWorksheet={handleRenameWorksheetStart}
-        onRemoveFromGroup={controller.removeWorksheetFromGroup}
+        onRemoveFromGroup={handleRemoveFromGroup}
         onStartCreatingGroup={handleStartCreatingGroup}
         onRenameGroup={handleRenameGroupStart}
         onDeleteGroup={handleDeleteGroup}
+        deleteGroupRequest={deleteGroupRequest}
+        onCancelDeleteGroup={cancelDeleteGroup}
+        onConfirmDeleteGroup={confirmDeleteGroup}
         onSetGroupColor={controller.setGroupColor}
         isCreatingGroup={isCreating}
         onCancelCreatingGroup={cancelCreatingGroup}
@@ -325,20 +499,6 @@ export function TaskpaneAppContainer() {
         submitLabel={textPromptConfig?.submitLabel ?? 'Save'}
         onCancel={closeTextPrompt}
         onSubmit={submitTextPrompt}
-      />
-
-      {/* Product-owned confirmation keeps delete flow aligned with the rest of the UI. */}
-      <ConfirmDialog
-        isOpen={Boolean(deleteGroupRequest)}
-        title="Ungroup"
-        description={
-          deleteGroupRequest
-            ? `Ungroup ${deleteGroupRequest.groupName}? Sheets will become independent.`
-            : undefined
-        }
-        confirmLabel="Ungroup"
-        onCancel={closeDeleteGroupDialog}
-        onConfirm={confirmDeleteGroup}
       />
 
     </TaskpaneShell>

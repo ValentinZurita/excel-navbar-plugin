@@ -125,6 +125,10 @@ button {
   margin-top: 0;
 }
 
+.taskpane-toast-slot {
+  margin-top: 8px;
+}
+
 /* ==========================================================================
    4. Structural wrappers
    Section containers stay visually flat on purpose.

@@ -2,7 +2,12 @@ import { useEffect, useCallback, type KeyboardEvent as ReactKeyboardEvent } from
 import './InlineDeleteConfirmation.css';
 
 interface InlineDeleteConfirmationProps {
-  worksheetName: string;
+  worksheetName?: string;
+  message?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  confirmAriaLabel?: string;
+  cancelAriaLabel?: string;
   onConfirm: () => Promise<void>;
   onCancel: () => void;
   onCloseMenu: () => void;
@@ -12,12 +17,18 @@ interface InlineDeleteConfirmationProps {
 
 export function InlineDeleteConfirmation({
   worksheetName,
+  message,
+  confirmLabel = 'Delete',
+  cancelLabel = 'Cancel',
+  confirmAriaLabel,
+  cancelAriaLabel = 'Cancel deletion',
   onConfirm,
   onCancel,
   onCloseMenu,
   isDeleting = false,
   error = null,
 }: InlineDeleteConfirmationProps) {
+  const deletingLabel = confirmLabel === 'Delete' ? 'Deleting...' : `${confirmLabel}...`;
   // Handle keyboard interactions
   const handleKeyDown = useCallback(
     (event: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -64,7 +75,7 @@ export function InlineDeleteConfirmation({
   return (
     <div className="inline-delete-confirmation" onKeyDown={handleKeyDown} role="alertdialog" aria-live="polite">
       <p className="inline-delete-message">
-        Delete &apos;{worksheetName}&apos;?
+        {message ?? `Delete '${worksheetName ?? ''}'?`}
       </p>
 
       {error && <p className="inline-delete-error">{error}</p>}
@@ -75,19 +86,19 @@ export function InlineDeleteConfirmation({
           className="inline-delete-button inline-delete-cancel"
           onClick={handleCancelClick}
           disabled={isDeleting}
-          aria-label="Cancel deletion"
+          aria-label={cancelAriaLabel}
         >
-          Cancel
+          {cancelLabel}
         </button>
         <button
           type="button"
           className="inline-delete-button inline-delete-confirm"
           onClick={handleConfirmClick}
           disabled={isDeleting}
-          aria-label={`Confirm deletion of ${worksheetName}`}
+          aria-label={confirmAriaLabel ?? `Confirm deletion of ${worksheetName ?? 'item'}`}
           autoFocus
         >
-          {isDeleting ? 'Deleting...' : 'Delete'}
+          {isDeleting ? deletingLabel : confirmLabel}
         </button>
       </div>
     </div>

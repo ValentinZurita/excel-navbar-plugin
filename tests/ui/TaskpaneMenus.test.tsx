@@ -29,6 +29,9 @@ function renderSheetMenu(overrides: Partial<React.ComponentProps<typeof Taskpane
       onStartCreatingGroup={vi.fn()}
       onRenameGroup={vi.fn()}
       onDeleteGroup={vi.fn()}
+      deleteGroupRequest={null}
+      onCancelDeleteGroup={vi.fn()}
+      onConfirmDeleteGroup={vi.fn()}
       onSetGroupColor={vi.fn()}
       isCreatingGroup={false}
       onCancelCreatingGroup={vi.fn()}
@@ -66,6 +69,9 @@ describe('TaskpaneMenus', () => {
         onStartCreatingGroup={vi.fn()}
         onRenameGroup={vi.fn()}
         onDeleteGroup={vi.fn()}
+        deleteGroupRequest={null}
+        onCancelDeleteGroup={vi.fn()}
+        onConfirmDeleteGroup={vi.fn()}
         onSetGroupColor={vi.fn()}
         isCreatingGroup={false}
         onCancelCreatingGroup={vi.fn()}
@@ -96,6 +102,9 @@ describe('TaskpaneMenus', () => {
         onStartCreatingGroup={vi.fn()}
         onRenameGroup={vi.fn()}
         onDeleteGroup={vi.fn()}
+        deleteGroupRequest={null}
+        onCancelDeleteGroup={vi.fn()}
+        onConfirmDeleteGroup={vi.fn()}
         onSetGroupColor={vi.fn()}
         isCreatingGroup={false}
         onCancelCreatingGroup={vi.fn()}
@@ -131,6 +140,9 @@ describe('TaskpaneMenus', () => {
         onStartCreatingGroup={vi.fn()}
         onRenameGroup={vi.fn()}
         onDeleteGroup={vi.fn()}
+        deleteGroupRequest={null}
+        onCancelDeleteGroup={vi.fn()}
+        onConfirmDeleteGroup={vi.fn()}
         onSetGroupColor={vi.fn()}
         isCreatingGroup={false}
         onCancelCreatingGroup={vi.fn()}
@@ -190,6 +202,9 @@ describe('TaskpaneMenus', () => {
         onStartCreatingGroup={vi.fn()}
         onRenameGroup={vi.fn()}
         onDeleteGroup={onDeleteGroup}
+        deleteGroupRequest={null}
+        onCancelDeleteGroup={vi.fn()}
+        onConfirmDeleteGroup={vi.fn()}
         onSetGroupColor={vi.fn()}
         isCreatingGroup={false}
         onCancelCreatingGroup={vi.fn()}
@@ -207,7 +222,41 @@ describe('TaskpaneMenus', () => {
     await user.click(screen.getByRole('button', { name: 'Ungroup' }));
 
     expect(onDeleteGroup).toHaveBeenCalledWith('group-1', 'Finance');
-    expect(onCloseMenus).toHaveBeenCalled();
+    expect(onCloseMenus).not.toHaveBeenCalled();
+  });
+
+  it('shows inline ungroup confirmation in group menu when requested', () => {
+    render(
+      <TaskpaneMenus
+        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
+        onCloseMenus={vi.fn()}
+        onTogglePin={vi.fn()}
+        onToggleVisibility={vi.fn()}
+        onRenameWorksheet={vi.fn()}
+        onRemoveFromGroup={vi.fn()}
+        onStartCreatingGroup={vi.fn()}
+        onRenameGroup={vi.fn()}
+        onDeleteGroup={vi.fn()}
+        deleteGroupRequest={{ groupId: 'group-1', groupName: 'Finance' }}
+        onCancelDeleteGroup={vi.fn()}
+        onConfirmDeleteGroup={vi.fn()}
+        onSetGroupColor={vi.fn()}
+        isCreatingGroup={false}
+        onCancelCreatingGroup={vi.fn()}
+        onConfirmCreatingGroup={vi.fn()}
+        isConfirmingDelete={false}
+        worksheetToDelete={null}
+        onStartDeleteConfirmation={vi.fn()}
+        onCancelDeleteConfirmation={vi.fn()}
+        onConfirmDelete={vi.fn().mockResolvedValue(undefined)}
+        isDeleting={false}
+        deleteError={null}
+      />,
+    );
+
+    expect(screen.getByText("Ungroup 'Finance'? Sheets become independent.")).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel ungroup' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Confirm ungroup Finance' })).toBeInTheDocument();
   });
 
   it('starts inline creation when New group is clicked', async () => {

@@ -29,10 +29,13 @@ interface TaskpaneMenusProps {
   onTogglePin: (worksheet: WorksheetEntity) => void;
   onToggleVisibility: (worksheet: WorksheetEntity) => void;
   onRenameWorksheet: (worksheet: WorksheetEntity) => void;
-  onRemoveFromGroup: (worksheetId: string) => void;
+  onRemoveFromGroup: (worksheetId: string, targetIndex?: number) => void;
   onStartCreatingGroup: (initialWorksheetId?: string) => void;
   onRenameGroup: (groupId: string, groupName: string) => void;
   onDeleteGroup: (groupId: string, groupName: string) => void;
+  deleteGroupRequest: { groupId: string; groupName: string } | null;
+  onCancelDeleteGroup: () => void;
+  onConfirmDeleteGroup: () => void;
   onSetGroupColor: (groupId: string, colorToken: GroupColorToken) => void;
   // Inline creation state
   isCreatingGroup: boolean;
@@ -183,7 +186,7 @@ function isColorNone(color: GroupColorToken): color is 'none' {
 
 function buildGroupMenuActions(
   groupMenu: GroupMenuState,
-  handlers: Pick<TaskpaneMenusProps, 'onCloseMenus' | 'onStartCreatingGroup' | 'onRenameGroup' | 'onDeleteGroup' | 'onSetGroupColor'>,
+  handlers: Pick<TaskpaneMenusProps, 'onStartCreatingGroup' | 'onRenameGroup' | 'onDeleteGroup' | 'onSetGroupColor'>,
   onOpenColorPicker: (open: boolean) => void,
 ): MenuAction[] {
   return [
@@ -216,7 +219,6 @@ function buildGroupMenuActions(
       label: 'Ungroup',
       onSelect: () => {
         handlers.onDeleteGroup(groupMenu.groupId, groupMenu.groupName);
-        handlers.onCloseMenus();
       },
     },
   ];
@@ -246,7 +248,7 @@ function SheetContextMenu({
   onTogglePin: (worksheet: WorksheetEntity) => void;
   onToggleVisibility: (worksheet: WorksheetEntity) => void;
   onRenameWorksheet: (worksheet: WorksheetEntity) => void;
-  onRemoveFromGroup: (worksheetId: string) => void;
+  onRemoveFromGroup: (worksheetId: string, targetIndex?: number) => void;
   onStartCreatingGroup: (initialWorksheetId?: string) => void;
   onStartDeleteConfirmation: (worksheet: WorksheetEntity) => void;
   isCreatingGroup: boolean;
@@ -299,6 +301,9 @@ function GroupContextMenu({
   onStartCreatingGroup,
   onRenameGroup,
   onDeleteGroup,
+  deleteGroupRequest,
+  onCancelDeleteGroup,
+  onConfirmDeleteGroup,
   onSetGroupColor,
   isCreatingGroup,
   onCancelCreatingGroup,
@@ -324,6 +329,10 @@ function GroupContextMenu({
     onSetGroupColor,
   }, setIsColorPickerOpen);
 
+  const isConfirmingGroupDelete = Boolean(
+    deleteGroupRequest && deleteGroupRequest.groupId === groupMenu.groupId,
+  );
+
   function handleColorSelect(color: GroupColorToken) {
     onSetGroupColor(groupMenu.groupId, color);
     onCloseMenus();
@@ -335,6 +344,19 @@ function GroupContextMenu({
         <InlineGroupCreator
           onCreate={onConfirmCreatingGroup}
           onCancel={onCancelCreatingGroup}
+          onCloseMenu={onCloseMenus}
+        />
+      ) : isConfirmingGroupDelete ? (
+        <InlineDeleteConfirmation
+          message={deleteGroupRequest ? `Ungroup '${deleteGroupRequest.groupName}'? Sheets become independent.` : undefined}
+          confirmLabel="Ungroup"
+          cancelLabel="Cancel"
+          confirmAriaLabel={deleteGroupRequest ? `Confirm ungroup ${deleteGroupRequest.groupName}` : 'Confirm ungroup'}
+          cancelAriaLabel="Cancel ungroup"
+          onConfirm={async () => {
+            onConfirmDeleteGroup();
+          }}
+          onCancel={onCancelDeleteGroup}
           onCloseMenu={onCloseMenus}
         />
       ) : isColorPickerOpen ? (
@@ -385,6 +407,9 @@ export function TaskpaneMenus({
   onStartCreatingGroup,
   onRenameGroup,
   onDeleteGroup,
+  deleteGroupRequest,
+  onCancelDeleteGroup,
+  onConfirmDeleteGroup,
   onSetGroupColor,
   isCreatingGroup,
   onCancelCreatingGroup,
@@ -432,6 +457,9 @@ export function TaskpaneMenus({
       onStartCreatingGroup={onStartCreatingGroup}
       onRenameGroup={onRenameGroup}
       onDeleteGroup={onDeleteGroup}
+      deleteGroupRequest={deleteGroupRequest}
+      onCancelDeleteGroup={onCancelDeleteGroup}
+      onConfirmDeleteGroup={onConfirmDeleteGroup}
       onSetGroupColor={onSetGroupColor}
       isCreatingGroup={isCreatingGroup}
       onCancelCreatingGroup={onCancelCreatingGroup}

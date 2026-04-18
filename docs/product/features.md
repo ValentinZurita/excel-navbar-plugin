@@ -7,6 +7,7 @@ Pinned sheets, groups, ungrouped sheets, and hidden sheets render in a single ta
 Manual, single-membership groups that do not change workbook order.
 When local user actions remove the last sheet from a group, that group is removed automatically for cleaner navigation.
 Groups can still appear empty after external workbook edits remove their member sheets.
+When local auto-removal happens, a short Undo toast appears so users can restore the group quickly.
 
 ## Sidebar Ordering
 Visible ungrouped sheets can be reordered inside the sidebar without changing the real Excel tab order.

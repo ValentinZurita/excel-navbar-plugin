@@ -7,6 +7,7 @@ import { useNavigationContext } from '../../ui/navigation/NavigationProvider';
 import type {
   BannerState,
   GroupColorToken,
+  GroupEntity,
   PersistenceStatus,
   WorkbookPersistenceContext,
 } from '../../domain/navigation/types';
@@ -213,6 +214,9 @@ export function useNavigationController() {
     },
     deleteGroup(groupId: string) {
       dispatch({ type: 'deleteGroup', groupId });
+    },
+    restoreGroup(group: GroupEntity, worksheetId: string, orderIndex: number) {
+      dispatch({ type: 'restoreGroup', group, worksheetId, orderIndex });
     },
     setGroupColor(groupId: string, colorToken: GroupColorToken) {
       dispatch({ type: 'setGroupColor', groupId, colorToken });

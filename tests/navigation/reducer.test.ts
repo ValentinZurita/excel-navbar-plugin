@@ -217,6 +217,53 @@ describe('navigationReducer', () => {
     expect(nextState.groupsById['group-stale'].worksheetOrder).toEqual([]);
   });
 
+  it('restores pruned group with worksheet on undo', () => {
+    const state = createDefaultNavigationState();
+    state.groupOrder = ['group-2'];
+    state.groupsById = {
+      'group-2': {
+        groupId: 'group-2',
+        name: 'Other',
+        colorToken: 'yellow',
+        isCollapsed: false,
+        worksheetOrder: [],
+        createdAt: 2,
+      },
+    };
+    state.worksheetsById = {
+      one: {
+        worksheetId: 'one',
+        name: 'Overview',
+        visibility: 'Visible',
+        workbookOrder: 0,
+        isPinned: false,
+        groupId: null,
+        lastKnownStructuralState: { kind: 'ungrouped' },
+      },
+    };
+    state.sheetSectionOrder = ['one'];
+
+    const nextState = navigationReducer(state, {
+      type: 'restoreGroup',
+      group: {
+        groupId: 'group-1',
+        name: 'Finance',
+        colorToken: 'green',
+        isCollapsed: false,
+        worksheetOrder: ['one'],
+        createdAt: 1,
+      },
+      worksheetId: 'one',
+      orderIndex: 0,
+    });
+
+    expect(nextState.groupOrder).toEqual(['group-1', 'group-2']);
+    expect(nextState.groupsById['group-1']).toBeDefined();
+    expect(nextState.groupsById['group-1'].worksheetOrder).toEqual(['one']);
+    expect(nextState.worksheetsById.one.groupId).toBe('group-1');
+    expect(nextState.worksheetsById.one.lastKnownStructuralState).toEqual({ kind: 'group', groupId: 'group-1' });
+  });
+
   it('creates a group with no color when colorToken is none', () => {
     const state = createDefaultNavigationState();
 
