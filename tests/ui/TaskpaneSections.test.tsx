@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useState, type ComponentProps, type ReactNode } from 'react';
+import { createRef, useState, type ComponentProps, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NavigatorView, WorksheetEntity } from '../../src/domain/navigation/types';
 import { TaskpaneSections } from '../../src/ui/taskpane/components/TaskpaneSections';
@@ -75,6 +75,7 @@ function createBaseProps(overrides: Partial<ComponentProps<typeof TaskpaneSectio
     onUnhideWorksheet: vi.fn().mockResolvedValue(undefined),
     onOpenSheetMenu: vi.fn(),
     onOpenGroupMenu: vi.fn(),
+    searchInputRef: createRef<HTMLInputElement>(),
     ...overrides,
   };
 }

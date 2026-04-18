@@ -1,0 +1,42 @@
+{
+  "actions": [
+    {
+      "id": "toggleTaskpane",
+      "type": "ExecuteFunction",
+      "name": "Toggle Navigator"
+    },
+    {
+      "id": "focusSearch",
+      "type": "ExecuteFunction",
+      "name": "Focus Search"
+    },
+    {
+      "id": "createWorksheet",
+      "type": "ExecuteFunction",
+      "name": "Create Worksheet"
+    }
+  ],
+  "shortcuts": [
+    {
+      "action": "toggleTaskpane",
+      "key": {
+        "default": "Ctrl+Alt+K",
+        "mac": "Command+Option+K"
+      }
+    },
+    {
+      "action": "focusSearch",
+      "key": {
+        "default": "Ctrl+Alt+F",
+        "mac": "Command+Option+F"
+      }
+    },
+    {
+      "action": "createWorksheet",
+      "key": {
+        "default": "Ctrl+Alt+N",
+        "mac": "Command+Option+N"
+      }
+    }
+  ]
+}

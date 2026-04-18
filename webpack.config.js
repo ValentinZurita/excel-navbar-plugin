@@ -5,7 +5,6 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 module.exports = {
   entry: {
     taskpane: path.resolve(__dirname, 'src/taskpane/index.tsx'),
-    commands: path.resolve(__dirname, 'src/commands/commands.ts'),
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
@@ -39,15 +38,11 @@ module.exports = {
       template: path.resolve(__dirname, 'src/taskpane/taskpane.html'),
       chunks: ['taskpane'],
     }),
-    new HtmlWebpackPlugin({
-      filename: 'commands.html',
-      template: path.resolve(__dirname, 'src/commands/commands.html'),
-      chunks: ['commands'],
-    }),
     new CopyWebpackPlugin({
       patterns: [
         { from: 'manifest.xml', to: 'manifest.xml' },
         { from: 'assets', to: 'assets' },
+        { from: 'shortcuts.json', to: 'shortcuts.json' },
       ],
     }),
   ],

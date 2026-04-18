@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo } from 'react';
 import {
   type CollisionDetection,
   DndContext,
@@ -65,6 +65,8 @@ interface TaskpaneSectionsProps {
   isDialogOpen?: boolean;
   isRenaming?: boolean;
   isContextMenuOpen?: boolean;
+  /** Ref to the search input, lifted from container for shortcut access */
+  searchInputRef: React.RefObject<HTMLInputElement>;
 }
 
 const worksheetCollisionDetection: CollisionDetection = (args) => {
@@ -154,9 +156,8 @@ export function TaskpaneSections({
   isDialogOpen = false,
   isRenaming = false,
   isContextMenuOpen = false,
+  searchInputRef,
 }: TaskpaneSectionsProps) {
-  // Ref to the search input for focus management
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Build the linear list of navigable items for keyboard navigation
   const navigableItems = useMemo(() => {

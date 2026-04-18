@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigationController } from '../../application/navigation/useNavigationController';
 import { TaskpaneShell } from '../components/TaskpaneShell';
 import { AddWorksheetFab } from '../components/AddWorksheetFab';
@@ -13,11 +13,17 @@ import { useTextPromptState } from './hooks/useTextPromptState';
 import { useGroupCreationState } from './hooks/useGroupCreationState';
 import { useDeleteConfirmationState } from './hooks/useDeleteConfirmationState';
 import { pinnedSectionPolicy } from './dnd/dndPolicies';
+import { useShortcutActions } from '../../application/shortcuts/useShortcutActions';
+import { ShortcutActionId } from '../../application/shortcuts/ShortcutRegistry';
+import type { ShortcutAction } from '../../application/shortcuts/types';
 
 export function TaskpaneAppContainer() {
   // The controller owns workbook operations and domain state transitions.
   const controller = useNavigationController();
   const [deleteGroupRequest, setDeleteGroupRequest] = useState<{ groupId: string; groupName: string } | null>(null);
+
+  // Search input ref lifted here so shortcuts can focus it programmatically.
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Inline rename state for worksheets and groups (replaces dialog-based rename).
   const [renamingWorksheetId, setRenamingWorksheetId] = useState<string | null>(null);
@@ -209,6 +215,33 @@ export function TaskpaneAppContainer() {
     dragAndDrop.shouldSuppressActivation,
   ]);
 
+  // Centralized keyboard shortcuts — suppressed during modal interactions.
+  const isShortcutsSuppressed = Boolean(
+    textPrompt || deleteGroupRequest || renamingWorksheetId || renamingGroupId || activeMenu,
+  );
+
+  const shortcutActions: ShortcutAction[] = useMemo(() => [
+    {
+      id: ShortcutActionId.FOCUS_SEARCH,
+      description: 'Focus the search field',
+      handler: () => {
+        searchInputRef.current?.focus();
+      },
+    },
+    {
+      id: ShortcutActionId.CREATE_WORKSHEET,
+      description: 'Create a new worksheet',
+      handler: () => {
+        void controller.createWorksheet();
+      },
+    },
+  ], [controller.createWorksheet]);
+
+  useShortcutActions({
+    actions: shortcutActions,
+    isSuppressed: isShortcutsSuppressed,
+  });
+
   return (
     <TaskpaneShell banner={controller.banner}>
       {/* Main taskpane navigation sections (search, pinned, groups, hidden). */}
@@ -240,6 +273,7 @@ export function TaskpaneAppContainer() {
         isDialogOpen={Boolean(textPrompt || deleteGroupRequest)}
         isRenaming={renamingWorksheetId !== null || renamingGroupId !== null}
         isContextMenuOpen={activeMenu !== null}
+        searchInputRef={searchInputRef}
       />
 
       {!dragAndDrop.activeWorksheetId ? (
