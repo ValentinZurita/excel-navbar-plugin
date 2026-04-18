@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   type CollisionDetection,
   DndContext,
@@ -159,16 +159,29 @@ export function TaskpaneSections({
   searchInputRef,
 }: TaskpaneSectionsProps) {
 
+  const [isPinnedCollapsed, setIsPinnedCollapsed] = useState(false);
+  const [isGroupsCollapsed, setIsGroupsCollapsed] = useState(false);
+  const [isSheetsCollapsed, setIsSheetsCollapsed] = useState(false);
+
   // Build the linear list of navigable items for keyboard navigation
   const navigableItems = useMemo(() => {
     return buildNavigableItems({
       query,
       searchResults,
-      pinned: navigatorView.pinned,
-      groups: navigatorView.groups,
-      ungrouped: navigatorView.ungrouped,
+      pinned: isPinnedCollapsed ? [] : navigatorView.pinned,
+      groups: isGroupsCollapsed ? [] : navigatorView.groups,
+      ungrouped: isSheetsCollapsed ? [] : navigatorView.ungrouped,
     });
-  }, [query, searchResults, navigatorView.pinned, navigatorView.groups, navigatorView.ungrouped]);
+  }, [
+    query,
+    searchResults,
+    navigatorView.pinned,
+    navigatorView.groups,
+    navigatorView.ungrouped,
+    isPinnedCollapsed,
+    isGroupsCollapsed,
+    isSheetsCollapsed,
+  ]);
 
   const shouldShowPinnedSection = navigatorView.pinned.length > 0;
   const shouldShowGroupsSection = navigatorView.groups.length > 0;
@@ -233,6 +246,12 @@ export function TaskpaneSections({
         shouldShowUngroupedSection={shouldShowUngroupedSection}
         shouldShowHiddenSection={shouldShowHiddenSection}
         searchInputRef={searchInputRef}
+        isPinnedCollapsed={isPinnedCollapsed}
+        setIsPinnedCollapsed={setIsPinnedCollapsed}
+        isGroupsCollapsed={isGroupsCollapsed}
+        setIsGroupsCollapsed={setIsGroupsCollapsed}
+        isSheetsCollapsed={isSheetsCollapsed}
+        setIsSheetsCollapsed={setIsSheetsCollapsed}
         onChangeQuery={onChangeQuery}
         onSelectSearchResult={onSelectSearchResult}
         onActivateWorksheet={onActivateWorksheet}
@@ -261,6 +280,12 @@ interface TaskpaneSectionsContentProps extends Omit<TaskpaneSectionsProps, 'isDi
   shouldShowUngroupedSection: boolean;
   shouldShowHiddenSection: boolean;
   searchInputRef: React.RefObject<HTMLInputElement>;
+  isPinnedCollapsed: boolean;
+  setIsPinnedCollapsed: (collapsed: boolean) => void;
+  isGroupsCollapsed: boolean;
+  setIsGroupsCollapsed: (collapsed: boolean) => void;
+  isSheetsCollapsed: boolean;
+  setIsSheetsCollapsed: (collapsed: boolean) => void;
 }
 
 function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
@@ -282,6 +307,12 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     shouldShowUngroupedSection,
     shouldShowHiddenSection,
     searchInputRef,
+    isPinnedCollapsed,
+    setIsPinnedCollapsed,
+    isGroupsCollapsed,
+    setIsGroupsCollapsed,
+    isSheetsCollapsed,
+    setIsSheetsCollapsed,
     onChangeQuery,
     onSelectSearchResult,
     onActivateWorksheet,
@@ -356,7 +387,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
         </DragOverlay>
 
         {shouldShowPinnedSection ? (
-          <Section title="Pinned">
+          <Section title="Pinned" isCollapsed={isPinnedCollapsed} onToggle={setIsPinnedCollapsed}>
             <SheetList
               worksheets={navigatorView.pinned}
               activeWorksheetId={activeWorksheetId}
@@ -376,7 +407,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
         ) : null}
 
         {shouldShowGroupsSection ? (
-          <Section title="Groups" headerAccessory={groupsSessionOnlyHint}>
+          <Section title="Groups" headerAccessory={groupsSessionOnlyHint} isCollapsed={isGroupsCollapsed} onToggle={setIsGroupsCollapsed}>
             <GroupSection
               groups={navigatorView.groups}
               activeWorksheetId={activeWorksheetId}
@@ -400,7 +431,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
         ) : null}
 
         {shouldShowUngroupedSection ? (
-          <Section title="Sheets">
+          <Section title="Sheets" isCollapsed={isSheetsCollapsed} onToggle={setIsSheetsCollapsed}>
             <div className="primary-tabs">
               <SheetList
                 worksheets={navigatorView.ungrouped}
