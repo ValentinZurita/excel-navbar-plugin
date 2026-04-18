@@ -228,13 +228,13 @@ describe('TaskpaneAppContainer', () => {
     expect(groupRow).not.toBeNull();
     fireEvent.contextMenu(groupRow as HTMLElement, { clientX: 120, clientY: 80 });
 
-    await user.click(screen.getByRole('button', { name: 'Delete group' }));
+    await user.click(screen.getByRole('button', { name: 'Ungroup' }));
 
-    expect(screen.getByRole('heading', { name: 'Delete group' })).toBeInTheDocument();
-    expect(screen.getByText('Delete Finance? Sheets will become ungrouped.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Ungroup' })).toBeInTheDocument();
+    expect(screen.getByText('Ungroup Finance? Sheets will become independent.')).toBeInTheDocument();
 
-    const confirmDialog = screen.getByRole('dialog', { name: 'Delete group' });
-    await user.click(within(confirmDialog).getByRole('button', { name: 'Delete group' }));
+    const confirmDialog = screen.getByRole('dialog', { name: 'Ungroup' });
+    await user.click(within(confirmDialog).getByRole('button', { name: 'Ungroup' }));
 
     expect(controller.deleteGroup).toHaveBeenCalledWith('group-1');
   });

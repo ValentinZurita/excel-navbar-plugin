@@ -81,7 +81,7 @@ describe('TaskpaneMenus', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Rename group' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Delete group' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ungroup' })).toBeInTheDocument();
   });
 
   it('does not show New group action in group menu', () => {
@@ -204,7 +204,7 @@ describe('TaskpaneMenus', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Delete group' }));
+    await user.click(screen.getByRole('button', { name: 'Ungroup' }));
 
     expect(onDeleteGroup).toHaveBeenCalledWith('group-1', 'Finance');
     expect(onCloseMenus).toHaveBeenCalled();

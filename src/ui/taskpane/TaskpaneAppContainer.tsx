@@ -330,13 +330,13 @@ export function TaskpaneAppContainer() {
       {/* Product-owned confirmation keeps delete flow aligned with the rest of the UI. */}
       <ConfirmDialog
         isOpen={Boolean(deleteGroupRequest)}
-        title="Delete group"
+        title="Ungroup"
         description={
           deleteGroupRequest
-            ? `Delete ${deleteGroupRequest.groupName}? Sheets will become ungrouped.`
+            ? `Ungroup ${deleteGroupRequest.groupName}? Sheets will become independent.`
             : undefined
         }
-        confirmLabel="Delete group"
+        confirmLabel="Ungroup"
         onCancel={closeDeleteGroupDialog}
         onConfirm={confirmDeleteGroup}
       />

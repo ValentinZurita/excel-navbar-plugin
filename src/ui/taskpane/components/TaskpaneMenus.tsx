@@ -211,9 +211,9 @@ function buildGroupMenuActions(
       },
     },
     {
-      key: 'delete-group',
+      key: 'ungroup',
       icon: <DeleteMenuIcon className="context-menu-icon-svg" />,
-      label: 'Delete group',
+      label: 'Ungroup',
       onSelect: () => {
         handlers.onDeleteGroup(groupMenu.groupId, groupMenu.groupName);
         handlers.onCloseMenus();
