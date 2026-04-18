@@ -405,6 +405,50 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   }, [items, isSearchActive]);
 
   /**
+   * Catch global ArrowDown / ArrowUp when no navigable item has focus.
+   * This allows the user to immediately start navigating with arrows right after
+   * opening the taskpane via a keyboard shortcut, without needing to click anything first.
+   */
+  useEffect(() => {
+    const handleGlobalKeyDown = (event: KeyboardEvent) => {
+      if (isSuppressed || focusedItemId) {
+        return;
+      }
+
+      // Do not intercept if user is typing in a native input/textarea
+      if (document.activeElement && (
+        document.activeElement.tagName === 'INPUT' ||
+        document.activeElement.tagName === 'TEXTAREA'
+      )) {
+        return;
+      }
+
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        // Find the best item to start navigation from (active worksheet or first item)
+        const activeItemId = activeWorksheetId ? `worksheet:${activeWorksheetId}` : null;
+        let targetId = activeItemId && hasItem(activeItemId, items) ? activeItemId : null;
+        
+        if (!targetId) {
+           const firstItem = getFirstItem(items);
+           targetId = firstItem?.id ?? null;
+        }
+
+        if (targetId) {
+          event.preventDefault();
+          event.stopPropagation();
+          setKeyboardFocusedItem(targetId);
+          markKeyboardActivity();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [isSuppressed, focusedItemId, activeWorksheetId, items, setKeyboardFocusedItem, markKeyboardActivity]);
+
+  /**
    * Handler for keydown events on the search input.
    * ArrowDown: move focus to first result
    * Escape: handled by caller (clears search)
