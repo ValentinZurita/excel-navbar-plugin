@@ -84,6 +84,7 @@ describe('buildNavigatorView', () => {
         isPinned: false,
         isGrouped: true,
         groupName: 'Finance',
+        groupColor: 'blue',
       },
     ]);
   });

@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useNavigationController } from '../../application/navigation/useNavigationController';
 import { TaskpaneShell } from '../components/TaskpaneShell';
 import { UndoToast } from '../components/UndoToast';
 import { AddWorksheetFab } from '../components/AddWorksheetFab';
 import { TextPromptDialog } from '../components/TextPromptDialog';
-import type { GroupEntity, WorksheetEntity } from '../../domain/navigation/types';
+import type { WorksheetEntity } from '../../domain/navigation/types';
 import { TaskpaneMenus } from './components/TaskpaneMenus';
 import { TaskpaneSections } from './components/TaskpaneSections';
 import { useContextMenus } from './hooks/useContextMenus';
@@ -12,6 +12,8 @@ import { useWorksheetDnD } from './hooks/useWorksheetDnD';
 import { useTextPromptState } from './hooks/useTextPromptState';
 import { useGroupCreationState } from './hooks/useGroupCreationState';
 import { useDeleteConfirmationState } from './hooks/useDeleteConfirmationState';
+import { usePersistenceBannerAutoDismiss } from './hooks/usePersistenceBannerAutoDismiss';
+import { useUndoToastScheduler } from './hooks/useUndoToastScheduler';
 import { pinnedSectionPolicy } from './dnd/dndPolicies';
 import { useShortcutActions } from '../../application/shortcuts/useShortcutActions';
 import { ShortcutActionId } from '../../application/shortcuts/ShortcutRegistry';
@@ -21,46 +23,9 @@ export function TaskpaneAppContainer() {
   // The controller owns workbook operations and domain state transitions.
   const controller = useNavigationController();
   const [deleteGroupRequest, setDeleteGroupRequest] = useState<{ groupId: string; groupName: string } | null>(null);
-  const [undoToast, setUndoToast] = useState<{
-    group: GroupEntity;
-    worksheetId: string;
-    orderIndex: number;
-    message: string;
-  } | null>(null);
-  const undoTimerRef = useRef<number | null>(null);
+  const { undoToast, scheduleUndoToast, dismissUndoToast } = useUndoToastScheduler();
 
-  const dismissUndoToast = useCallback(() => {
-    setUndoToast(null);
-    if (undoTimerRef.current !== null) {
-      window.clearTimeout(undoTimerRef.current);
-      undoTimerRef.current = null;
-    }
-  }, []);
-
-  const scheduleUndoToast = useCallback((payload: {
-    group: GroupEntity;
-    worksheetId: string;
-    orderIndex: number;
-    message: string;
-  }) => {
-    if (undoTimerRef.current !== null) {
-      window.clearTimeout(undoTimerRef.current);
-      undoTimerRef.current = null;
-    }
-    setUndoToast(payload);
-    undoTimerRef.current = window.setTimeout(() => {
-      setUndoToast(null);
-      undoTimerRef.current = null;
-    }, 7000);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (undoTimerRef.current !== null) {
-        window.clearTimeout(undoTimerRef.current);
-      }
-    };
-  }, []);
+  usePersistenceBannerAutoDismiss(controller.banner, controller.dismissBanner);
 
   // Search input ref lifted here so shortcuts can focus it programmatically.
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -414,6 +379,7 @@ export function TaskpaneAppContainer() {
   return (
     <TaskpaneShell
       banner={controller.banner}
+      onDismissBanner={controller.dismissBanner}
       toast={undoToast ? (
         <UndoToast
           message={undoToast.message}

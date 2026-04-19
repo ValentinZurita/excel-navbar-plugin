@@ -282,7 +282,7 @@ describe('GroupCard', () => {
         <GroupCard
           group={createGroup({ isCollapsed: false, worksheets: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' })] })}
           activeWorksheetId={null}
-          focusedItemId={'worksheet:sheet-1'}
+          visualFocusedItemId={'worksheet:sheet-1'}
           onItemKeyDown={onItemKeyDown}
           registerElement={registerElement}
           onActivate={vi.fn()}

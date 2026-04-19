@@ -51,6 +51,10 @@ export function useNavigationController() {
     setBanner(status.banner?.tone === 'info' ? null : status.banner);
   }, []);
 
+  const dismissBanner = useCallback(() => {
+    setBanner(null);
+  }, []);
+
   const resolvePersistenceContext = useCallback(async (options?: { forceRefresh?: boolean }) => {
     const shouldForceRefresh = options?.forceRefresh ?? false;
     const currentContext = persistenceContextRef.current;
@@ -321,6 +325,7 @@ export function useNavigationController() {
     navigatorView,
     isBusy,
     banner,
+    dismissBanner,
     isSessionOnlyPersistence,
     ...handlers,
   };

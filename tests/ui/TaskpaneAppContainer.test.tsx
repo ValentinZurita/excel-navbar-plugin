@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BannerState, WorksheetEntity } from '../../src/domain/navigation/types';
+import { PERSISTENCE_BANNER_AUTO_DISMISS_MS } from '../../src/ui/taskpane/hooks/usePersistenceBannerAutoDismiss';
 import { TaskpaneAppContainer } from '../../src/ui/taskpane/TaskpaneAppContainer';
 
 const { useNavigationControllerMock, useWorksheetDnDMock } = vi.hoisted(() => ({
@@ -76,6 +77,7 @@ function createControllerMock() {
     hideWorksheet: vi.fn().mockResolvedValue(undefined),
     restoreGroup: vi.fn(),
     reload: vi.fn().mockResolvedValue(undefined),
+    dismissBanner: vi.fn(),
   };
 
   return controller;
@@ -249,6 +251,41 @@ describe('TaskpaneAppContainer', () => {
     render(<TaskpaneAppContainer />);
 
     expect(screen.getByText(sessionBanner.message)).toBeInTheDocument();
+  });
+
+  it('dismisses persistence banners when the close control is used', async () => {
+    const user = userEvent.setup();
+    const controller = createControllerMock();
+    controller.banner = {
+      tone: 'warning',
+      message: 'We could not save this workbook state, and local recovery is unavailable until the file is saved.',
+    };
+    useNavigationControllerMock.mockReturnValue(controller);
+
+    render(<TaskpaneAppContainer />);
+
+    await user.click(screen.getByRole('button', { name: 'Dismiss notification' }));
+    expect(controller.dismissBanner).toHaveBeenCalledTimes(1);
+  });
+
+  it('auto-dismisses persistence banners after fourteen seconds', () => {
+    vi.useFakeTimers();
+    const controller = createControllerMock();
+    controller.banner = {
+      tone: 'warning',
+      message: 'Persistence banner timeout body',
+    };
+    useNavigationControllerMock.mockReturnValue(controller);
+
+    render(<TaskpaneAppContainer />);
+    expect(screen.getByText('Persistence banner timeout body')).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(PERSISTENCE_BANNER_AUTO_DISMISS_MS);
+    });
+
+    expect(controller.dismissBanner).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 
   it('renders the groups session-only hint instead of a banner', () => {
