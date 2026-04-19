@@ -1,20 +1,42 @@
+/* Drop zone areas between worksheet rows. */
+
+/* Base styles for all drop zones */
 .worksheet-drop-zone {
-  min-height: 12px;
   display: flex;
   align-items: center;
 }
 
-.worksheet-drop-zone:not(.worksheet-drop-zone-empty) {
+/* 
+ * Gap zones are positioned absolutely so they take up ZERO space in the document flow.
+ * They are centered on the boundary between slots (-4px top, 8px height).
+ * This handles closestCenter collision detection natively without CAUSING a layout shift!
+ * NOTE: The parent must be position: relative (.sortable-worksheet-slot)
+ */
+.worksheet-drop-zone-gap {
   position: absolute;
+  top: -4px;
+  height: 8px;
   left: 0;
   right: 0;
-  bottom: -12px;
+  z-index: 10;
+  pointer-events: none; /* Let pointer events pass through to rows if needed */
+}
+
+/* 
+ * Container end zones sit at the very bottom of the list.
+ * They are relative because they are NOT centered between items, they form the 
+ * final boundary at the end of the flex list.
+ */
+.worksheet-drop-zone-container-end {
+  position: relative;
+  min-height: 8px;
 }
 
 .worksheet-drop-zone-empty {
   min-height: 28px;
 }
 
+/* Insertion indicator line inside drop zones. */
 .worksheet-insertion-line {
   width: 100%;
   height: 2px;
@@ -25,4 +47,9 @@
 
 .worksheet-insertion-line-active {
   background: color-mix(in srgb, var(--excel-body-fg) 24%, transparent);
+}
+
+/* Slot wrapper keeps each gap + row pair together in the flow. */
+.sortable-worksheet-slot {
+  position: relative;
 }

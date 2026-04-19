@@ -188,21 +188,7 @@
     0 2px 6px rgba(0, 0, 0, 0.16);
 }
 
-/* Container used for the drag-and-drop row ordering overlay. */
-.sortable-worksheet-row {
-  position: relative;
-}
 
-/* Visual insertion marker shown when dragging a row above/below another. */
-.row-insertion-line {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  z-index: 1;
-  pointer-events: none;
-}
 
 /* Action button positioned over the row leading area for pin/unpin. */
 .sheet-pin-button {
