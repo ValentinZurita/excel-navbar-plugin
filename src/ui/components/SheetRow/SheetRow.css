@@ -271,6 +271,12 @@
   outline-offset: -2px;
 }
 
+/* Suppress focus outline during drag to avoid visual noise. 
+   We keep it for normal keyboard navigation but hide it when the mouse is dragging. */
+.sheet-list-drag-active .sheet-row:focus-visible {
+  outline: none;
+}
+
 /* Focus style for the pin button while still keeping it subtle. */
 .sheet-row .sheet-pin-button:focus-visible {
   opacity: 0.75;
