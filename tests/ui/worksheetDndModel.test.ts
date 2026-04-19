@@ -340,7 +340,7 @@ describe('worksheetDndModel', () => {
       const result = moveWorksheetInLayout(layout, 'non-existent', {
         containerId: 'sheets',
         index: 0,
-        kind: 'row',
+        kind: 'gap',
       });
       expect(result).toBe(layout);
     });
@@ -353,7 +353,7 @@ describe('worksheetDndModel', () => {
       const result = moveWorksheetInLayout(layout, 'sheet-1', {
         containerId: 'sheets',
         index: 2,
-        kind: 'row',
+        kind: 'gap',
       });
       expect(result.sheets).toEqual(['sheet-2', 'sheet-3', 'sheet-1']);
     });
@@ -414,7 +414,7 @@ describe('worksheetDndModel', () => {
       const result = moveWorksheetInLayout(layout, 'sheet-1', {
         containerId: 'sheets',
         index: 0,
-        kind: 'row',
+        kind: 'gap',
       });
       // Should return a new object even if content is same
       expect(result).not.toBe(layout);

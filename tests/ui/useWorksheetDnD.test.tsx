@@ -35,7 +35,7 @@ function createDragStartEvent(worksheetId = 'sheet-1', containerId = 'group:grou
 function createDropTargetEvent(
   containerId: 'sheets' | 'pinned' | `group:${string}`,
   index: number,
-  kind: 'row' | 'container-end' | 'group-header' = 'row',
+  kind: 'gap' | 'container-end' | 'group-header' = 'gap',
   worksheetId = 'sheet-1',
   sourceContainerId: 'sheets' | 'pinned' | `group:${string}` = 'sheets',
   sourceIndex = 0,
@@ -93,7 +93,7 @@ describe('useWorksheetDnD', () => {
     expect(result.current.projectedDropTarget).toEqual({
       containerId: 'group:group-1',
       index: 0,
-      kind: 'row',
+      kind: 'gap',
     });
 
     act(() => {
@@ -148,12 +148,12 @@ describe('useWorksheetDnD', () => {
     });
 
     act(() => {
-      result.current.onDragOver(createDropTargetEvent('group:group-1', 0, 'row', worksheet.worksheetId, 'sheets', 0));
+      result.current.onDragOver(createDropTargetEvent('group:group-1', 0, 'gap', worksheet.worksheetId, 'sheets', 0));
     });
     const firstProjectedTarget = result.current.projectedDropTarget;
 
     act(() => {
-      result.current.onDragOver(createDropTargetEvent('group:group-1', 0, 'row', worksheet.worksheetId, 'sheets', 0));
+      result.current.onDragOver(createDropTargetEvent('group:group-1', 0, 'gap', worksheet.worksheetId, 'sheets', 0));
     });
 
     expect(result.current.projectedDropTarget).toBe(firstProjectedTarget);
@@ -223,13 +223,13 @@ describe('useWorksheetDnD', () => {
       expect(result.current.projectedDropTarget).toEqual({
         containerId: 'pinned',
         index: 0,
-        kind: 'row',
+        kind: 'gap',
       });
 
       // Try to drag over sheets section (should be prohibited by policy)
       act(() => {
         result.current.onDragOver(
-          createDropTargetEvent('sheets', 0, 'row', pinnedWorksheet.worksheetId, 'pinned', 0),
+          createDropTargetEvent('sheets', 0, 'gap', pinnedWorksheet.worksheetId, 'pinned', 0),
         );
       });
 
@@ -270,7 +270,7 @@ describe('useWorksheetDnD', () => {
       // Drag to another position within pinned (should be allowed)
       act(() => {
         result.current.onDragOver(
-          createDropTargetEvent('pinned', 2, 'row', pinnedWorksheet.worksheetId, 'pinned', 0),
+          createDropTargetEvent('pinned', 2, 'gap', pinnedWorksheet.worksheetId, 'pinned', 0),
         );
       });
 
@@ -278,7 +278,7 @@ describe('useWorksheetDnD', () => {
       expect(result.current.projectedDropTarget).toEqual({
         containerId: 'pinned',
         index: 2,
-        kind: 'row',
+        kind: 'gap',
       });
     });
 
@@ -315,7 +315,7 @@ describe('useWorksheetDnD', () => {
       // Drag to group (should be allowed by policy)
       act(() => {
         result.current.onDragOver(
-          createDropTargetEvent('group:group-1', 0, 'row', worksheet.worksheetId, 'sheets', 0),
+          createDropTargetEvent('group:group-1', 0, 'gap', worksheet.worksheetId, 'sheets', 0),
         );
       });
 
@@ -323,7 +323,7 @@ describe('useWorksheetDnD', () => {
       expect(result.current.projectedDropTarget).toEqual({
         containerId: 'group:group-1',
         index: 0,
-        kind: 'row',
+        kind: 'gap',
       });
     });
 
@@ -360,7 +360,7 @@ describe('useWorksheetDnD', () => {
       // Try to drag to pinned (should be prohibited by policy)
       act(() => {
         result.current.onDragOver(
-          createDropTargetEvent('pinned', 0, 'row', worksheet.worksheetId, 'sheets', 0),
+          createDropTargetEvent('pinned', 0, 'gap', worksheet.worksheetId, 'sheets', 0),
         );
       });
 
@@ -401,7 +401,7 @@ describe('useWorksheetDnD', () => {
 
       act(() => {
         result.current.onDragEnd(
-          createDropTargetEvent('sheets', 0, 'row', pinnedWorksheet.worksheetId, 'pinned', 0),
+          createDropTargetEvent('sheets', 0, 'gap', pinnedWorksheet.worksheetId, 'pinned', 0),
         );
       });
 
@@ -437,7 +437,7 @@ describe('useWorksheetDnD', () => {
       // Drag anywhere - should show feedback since no policy restricts it
       act(() => {
         result.current.onDragOver(
-          createDropTargetEvent('sheets', 0, 'row', worksheet.worksheetId, 'pinned', 0),
+          createDropTargetEvent('sheets', 0, 'gap', worksheet.worksheetId, 'pinned', 0),
         );
       });
 
@@ -445,7 +445,7 @@ describe('useWorksheetDnD', () => {
       expect(result.current.projectedDropTarget).toEqual({
         containerId: 'sheets',
         index: 0,
-        kind: 'row',
+        kind: 'gap',
       });
     });
   });

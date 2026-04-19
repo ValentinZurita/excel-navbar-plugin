@@ -90,7 +90,7 @@ describe('GroupCard', () => {
           group={group}
           activeWorksheetId={null}
           dragConfig={{
-            projectedDropTarget: { containerId: 'group:group-1', index: 1, kind: 'row' },
+            projectedDropTarget: { containerId: 'group:group-1', index: 1, kind: 'gap' },
             flashedGroupId: null,
             isDragActive: true,
             shouldSuppressActivation: () => false,

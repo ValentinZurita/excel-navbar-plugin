@@ -72,7 +72,7 @@ describe('Pinned Section Drag and Drop Integration', () => {
             projectedDropTarget: {
               containerId: 'pinned',
               index: 1,
-              kind: 'row',
+              kind: 'gap',
             },
             isDragActive: true,
             shouldSuppressActivation,

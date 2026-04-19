@@ -42,7 +42,7 @@ describe('SortableWorksheetRow', () => {
         containerId="sheets"
         index={0}
         isActive={false}
-        isInsertionBefore={false}
+
         shouldSuppressActivation={() => false}
         onActivate={onActivate}
         onOpenContextMenu={vi.fn()}
@@ -70,7 +70,7 @@ describe('SortableWorksheetRow', () => {
         containerId="sheets"
         index={0}
         isActive={false}
-        isInsertionBefore={false}
+
         shouldSuppressActivation={() => false}
         onActivate={onActivate}
         onOpenContextMenu={vi.fn()}
@@ -94,7 +94,7 @@ describe('SortableWorksheetRow', () => {
         containerId="sheets"
         index={0}
         isActive={false}
-        isInsertionBefore={false}
+
         shouldSuppressActivation={shouldSuppressActivation}
         onActivate={onActivate}
         onOpenContextMenu={vi.fn()}
@@ -124,7 +124,7 @@ describe('SortableWorksheetRow', () => {
         containerId="sheets"
         index={0}
         isActive={false}
-        isInsertionBefore={false}
+
         isRenaming
         shouldSuppressActivation={() => false}
         onActivate={onActivate}

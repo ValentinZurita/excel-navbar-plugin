@@ -15,8 +15,8 @@ describe('WorksheetDropZone', () => {
     });
   });
 
-  it('does not render when drag is inactive', () => {
-    const { container } = render(
+  it('renders but disables droppable when drag is inactive', () => {
+    render(
       <WorksheetDropZone
         dropTargetId="sheets:end"
         containerId="sheets"
@@ -28,8 +28,14 @@ describe('WorksheetDropZone', () => {
       />,
     );
 
-    expect(screen.queryByTestId('drop-zone')).not.toBeInTheDocument();
-    expect(container.firstChild).toBeNull();
+    expect(screen.queryByTestId('drop-zone')).toBeInTheDocument();
+    
+    // Check that useDroppable was called with disabled: true
+    expect(useDroppableMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        disabled: true,
+      })
+    );
   });
 
   it('renders empty and active visual states when requested', () => {

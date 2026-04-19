@@ -144,10 +144,10 @@ describe('SheetList', () => {
 
     const endDropZone = screen.getByTestId('group:group-1-drop-end');
     expect(endDropZone.querySelector('.worksheet-insertion-line-active')).not.toBeInTheDocument();
-    expect(container.querySelector('.row-insertion-line.worksheet-insertion-line-active')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-testid="group:group-1-drop-gap-0"] .worksheet-insertion-line-active')).not.toBeInTheDocument();
   });
 
-  it('keeps same-group row insertion line for regular row targets', () => {
+  it('activates gap insertion line for gap drop targets', () => {
     const worksheet: WorksheetEntity = {
       worksheetId: 'sheet-1',
       name: 'Revenue',
@@ -158,7 +158,7 @@ describe('SheetList', () => {
       lastKnownStructuralState: null,
     };
 
-    const { container } = render(
+    render(
       <DndContext>
         <SheetList
           worksheets={[worksheet]}
@@ -167,7 +167,7 @@ describe('SheetList', () => {
           onOpenContextMenu={vi.fn()}
           dragConfig={{
             containerId: 'group:group-1',
-            projectedDropTarget: { containerId: 'group:group-1', index: 0, kind: 'row' },
+            projectedDropTarget: { containerId: 'group:group-1', index: 0, kind: 'gap' },
             isDragActive: true,
             shouldSuppressActivation: () => false,
           }}
@@ -175,7 +175,8 @@ describe('SheetList', () => {
       </DndContext>,
     );
 
-    expect(container.querySelector('.row-insertion-line.worksheet-insertion-line-active')).toBeInTheDocument();
+    const gapZone = screen.getByTestId('group:group-1-drop-gap-0');
+    expect(gapZone.querySelector('.worksheet-insertion-line-active')).toBeInTheDocument();
   });
 
   it('does not track row hover state - pin only shows on leading area hover', async () => {
