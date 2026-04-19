@@ -138,10 +138,10 @@
 }
 */
 
-/* When drag mode is active, suppress row states so the drag overlay stays visible. */
+/* When drag mode is active, suppress transient row states only.
+   Active row must keep ghost state so current worksheet stays anchored. */
 .sheet-list-drag-active .sheet-row[data-context-open='true'],
-.sheet-list-drag-active .sheet-row[data-active='true'],
-.sheet-list-drag-active .sheet-row[data-highlighted='true'] {
+.sheet-list-drag-active .sheet-row[data-highlighted='true']:not([data-active='true']) {
   background: transparent;
   border-color: transparent;
   box-shadow: none;
