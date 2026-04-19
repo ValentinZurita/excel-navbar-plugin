@@ -52,7 +52,7 @@ describe('TaskpaneMenus', () => {
   it('renders sheet actions from the active menu kind', () => {
     renderSheetMenu();
 
-    expect(screen.getByRole('button', { name: 'Pin tab' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pin sheet' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Hide sheet' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Rename' })).toBeInTheDocument();
   });
@@ -168,7 +168,7 @@ describe('TaskpaneMenus', () => {
 
     renderSheetMenu({ onTogglePin, onCloseMenus });
 
-    await user.click(screen.getByRole('button', { name: 'Pin tab' }));
+    await user.click(screen.getByRole('button', { name: 'Pin sheet' }));
 
     expect(onTogglePin).toHaveBeenCalledWith(worksheet);
     expect(onCloseMenus).toHaveBeenCalled();
@@ -423,7 +423,7 @@ describe('TaskpaneMenus', () => {
       });
 
       // Menu actions should not be visible
-      expect(screen.queryByRole('button', { name: 'Pin tab' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Pin sheet' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Hide sheet' })).not.toBeInTheDocument();
     });
 

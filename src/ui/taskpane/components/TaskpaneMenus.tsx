@@ -16,6 +16,15 @@ import { InlineGroupCreator } from '../../components/InlineGroupCreator';
 import { InlineDeleteConfirmation } from '../../components/InlineDeleteConfirmation';
 import '../styles/TaskpaneMenus.css';
 
+/** Sheet row context menu — one vocabulary (“sheet”) for pin, visibility, and delete. */
+const SHEET_CONTEXT_MENU_LABELS = {
+  pinSheet: 'Pin sheet',
+  unpinSheet: 'Unpin sheet',
+  hideSheet: 'Hide sheet',
+  unhideSheet: 'Unhide sheet',
+  deleteSheet: 'Delete sheet',
+} as const;
+
 interface MenuAction {
   key: string;
   icon: ReactNode;
@@ -114,7 +123,9 @@ function buildSheetMenuActions(
       ) : (
         <PinMenuIcon className="context-menu-icon-svg" />
       ),
-      label: sheetMenu.worksheet.isPinned ? 'Unpin tab' : 'Pin tab',
+      label: sheetMenu.worksheet.isPinned
+        ? SHEET_CONTEXT_MENU_LABELS.unpinSheet
+        : SHEET_CONTEXT_MENU_LABELS.pinSheet,
       onSelect: () => {
         handlers.onTogglePin(sheetMenu.worksheet);
         handlers.onCloseMenus();
@@ -127,7 +138,9 @@ function buildSheetMenuActions(
       ) : (
         <EyeIcon className="context-menu-icon-svg" />
       ),
-      label: sheetMenu.worksheet.visibility === 'Visible' ? 'Hide sheet' : 'Unhide sheet',
+      label: sheetMenu.worksheet.visibility === 'Visible'
+        ? SHEET_CONTEXT_MENU_LABELS.hideSheet
+        : SHEET_CONTEXT_MENU_LABELS.unhideSheet,
       onSelect: () => {
         handlers.onToggleVisibility(sheetMenu.worksheet);
         handlers.onCloseMenus();
@@ -168,7 +181,7 @@ function buildSheetMenuActions(
   actions.push({
     key: 'delete-sheet',
     icon: <DeleteMenuIcon className="context-menu-icon-svg" />,
-    label: 'Delete sheet',
+    label: SHEET_CONTEXT_MENU_LABELS.deleteSheet,
     onSelect: () => {
       handlers.onStartDeleteConfirmation(sheetMenu.worksheet);
       // Don't close menu - show inline confirmation instead

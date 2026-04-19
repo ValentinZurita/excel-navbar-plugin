@@ -173,7 +173,7 @@ describe('TaskpaneAppContainer', () => {
 
     // Open menu again - should show action menu, not creation
     fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
-    expect(screen.getByRole('button', { name: 'Pin tab' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pin sheet' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'New group' })).toBeInTheDocument();
     // Should NOT show the inline creator
     expect(screen.queryByLabelText('Name')).not.toBeInTheDocument();
