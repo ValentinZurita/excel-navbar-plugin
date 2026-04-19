@@ -1,5 +1,6 @@
 import { createDefaultNavigationState } from './defaultState';
 import { groupColorTokens } from './constants';
+import { applyMoveAmongUngroupedVisibleSheets } from './sheetSectionVisibleOrder';
 import {
   byWorkbookOrder,
   dedupeWorksheetIds,
@@ -367,11 +368,11 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
 
       const nextState = cloneState(state);
       removeWorksheetFromAnyGroup(nextState, action.worksheetId);
-      const reconciledSheetSectionOrder = reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById);
       nextState.sheetSectionOrder = action.targetIndex === undefined
-        ? reconciledSheetSectionOrder
-        : moveWorksheetId(
-            reconciledSheetSectionOrder,
+        ? reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById)
+        : applyMoveAmongUngroupedVisibleSheets(
+            nextState.sheetSectionOrder,
+            nextState.worksheetsById,
             action.worksheetId,
             action.targetIndex,
           );
@@ -401,33 +402,14 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
         return state;
       }
 
-      const currentOrder = reconcileSheetSectionOrder(state.sheetSectionOrder, state.worksheetsById);
-      
-      const ungroupedVisibleIds = currentOrder.filter((id) => {
-        const w = state.worksheetsById[id];
-        return w && !w.groupId && !w.isPinned && w.visibility === 'Visible';
-      });
-
-      const nextUngroupedVisibleIds = moveWorksheetId(
-        ungroupedVisibleIds,
-        action.worksheetId,
-        action.targetIndex,
-      );
-
-      let ungroupedIndex = 0;
-      const nextOrder = currentOrder.map((id) => {
-        const w = state.worksheetsById[id];
-        if (w && !w.groupId && !w.isPinned && w.visibility === 'Visible') {
-          const nextId = nextUngroupedVisibleIds[ungroupedIndex];
-          ungroupedIndex += 1;
-          return nextId;
-        }
-        return id;
-      });
-
       return {
         ...state,
-        sheetSectionOrder: nextOrder,
+        sheetSectionOrder: applyMoveAmongUngroupedVisibleSheets(
+          state.sheetSectionOrder,
+          state.worksheetsById,
+          action.worksheetId,
+          action.targetIndex,
+        ),
       };
     }
     case 'reorderPinnedWorksheet': {

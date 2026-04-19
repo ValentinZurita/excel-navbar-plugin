@@ -39,6 +39,10 @@ export function dedupeWorksheetIds(ids: string[]): string[] {
 /**
  * Moves a worksheet ID to a new position within an order array.
  * Returns a new array without mutating the original.
+ *
+ * `targetIndex` is clamped to `[0, order.length]` after removing `worksheetId`.
+ * `NaN` is treated as `0`. Finite fractions are truncated toward zero.
+ * `±Infinity` behave like clamp boundaries (`+Infinity` → append).
  */
 export function moveWorksheetId(
   order: string[],
@@ -46,7 +50,12 @@ export function moveWorksheetId(
   targetIndex: number,
 ): string[] {
   const nextOrder = order.filter((candidateId) => candidateId !== worksheetId);
-  const clampedIndex = Math.max(0, Math.min(targetIndex, nextOrder.length));
+  const normalizedTarget = Number.isNaN(targetIndex)
+    ? 0
+    : Number.isFinite(targetIndex)
+      ? Math.trunc(targetIndex)
+      : targetIndex;
+  const clampedIndex = Math.max(0, Math.min(normalizedTarget, nextOrder.length));
   nextOrder.splice(clampedIndex, 0, worksheetId);
   return nextOrder;
 }

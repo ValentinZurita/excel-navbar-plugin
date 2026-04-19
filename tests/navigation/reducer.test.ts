@@ -86,6 +86,39 @@ describe('navigationReducer', () => {
     expect(nextState.sheetSectionOrder).toEqual(['one', 'two', 'three']);
   });
 
+  it('removes from group at a Sheets gap index even when grouped ids sit between ungrouped ids in sheetSectionOrder', () => {
+    const state = createDefaultNavigationState();
+    state.groupOrder = ['grp'];
+    state.sheetSectionOrder = ['a', 'g1', 'g2', 'b', 'c', 'x'];
+    state.groupsById = {
+      grp: {
+        groupId: 'grp',
+        name: 'G',
+        colorToken: 'blue',
+        isCollapsed: false,
+        worksheetOrder: ['g1', 'g2', 'x'],
+        createdAt: 1,
+      },
+    };
+    state.worksheetsById = {
+      a: { worksheetId: 'a', name: 'A', visibility: 'Visible', workbookOrder: 0, isPinned: false, groupId: null, lastKnownStructuralState: null },
+      g1: { worksheetId: 'g1', name: 'G1', visibility: 'Visible', workbookOrder: 1, isPinned: false, groupId: 'grp', lastKnownStructuralState: { kind: 'group', groupId: 'grp' } },
+      g2: { worksheetId: 'g2', name: 'G2', visibility: 'Visible', workbookOrder: 2, isPinned: false, groupId: 'grp', lastKnownStructuralState: { kind: 'group', groupId: 'grp' } },
+      b: { worksheetId: 'b', name: 'B', visibility: 'Visible', workbookOrder: 3, isPinned: false, groupId: null, lastKnownStructuralState: null },
+      c: { worksheetId: 'c', name: 'C', visibility: 'Visible', workbookOrder: 4, isPinned: false, groupId: null, lastKnownStructuralState: null },
+      x: { worksheetId: 'x', name: 'X', visibility: 'Visible', workbookOrder: 5, isPinned: false, groupId: 'grp', lastKnownStructuralState: { kind: 'group', groupId: 'grp' } },
+    };
+
+    const nextState = navigationReducer(state, {
+      type: 'removeWorksheetFromGroup',
+      worksheetId: 'x',
+      targetIndex: 1,
+    });
+
+    expect(nextState.worksheetsById.x.groupId).toBeNull();
+    expect(nextState.sheetSectionOrder).toEqual(['a', 'g1', 'g2', 'x', 'b', 'c']);
+  });
+
   it('moves a grouped worksheet to pinned when pinning it', () => {
     const state = createDefaultNavigationState();
     state.groupOrder = ['group-1'];
