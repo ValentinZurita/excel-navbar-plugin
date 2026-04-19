@@ -32,6 +32,27 @@ function createDragStartEvent(worksheetId = 'sheet-1', containerId = 'group:grou
   } as any;
 }
 
+function createDragEndEvent(
+  worksheetId: string,
+  sourceContainerId: 'sheets' | 'pinned' | `group:${string}`,
+  sourceIndex: number,
+  over: null,
+) {
+  return {
+    active: {
+      data: {
+        current: {
+          type: 'worksheet',
+          worksheetId,
+          containerId: sourceContainerId,
+          index: sourceIndex,
+        },
+      },
+    },
+    over,
+  } as any;
+}
+
 function createDropTargetEvent(
   containerId: 'sheets' | 'pinned' | `group:${string}`,
   index: number,
@@ -129,6 +150,70 @@ describe('useWorksheetDnD', () => {
     });
 
     expect(assignWorksheetToGroup).toHaveBeenCalledWith('sheet-1', 'group-1', 0);
+  });
+
+  it('commits remove-from-group when drag end has no over but last dragOver was valid', () => {
+    const removeWorksheetFromGroup = vi.fn();
+    const worksheet = createWorksheet();
+    const { result } = renderHook(() =>
+      useWorksheetDnD({
+        assignWorksheetToGroup: vi.fn(),
+        removeWorksheetFromGroup,
+        reorderGroupWorksheet: vi.fn(),
+        reorderSheetSectionWorksheet: vi.fn(),
+        reorderPinnedWorksheet: vi.fn(),
+      }),
+    );
+
+    act(() => {
+      result.current.onDragStart(createDragStartEvent(worksheet.worksheetId, 'group:group-1', 0));
+    });
+
+    act(() => {
+      result.current.onDragOver(
+        createDropTargetEvent('sheets', 2, 'gap', worksheet.worksheetId, 'group:group-1', 0),
+      );
+    });
+
+    act(() => {
+      result.current.onDragEnd(createDragEndEvent(worksheet.worksheetId, 'group:group-1', 0, null));
+    });
+
+    expect(removeWorksheetFromGroup).toHaveBeenCalledWith('sheet-1', 2);
+  });
+
+  it('does not commit when drag end has no over after pointer left all drop zones', () => {
+    const removeWorksheetFromGroup = vi.fn();
+    const worksheet = createWorksheet();
+    const { result } = renderHook(() =>
+      useWorksheetDnD({
+        assignWorksheetToGroup: vi.fn(),
+        removeWorksheetFromGroup,
+        reorderGroupWorksheet: vi.fn(),
+        reorderSheetSectionWorksheet: vi.fn(),
+        reorderPinnedWorksheet: vi.fn(),
+      }),
+    );
+
+    act(() => {
+      result.current.onDragStart(createDragStartEvent(worksheet.worksheetId, 'group:group-1', 0));
+    });
+
+    act(() => {
+      result.current.onDragOver(
+        createDropTargetEvent('sheets', 2, 'gap', worksheet.worksheetId, 'group:group-1', 0),
+      );
+    });
+
+    act(() => {
+      result.current.onDragOver({ over: null } as any);
+    });
+
+    act(() => {
+      result.current.onDragEnd(createDragEndEvent(worksheet.worksheetId, 'group:group-1', 0, null));
+    });
+
+    expect(removeWorksheetFromGroup).not.toHaveBeenCalled();
   });
 
   it('reuses the same projected target object when the semantic drop target is unchanged', () => {
@@ -366,6 +451,49 @@ describe('useWorksheetDnD', () => {
 
       // Visual feedback should be suppressed
       expect(result.current.projectedDropTarget).toBeNull();
+    });
+
+    it('commits pinned reorder when drag end has no over but last dragOver was policy-valid', () => {
+      const reorderPinnedWorksheet = vi.fn();
+      const pinnedWorksheet = createWorksheet({
+        worksheetId: 'sheet-1',
+        isPinned: true,
+        groupId: null,
+      });
+
+      const { result } = renderHook(() =>
+        useWorksheetDnD({
+          assignWorksheetToGroup: vi.fn(),
+          removeWorksheetFromGroup: vi.fn(),
+          reorderGroupWorksheet: vi.fn(),
+          reorderSheetSectionWorksheet: vi.fn(),
+          reorderPinnedWorksheet,
+          policy: pinnedSectionPolicy,
+          policyState: {
+            worksheetsById: {
+              [pinnedWorksheet.worksheetId]: pinnedWorksheet,
+            },
+          },
+        }),
+      );
+
+      act(() => {
+        result.current.onDragStart(
+          createDragStartEvent(pinnedWorksheet.worksheetId, 'pinned', 0),
+        );
+      });
+
+      act(() => {
+        result.current.onDragOver(
+          createDropTargetEvent('pinned', 2, 'gap', pinnedWorksheet.worksheetId, 'pinned', 0),
+        );
+      });
+
+      act(() => {
+        result.current.onDragEnd(createDragEndEvent(pinnedWorksheet.worksheetId, 'pinned', 0, null));
+      });
+
+      expect(reorderPinnedWorksheet).toHaveBeenCalledWith('sheet-1', 1);
     });
 
     it('does not commit an invalid pinned-to-sheets drop when policy rejects it', () => {

@@ -92,6 +92,28 @@ function areProjectedDropTargetsEqual(
     && left.kind === right.kind;
 }
 
+/**
+ * When `DragEndEvent.over` is null, dnd-kit can still fire `onDragEnd` right after
+ * a valid `onDragOver`. Reuse only the last policy-approved drop target then.
+ * If `over` is non-null but not a worksheet gap target, do not fall back (avoids
+ * committing against the wrong droppable).
+ */
+function resolveDropTargetForDragEnd(
+  event: DragEndEvent,
+  lastPolicyApprovedTarget: WorksheetProjectedDropTarget | null,
+): WorksheetProjectedDropTarget | null {
+  const fromPointerCollision = getProjectedDropTarget(event.over?.data.current);
+  if (fromPointerCollision) {
+    return fromPointerCollision;
+  }
+
+  if (!event.over) {
+    return lastPolicyApprovedTarget;
+  }
+
+  return null;
+}
+
 export function useWorksheetDnD({
   assignWorksheetToGroup,
   removeWorksheetFromGroup,
@@ -130,6 +152,7 @@ export function useWorksheetDnD({
 
   // Mutable refs keep transient drag bookkeeping out of React's render cycle.
   const initialLocationRef = useRef<{ worksheetId: string; containerId: WorksheetContainerId; index: number } | null>(null);
+  const lastPolicyApprovedDropTargetRef = useRef<WorksheetProjectedDropTarget | null>(null);
   const flashTimeoutIdRef = useRef<number | null>(null);
   const suppressActivationRef = useRef<{ worksheetId: string | null; until: number }>({ worksheetId: null, until: 0 });
 
@@ -152,6 +175,7 @@ export function useWorksheetDnD({
     setActiveWorksheetId(null);
     updateProjectedDropTarget(null);
     initialLocationRef.current = null;
+    lastPolicyApprovedDropTargetRef.current = null;
   }, [updateProjectedDropTarget]);
 
   // Drag start captures the source location and seeds the initial preview state.
@@ -162,11 +186,13 @@ export function useWorksheetDnD({
     }
 
     setActiveWorksheetId(activeData.worksheetId);
-    updateProjectedDropTarget({
+    const initialDropPreview: WorksheetProjectedDropTarget = {
       containerId: activeData.containerId,
       index: activeData.index,
       kind: 'gap',
-    });
+    };
+    lastPolicyApprovedDropTargetRef.current = initialDropPreview;
+    updateProjectedDropTarget(initialDropPreview);
     initialLocationRef.current = {
       worksheetId: activeData.worksheetId,
       containerId: activeData.containerId,
@@ -181,6 +207,7 @@ export function useWorksheetDnD({
     const initialLocation = initialLocationRef.current;
 
     if (!nextProjectedDropTarget) {
+      lastPolicyApprovedDropTargetRef.current = null;
       updateProjectedDropTarget(null);
       return;
     }
@@ -198,12 +225,14 @@ export function useWorksheetDnD({
 
         if (!isDropAllowed) {
           // Drop violates policy - hide visual feedback
+          lastPolicyApprovedDropTargetRef.current = null;
           updateProjectedDropTarget(null);
           return;
         }
       }
     }
 
+    lastPolicyApprovedDropTargetRef.current = nextProjectedDropTarget;
     updateProjectedDropTarget(nextProjectedDropTarget);
   }, [policy, policyState, updateProjectedDropTarget]);
 
@@ -237,7 +266,10 @@ export function useWorksheetDnD({
       return;
     }
 
-    const finalDropTarget = getProjectedDropTarget(event.over?.data.current);
+    const finalDropTarget = resolveDropTargetForDragEnd(
+      event,
+      lastPolicyApprovedDropTargetRef.current,
+    );
     const finalLocation = finalDropTarget
       ? {
           containerId: finalDropTarget.containerId,
