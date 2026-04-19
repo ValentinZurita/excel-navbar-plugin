@@ -315,6 +315,9 @@ function GroupContextMenu({
   onRenameGroup: (groupId: string, groupName: string) => void;
   onDeleteGroup: (groupId: string, groupName: string) => void;
   onSetGroupColor: (groupId: string, colorToken: GroupColorToken) => void;
+  deleteGroupRequest: { groupId: string; groupName: string } | null;
+  onCancelDeleteGroup: () => void;
+  onConfirmDeleteGroup: () => void;
   isCreatingGroup: boolean;
   onCancelCreatingGroup: () => void;
   onConfirmCreatingGroup: (name: string, colorToken: GroupColorToken) => void;
@@ -322,7 +325,6 @@ function GroupContextMenu({
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
   const actions = buildGroupMenuActions(groupMenu, {
-    onCloseMenus,
     onStartCreatingGroup,
     onRenameGroup,
     onDeleteGroup,
