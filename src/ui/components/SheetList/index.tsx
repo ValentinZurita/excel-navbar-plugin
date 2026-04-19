@@ -53,6 +53,18 @@ function isProjectedTargetInContainer(
   return projectedDropTarget?.containerId === containerId;
 }
 
+function isGapDropActive(
+  projectedDropTarget: WorksheetProjectedDropTarget | null,
+  containerId: WorksheetContainerId,
+  gapIndex: number,
+) {
+  return Boolean(
+    isProjectedTargetInContainer(projectedDropTarget, containerId) &&
+      projectedDropTarget?.kind === 'gap' &&
+      projectedDropTarget.index === gapIndex,
+  );
+}
+
 function isEndDropLineActive(
   projectedDropTarget: WorksheetProjectedDropTarget | null,
   containerId: WorksheetContainerId,
@@ -62,16 +74,6 @@ function isEndDropLineActive(
     isProjectedTargetInContainer(projectedDropTarget, containerId) &&
       projectedDropTarget?.kind === 'container-end' &&
       projectedDropTarget.index === worksheetCount,
-  );
-}
-
-function isInsertionBeforeIndex(
-  projectedDropTarget: WorksheetProjectedDropTarget | null,
-  containerId: WorksheetContainerId,
-  index: number,
-) {
-  return Boolean(
-    isProjectedTargetInContainer(projectedDropTarget, containerId) && projectedDropTarget?.index === index,
   );
 }
 
@@ -129,29 +131,40 @@ export function SheetList(props: SheetListProps) {
         {props.worksheets.map((worksheet, index) => {
           const navigableId = `worksheet:${worksheet.worksheetId}`;
           const isFocused = focusedItemId === navigableId;
+          const gapActive = isGapDropActive(dragConfig.projectedDropTarget, dragConfig.containerId, index);
 
           return (
-            <SortableWorksheetRow
-              key={worksheet.worksheetId}
-              worksheet={worksheet}
-              containerId={dragConfig.containerId}
-              index={index}
-              isActive={worksheet.worksheetId === props.activeWorksheetId}
-              isContextMenuOpen={worksheet.worksheetId === props.contextMenuOpenId}
-              isInteractionSuppressed={dragConfig.isDragActive}
-              isInsertionBefore={isInsertionBeforeIndex(dragConfig.projectedDropTarget, dragConfig.containerId, index)}
-              shouldSuppressActivation={dragConfig.shouldSuppressActivation}
-              isRenaming={props.renamingWorksheetId === worksheet.worksheetId}
-              navigableId={navigableId}
-              isFocused={isFocused}
-              onActivate={props.onActivate}
-              onTogglePin={props.onTogglePin}
-              onOpenContextMenu={props.onOpenContextMenu}
-              onRenameSubmit={props.onRenameSubmit}
-              onRenameCancel={props.onRenameCancel}
-              onItemKeyDown={onItemKeyDown}
-              registerElement={registerElement}
-            />
+            <div key={worksheet.worksheetId} className="sortable-worksheet-slot">
+              <WorksheetDropZone
+                dropTargetId={`${dragConfig.containerId}:gap:${index}`}
+                containerId={dragConfig.containerId}
+                index={index}
+                kind="gap"
+                isActive={gapActive}
+                isDragActive={dragConfig.isDragActive}
+                testId={`${dragConfig.containerId}-drop-gap-${index}`}
+              />
+
+              <SortableWorksheetRow
+                worksheet={worksheet}
+                containerId={dragConfig.containerId}
+                index={index}
+                isActive={worksheet.worksheetId === props.activeWorksheetId}
+                isContextMenuOpen={worksheet.worksheetId === props.contextMenuOpenId}
+                isInteractionSuppressed={dragConfig.isDragActive}
+                shouldSuppressActivation={dragConfig.shouldSuppressActivation}
+                isRenaming={props.renamingWorksheetId === worksheet.worksheetId}
+                navigableId={navigableId}
+                isFocused={isFocused}
+                onActivate={props.onActivate}
+                onTogglePin={props.onTogglePin}
+                onOpenContextMenu={props.onOpenContextMenu}
+                onRenameSubmit={props.onRenameSubmit}
+                onRenameCancel={props.onRenameCancel}
+                onItemKeyDown={onItemKeyDown}
+                registerElement={registerElement}
+              />
+            </div>
           );
         })}
 

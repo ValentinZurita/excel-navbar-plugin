@@ -16,8 +16,8 @@ interface WorksheetDropZoneProps {
   testId?: string;
 }
 
-function getDropZoneClassName(isEmpty?: boolean) {
-  return `worksheet-drop-zone ${isEmpty ? 'worksheet-drop-zone-empty' : ''}`.trim();
+function getDropZoneClassName(kind: WorksheetDropKind, isEmpty?: boolean) {
+  return `worksheet-drop-zone worksheet-drop-zone-${kind} ${isEmpty ? 'worksheet-drop-zone-empty' : ''}`.trim();
 }
 
 function getInsertionLineClassName(isActive: boolean) {
@@ -45,16 +45,12 @@ export function WorksheetDropZone({
     disabled: !isDragActive,
   });
 
-  if (!isDragActive) {
-    return null;
-  }
-
   return (
     <div
       ref={setNodeRef}
       aria-hidden="true"
       data-testid={testId}
-      className={getDropZoneClassName(isEmpty)}
+      className={getDropZoneClassName(kind, isEmpty)}
     >
       <div className={getInsertionLineClassName(isActive)} />
     </div>

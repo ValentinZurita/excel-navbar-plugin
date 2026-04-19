@@ -10,7 +10,6 @@ interface SortableWorksheetRowProps {
   index: number;
   isActive: boolean;
   isContextMenuOpen?: boolean;
-  isInsertionBefore: boolean;
   isInteractionSuppressed?: boolean;
   isRenaming?: boolean;
   shouldSuppressActivation: (worksheetId: string) => boolean;
@@ -42,7 +41,6 @@ function areSortableWorksheetRowPropsEqual(
     && left.index === right.index
     && left.isActive === right.isActive
     && left.isContextMenuOpen === right.isContextMenuOpen
-    && left.isInsertionBefore === right.isInsertionBefore
     && left.isInteractionSuppressed === right.isInteractionSuppressed
     && left.isRenaming === right.isRenaming
     && left.shouldSuppressActivation === right.shouldSuppressActivation
@@ -63,7 +61,6 @@ function SortableWorksheetRowComponent({
   index,
   isActive,
   isContextMenuOpen,
-  isInsertionBefore,
   isInteractionSuppressed,
   isRenaming,
   shouldSuppressActivation,
@@ -98,37 +95,28 @@ function SortableWorksheetRowComponent({
   };
 
   return (
-    <div className="sortable-worksheet-row">
-      {isInsertionBefore ? (
-        <div
-          className="worksheet-insertion-line worksheet-insertion-line-active row-insertion-line"
-          aria-hidden="true"
-        />
-      ) : null}
-
-      <SheetRow
-        worksheet={worksheet}
-        isActive={isActive}
-        isContextMenuOpen={isContextMenuOpen}
-        isDragged={isDragging}
-        isInteractionSuppressed={isInteractionSuppressed}
-        isRenaming={isRenaming}
-        navigableId={navigableId}
-        isFocused={isFocused}
-        containerRef={setNodeRef}
-        containerProps={{
-          ...attributes,
-          ...(isRenameActive ? {} : listeners),
-        }}
-        onActivate={handleActivate}
-        onTogglePin={onTogglePin}
-        onOpenContextMenu={onOpenContextMenu}
-        onRenameSubmit={onRenameSubmit}
-        onRenameCancel={onRenameCancel}
-        onItemKeyDown={onItemKeyDown}
-        registerElement={registerElement}
-      />
-    </div>
+    <SheetRow
+      worksheet={worksheet}
+      isActive={isActive}
+      isContextMenuOpen={isContextMenuOpen}
+      isDragged={isDragging}
+      isInteractionSuppressed={isInteractionSuppressed}
+      isRenaming={isRenaming}
+      navigableId={navigableId}
+      isFocused={isFocused}
+      containerRef={setNodeRef}
+      containerProps={{
+        ...attributes,
+        ...(isRenameActive ? {} : listeners),
+      }}
+      onActivate={handleActivate}
+      onTogglePin={onTogglePin}
+      onOpenContextMenu={onOpenContextMenu}
+      onRenameSubmit={onRenameSubmit}
+      onRenameCancel={onRenameCancel}
+      onItemKeyDown={onItemKeyDown}
+      registerElement={registerElement}
+    />
   );
 }
 
