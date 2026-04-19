@@ -146,4 +146,52 @@ describe('HiddenSection', () => {
 
     expect(container.querySelector('.sheet-list.section-body')).toBeNull();
   });
+
+  it('marks the row visually focused when visualFocusedItemId matches', () => {
+    const { container } = render(
+      <HiddenSection
+        isCollapsed={false}
+        worksheets={[hiddenWorksheet()]}
+        visualFocusedItemId="worksheet:hidden-1"
+        onToggle={vi.fn()}
+        onUnhide={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+      />,
+    );
+
+    const row = container.querySelector('.hidden-row');
+    expect(row).toHaveAttribute('data-visual-focused', 'true');
+  });
+
+  it('marks context-open and highlight when the sheet menu targets this row', () => {
+    const { container } = render(
+      <HiddenSection
+        isCollapsed={false}
+        worksheets={[hiddenWorksheet()]}
+        contextMenuOpenSheetId="hidden-1"
+        onToggle={vi.fn()}
+        onUnhide={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+      />,
+    );
+
+    const row = container.querySelector('.hidden-row');
+    expect(row).toHaveAttribute('data-context-open', 'true');
+    expect(row).toHaveAttribute('data-highlighted', 'true');
+    expect(row?.classList.contains('sheet-row-context-open')).toBe(true);
+  });
+
+  it('does not set data-navigable-id on hidden rows', () => {
+    const { container } = render(
+      <HiddenSection
+        isCollapsed={false}
+        worksheets={[hiddenWorksheet()]}
+        onToggle={vi.fn()}
+        onUnhide={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+      />,
+    );
+
+    expect(container.querySelector('.hidden-row')).not.toHaveAttribute('data-navigable-id');
+  });
 });

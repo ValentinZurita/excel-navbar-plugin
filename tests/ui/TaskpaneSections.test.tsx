@@ -822,4 +822,61 @@ describe('TaskpaneSections', () => {
 
     expect(groupHeader).toHaveAttribute('data-visual-focused', 'true');
   });
+
+  it('applies context-menu visual highlight to a hidden worksheet row', () => {
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [createWorksheet({ worksheetId: 'vis-1', name: 'Visible' })],
+      hidden: [
+        createWorksheet({ worksheetId: 'hid-1', name: 'Archived', visibility: 'Hidden' }),
+      ],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          isHiddenSectionCollapsed: false,
+          isContextMenuOpen: true,
+          contextMenuOpenSheetId: 'hid-1',
+        })}
+      />,
+    );
+
+    const hiddenRow = document.querySelector('.hidden-row');
+    expect(hiddenRow).toBeTruthy();
+    expect(hiddenRow).toHaveAttribute('data-visual-focused', 'true');
+    expect(hiddenRow).toHaveAttribute('data-context-open', 'true');
+    expect(hiddenRow).not.toHaveAttribute('data-navigable-id');
+  });
+
+  it('does not apply context-menu visual highlight while search is active (global policy)', () => {
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [],
+      hidden: [
+        createWorksheet({ worksheetId: 'hid-1', name: 'Archived', visibility: 'Hidden' }),
+      ],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          query: 'a',
+          navigatorView,
+          isHiddenSectionCollapsed: false,
+          isContextMenuOpen: true,
+          contextMenuOpenSheetId: 'hid-1',
+        })}
+      />,
+    );
+
+    const hiddenRow = document.querySelector('.hidden-row');
+    expect(hiddenRow).toBeTruthy();
+    expect(hiddenRow).not.toHaveAttribute('data-visual-focused');
+  });
 });
