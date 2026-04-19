@@ -72,14 +72,6 @@ function getProjectedDropTarget(data: unknown): WorksheetProjectedDropTarget | n
     };
   }
 
-  if (isWorksheetDragItemData(data)) {
-    return {
-      containerId: data.containerId,
-      index: data.index,
-      kind: 'row',
-    };
-  }
-
   return null;
 }
 
@@ -173,7 +165,7 @@ export function useWorksheetDnD({
     updateProjectedDropTarget({
       containerId: activeData.containerId,
       index: activeData.index,
-      kind: 'row',
+      kind: 'gap',
     });
     initialLocationRef.current = {
       worksheetId: activeData.worksheetId,

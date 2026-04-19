@@ -5,6 +5,7 @@ import {
   DragOverlay,
   MeasuringStrategy,
   pointerWithin,
+  closestCenter,
   closestCorners,
   type Modifier,
   type DragCancelEvent,
@@ -70,19 +71,30 @@ interface TaskpaneSectionsProps {
 }
 
 const worksheetCollisionDetection: CollisionDetection = (args) => {
-  const pointerCollisions = pointerWithin(args);
+  // Only consider explicit drop-target zones (gap, container-end, group-header).
+  // useSortable registers each row as a droppable too, but rows should not compete
+  // with gap zones for collision priority.
+  const filteredArgs = {
+    ...args,
+    droppableContainers: args.droppableContainers.filter(
+      (container) => container.data.current?.type === 'worksheet-drop-target',
+    ),
+  };
 
+  const pointerCollisions = pointerWithin(filteredArgs);
   if (pointerCollisions.length > 0) {
     return pointerCollisions;
   }
 
-  // For pointer-driven drag, avoid geometric fallback to keep projected targets
-  // strictly aligned with the pointer and prevent distant ghost highlights.
+  // When the pointer is between gap zones (i.e. over a row), closestCenter
+  // finds the nearest gap zone center. This naturally switches at the row
+  // midpoint, giving correct top-half / bottom-half insertion behavior.
   if (args.pointerCoordinates) {
-    return [];
+    return closestCenter(filteredArgs);
   }
 
-  return closestCorners(args);
+  // Keyboard fallback.
+  return closestCorners(filteredArgs);
 };
 
 const worksheetDragOverlayOffset: Modifier = ({ transform }) => ({
