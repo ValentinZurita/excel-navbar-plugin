@@ -46,19 +46,48 @@
   opacity: 1;
 }
 
-/* Search icon color follows the same muted-to-active pattern as row icons. */
-.search-icon {
-  color: color-mix(in srgb, var(--excel-muted) 88%, transparent);
+/* Leading slot: search glyph or clear control (colors from theme field-adornment tokens). */
+.search-icon,
+.search-clear {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color 160ms ease;
+  width: 16px;
+  height: 16px;
+  color: var(--excel-field-adornment-fg);
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.search-icon {
+  pointer-events: none;
 }
 
 .search-icon-svg {
   width: 12px;
   height: 12px;
   display: block;
+}
+
+.search-clear {
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.search-clear:hover {
+  color: var(--excel-field-adornment-hover-fg);
+}
+
+.search-clear:active {
+  background: var(--excel-pressed);
+}
+
+.search-clear:focus-visible {
+  outline: 2px solid var(--excel-accent);
+  outline-offset: 1px;
 }
 
 :root[data-office-theme-mode='dark'] .search-field {

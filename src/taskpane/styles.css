@@ -18,6 +18,11 @@
   --excel-surface-raised: color-mix(in srgb, var(--excel-control-bg) 96%, var(--excel-body-bg));
   --excel-focus-ring: color-mix(in srgb, var(--excel-muted) 18%, transparent);
 
+  /* Leading icons inside compact fields (search, future inline adorners).
+     Derived from core tokens so Office/runtime theme overrides stay coherent. */
+  --excel-field-adornment-fg: color-mix(in srgb, var(--excel-muted) 88%, transparent);
+  --excel-field-adornment-hover-fg: color-mix(in srgb, var(--excel-control-fg) 78%, transparent);
+
   /* Navigation row state semantics: active → drag-over.
      Note: Hover no longer has visual background (intentional design choice).
      Adjust these to tune the navigator visual hierarchy.

@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { SearchIcon } from '../../icons';
+import { RemoveMenuIcon, SearchIcon } from '../../icons';
 import './SearchBar.css';
 
 interface SearchBarProps {
@@ -16,12 +16,29 @@ interface SearchBarProps {
  */
 export const SearchBar = forwardRef<HTMLInputElement | null, SearchBarProps>(
   ({ value, onChange, onKeyDown }, ref) => {
+    const hasQuery = value.length > 0;
+
     return (
       // This field drives both local search filtering and dropdown visibility.
-      <label className="search-field">
-        <span className="search-icon" aria-hidden="true">
-          <SearchIcon className="search-icon-svg" />
-        </span>
+      <div className="search-field">
+        {hasQuery ? (
+          <button
+            type="button"
+            className="search-clear"
+            aria-label="Clear search"
+            onMouseDown={(event) => {
+              // Keep focus in the input; blur would fight keyboard navigation.
+              event.preventDefault();
+            }}
+            onClick={() => onChange('')}
+          >
+            <RemoveMenuIcon className="search-icon-svg" aria-hidden />
+          </button>
+        ) : (
+          <span className="search-icon" aria-hidden="true">
+            <SearchIcon className="search-icon-svg" />
+          </span>
+        )}
         <input
           ref={ref}
           type="text"
@@ -32,7 +49,7 @@ export const SearchBar = forwardRef<HTMLInputElement | null, SearchBarProps>(
           onKeyDown={onKeyDown}
           spellCheck={false}
         />
-      </label>
+      </div>
     );
   },
 );
