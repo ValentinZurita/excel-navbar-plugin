@@ -34,6 +34,22 @@ export function SearchResults({
   registerElement,
   onPointerFocus,
 }: SearchResultsProps) {
+  // Track last known physical mouse coordinates. This prevents "ghost hovers"
+  // from stationary pointers during list scrolling (e.g. from ArrowDown focus tracking
+  // or trackpad scrolling), which would otherwise accidentally update the keyboard anchor state.
+  const lastMousePositionRef = useRef({ x: -1, y: -1 });
+
+  const handlePointerFocus = (itemId: string, event: React.MouseEvent) => {
+    if (
+      event.clientX === lastMousePositionRef.current.x &&
+      event.clientY === lastMousePositionRef.current.y
+    ) {
+      return; // Ignore synthetic events caused by elements sliding under a stationary cursor
+    }
+    
+    lastMousePositionRef.current = { x: event.clientX, y: event.clientY };
+    onPointerFocus?.(itemId);
+  };
   function renderResultIcon(result: SearchResultItem) {
     if (result.visibility !== 'Visible') {
       return <EyeOffIcon className="search-result-icon search-result-icon-hidden" />;
@@ -71,7 +87,7 @@ export function SearchResults({
               onSelect={onSelect}
               onItemKeyDown={onItemKeyDown}
               registerElement={registerElement}
-              onPointerFocus={onPointerFocus}
+              onPointerFocus={onPointerFocus ? handlePointerFocus : undefined}
               renderIcon={renderResultIcon}
             />
           );
@@ -90,7 +106,7 @@ interface SearchResultItemComponentProps {
   onSelect: (worksheetId: string) => void | Promise<void>;
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>, itemId: string) => void;
   registerElement?: (id: string, element: HTMLElement | null) => void;
-  onPointerFocus?: (itemId: string) => void;
+  onPointerFocus?: (itemId: string, event: React.MouseEvent) => void;
   renderIcon: (result: SearchResultItem) => React.ReactNode;
 }
 
@@ -131,8 +147,8 @@ function SearchResultItemComponent({
       tabIndex={isFocused ? 0 : -1}
       onClick={() => onSelect(result.worksheetId)}
       onKeyDown={(event) => onItemKeyDown?.(event, itemId)}
-      onMouseMove={() => onPointerFocus?.(itemId)}
-      onMouseEnter={() => onPointerFocus?.(itemId)}
+      onMouseMove={(event) => onPointerFocus?.(itemId, event)}
+      onMouseEnter={(event) => onPointerFocus?.(itemId, event)}
     >
       <span className={`search-result-leading ${result.groupColor && result.groupColor !== 'none' ? `group-color-${result.groupColor}` : ''}`.trim()} aria-hidden="true">
         {renderIcon(result)}
