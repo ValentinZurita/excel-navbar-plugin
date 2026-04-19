@@ -8,7 +8,7 @@ import { ShortcutActionId } from './ShortcutRegistry';
  */
 const SHORTCUT_KEY_MAP: Record<string, string> = {
   [ShortcutActionId.TOGGLE_TASKPANE]: 'p',
-  [ShortcutActionId.FOCUS_SEARCH]: 'f',
+  [ShortcutActionId.FOCUS_SEARCH]: 'o',
   [ShortcutActionId.CREATE_WORKSHEET]: 'n',
 };
 

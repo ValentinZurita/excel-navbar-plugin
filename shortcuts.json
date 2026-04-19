@@ -27,8 +27,8 @@
     {
       "action": "focusSearch",
       "key": {
-        "default": "Ctrl+Alt+F",
-        "mac": "Command+Option+F"
+        "default": "Ctrl+Alt+O",
+        "mac": "Command+Option+O"
       }
     },
     {
