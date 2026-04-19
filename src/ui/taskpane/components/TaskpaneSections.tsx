@@ -230,6 +230,10 @@ export function TaskpaneSections({
   const shouldShowHiddenSection = navigatorView.hidden.length > 0;
   const shouldShowSessionOnlyGroupsHint = shouldShowGroupsSection && isSessionOnlyPersistence;
   const isSearchActive = Boolean(query.trim());
+  const hiddenWorksheetIds = useMemo(
+    () => navigatorView.hidden.map((w) => w.worksheetId),
+    [navigatorView.hidden],
+  );
   const contextMenuTargetItemId = contextMenuOpenSheetId
     ? `worksheet:${contextMenuOpenSheetId}`
     : contextMenuOpenGroupId
@@ -284,6 +288,7 @@ export function TaskpaneSections({
       isContextMenuOpen={isContextMenuOpen}
       contextMenuTargetItemId={contextMenuTargetItemId}
       activeVisualItemId={activeVisualItemId}
+      hiddenWorksheetIds={hiddenWorksheetIds}
     >
       <TaskpaneSectionsContent
         query={query}
@@ -523,9 +528,14 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
         <HiddenSection
           isCollapsed={isHiddenSectionCollapsed}
           worksheets={navigatorView.hidden}
+          contextMenuOpenSheetId={contextMenuOpenSheetId}
+          focusedItemId={focusedItemId}
+          visualFocusedItemId={visualFocusedItemId}
+          visualExitingItemId={visualExitingItemId}
           onToggle={onToggleHiddenSection}
           onUnhide={onUnhideWorksheet}
           onOpenContextMenu={onOpenSheetMenu}
+          registerElement={registerElement}
         />
       ) : null}
     </>

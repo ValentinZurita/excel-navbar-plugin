@@ -1,3 +1,4 @@
+import { useCallback, useEffect } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import { useLeadingClusterInteraction } from '../../hooks/useLeadingClusterInteraction';
 import { ChevronDownIcon, ChevronRightIcon, EyeIcon, EyeOffIcon } from '../../icons';
@@ -8,6 +9,10 @@ import '../Section/Section.css';
 interface HiddenSectionProps {
   isCollapsed: boolean;
   worksheets: WorksheetEntity[];
+  contextMenuOpenSheetId?: string | null;
+  focusedItemId?: string | null;
+  visualFocusedItemId?: string | null;
+  visualExitingItemId?: string | null;
   onToggle: () => void;
   onUnhide: (worksheetId: string) => void | Promise<void>;
   onOpenContextMenu: (args: {
@@ -16,10 +21,16 @@ interface HiddenSectionProps {
     y: number;
     worksheet: WorksheetEntity;
   }) => void;
+  registerElement?: (id: string, element: HTMLElement | null) => void;
 }
 
 interface HiddenSheetRowProps {
   worksheet: WorksheetEntity;
+  isContextMenuOpen?: boolean;
+  isFocused?: boolean;
+  isVisualFocused?: boolean;
+  isVisualExiting?: boolean;
+  isActiveDimmed?: boolean;
   onUnhide: (worksheetId: string) => void | Promise<void>;
   onOpenContextMenu: (args: {
     target: HTMLElement;
@@ -27,20 +38,61 @@ interface HiddenSheetRowProps {
     y: number;
     worksheet: WorksheetEntity;
   }) => void;
+  registerElement?: (id: string, element: HTMLElement | null) => void;
 }
 
 /**
  * Same leading-slot pattern as SheetRow pin: muted base icon, overlay action on hover/focus with motion.
+ * Intentionally omits `data-navigable-id`: hidden rows are not in `buildNavigableItems`, and the global
+ * pointer-sync listener would otherwise clear focus when their id is missing from the main list.
  */
-function HiddenSheetRow({ worksheet, onUnhide, onOpenContextMenu }: HiddenSheetRowProps) {
-  const { isHovered, isFocused, clusterPointerProps, actionFocusProps } = useLeadingClusterInteraction();
+function HiddenSheetRow({
+  worksheet,
+  isContextMenuOpen = false,
+  isFocused = false,
+  isVisualFocused = false,
+  isVisualExiting = false,
+  isActiveDimmed = false,
+  onUnhide,
+  onOpenContextMenu,
+  registerElement,
+}: HiddenSheetRowProps) {
+  const { isHovered, isFocused: isLeadingFocused, clusterPointerProps, actionFocusProps } = useLeadingClusterInteraction();
   const isVeryHidden = worksheet.visibility === 'VeryHidden';
-  const showUnhideAction = !isVeryHidden && (isHovered || isFocused);
+  const showUnhideAction = !isVeryHidden && (isHovered || isLeadingFocused);
+  const navigableId = `worksheet:${worksheet.worksheetId}`;
+  const isHighlighted = Boolean(isContextMenuOpen);
+
+  useEffect(() => {
+    if (!registerElement) {
+      return undefined;
+    }
+    return () => {
+      registerElement(navigableId, null);
+    };
+  }, [navigableId, registerElement]);
+
+  const setArticleRef = useCallback((element: HTMLElement | null) => {
+    if (registerElement) {
+      registerElement(navigableId, element);
+    }
+  }, [navigableId, registerElement]);
 
   return (
     <article
-      className="sheet-row hidden-row"
+      ref={setArticleRef}
+      className={`sheet-row hidden-row ${isContextMenuOpen ? 'sheet-row-context-open' : ''}`}
       data-unhide-interacting={showUnhideAction ? 'true' : 'false'}
+      data-active="false"
+      data-highlighted={isHighlighted ? 'true' : 'false'}
+      data-context-open={isContextMenuOpen ? 'true' : 'false'}
+      data-pin-visible="false"
+      data-leading-state="indicator"
+      data-interaction-suppressed="false"
+      data-focused={isFocused ? 'true' : undefined}
+      data-visual-focused={isVisualFocused ? 'true' : undefined}
+      data-visual-exiting={isVisualExiting ? 'true' : undefined}
+      data-active-dimmed={isActiveDimmed ? 'true' : 'false'}
       title={isVeryHidden ? 'Cannot unhide Very Hidden sheet' : undefined}
       onContextMenu={(event) => {
         event.preventDefault();
@@ -89,7 +141,18 @@ function HiddenSheetRow({ worksheet, onUnhide, onOpenContextMenu }: HiddenSheetR
   );
 }
 
-export function HiddenSection({ isCollapsed, worksheets, onToggle, onUnhide, onOpenContextMenu }: HiddenSectionProps) {
+export function HiddenSection({
+  isCollapsed,
+  worksheets,
+  contextMenuOpenSheetId,
+  focusedItemId,
+  visualFocusedItemId,
+  visualExitingItemId,
+  onToggle,
+  onUnhide,
+  onOpenContextMenu,
+  registerElement,
+}: HiddenSectionProps) {
   return (
     <section className="section-card hidden-section">
       <header className="section-header section-header-clickable" onClick={onToggle}>
@@ -103,14 +166,29 @@ export function HiddenSection({ isCollapsed, worksheets, onToggle, onUnhide, onO
 
       {!isCollapsed ? (
         <div className="sheet-list section-body">
-          {worksheets.map((worksheet) => (
-            <HiddenSheetRow
-              key={worksheet.worksheetId}
-              worksheet={worksheet}
-              onUnhide={onUnhide}
-              onOpenContextMenu={onOpenContextMenu}
-            />
-          ))}
+          {worksheets.map((worksheet) => {
+            const navigableId = `worksheet:${worksheet.worksheetId}`;
+            const isContextMenuOpen = worksheet.worksheetId === contextMenuOpenSheetId;
+            const isFocused = focusedItemId === navigableId;
+            const isVisualFocused = visualFocusedItemId === navigableId;
+            const isVisualExiting = visualExitingItemId === navigableId;
+            const isActiveDimmed = Boolean(visualFocusedItemId && visualFocusedItemId !== navigableId);
+
+            return (
+              <HiddenSheetRow
+                key={worksheet.worksheetId}
+                worksheet={worksheet}
+                isContextMenuOpen={isContextMenuOpen}
+                isFocused={isFocused}
+                isVisualFocused={isVisualFocused}
+                isVisualExiting={isVisualExiting}
+                isActiveDimmed={isActiveDimmed}
+                onUnhide={onUnhide}
+                onOpenContextMenu={onOpenContextMenu}
+                registerElement={registerElement}
+              />
+            );
+          })}
         </div>
       ) : null}
     </section>
