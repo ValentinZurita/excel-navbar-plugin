@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-export const HIGHLIGHT_EXIT_MS = 160;
+export const HIGHLIGHT_EXIT_MS = 230;
 
 interface UseHighlightLifecycleArgs {
   logicalFocusedItemId: string | null;

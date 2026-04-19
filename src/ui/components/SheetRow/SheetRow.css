@@ -104,7 +104,7 @@
   pointer-events: none;
   background: var(--excel-nav-active-bg);
   opacity: 0;
-  transition: opacity 220ms ease;
+  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: none;
 }
 
@@ -117,7 +117,7 @@
   box-shadow: none;
   transform: none;
   transition:
-    background-color 220ms ease,
+    background-color 260ms cubic-bezier(0.22, 1, 0.36, 1),
     border-color 140ms ease,
     box-shadow 140ms ease;
 }
@@ -126,7 +126,6 @@
 .sheet-row-active .sheet-title,
 .sheet-row[data-active='true'] .sheet-title {
   color: var(--excel-nav-active-fg);
-  font-weight: 500;
 }
 
 /* ELIMINADO: Hover no longer has visual background state
@@ -302,5 +301,5 @@
 
 /* Sheet title with smooth color transition for active state change */
 .sheet-title {
-  transition: color 250ms ease;
+  transition: color 250ms cubic-bezier(0.22, 1, 0.36, 1);
 }

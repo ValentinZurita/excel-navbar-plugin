@@ -27,7 +27,7 @@
   pointer-events: none;
   background: var(--excel-nav-active-bg);
   opacity: 0;
-  transition: opacity 220ms ease;
+  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
   box-shadow: none;
 }
 
@@ -62,7 +62,7 @@
   background: var(--excel-nav-resting-bg);
   border-color: transparent;
   transition:
-    background-color 220ms ease,
+    background-color 260ms cubic-bezier(0.22, 1, 0.36, 1),
     border-color 140ms ease,
     box-shadow 140ms ease;
 }
@@ -77,7 +77,6 @@
 
 .group-header-active .group-title {
   color: var(--excel-nav-active-fg);
-  font-weight: 500;
 }
 
 .group-toggle {
@@ -193,7 +192,7 @@
   font-size: 13px;
   font-weight: 400;
   color: var(--excel-body-fg);
-  transition: color 140ms ease;
+  transition: color 250ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .group-card .search-result {
