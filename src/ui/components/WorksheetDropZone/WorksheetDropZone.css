@@ -22,14 +22,26 @@
   pointer-events: none; /* Let pointer events pass through to rows if needed */
 }
 
-/* 
- * Container end zones sit at the very bottom of the list.
- * They are relative because they are NOT centered between items, they form the 
- * final boundary at the end of the flex list.
+/*
+ * Container end zones must stay mounted to avoid drag-start layout jumps,
+ * but must not consume layout space while idle.
  */
 .worksheet-drop-zone-container-end {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 8px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.worksheet-drop-zone-container-end.worksheet-drop-zone-empty {
   position: relative;
-  min-height: 8px;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  height: auto;
 }
 
 .worksheet-drop-zone-empty {
