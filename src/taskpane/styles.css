@@ -13,6 +13,8 @@
   --excel-border: #e1dfdd;
   --excel-muted: #605e5c;
   --excel-accent: #107c41;
+  /* DnD worksheet insertion bar — same hue as Excel sheet-tab reorder feedback. */
+  --excel-insertion-line: var(--excel-accent);
   --excel-hover: color-mix(in srgb, var(--excel-control-bg) 82%, var(--excel-body-bg));
   --excel-pressed: color-mix(in srgb, var(--excel-control-bg) 72%, var(--excel-body-bg));
   --excel-surface-raised: color-mix(in srgb, var(--excel-control-bg) 96%, var(--excel-body-bg));

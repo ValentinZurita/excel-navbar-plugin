@@ -58,7 +58,7 @@
 }
 
 .worksheet-insertion-line-active {
-  background: color-mix(in srgb, var(--excel-body-fg) 24%, transparent);
+  background: var(--excel-insertion-line);
 }
 
 /* Slot wrapper keeps each gap + row pair together in the flow. */
