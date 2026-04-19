@@ -401,13 +401,33 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
         return state;
       }
 
+      const currentOrder = reconcileSheetSectionOrder(state.sheetSectionOrder, state.worksheetsById);
+      
+      const ungroupedVisibleIds = currentOrder.filter((id) => {
+        const w = state.worksheetsById[id];
+        return w && !w.groupId && !w.isPinned && w.visibility === 'Visible';
+      });
+
+      const nextUngroupedVisibleIds = moveWorksheetId(
+        ungroupedVisibleIds,
+        action.worksheetId,
+        action.targetIndex,
+      );
+
+      let ungroupedIndex = 0;
+      const nextOrder = currentOrder.map((id) => {
+        const w = state.worksheetsById[id];
+        if (w && !w.groupId && !w.isPinned && w.visibility === 'Visible') {
+          const nextId = nextUngroupedVisibleIds[ungroupedIndex];
+          ungroupedIndex += 1;
+          return nextId;
+        }
+        return id;
+      });
+
       return {
         ...state,
-        sheetSectionOrder: moveWorksheetId(
-          reconcileSheetSectionOrder(state.sheetSectionOrder, state.worksheetsById),
-          action.worksheetId,
-          action.targetIndex,
-        ),
+        sheetSectionOrder: nextOrder,
       };
     }
     case 'reorderPinnedWorksheet': {
