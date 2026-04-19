@@ -25,8 +25,9 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
+  background: var(--excel-nav-active-bg);
   opacity: 0;
-  transition: opacity 160ms ease;
+  transition: opacity 220ms ease;
   box-shadow: none;
 }
 
@@ -60,6 +61,18 @@
 .group-header-active {
   background: var(--excel-nav-resting-bg);
   border-color: transparent;
+  transition:
+    background-color 220ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.group-header[data-visual-focused='true']::before {
+  opacity: 1;
+}
+
+.group-header[data-visual-exiting='true']::before {
+  opacity: 0;
 }
 
 .group-header-active .group-title {

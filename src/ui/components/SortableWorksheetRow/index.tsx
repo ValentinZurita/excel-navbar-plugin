@@ -20,8 +20,14 @@ interface SortableWorksheetRowProps {
   onRenameCancel?: () => void;
   /** Optional: ID for keyboard navigation */
   navigableId?: string;
-  /** Whether this row has keyboard focus */
+  /** Whether this row has logical keyboard/pointer focus */
   isFocused?: boolean;
+  /** Whether this row owns visual highlight */
+  isVisualFocused?: boolean;
+  /** Whether this row is fading highlight out */
+  isVisualExiting?: boolean;
+  /** Whether active ghost should dim while another row owns highlight */
+  isActiveDimmed?: boolean;
   /** Handler for keyboard navigation */
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
   /** Register DOM element for focus management */
@@ -51,6 +57,9 @@ function areSortableWorksheetRowPropsEqual(
     && left.onRenameCancel === right.onRenameCancel
     && left.navigableId === right.navigableId
     && left.isFocused === right.isFocused
+    && left.isVisualFocused === right.isVisualFocused
+    && left.isVisualExiting === right.isVisualExiting
+    && left.isActiveDimmed === right.isActiveDimmed
     && left.onItemKeyDown === right.onItemKeyDown
     && left.registerElement === right.registerElement;
 }
@@ -71,6 +80,9 @@ function SortableWorksheetRowComponent({
   onRenameCancel,
   navigableId,
   isFocused,
+  isVisualFocused,
+  isVisualExiting,
+  isActiveDimmed,
   onItemKeyDown,
   registerElement,
 }: SortableWorksheetRowProps) {
@@ -104,6 +116,9 @@ function SortableWorksheetRowComponent({
       isRenaming={isRenaming}
       navigableId={navigableId}
       isFocused={isFocused}
+      isVisualFocused={isVisualFocused}
+      isVisualExiting={isVisualExiting}
+      isActiveDimmed={isActiveDimmed}
       containerRef={setNodeRef}
       containerProps={{
         ...attributes,

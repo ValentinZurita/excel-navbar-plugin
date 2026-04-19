@@ -102,8 +102,9 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
+  background: var(--excel-nav-active-bg);
   opacity: 0;
-  transition: opacity 160ms ease;
+  transition: opacity 220ms ease;
   box-shadow: none;
 }
 
@@ -115,6 +116,10 @@
   border-color: transparent;
   box-shadow: none;
   transform: none;
+  transition:
+    background-color 220ms ease,
+    border-color 140ms ease,
+    box-shadow 140ms ease;
 }
 
 /* Active state text color - Excel green for emphasis */
@@ -140,6 +145,14 @@
   background: transparent;
   border-color: transparent;
   box-shadow: none;
+}
+
+.sheet-row[data-visual-focused='true']::before {
+  opacity: 1;
+}
+
+.sheet-row[data-visual-exiting='true']::before {
+  opacity: 0;
 }
 
 /* Dragging state for when a row is being moved. It becomes translucent and non-interactive. */
@@ -171,7 +184,8 @@
 /* Reuse overlay styling for active/highlight/context-open states in floating preview mode. */
 .sheet-row-overlay.sheet-row-active,
 .sheet-row-overlay[data-highlighted='true'],
-.sheet-row-overlay[data-context-open='true'] {
+.sheet-row-overlay[data-context-open='true'],
+.sheet-row-overlay[data-visual-focused='true'] {
   background: var(--excel-surface-raised);
   border-color: color-mix(in srgb, var(--excel-border) 84%, transparent);
   box-shadow:

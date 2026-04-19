@@ -41,8 +41,14 @@ interface SheetRowProps {
   onRenameCancel?: () => void;
   /** Optional: ID for keyboard navigation. When provided, participates in arrow key navigation. */
   navigableId?: string;
-  /** Whether this row has keyboard focus (from navigation context) */
+  /** Whether this row has logical keyboard/pointer focus */
   isFocused?: boolean;
+  /** Whether this row owns visual highlight */
+  isVisualFocused?: boolean;
+  /** Whether this row is fading highlight out */
+  isVisualExiting?: boolean;
+  /** Whether active ghost should dim while another row owns highlight */
+  isActiveDimmed?: boolean;
   /** Handler for keyboard navigation (from navigation context) */
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
   /** Register DOM element for focus management (from navigation context) */
@@ -67,6 +73,9 @@ function areSheetRowPropsEqual(left: SheetRowProps, right: SheetRowProps) {
     && left.onRenameCancel === right.onRenameCancel
     && left.navigableId === right.navigableId
     && left.isFocused === right.isFocused
+    && left.isVisualFocused === right.isVisualFocused
+    && left.isVisualExiting === right.isVisualExiting
+    && left.isActiveDimmed === right.isActiveDimmed
     && left.onItemKeyDown === right.onItemKeyDown
     && left.registerElement === right.registerElement;
 }
@@ -89,6 +98,9 @@ function SheetRowComponent({
   onRenameCancel,
   navigableId,
   isFocused = false,
+  isVisualFocused = false,
+  isVisualExiting = false,
+  isActiveDimmed = false,
   onItemKeyDown,
   registerElement,
 }: SheetRowProps) {
@@ -177,6 +189,9 @@ function SheetRowComponent({
       data-interaction-suppressed={isInteractionSuppressed ? 'true' : 'false'}
       data-navigable-id={navigableId}
       data-focused={navigableId ? isFocused : undefined}
+      data-visual-focused={navigableId ? isVisualFocused : undefined}
+      data-visual-exiting={navigableId ? isVisualExiting : undefined}
+      data-active-dimmed={isActiveDimmed ? 'true' : 'false'}
       style={containerStyle}
       role={isInteractive ? 'button' : undefined}
       tabIndex={tabIndex}

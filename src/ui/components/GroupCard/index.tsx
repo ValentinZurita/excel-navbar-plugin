@@ -27,14 +27,22 @@ interface GroupCardProps {
   onRenameCancel?: () => void;
   /** Optional: ID for keyboard navigation on the group header */
   navigableId?: string;
-  /** Whether this group header has keyboard focus */
+  /** Whether this group header has logical keyboard/pointer focus */
   isFocused?: boolean;
+  /** Whether this group header owns visual highlight */
+  isVisualFocused?: boolean;
+  /** Whether this group header is fading highlight out */
+  isVisualExiting?: boolean;
+  /** Whether active ghost should dim while another item owns highlight */
+  isActiveDimmed?: boolean;
   /** Handler for group header keyboard navigation (ArrowRight/Left, Enter) */
   onGroupHeaderKeyDown?: (event: React.KeyboardEvent<HTMLElement>, groupId: string, isCollapsed: boolean) => void;
   /** Register DOM element for focus management */
   registerElement?: (id: string, element: HTMLElement | null) => void;
-  /** Current focused item ID for child worksheets in this group */
-  focusedItemId?: string | null;
+  /** Taskpane item with strong visual highlight */
+  visualFocusedItemId?: string | null;
+  /** Taskpane item fading out after highlight release */
+  visualExitingItemId?: string | null;
   /** Handler for keyboard navigation on child worksheets */
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
 }
@@ -122,9 +130,13 @@ function areGroupCardPropsEqual(left: GroupCardProps, right: GroupCardProps) {
     && left.onRenameCancel === right.onRenameCancel
     && left.navigableId === right.navigableId
     && left.isFocused === right.isFocused
+    && left.isVisualFocused === right.isVisualFocused
+    && left.isVisualExiting === right.isVisualExiting
+    && left.isActiveDimmed === right.isActiveDimmed
     && left.onGroupHeaderKeyDown === right.onGroupHeaderKeyDown
     && left.registerElement === right.registerElement
-    && left.focusedItemId === right.focusedItemId
+    && left.visualFocusedItemId === right.visualFocusedItemId
+    && left.visualExitingItemId === right.visualExitingItemId
     && left.onItemKeyDown === right.onItemKeyDown;
 }
 
@@ -138,6 +150,9 @@ function GroupCardComponent({
   onRenameCancel,
   navigableId,
   isFocused = false,
+  isVisualFocused = false,
+  isVisualExiting = false,
+  isActiveDimmed = false,
   onGroupHeaderKeyDown,
   registerElement,
   ...rest
@@ -246,7 +261,11 @@ function GroupCardComponent({
         ref={setNodeRef}
         className={`group-header ${group.groupId === rest.groupMenuOpenId ? 'group-header-context-open' : ''} ${isDropActive ? 'group-header-drop-active' : ''} ${isActiveGroupHeader ? 'group-header-active' : ''}`}
         data-navigable-id={navigableId}
+        data-active={isActiveGroupHeader ? 'true' : 'false'}
         data-focused={navigableId ? isFocused : undefined}
+        data-visual-focused={navigableId ? isVisualFocused : undefined}
+        data-visual-exiting={navigableId ? isVisualExiting : undefined}
+        data-active-dimmed={isActiveDimmed ? 'true' : 'false'}
       >
         <button
           ref={headerButtonRef}
@@ -297,7 +316,8 @@ function GroupCardComponent({
           activeWorksheetId={rest.activeWorksheetId}
           contextMenuOpenId={rest.contextMenuOpenId}
           dragConfig={sheetListDragConfig}
-          focusedItemId={rest.focusedItemId}
+          visualFocusedItemId={rest.visualFocusedItemId}
+          visualExitingItemId={rest.visualExitingItemId}
           onActivate={rest.onActivate}
           onTogglePin={rest.onTogglePin}
           onOpenContextMenu={onOpenSheetMenu}

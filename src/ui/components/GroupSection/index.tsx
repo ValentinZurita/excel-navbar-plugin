@@ -18,8 +18,12 @@ interface GroupSectionProps {
   onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
   onRenameSubmit?: (groupId: string, newName: string) => void;
   onRenameCancel?: () => void;
-  /** Current focused item ID for keyboard navigation */
+  /** Logical focus item ID for DOM focus management */
   focusedItemId?: string | null;
+  /** Taskpane item with strong visual highlight */
+  visualFocusedItemId?: string | null;
+  /** Taskpane item fading out after highlight release */
+  visualExitingItemId?: string | null;
   /** Handler for group header keyboard navigation */
   onGroupHeaderKeyDown?: (event: React.KeyboardEvent<HTMLElement>, groupId: string, isCollapsed: boolean) => void;
   /** Handler for worksheet keyboard navigation inside expanded groups */
@@ -43,6 +47,8 @@ export function GroupSection({
   onRenameSubmit,
   onRenameCancel,
   focusedItemId,
+  visualFocusedItemId,
+  visualExitingItemId,
   onGroupHeaderKeyDown,
   onItemKeyDown,
   registerElement,
@@ -54,6 +60,9 @@ export function GroupSection({
       {groups.map((group) => {
         const navigableId = `group-header:${group.groupId}`;
         const isFocused = focusedItemId === navigableId;
+        const isVisualFocused = visualFocusedItemId === navigableId;
+        const isVisualExiting = visualExitingItemId === navigableId;
+        const isActiveDimmed = Boolean(visualFocusedItemId && visualFocusedItemId !== navigableId);
 
         return (
           <GroupCard
@@ -66,6 +75,9 @@ export function GroupSection({
             isRenaming={renamingGroupId === group.groupId}
             navigableId={navigableId}
             isFocused={isFocused}
+            isVisualFocused={isVisualFocused}
+            isVisualExiting={isVisualExiting}
+            isActiveDimmed={isActiveDimmed}
             onActivate={onActivate}
             onToggleCollapsed={onToggleCollapsed}
             onTogglePin={onTogglePin}
@@ -74,7 +86,8 @@ export function GroupSection({
             onRenameSubmit={onRenameSubmit}
             onRenameCancel={onRenameCancel}
             onGroupHeaderKeyDown={onGroupHeaderKeyDown}
-            focusedItemId={focusedItemId}
+            visualFocusedItemId={visualFocusedItemId}
+            visualExitingItemId={visualExitingItemId}
             onItemKeyDown={onItemKeyDown}
             registerElement={registerElement}
           />

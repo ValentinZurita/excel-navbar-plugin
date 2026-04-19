@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { createRef, useState, type ComponentProps, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NavigatorView, WorksheetEntity } from '../../src/domain/navigation/types';
+import { HIGHLIGHT_EXIT_MS } from '../../src/application/navigation/useHighlightLifecycle';
 import { TaskpaneSections } from '../../src/ui/taskpane/components/TaskpaneSections';
 
 vi.mock('@dnd-kit/core', async () => {
@@ -336,11 +337,11 @@ describe('TaskpaneSections', () => {
     await user.click(revenueRow);
 
     expect(onActivateWorksheet).toHaveBeenCalledWith('sheet-1');
-    expect(revenueArticle).toHaveAttribute('data-focused', 'true');
-    expect(forecastArticle).toHaveAttribute('data-focused', 'false');
+    expect(revenueArticle).toHaveAttribute('data-visual-focused', 'true');
+    expect(forecastArticle).toHaveAttribute('data-visual-focused', 'false');
 
     // There should be exactly one focused navigable item.
-    expect(container.querySelectorAll('[data-focused="true"]').length).toBe(1);
+    expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
   });
 
   it('clears keyboard navigation focus when pressing Escape', async () => {
@@ -369,11 +370,11 @@ describe('TaskpaneSections', () => {
     revenueRow.focus();
     await user.keyboard('{ArrowDown}');
 
-    expect(container.querySelectorAll('[data-focused="true"]').length).toBe(1);
+    expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
 
     await user.keyboard('{Escape}');
 
-    expect(container.querySelectorAll('[data-focused="true"]').length).toBe(0);
+    expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(0);
     expect(document.activeElement).toBe(document.body);
   });
 
@@ -395,6 +396,7 @@ describe('TaskpaneSections', () => {
       <TaskpaneSections
         {...createBaseProps({
           navigatorView,
+          activeWorksheetId: 'sheet-1',
         })}
       />,
     );
@@ -403,14 +405,22 @@ describe('TaskpaneSections', () => {
     revenueRow.focus();
     fireEvent.keyDown(revenueRow, { key: 'ArrowDown', code: 'ArrowDown' });
 
-    expect(container.querySelectorAll('[data-focused="true"]').length).toBe(1);
+    expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
 
     // 3 seconds idle timeout for keyboard focus clear
     act(() => {
       vi.advanceTimersByTime(3000);
     });
 
-    expect(container.querySelectorAll('[data-focused="true"]').length).toBe(0);
+    expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
+    expect(screen.getByRole('button', { name: 'Revenue' }).closest('[data-navigable-id="worksheet:sheet-1"]')).toHaveAttribute('data-visual-focused', 'true');
+    expect(container.querySelectorAll('[data-visual-exiting="true"]').length).toBe(1);
+
+    act(() => {
+      vi.advanceTimersByTime(HIGHLIGHT_EXIT_MS);
+    });
+
+    expect(container.querySelectorAll('[data-visual-exiting="true"]').length).toBe(0);
     expect(document.activeElement).toBe(document.body);
   }, 10000);
 
@@ -446,14 +456,15 @@ describe('TaskpaneSections', () => {
     act(() => {
       vi.advanceTimersByTime(3000);
     });
-    expect(container.querySelectorAll('[data-focused="true"]').length).toBe(0);
+    expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
+    expect(screen.getByRole('button', { name: 'Forecast' }).closest('[data-navigable-id="worksheet:sheet-2"]')).toHaveAttribute('data-visual-focused', 'true');
 
     // Next arrow key should anchor from active worksheet (Forecast) and move to Summary.
     const activeRow = screen.getByRole('button', { name: 'Forecast' });
     fireEvent.keyDown(activeRow, { key: 'ArrowDown', code: 'ArrowDown' });
 
     const summaryArticle = screen.getByRole('button', { name: 'Summary' }).closest('[data-navigable-id="worksheet:sheet-3"]');
-    expect(summaryArticle).toHaveAttribute('data-focused', 'true');
+    expect(summaryArticle).toHaveAttribute('data-visual-focused', 'true');
   });
 
   it('keeps search result pointer and keyboard navigation in sync', async () => {
@@ -599,6 +610,216 @@ describe('TaskpaneSections', () => {
     await user.keyboard('{ArrowDown}');
 
     const summaryRow = screen.getByRole('button', { name: 'Summary' });
-    expect(summaryRow).toHaveAttribute('data-focused', 'true');
+    expect(summaryRow.closest('[data-navigable-id="worksheet:sheet-3"]')).toHaveAttribute('data-visual-focused', 'true');
+  });
+
+  it('fades transient highlight out and returns active ghost after pointer idle clear', () => {
+    vi.useFakeTimers();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' }),
+        createWorksheet({ worksheetId: 'sheet-2', name: 'Forecast' }),
+      ],
+      hidden: [],
+      searchResults: [],
+    };
+
+    const { container } = render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          activeWorksheetId: 'sheet-2',
+        })}
+      />,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    const revenueArticle = revenueRow.closest('[data-navigable-id="worksheet:sheet-1"]');
+    const forecastArticle = screen.getByRole('button', { name: 'Forecast' }).closest('[data-navigable-id="worksheet:sheet-2"]');
+
+    fireEvent.pointerDown(revenueRow);
+
+    expect(revenueArticle).toHaveAttribute('data-visual-focused', 'true');
+    expect(forecastArticle).toHaveAttribute('data-active', 'true');
+    expect(forecastArticle).toHaveAttribute('data-active-dimmed', 'true');
+
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+
+    expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
+    expect(revenueArticle).toHaveAttribute('data-visual-exiting', 'true');
+    expect(forecastArticle).toHaveAttribute('data-visual-focused', 'true');
+
+    act(() => {
+      vi.advanceTimersByTime(HIGHLIGHT_EXIT_MS);
+    });
+
+    expect(revenueArticle).toHaveAttribute('data-visual-exiting', 'false');
+  });
+
+  it('pins context-menu highlight until menu closes, then starts exit fade', () => {
+    vi.useFakeTimers();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' }),
+        createWorksheet({ worksheetId: 'sheet-2', name: 'Forecast' }),
+      ],
+      hidden: [],
+      searchResults: [],
+    };
+
+    const { rerender } = render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          activeWorksheetId: 'sheet-2',
+          isContextMenuOpen: true,
+          contextMenuOpenSheetId: 'sheet-1',
+        })}
+      />,
+    );
+
+    const revenueArticle = screen.getByRole('button', { name: 'Revenue' }).closest('[data-navigable-id="worksheet:sheet-1"]');
+
+    expect(revenueArticle).toHaveAttribute('data-visual-focused', 'true');
+
+    act(() => {
+      vi.advanceTimersByTime(3000 + HIGHLIGHT_EXIT_MS);
+    });
+
+    expect(revenueArticle).toHaveAttribute('data-visual-focused', 'true');
+
+    rerender(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          activeWorksheetId: 'sheet-2',
+          isContextMenuOpen: false,
+        })}
+      />,
+    );
+
+    expect(revenueArticle).toHaveAttribute('data-visual-focused', 'false');
+    expect(revenueArticle).toHaveAttribute('data-visual-exiting', 'true');
+    expect(screen.getByRole('button', { name: 'Forecast' }).closest('[data-navigable-id="worksheet:sheet-2"]')).toHaveAttribute('data-visual-focused', 'true');
+
+    act(() => {
+      vi.advanceTimersByTime(HIGHLIGHT_EXIT_MS);
+    });
+
+    expect(revenueArticle).toHaveAttribute('data-visual-exiting', 'false');
+  });
+
+  it('applies visual highlight to group header on pointer selection', () => {
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [
+        {
+          groupId: 'group-1',
+          name: 'Finance',
+          colorToken: 'green',
+          isCollapsed: false,
+          worksheets: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: 'group-1' })],
+        },
+      ],
+      ungrouped: [],
+      hidden: [],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+        })}
+      />,
+    );
+
+    const groupButton = screen.getByRole('button', { name: 'Finance' });
+    const groupHeader = groupButton.closest('[data-navigable-id="group-header:group-1"]');
+
+    fireEvent.pointerDown(groupButton);
+
+    expect(groupHeader).toHaveAttribute('data-visual-focused', 'true');
+    expect(groupHeader).toHaveAttribute('data-focused', 'true');
+  });
+
+  it('pins visual highlight to group header while group menu is open', () => {
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [
+        {
+          groupId: 'group-1',
+          name: 'Finance',
+          colorToken: 'green',
+          isCollapsed: false,
+          worksheets: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: 'group-1' })],
+        },
+      ],
+      ungrouped: [],
+      hidden: [],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          isContextMenuOpen: true,
+          contextMenuOpenGroupId: 'group-1',
+        })}
+      />,
+    );
+
+    const groupHeader = screen.getByRole('button', { name: 'Finance' }).closest('[data-navigable-id="group-header:group-1"]');
+    expect(groupHeader).toHaveAttribute('data-visual-focused', 'true');
+  });
+
+  it('returns visual highlight to collapsed active group header after transient clears', () => {
+    vi.useFakeTimers();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [
+        {
+          groupId: 'group-1',
+          name: 'Finance',
+          colorToken: 'green',
+          isCollapsed: true,
+          worksheets: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: 'group-1' })],
+        },
+      ],
+      ungrouped: [createWorksheet({ worksheetId: 'sheet-2', name: 'Forecast' })],
+      hidden: [],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          activeWorksheetId: 'sheet-1',
+        })}
+      />,
+    );
+
+    const forecastRow = screen.getByRole('button', { name: 'Forecast' });
+    const groupHeader = screen.getByRole('button', { name: 'Finance' }).closest('[data-navigable-id="group-header:group-1"]');
+
+    fireEvent.pointerDown(forecastRow);
+    expect(forecastRow.closest('[data-navigable-id="worksheet:sheet-2"]')).toHaveAttribute('data-visual-focused', 'true');
+
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+
+    expect(groupHeader).toHaveAttribute('data-visual-focused', 'true');
   });
 });

@@ -140,6 +140,35 @@ function buildPinnedDragConfig(
   };
 }
 
+function deriveActiveVisualItemId(
+  activeWorksheetId: string | null,
+  navigatorView: NavigatorView,
+  navigableItems: ReturnType<typeof buildNavigableItems>,
+): string | null {
+  if (!activeWorksheetId) {
+    return null;
+  }
+
+  const activeWorksheetItemId = `worksheet:${activeWorksheetId}`;
+  if (navigableItems.some((item) => item.id === activeWorksheetItemId)) {
+    return activeWorksheetItemId;
+  }
+
+  const collapsedOwningGroup = navigatorView.groups.find((group) => (
+    group.isCollapsed
+    && group.worksheets.some((worksheet) => worksheet.worksheetId === activeWorksheetId)
+  ));
+
+  if (!collapsedOwningGroup) {
+    return null;
+  }
+
+  const groupHeaderItemId = `group-header:${collapsedOwningGroup.groupId}`;
+  return navigableItems.some((item) => item.id === groupHeaderItemId)
+    ? groupHeaderItemId
+    : null;
+}
+
 export function TaskpaneSections({
   query,
   searchResults,
@@ -201,6 +230,16 @@ export function TaskpaneSections({
   const shouldShowHiddenSection = navigatorView.hidden.length > 0;
   const shouldShowSessionOnlyGroupsHint = shouldShowGroupsSection && isSessionOnlyPersistence;
   const isSearchActive = Boolean(query.trim());
+  const contextMenuTargetItemId = contextMenuOpenSheetId
+    ? `worksheet:${contextMenuOpenSheetId}`
+    : contextMenuOpenGroupId
+      ? `group-header:${contextMenuOpenGroupId}`
+      : null;
+  const activeVisualItemId = deriveActiveVisualItemId(
+    activeWorksheetId,
+    navigatorView,
+    navigableItems,
+  );
   const groupsSessionOnlyHint = shouldShowSessionOnlyGroupsHint ? (
     <button
       className="section-hint-button"
@@ -243,6 +282,8 @@ export function TaskpaneSections({
       isDialogOpen={isDialogOpen}
       isRenaming={isRenaming}
       isContextMenuOpen={isContextMenuOpen}
+      contextMenuTargetItemId={contextMenuTargetItemId}
+      activeVisualItemId={activeVisualItemId}
     >
       <TaskpaneSectionsContent
         query={query}
@@ -347,6 +388,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
   // Get keyboard navigation context
   const {
     focusedItemId,
+    visualFocusedItemId,
+    visualExitingItemId,
     navigationInputMode,
     setPointerFocusItem,
     handleSearchKeyDown,
@@ -411,6 +454,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
               dragConfig={buildPinnedDragConfig(dragConfig, 'pinned')}
               renamingWorksheetId={renamingWorksheetId}
               focusedItemId={focusedItemId}
+              visualFocusedItemId={visualFocusedItemId}
+              visualExitingItemId={visualExitingItemId}
               onActivate={onActivateWorksheet}
               onTogglePin={onUnpinWorksheet}
               onOpenContextMenu={onOpenSheetMenu}
@@ -432,6 +477,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
               dragConfig={buildGroupDragConfig(dragConfig)}
               renamingGroupId={renamingGroupId}
               focusedItemId={focusedItemId}
+              visualFocusedItemId={visualFocusedItemId}
+              visualExitingItemId={visualExitingItemId}
               onActivate={onActivateWorksheet}
               onToggleCollapsed={onToggleGroupCollapsed}
               onTogglePin={onPinWorksheet}
@@ -456,6 +503,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
                 dragConfig={buildSheetListDragConfig(dragConfig, 'sheets')}
                 renamingWorksheetId={renamingWorksheetId}
                 focusedItemId={focusedItemId}
+                visualFocusedItemId={visualFocusedItemId}
+                visualExitingItemId={visualExitingItemId}
                 onActivate={onActivateWorksheet}
                 onTogglePin={onPinWorksheet}
                 onOpenContextMenu={onOpenSheetMenu}

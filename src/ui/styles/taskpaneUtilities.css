@@ -154,12 +154,13 @@
 
 /* ==========================================================================
    Keyboard Navigation Focus Styles
-   Visual indicators for items focused via arrow key navigation.
-   Uses data-focused attribute from KeyboardNavigationProvider.
+   Search keeps logical data-focused styling.
+   Taskpane rows/groups now use dedicated visual lifecycle attrs in component CSS.
    ========================================================================== */
 
 /* Base focus indicator for all navigable items */
-[data-navigable-id][data-focused="true"] {
+[data-navigable-id][data-focused="true"],
+[data-navigable-id][data-visual-focused="true"] {
   outline: none;
 }
 
@@ -176,26 +177,9 @@
   background: transparent;
 }
 
-/* Sheet row focused state */
-.sheet-row[data-focused="true"],
-.sheet-row[data-active="true"][data-focused="true"] {
-  background: var(--excel-nav-active-bg);
-}
-
-/* Group header focused state */
-.group-header[data-focused="true"] {
-  outline: none;
-  background: var(--excel-nav-active-bg);
-  border-color: transparent;
-}
-
-/* Group toggle button within focused header */
-.group-header[data-focused="true"] .group-toggle {
-  background: transparent;
-}
-
 /* When drag is active, suppress focus styles */
-.sheet-list-drag-active [data-navigable-id][data-focused="true"] {
+.sheet-list-drag-active [data-navigable-id][data-focused="true"],
+.sheet-list-drag-active [data-navigable-id][data-visual-focused="true"] {
   outline: none;
   background: transparent;
 }
@@ -206,9 +190,4 @@
 
 :root[data-office-theme-mode="dark"] .search-result[data-focused="true"][data-pointer-mode-active="true"] {
   background: transparent;
-}
-
-:root[data-office-theme-mode="dark"] .sheet-row[data-focused="true"],
-:root[data-office-theme-mode="dark"] .sheet-row[data-active="true"][data-focused="true"] {
-  background: var(--excel-nav-active-bg);
 }

@@ -1,9 +1,14 @@
 import { createContext, useContext, type ReactNode, type RefObject } from 'react';
 import { useKeyboardNavigation, type UseKeyboardNavigationArgs } from '../../application/navigation/useKeyboardNavigation';
+import { useHighlightLifecycle } from '../../application/navigation/useHighlightLifecycle';
 
 interface KeyboardNavContextValue {
   /** Currently focused item ID, or null if no focus */
   focusedItemId: string | null;
+  /** Taskpane item with strong visual highlight */
+  visualFocusedItemId: string | null;
+  /** Taskpane item fading out after highlight release */
+  visualExitingItemId: string | null;
   /** Source of current focused row (keyboard or pointer) */
   navigationInputMode: 'keyboard' | 'pointer' | null;
   /** Register a DOM element for the given navigable item ID */
@@ -31,6 +36,7 @@ interface KeyboardNavContextValue {
 const KeyboardNavContext = createContext<KeyboardNavContextValue | null>(null);
 
 interface KeyboardNavigationProviderProps extends UseKeyboardNavigationArgs {
+  activeVisualItemId: string | null;
   children: ReactNode;
 }
 
@@ -49,10 +55,22 @@ interface KeyboardNavigationProviderProps extends UseKeyboardNavigationArgs {
 export function KeyboardNavigationProvider(props: KeyboardNavigationProviderProps): React.ReactElement {
   const { children, ...hookArgs } = props;
 
-  const navigation = useKeyboardNavigation(hookArgs);
+  const { activeVisualItemId, ...navigationArgs } = hookArgs;
+  const navigation = useKeyboardNavigation(navigationArgs);
+  const isSuppressed = hookArgs.isDragActive || hookArgs.isDialogOpen || hookArgs.isRenaming;
+  const highlightLifecycle = useHighlightLifecycle({
+    logicalFocusedItemId: navigation.focusedItemId,
+    activeVisualItemId,
+    isContextMenuOpen: hookArgs.isContextMenuOpen,
+    contextMenuTargetItemId: hookArgs.contextMenuTargetItemId,
+    isSuppressed,
+    isSearchActive: hookArgs.isSearchActive,
+  });
 
   const contextValue: KeyboardNavContextValue = {
     focusedItemId: navigation.focusedItemId,
+    visualFocusedItemId: highlightLifecycle.visualFocusedItemId,
+    visualExitingItemId: highlightLifecycle.visualExitingItemId,
     navigationInputMode: navigation.navigationInputMode,
     registerElement: navigation.registerElement,
     setPointerFocusItem: navigation.setPointerFocusItem,

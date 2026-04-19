@@ -9,9 +9,33 @@ import {
   SEARCH_INPUT_SENTINEL_ID,
 } from '../../domain/navigation/navigableItems';
 
-const KEYBOARD_FOCUS_IDLE_TIMEOUT_MS = 3000;
+const TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS = 3000;
 
 type NavigationInputMode = 'keyboard' | 'pointer' | null;
+
+function isNestedInteractivePointerTarget(target: EventTarget | null, currentTarget: HTMLElement) {
+  if (!(target instanceof HTMLElement) || target === currentTarget) {
+    return false;
+  }
+
+  const navigableId = currentTarget.getAttribute('data-navigable-id');
+  if (
+    navigableId?.startsWith('group-header:')
+    && target.closest('.group-toggle')
+  ) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  const interactiveTarget = target.closest(
+    'input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]',
+  );
+
+  return Boolean(interactiveTarget && currentTarget.contains(interactiveTarget));
+}
 
 export interface UseKeyboardNavigationArgs {
   /** Current list of navigable items, in visual order */
@@ -40,6 +64,8 @@ export interface UseKeyboardNavigationArgs {
   isRenaming: boolean;
   /** True when context menu is open - suppresses navigation */
   isContextMenuOpen: boolean;
+  /** Current context-menu target when it maps to a navigable taskpane item */
+  contextMenuTargetItemId: string | null;
 }
 
 interface UseKeyboardNavigationReturn {
@@ -96,6 +122,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     isDialogOpen,
     isRenaming,
     isContextMenuOpen,
+    contextMenuTargetItemId,
   } = args;
 
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
@@ -110,6 +137,9 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   const idleClearTimeoutRef = useRef<number | null>(null);
   const suppressNextDomFocusRef = useRef(false);
   const pendingFocusRestoreAfterSearchClearRef = useRef(false);
+  const previousContextMenuOpenRef = useRef(isContextMenuOpen);
+  const contextMenuOwnedFocusRef = useRef(false);
+  const lastContextMenuTargetItemIdRef = useRef<string | null>(contextMenuTargetItemId);
 
   // Check if navigation should be suppressed
   const isSuppressed = isDragActive || isDialogOpen || isRenaming || isContextMenuOpen;
@@ -248,7 +278,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     idleClearTimeoutRef.current = window.setTimeout(() => {
       clearFocus();
       idleClearTimeoutRef.current = null;
-    }, KEYBOARD_FOCUS_IDLE_TIMEOUT_MS);
+    }, TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS);
   }, [clearIdleTimeout, clearFocus]);
 
   const markKeyboardActivity = useCallback(() => {
@@ -261,6 +291,44 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       pendingFocusRestoreAfterSearchClearRef.current = false;
     };
   }, [clearIdleTimeout]);
+
+  useEffect(() => {
+    if (isSearchActive) {
+      previousContextMenuOpenRef.current = isContextMenuOpen;
+      return;
+    }
+
+    if (isContextMenuOpen) {
+      if (contextMenuTargetItemId && hasItem(contextMenuTargetItemId, items)) {
+        clearIdleTimeout();
+        suppressNextDomFocusRef.current = true;
+        setFocusedItemId(contextMenuTargetItemId);
+        setNavigationInputMode('pointer');
+        contextMenuOwnedFocusRef.current = true;
+        lastContextMenuTargetItemIdRef.current = contextMenuTargetItemId;
+      }
+
+      previousContextMenuOpenRef.current = true;
+      return;
+    }
+
+    if (previousContextMenuOpenRef.current && contextMenuOwnedFocusRef.current) {
+      const previousContextMenuTargetItemId = lastContextMenuTargetItemIdRef.current;
+      contextMenuOwnedFocusRef.current = false;
+      setFocusedItemId((currentFocusedItemId) => (
+        currentFocusedItemId === previousContextMenuTargetItemId ? null : currentFocusedItemId
+      ));
+      setNavigationInputMode(null);
+    }
+
+    previousContextMenuOpenRef.current = false;
+  }, [
+    clearIdleTimeout,
+    contextMenuTargetItemId,
+    isContextMenuOpen,
+    isSearchActive,
+    items,
+  ]);
 
   /**
    * Effect: when focusedItemId changes, focus the corresponding DOM element.
@@ -387,6 +455,10 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         return;
       }
 
+      if (isNestedInteractivePointerTarget(target, navigableElement)) {
+        return;
+      }
+
       const navigableId = navigableElement.getAttribute('data-navigable-id');
       if (!navigableId) {
         return;
@@ -396,8 +468,11 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       // Search mode uses dedicated pointer focus handling at row level.
       if (!isSearchActive) {
         if (hasItem(navigableId, items)) {
+          clearIdleTimeout();
+          contextMenuOwnedFocusRef.current = false;
           setFocusedItemId(navigableId);
           setNavigationInputMode('pointer');
+          scheduleIdleClear();
         } else {
           setFocusedItemId(null);
           setNavigationInputMode(null);
@@ -410,7 +485,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown, true);
     };
-  }, [items, isSearchActive]);
+  }, [clearIdleTimeout, items, isSearchActive, scheduleIdleClear]);
 
   /**
    * Catch global ArrowDown / ArrowUp when no navigable item has focus.

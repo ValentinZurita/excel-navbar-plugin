@@ -21,8 +21,12 @@ interface SheetListProps {
   dragConfig?: SheetListDragConfig;
   onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameCancel?: () => void;
-  /** Current focused item ID for keyboard navigation */
+  /** Logical focus item ID for DOM focus management */
   focusedItemId?: string | null;
+  /** Taskpane item with strong visual highlight */
+  visualFocusedItemId?: string | null;
+  /** Taskpane item fading out after highlight release */
+  visualExitingItemId?: string | null;
   /** Handler for keyboard navigation on worksheet items */
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
   /** Register DOM element for focus management */
@@ -80,7 +84,7 @@ function isEndDropLineActive(
 export function SheetList(props: SheetListProps) {
   const dragConfig = props.dragConfig;
   const shouldRenderStaticList = !dragConfig;
-  const { focusedItemId, onItemKeyDown, registerElement } = props;
+  const { focusedItemId, visualFocusedItemId, visualExitingItemId, onItemKeyDown, registerElement } = props;
 
   if (shouldHideEmptyList(props.worksheets, dragConfig)) {
     return null;
@@ -94,6 +98,9 @@ export function SheetList(props: SheetListProps) {
         {props.worksheets.map((worksheet) => {
           const navigableId = `worksheet:${worksheet.worksheetId}`;
           const isFocused = focusedItemId === navigableId;
+          const isVisualFocused = visualFocusedItemId === navigableId;
+          const isVisualExiting = visualExitingItemId === navigableId;
+          const isActiveDimmed = Boolean(visualFocusedItemId && visualFocusedItemId !== navigableId);
 
           return (
             <SheetRow
@@ -105,6 +112,9 @@ export function SheetList(props: SheetListProps) {
               isRenaming={props.renamingWorksheetId === worksheet.worksheetId}
               navigableId={navigableId}
               isFocused={isFocused}
+              isVisualFocused={isVisualFocused}
+              isVisualExiting={isVisualExiting}
+              isActiveDimmed={isActiveDimmed}
               onActivate={props.onActivate}
               onTogglePin={props.onTogglePin}
               onOpenContextMenu={props.onOpenContextMenu}
@@ -131,6 +141,9 @@ export function SheetList(props: SheetListProps) {
         {props.worksheets.map((worksheet, index) => {
           const navigableId = `worksheet:${worksheet.worksheetId}`;
           const isFocused = focusedItemId === navigableId;
+          const isVisualFocused = visualFocusedItemId === navigableId;
+          const isVisualExiting = visualExitingItemId === navigableId;
+          const isActiveDimmed = Boolean(visualFocusedItemId && visualFocusedItemId !== navigableId);
           const gapActive = isGapDropActive(dragConfig.projectedDropTarget, dragConfig.containerId, index);
 
           return (
@@ -156,6 +169,9 @@ export function SheetList(props: SheetListProps) {
                 isRenaming={props.renamingWorksheetId === worksheet.worksheetId}
                 navigableId={navigableId}
                 isFocused={isFocused}
+                isVisualFocused={isVisualFocused}
+                isVisualExiting={isVisualExiting}
+                isActiveDimmed={isActiveDimmed}
                 onActivate={props.onActivate}
                 onTogglePin={props.onTogglePin}
                 onOpenContextMenu={props.onOpenContextMenu}
