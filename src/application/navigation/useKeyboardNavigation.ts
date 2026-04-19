@@ -144,12 +144,20 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     // Pointer hover should update keyboard anchor/visual row without stealing
     // text-input focus from the search field.
     suppressNextDomFocusRef.current = true;
-    setSearchFocusedItemId(itemId);
+    
+    if (itemId.startsWith('search:') || itemId === SEARCH_INPUT_SENTINEL_ID) {
+      setSearchFocusedItemId(itemId);
+    } else {
+      setFocusedItemId(itemId);
+    }
   }, [items, focusedItemId, searchFocusedItemId, isSearchActive]);
 
   const setKeyboardFocusedItem = useCallback((itemId: string) => {
-    setFocusedItemId(itemId);
-    setSearchFocusedItemId(itemId);
+    if (itemId.startsWith('search:') || itemId === SEARCH_INPUT_SENTINEL_ID) {
+      setSearchFocusedItemId(itemId);
+    } else {
+      setFocusedItemId(itemId);
+    }
     setNavigationInputMode('keyboard');
   }, []);
 
@@ -470,6 +478,17 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         if (nextItem) {
           setKeyboardFocusedItem(nextItem.id);
           markKeyboardActivity();
+        }
+        return;
+      }
+
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        const anchorItemId = searchFocusedItemId ?? (focusedItemId && hasItem(focusedItemId, items) ? focusedItemId : null) ?? getFirstItem(items)?.id;
+        if (anchorItemId) {
+          onActivate(anchorItemId);
         }
         return;
       }
