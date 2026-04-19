@@ -6,6 +6,7 @@ import {
   getNextItem,
   getPrevItem,
   hasItem,
+  isNavListItemOrHiddenWorksheet,
   SEARCH_INPUT_SENTINEL_ID,
 } from '../../domain/navigation/navigableItems';
 
@@ -64,8 +65,16 @@ export interface UseKeyboardNavigationArgs {
   isRenaming: boolean;
   /** True when context menu is open - suppresses navigation */
   isContextMenuOpen: boolean;
-  /** Current context-menu target when it maps to a navigable taskpane item */
+  /**
+   * Context-menu target id (`worksheet:…`, `group-header:…`, etc.).
+   * Worksheet targets may reference the Hidden section, which is not part of `items`.
+   */
   contextMenuTargetItemId: string | null;
+  /**
+   * Worksheet ids currently shown under the Hidden section. Used so context-menu focus
+   * and highlight stay consistent without adding hidden rows to the arrow-key list.
+   */
+  hiddenWorksheetIds?: readonly string[];
 }
 
 interface UseKeyboardNavigationReturn {
@@ -123,6 +132,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     isRenaming,
     isContextMenuOpen,
     contextMenuTargetItemId,
+    hiddenWorksheetIds = [],
   } = args;
 
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
@@ -293,13 +303,19 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   }, [clearIdleTimeout]);
 
   useEffect(() => {
+    // While search is active, skip syncing context-menu target into focusedItemId.
+    // This matches KeyboardNavigationProvider's useHighlightLifecycle, which returns no
+    // visual anchor (including for sheet context menus) whenever isSearchActive is true.
     if (isSearchActive) {
       previousContextMenuOpenRef.current = isContextMenuOpen;
       return;
     }
 
     if (isContextMenuOpen) {
-      if (contextMenuTargetItemId && hasItem(contextMenuTargetItemId, items)) {
+      if (
+        contextMenuTargetItemId
+        && isNavListItemOrHiddenWorksheet(contextMenuTargetItemId, items, hiddenWorksheetIds)
+      ) {
         clearIdleTimeout();
         suppressNextDomFocusRef.current = true;
         setFocusedItemId(contextMenuTargetItemId);
@@ -325,6 +341,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   }, [
     clearIdleTimeout,
     contextMenuTargetItemId,
+    hiddenWorksheetIds,
     isContextMenuOpen,
     isSearchActive,
     items,
@@ -395,8 +412,8 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       return;
     }
 
-    // Check if focused item still exists
-    if (!hasItem(currentFocusedId, items)) {
+    // Check if focused item still exists (main list or Hidden section rows)
+    if (!isNavListItemOrHiddenWorksheet(currentFocusedId, items, hiddenWorksheetIds)) {
       // If search was just cleared without explicit pending restore, focus first item.
       const wasSearchCleared = searchJustClosed;
 
@@ -435,7 +452,15 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     }
 
     prevItemsRef.current = items;
-  }, [items, focusedItemId, searchFocusedItemId, isSearchActive, activeWorksheetId, setKeyboardFocusedItem]);
+  }, [
+    items,
+    focusedItemId,
+    searchFocusedItemId,
+    isSearchActive,
+    activeWorksheetId,
+    setKeyboardFocusedItem,
+    hiddenWorksheetIds,
+  ]);
 
   /**
    * Keep keyboard focus state in sync with pointer interactions.
