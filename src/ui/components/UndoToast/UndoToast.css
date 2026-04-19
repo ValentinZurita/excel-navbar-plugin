@@ -47,3 +47,32 @@
 .undo-toast-dismiss:hover {
   background: var(--excel-hover);
 }
+
+/* Dark host: Office tokens can pair light control surfaces with wrong text defaults;
+   match the floating context panel so the toast stays readable on dark canvases. */
+:root[data-office-theme-mode='dark'] .undo-toast {
+  background: #18191a;
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f3f2f1;
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.42),
+    0 1px 4px rgba(0, 0, 0, 0.28);
+}
+
+:root[data-office-theme-mode='dark'] .undo-toast-action,
+:root[data-office-theme-mode='dark'] .undo-toast-dismiss {
+  color: #f3f2f1;
+}
+
+:root[data-office-theme-mode='dark'] .undo-toast-action {
+  color: var(--excel-accent);
+}
+
+:root[data-office-theme-mode='dark'] .undo-toast-dismiss {
+  opacity: 0.8;
+}
+
+:root[data-office-theme-mode='dark'] .undo-toast-action:hover,
+:root[data-office-theme-mode='dark'] .undo-toast-dismiss:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
