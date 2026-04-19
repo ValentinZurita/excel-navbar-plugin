@@ -80,6 +80,7 @@ This phase is considered complete because it already established:
 - better contextual action discipline
 - a clearer distinction between primary, grouped, pinned, and hidden navigation areas
 - a documented style philosophy that matches the implementation
+- product-owned UI for prompt and confirmation flows (ConfirmDialog, TextPromptDialog)
 
 ## What remains outside this phase
 The following work is still valid, but belongs to later refinement phases:

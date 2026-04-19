@@ -10,21 +10,19 @@ AI-first execution with human supervision. Tasks should stay small, explicit, an
 - Visual/behavior acceptance note
 - Verification before claiming completion
 
-## P0 Blocker: DnD Ghost Highlights And Indicator Drift
+## P0 Blocker: DnD Ghost Highlights And Indicator Drift [SOLVED]
 
-This blocker is **not resolved** and has priority over all new feature work.
-
-- [ ] Produce a deterministic repro protocol (fast-drag stress path across Sheets + Groups).
-- [ ] Add short-lived instrumentation for drag target transitions (`over` target id/kind/container).
-- [ ] Add short-lived instrumentation for highlight class application/removal on group headers and sheet rows.
-- [ ] Define invariant checks:
-  - [ ] at most one active group drop highlight
-  - [ ] at most one insertion indicator
-  - [ ] insertion indicator must map to current projected target
-- [ ] Implement fix from evidence (not visual masking only).
-- [ ] Add regression tests for rapid over-null-over transitions.
-- [ ] Run manual stress verification in task pane and record acceptance notes.
-- [ ] Remove temporary instrumentation once validated.
+- [x] Produce a deterministic repro protocol (fast-drag stress path across Sheets + Groups).
+- [x] Add short-lived instrumentation for drag target transitions (`over` target id/kind/container).
+- [x] Add short-lived instrumentation for highlight class application/removal on group headers and sheet rows.
+- [x] Define invariant checks:
+  - [x] at most one active group drop highlight
+  - [x] at most one insertion indicator
+  - [x] insertion indicator must map to current projected target
+- [x] Implement fix from evidence (not visual masking only).
+- [x] Add regression tests for rapid over-null-over transitions.
+- [x] Run manual stress verification in task pane and record acceptance notes.
+- [x] Remove temporary instrumentation once validated.
 
 ## Feature Audit Snapshot
 
@@ -51,6 +49,8 @@ This list exists so pending work does not get lost between sessions.
 - [x] Product-owned dialogs for create / rename / delete-group flows
 - [x] Sidebar drag-and-drop for visible unpinned sheets
 - [x] Local persisted ordering for the Sheets section
+- [x] Drag-and-drop policies to prevent invalid placements
+- [x] Robust visual feedback for drop targets (Group highlight & Insertion line)
 
 ### Implemented but still needs real Excel validation
 
@@ -71,7 +71,10 @@ This list exists so pending work does not get lost between sessions.
 - [ ] Workbook event / sync resilience hardening
 - [ ] Reconcile external workbook tab changes against local sidebar ordering rules
 - [ ] Better error handling around Office runtime failures
-- [ ] Update planning docs that still describe already-completed interaction ownership work
+- [x] Update planning docs that still describe already-completed interaction ownership work
+- [ ] Register missing global shortcuts (`focusSearch`, `createWorksheet`) in `index.tsx`
+- [ ] Refactor `useKeyboardNavigation.ts` to break down the 750+ line monolith
+- [ ] Extract hardcoded mock data from `OfficeWorkbookAdapter.ts` to a dedicated mock provider
 
 ### Not implemented in current codebase
 
