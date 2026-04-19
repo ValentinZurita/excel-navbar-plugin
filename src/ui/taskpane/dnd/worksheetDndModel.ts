@@ -2,7 +2,7 @@ import type { NavigatorView, WorksheetEntity } from '../../../domain/navigation/
 
 export type WorksheetContainerId = 'sheets' | 'pinned' | `group:${string}`;
 
-export type WorksheetDropKind = 'row' | 'container-end' | 'group-header';
+export type WorksheetDropKind = 'gap' | 'container-end' | 'group-header';
 
 export interface WorksheetDragItemData {
   type: 'worksheet';
