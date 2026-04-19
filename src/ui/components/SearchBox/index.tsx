@@ -76,7 +76,19 @@ export function SearchBox({
 
   return (
     <div className="search-box" ref={searchBoxRef}>
-      <SearchBar ref={inputRef} value={value} onChange={onChange} onKeyDown={onSearchKeyDown} />
+      <SearchBar 
+        ref={inputRef} 
+        value={value} 
+        onChange={onChange} 
+        onKeyDown={(event) => {
+          if (event.key === 'Tab' && results.length > 0) {
+            event.preventDefault();
+            onChange(results[0].name);
+          } else {
+            onSearchKeyDown?.(event as any);
+          }
+        }} 
+      />
       {value ? (
         <div className="search-results-wrapper" data-navigation-input-mode={navigationInputMode ?? 'none'}>
           <SearchResults

@@ -127,6 +127,7 @@ export interface SearchResultItem {
   isPinned: boolean;
   isGrouped: boolean;
   groupName: string | null;
+  groupColor?: GroupColorToken | null;
 }
 
 export interface NavigatorGroupView {

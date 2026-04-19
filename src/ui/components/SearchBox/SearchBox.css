@@ -77,32 +77,41 @@
 }
 
 /* Hover/focus state for a search row.
-   Keeps the highlight full-width with no rounded corners. */
-.search-results-wrapper .search-result:hover,
-.search-results-wrapper .search-result:focus-visible {
+   Keeps the highlight full-width with no rounded corners.
+   Both pointer hover and keyboard navigation set data-focused="true". */
+.search-results-wrapper .search-result[data-focused="true"] {
   background: color-mix(in srgb, var(--excel-body-fg) 7%, transparent);
   border-radius: 0;
 }
 
-/* When keyboard mode is active, only suppress hover on the focused item
-   to avoid double highlight. Other rows still respond to hover normally. */
-.search-results-wrapper[data-navigation-input-mode='keyboard'] .search-result[data-focused="true"]:hover {
-  background: transparent;
-}
-
-/* Icon container for the left-side state icon.
-   Starts subtle and brightens on hover. */
 .search-results-wrapper .search-result-leading {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: var(--excel-muted);
   opacity: 0.6;
   transition: color 160ms ease, opacity 160ms ease;
+  z-index: 1;
 }
 
-.search-results-wrapper .search-result:hover .search-result-leading,
-.search-results-wrapper .search-result:focus-visible .search-result-leading {
+.search-results-wrapper .search-result-leading[class*="group-color-"]::after {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  z-index: -1;
+  opacity: 0.28;
+}
+
+.search-results-wrapper .search-result-leading.group-color-blue::after { background: var(--group-color-blue); }
+.search-results-wrapper .search-result-leading.group-color-green::after { background: var(--group-color-green); }
+.search-results-wrapper .search-result-leading.group-color-red::after { background: var(--group-color-red); }
+.search-results-wrapper .search-result-leading.group-color-purple::after { background: var(--group-color-purple); }
+.search-results-wrapper .search-result-leading.group-color-yellow::after { background: var(--group-color-yellow); }
+
+.search-results-wrapper .search-result[data-focused="true"] .search-result-leading {
   color: var(--excel-body-fg);
   opacity: 0.85;
 }
@@ -159,13 +168,8 @@
     0 4px 8px rgba(0, 0, 0, 0.16);
 }
 
-:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result:hover,
-:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result:focus-visible {
+:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result[data-focused="true"] {
   background: color-mix(in srgb, var(--excel-body-fg) 12%, transparent);
-}
-
-:root[data-office-theme-mode='dark'] .search-results-wrapper[data-navigation-input-mode='keyboard'] .search-result[data-focused="true"]:hover {
-  background: transparent;
 }
 
 :root[data-office-theme-mode='dark'] .search-results-wrapper .search-result-leading {
@@ -173,8 +177,7 @@
   opacity: 0.6;
 }
 
-:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result:hover .search-result-leading,
-:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result:focus-visible .search-result-leading {
+:root[data-office-theme-mode='dark'] .search-results-wrapper .search-result[data-focused="true"] .search-result-leading {
   color: rgba(255, 255, 255, 0.92);
   opacity: 0.85;
 }

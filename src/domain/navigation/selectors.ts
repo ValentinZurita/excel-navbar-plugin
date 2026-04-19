@@ -158,6 +158,7 @@ export function buildSearchResults(state: NavigationState): SearchResultItem[] {
       isPinned: worksheet.isPinned,
       isGrouped: worksheet.groupId !== null,
       groupName: worksheet.groupId ? state.groupsById[worksheet.groupId]?.name ?? null : null,
+      groupColor: worksheet.groupId ? state.groupsById[worksheet.groupId]?.colorToken ?? null : null,
     }));
 
   return searchResults;

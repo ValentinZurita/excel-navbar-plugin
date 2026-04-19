@@ -40,7 +40,11 @@ export function SearchResults({
     }
 
     if (result.isGrouped) {
-      return <GroupFolderIcon className="search-result-icon search-result-icon-group" />;
+      const colorClass = result.groupColor && result.groupColor !== 'none'
+        ? `group-leading-${result.groupColor}`
+        : '';
+        
+      return <GroupFolderIcon className={`search-result-icon search-result-icon-group ${colorClass}`.trim()} />;
     }
 
     if (result.isPinned) {
@@ -130,7 +134,7 @@ function SearchResultItemComponent({
       onMouseMove={() => onPointerFocus?.(itemId)}
       onMouseEnter={() => onPointerFocus?.(itemId)}
     >
-      <span className="search-result-leading" aria-hidden="true">
+      <span className={`search-result-leading ${result.groupColor && result.groupColor !== 'none' ? `group-color-${result.groupColor}` : ''}`.trim()} aria-hidden="true">
         {renderIcon(result)}
       </span>
       <span className="search-result-copy">

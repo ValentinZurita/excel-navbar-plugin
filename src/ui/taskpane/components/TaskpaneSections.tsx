@@ -212,7 +212,11 @@ export function TaskpaneSections({
         // Extract worksheetId from the itemId (format: 'worksheet:{id}' or 'search:{id}')
         const worksheetId = itemId.split(':')[1];
         if (worksheetId) {
-          void onActivateWorksheet(worksheetId);
+          if (itemId.startsWith('search:')) {
+            void onSelectSearchResult(worksheetId);
+          } else {
+            void onActivateWorksheet(worksheetId);
+          }
         }
       }}
       onExpandGroup={onToggleGroupCollapsed}
