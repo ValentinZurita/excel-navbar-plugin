@@ -1,5 +1,7 @@
 import type { WorksheetEntity } from '../../../domain/navigation/types';
-import { ChevronDownIcon, ChevronRightIcon, EyeIcon } from '../../icons';
+import { useLeadingClusterInteraction } from '../../hooks/useLeadingClusterInteraction';
+import { ChevronDownIcon, ChevronRightIcon, EyeIcon, EyeOffIcon } from '../../icons';
+import '../SheetRow/SheetRow.css';
 import './HiddenSection.css';
 import '../Section/Section.css';
 
@@ -16,6 +18,77 @@ interface HiddenSectionProps {
   }) => void;
 }
 
+interface HiddenSheetRowProps {
+  worksheet: WorksheetEntity;
+  onUnhide: (worksheetId: string) => void | Promise<void>;
+  onOpenContextMenu: (args: {
+    target: HTMLElement;
+    x: number;
+    y: number;
+    worksheet: WorksheetEntity;
+  }) => void;
+}
+
+/**
+ * Same leading-slot pattern as SheetRow pin: muted base icon, overlay action on hover/focus with motion.
+ */
+function HiddenSheetRow({ worksheet, onUnhide, onOpenContextMenu }: HiddenSheetRowProps) {
+  const { isHovered, isFocused, clusterPointerProps, actionFocusProps } = useLeadingClusterInteraction();
+  const isVeryHidden = worksheet.visibility === 'VeryHidden';
+  const showUnhideAction = !isVeryHidden && (isHovered || isFocused);
+
+  return (
+    <article
+      className="sheet-row hidden-row"
+      data-unhide-interacting={showUnhideAction ? 'true' : 'false'}
+      title={isVeryHidden ? 'Cannot unhide Very Hidden sheet' : undefined}
+      onContextMenu={(event) => {
+        event.preventDefault();
+        onOpenContextMenu({
+          target: event.currentTarget,
+          x: event.clientX,
+          y: event.clientY,
+          worksheet,
+        });
+      }}
+    >
+      <div className="row-topline">
+        <span className="sheet-row-leading" {...clusterPointerProps}>
+          <span
+            className={`sheet-row-base-indicator ${
+              !showUnhideAction ? 'sheet-row-base-indicator-visible' : ''
+            }`}
+            aria-hidden="true"
+          >
+            <EyeOffIcon className="sheet-pin-icon" />
+          </span>
+          {!isVeryHidden ? (
+            <button
+              className={`sheet-pin-button ${showUnhideAction ? 'sheet-pin-button-visible' : ''}`}
+              type="button"
+              aria-label={`Unhide ${worksheet.name}`}
+              title={`Unhide ${worksheet.name}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                void onUnhide(worksheet.worksheetId);
+              }}
+              {...actionFocusProps}
+            >
+              <EyeIcon className="sheet-pin-icon" />
+            </button>
+          ) : null}
+        </span>
+        <div className="hidden-sheet-content">
+          <span className="sheet-title" style={{ opacity: isVeryHidden ? 0.6 : 1 }}>
+            {worksheet.name}
+          </span>
+          {isVeryHidden ? <small>Very Hidden</small> : null}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export function HiddenSection({ isCollapsed, worksheets, onToggle, onUnhide, onOpenContextMenu }: HiddenSectionProps) {
   return (
     <section className="section-card hidden-section">
@@ -29,45 +102,15 @@ export function HiddenSection({ isCollapsed, worksheets, onToggle, onUnhide, onO
       </header>
 
       {!isCollapsed ? (
-        // Hidden worksheets still support context menu actions (rename, move, etc.).
         <div className="sheet-list section-body">
-          {worksheets.map((worksheet) => {
-            const isVeryHidden = worksheet.visibility === 'VeryHidden';
-            return (
-              <article
-                key={worksheet.worksheetId}
-                className="sheet-row hidden-row"
-                onContextMenu={(event) => {
-                  event.preventDefault();
-                  onOpenContextMenu({
-                    target: event.currentTarget,
-                    x: event.clientX,
-                    y: event.clientY,
-                    worksheet,
-                  });
-                }}
-              >
-                <div className="row-topline">
-                  <button
-                    className="sheet-unhide-button"
-                    type="button"
-                    disabled={isVeryHidden}
-                    aria-label={`Unhide ${worksheet.name}`}
-                    title={isVeryHidden ? 'Cannot unhide VeryHidden sheet' : `Unhide ${worksheet.name}`}
-                    onClick={() => onUnhide(worksheet.worksheetId)}
-                  >
-                    <EyeIcon className="sheet-pin-icon sheet-unhide-icon" />
-                  </button>
-                  <div className="hidden-sheet-content">
-                    <span className="sheet-title" style={{ opacity: isVeryHidden ? 0.6 : 1 }}>
-                      {worksheet.name}
-                    </span>
-                    {isVeryHidden && <small>Very Hidden</small>}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+          {worksheets.map((worksheet) => (
+            <HiddenSheetRow
+              key={worksheet.worksheetId}
+              worksheet={worksheet}
+              onUnhide={onUnhide}
+              onOpenContextMenu={onOpenContextMenu}
+            />
+          ))}
         </div>
       ) : null}
     </section>

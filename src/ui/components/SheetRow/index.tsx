@@ -1,5 +1,6 @@
-import { memo, useEffect, useState, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
+import { memo, useEffect, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
+import { useLeadingClusterInteraction } from '../../hooks/useLeadingClusterInteraction';
 import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 import { InlineRenameInput } from '../InlineRenameInput';
 import { resolveLeadingState, type LeadingState } from './resolveLeadingState';
@@ -105,8 +106,12 @@ function SheetRowComponent({
   registerElement,
 }: SheetRowProps) {
   const { onKeyDown: onContainerKeyDown, ...restContainerProps } = containerProps ?? {};
-  const [isLeadingHovered, setIsLeadingHovered] = useState(false);
-  const [isLeadingFocused, setIsLeadingFocused] = useState(false);
+  const {
+    isHovered: isLeadingHovered,
+    isFocused: isLeadingFocused,
+    clusterPointerProps,
+    actionFocusProps,
+  } = useLeadingClusterInteraction();
 
   // Register DOM element for focus management when navigableId is provided
   useEffect(() => {
@@ -263,24 +268,7 @@ function SheetRowComponent({
       {...restContainerProps}
     >
       <div className="row-topline">
-        <span
-          className="sheet-row-leading"
-          aria-hidden="true"
-          onPointerEnter={() => setIsLeadingHovered(true)}
-          onPointerLeave={(e) => {
-            // Only clear hover if leaving to outside the leading cluster (not to child button)
-            const relatedTarget = e.relatedTarget;
-            const currentTarget = e.currentTarget;
-            // Guard against invalid relatedTarget in jsdom/testing environments
-            if (!relatedTarget || !(relatedTarget instanceof Node)) {
-              setIsLeadingHovered(false);
-              return;
-            }
-            if (!currentTarget.contains(relatedTarget)) {
-              setIsLeadingHovered(false);
-            }
-          }}
-        >
+        <span className="sheet-row-leading" aria-hidden="true" {...clusterPointerProps}>
           {/* Base indicator - always rendered but visually hidden when action is shown */}
           <span className={`sheet-row-base-indicator ${leadingState === 'indicator' || leadingState === 'pinned-indicator' ? 'sheet-row-base-indicator-visible' : ''}`}>
             {renderBaseIndicator()}
@@ -296,8 +284,8 @@ function SheetRowComponent({
                 event.stopPropagation();
                 onTogglePin?.(worksheet.worksheetId);
               }}
-              onFocus={() => setIsLeadingFocused(true)}
-              onBlur={() => setIsLeadingFocused(false)}
+              onFocus={actionFocusProps.onFocus}
+              onBlur={actionFocusProps.onBlur}
             >
               <WorksheetPinIcon className={`sheet-pin-icon ${leadingState === 'unpin-action' ? 'sheet-pin-icon-active' : ''}`} />
             </button>
