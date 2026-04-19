@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { InlineGroupCreator } from '../../src/ui/components/InlineGroupCreator';
@@ -224,9 +224,15 @@ describe('InlineGroupCreator', () => {
       />,
     );
 
+    await waitFor(() => {
+      expect(screen.getByLabelText('Name')).toHaveFocus();
+    });
+
     // Tab to color chip without typing anything (first chip is 'none')
     await user.keyboard('{Tab}');
-    expect(screen.getByLabelText('No color')).toHaveFocus();
+    await waitFor(() => {
+      expect(screen.getByLabelText('No color')).toHaveFocus();
+    });
 
     // Press Enter - should not create group
     await user.keyboard('{Enter}');
