@@ -404,6 +404,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
         value={query}
         onChange={onChangeQuery}
         results={searchResults}
+        activeWorksheetId={activeWorksheetId}
         onSelect={onSelectSearchResult}
         inputRef={searchInputRef}
         onSearchKeyDown={handleSearchKeyDown}

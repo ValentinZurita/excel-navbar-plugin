@@ -57,6 +57,25 @@ describe('SearchResults', () => {
     expect(container.querySelector('.search-result-icon-worksheet')).toBeTruthy();
   });
 
+  it('marks the active worksheet row for styling', () => {
+    render(
+      <SearchResults
+        results={[
+          { worksheetId: 'sheet-a', name: 'Draft', visibility: 'Visible', isPinned: false, isGrouped: false, groupName: null },
+          { worksheetId: 'sheet-b', name: 'Live', visibility: 'Visible', isPinned: false, isGrouped: false, groupName: null },
+        ]}
+        onSelect={() => undefined}
+        activeWorksheetId="sheet-b"
+        focusedItemId={null}
+      />,
+    );
+
+    const live = screen.getByRole('button', { name: /Live/i });
+    const draft = screen.getByRole('button', { name: /Draft/i });
+    expect(live).toHaveAttribute('data-active-worksheet', 'true');
+    expect(draft).not.toHaveAttribute('data-active-worksheet');
+  });
+
   it('uses hidden icon with highest priority', () => {
     const { container } = render(
       <SearchResults

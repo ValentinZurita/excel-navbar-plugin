@@ -8,6 +8,8 @@ interface SearchBoxProps {
   value: string;
   onChange: (value: string) => void;
   results: SearchResultItem[];
+  /** Current workbook active sheet; its title is emphasized in the dropdown (same green as list rows). */
+  activeWorksheetId?: string | null;
   onSelect: (worksheetId: string) => void | Promise<void>;
   /** Ref to the search input for programmatic focus */
   inputRef: React.RefObject<HTMLInputElement | null>;
@@ -37,6 +39,7 @@ export function SearchBox({
   value,
   onChange,
   results,
+  activeWorksheetId = null,
   onSelect,
   inputRef,
   onSearchKeyDown,
@@ -93,6 +96,7 @@ export function SearchBox({
         <div className="search-results-wrapper" data-navigation-input-mode={navigationInputMode ?? 'none'}>
           <SearchResults
             results={results}
+            activeWorksheetId={activeWorksheetId}
             onSelect={onSelect}
             focusedItemId={focusedItemId}
             navigationInputMode={navigationInputMode}

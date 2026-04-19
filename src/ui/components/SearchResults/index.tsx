@@ -5,6 +5,8 @@ import { EyeOffIcon, GroupFolderIcon, WorksheetIcon, WorksheetPinIcon } from '..
 interface SearchResultsProps {
   results: SearchResultItem[];
   onSelect: (worksheetId: string) => void | Promise<void>;
+  /** Worksheet that is currently active in the workbook (green title, same as navigator rows). */
+  activeWorksheetId?: string | null;
   /** Currently focused item ID for visual focus indicator */
   focusedItemId: string | null;
   /** Current focus source to avoid double highlight with pointer hover */
@@ -28,6 +30,7 @@ interface SearchResultsProps {
 export function SearchResults({
   results,
   onSelect,
+  activeWorksheetId = null,
   focusedItemId,
   navigationInputMode = null,
   onItemKeyDown,
@@ -76,12 +79,14 @@ export function SearchResults({
         {results.map((result) => {
           const itemId = `search:${result.worksheetId}`;
           const isFocused = focusedItemId === itemId;
+          const isActiveWorksheet = activeWorksheetId !== null && activeWorksheetId === result.worksheetId;
 
           return (
             <SearchResultItemComponent
               key={result.worksheetId}
               result={result}
               itemId={itemId}
+              isActiveWorksheet={isActiveWorksheet}
               isFocused={isFocused}
               isPointerModeActive={navigationInputMode === 'pointer'}
               onSelect={onSelect}
@@ -101,6 +106,7 @@ export function SearchResults({
 interface SearchResultItemComponentProps {
   result: SearchResultItem;
   itemId: string;
+  isActiveWorksheet: boolean;
   isFocused: boolean;
   isPointerModeActive: boolean;
   onSelect: (worksheetId: string) => void | Promise<void>;
@@ -113,6 +119,7 @@ interface SearchResultItemComponentProps {
 function SearchResultItemComponent({
   result,
   itemId,
+  isActiveWorksheet,
   isFocused,
   isPointerModeActive,
   onSelect,
@@ -142,6 +149,7 @@ function SearchResultItemComponent({
       className="search-result"
       type="button"
       data-navigable-id={itemId}
+      data-active-worksheet={isActiveWorksheet ? 'true' : undefined}
       data-focused={isFocused}
       data-pointer-mode-active={isPointerModeActive}
       tabIndex={isFocused ? 0 : -1}

@@ -148,6 +148,12 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Active workbook sheet: same Excel green as navigator rows (SheetRow). */
+.search-results-wrapper .search-result[data-active-worksheet='true'] .sheet-title {
+  color: var(--excel-nav-active-fg);
 }
 
 /* Metadata text under the title.
