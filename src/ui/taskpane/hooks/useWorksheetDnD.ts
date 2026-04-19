@@ -215,20 +215,23 @@ export function useWorksheetDnD({
     // Validate against policy if provided to suppress invalid drop targets visually
     if (policy && policyState && initialLocation) {
       const worksheet = policyState.worksheetsById[initialLocation.worksheetId];
-      if (worksheet) {
-        const isDropAllowed = policy.canDrop(
-          worksheet,
-          initialLocation.containerId,
-          nextProjectedDropTarget.containerId,
-          policyState
-        );
+      if (!worksheet) {
+        lastPolicyApprovedDropTargetRef.current = null;
+        updateProjectedDropTarget(null);
+        return;
+      }
 
-        if (!isDropAllowed) {
-          // Drop violates policy - hide visual feedback
-          lastPolicyApprovedDropTargetRef.current = null;
-          updateProjectedDropTarget(null);
-          return;
-        }
+      const isDropAllowed = policy.canDrop(
+        worksheet,
+        initialLocation.containerId,
+        nextProjectedDropTarget.containerId,
+        policyState,
+      );
+
+      if (!isDropAllowed) {
+        lastPolicyApprovedDropTargetRef.current = null;
+        updateProjectedDropTarget(null);
+        return;
       }
     }
 

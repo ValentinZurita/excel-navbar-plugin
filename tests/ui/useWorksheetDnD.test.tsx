@@ -322,6 +322,35 @@ describe('useWorksheetDnD', () => {
       expect(result.current.projectedDropTarget).toBeNull();
     });
 
+    it('suppresses drop preview when policy is active but dragged worksheet is missing from policyState', () => {
+      const worksheet = createWorksheet({ groupId: null, isPinned: false });
+      const { result } = renderHook(() =>
+        useWorksheetDnD({
+          assignWorksheetToGroup: vi.fn(),
+          removeWorksheetFromGroup: vi.fn(),
+          reorderGroupWorksheet: vi.fn(),
+          reorderSheetSectionWorksheet: vi.fn(),
+          reorderPinnedWorksheet: vi.fn(),
+          policy: pinnedSectionPolicy,
+          policyState: { worksheetsById: {} },
+        }),
+      );
+
+      act(() => {
+        result.current.onDragStart(
+          createDragStartEvent(worksheet.worksheetId, 'sheets', 0),
+        );
+      });
+
+      act(() => {
+        result.current.onDragOver(
+          createDropTargetEvent('group:group-1', 0, 'gap', worksheet.worksheetId, 'sheets', 0),
+        );
+      });
+
+      expect(result.current.projectedDropTarget).toBeNull();
+    });
+
     it('allows visual feedback when policy permits the drop', () => {
       const pinnedWorksheet = createWorksheet({
         worksheetId: 'sheet-1',
