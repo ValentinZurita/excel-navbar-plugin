@@ -6,6 +6,9 @@ import {
   getNextItem,
   getPrevItem,
   hasItem,
+  isNavListItemOrHiddenWorksheet,
+  isWorksheetItemInHiddenSectionList,
+  parseWorksheetNavigableItemId,
 } from '../../src/domain/navigation/navigableItems';
 import type { NavigatorGroupView, SearchResultItem, WorksheetEntity } from '../../src/domain/navigation/types';
 
@@ -289,5 +292,44 @@ describe('hasItem', () => {
 
   it('returns false for empty list', () => {
     expect(hasItem('worksheet:1', [])).toBe(false);
+  });
+});
+
+describe('parseWorksheetNavigableItemId', () => {
+  it('returns worksheet id for worksheet keys', () => {
+    expect(parseWorksheetNavigableItemId('worksheet:abc')).toBe('abc');
+  });
+
+  it('returns null for non-worksheet keys', () => {
+    expect(parseWorksheetNavigableItemId('group-header:g1')).toBeNull();
+    expect(parseWorksheetNavigableItemId('search:x')).toBeNull();
+  });
+});
+
+describe('isWorksheetItemInHiddenSectionList', () => {
+  it('matches hidden ids', () => {
+    expect(isWorksheetItemInHiddenSectionList('worksheet:h1', ['h1', 'h2'])).toBe(true);
+    expect(isWorksheetItemInHiddenSectionList('worksheet:h9', ['h1', 'h2'])).toBe(false);
+  });
+});
+
+describe('isNavListItemOrHiddenWorksheet', () => {
+  const items = [{ id: 'worksheet:1', kind: 'worksheet' as const, name: 'First' }];
+  const hidden = ['h1'];
+
+  it('accepts ids in the navigable list', () => {
+    expect(isNavListItemOrHiddenWorksheet('worksheet:1', items, hidden)).toBe(true);
+  });
+
+  it('accepts hidden worksheet ids not in the navigable list', () => {
+    expect(isNavListItemOrHiddenWorksheet('worksheet:h1', items, hidden)).toBe(true);
+  });
+
+  it('rejects unknown worksheet ids', () => {
+    expect(isNavListItemOrHiddenWorksheet('worksheet:ghost', items, hidden)).toBe(false);
+  });
+
+  it('rejects null', () => {
+    expect(isNavListItemOrHiddenWorksheet(null, items, hidden)).toBe(false);
   });
 });

@@ -166,3 +166,44 @@ export function getLastItem(items: NavigableItem[]): NavigableItem | null {
 export function hasItem(itemId: string, items: NavigableItem[]): boolean {
   return items.some((item) => item.id === itemId);
 }
+
+/**
+ * Returns native worksheet id for `worksheet:{id}` navigable keys, else null.
+ */
+export function parseWorksheetNavigableItemId(itemId: string): string | null {
+  if (!itemId.startsWith('worksheet:')) {
+    return null;
+  }
+  return itemId.slice('worksheet:'.length);
+}
+
+/**
+ * True when the id refers to a worksheet listed in the Hidden section (not in the linear navigable list).
+ */
+export function isWorksheetItemInHiddenSectionList(
+  itemId: string,
+  hiddenWorksheetIds: readonly string[],
+): boolean {
+  const worksheetId = parseWorksheetNavigableItemId(itemId);
+  if (worksheetId === null) {
+    return false;
+  }
+  return hiddenWorksheetIds.includes(worksheetId);
+}
+
+/**
+ * Navigable list membership OR hidden-section worksheet (same `worksheet:{id}` keys as rows elsewhere).
+ */
+export function isNavListItemOrHiddenWorksheet(
+  itemId: string | null,
+  items: NavigableItem[],
+  hiddenWorksheetIds: readonly string[],
+): boolean {
+  if (!itemId) {
+    return false;
+  }
+  if (hasItem(itemId, items)) {
+    return true;
+  }
+  return isWorksheetItemInHiddenSectionList(itemId, hiddenWorksheetIds);
+}
