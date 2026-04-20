@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from 'react';
 import {
   HIGHLIGHT_EXIT_MS,
   computeVisualFocusedItemId,
@@ -17,6 +25,9 @@ import {
 
 /** After this much time without keyboard navigation activity, transient row focus clears and the wash returns to the active worksheet. */
 export const TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS = 10_000;
+
+/** Keys handled by worksheet/group list navigation (shared by row handlers and capture routing). */
+const LIST_NAVIGATION_DOM_KEYS = new Set(['ArrowDown', 'ArrowUp', 'Home', 'End']);
 
 type NavigationInputMode = 'keyboard' | 'pointer' | null;
 
@@ -1019,13 +1030,81 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   );
 
   /**
+   * When logical list focus points at a navigable row/header but DOM focus sits on a scrollable
+   * ancestor (common after menus close in Office webviews) or on a nested control (pin button),
+   * Arrow/Home/End would scroll the pane instead of moving selection. Catch those keys in the
+   * capture phase and route them through the same navigation handler as the row.
+   */
+  useEffect(() => {
+    const handleCaptureKeyDown = (event: KeyboardEvent) => {
+      if (!LIST_NAVIGATION_DOM_KEYS.has(event.key)) {
+        return;
+      }
+      if (isSuppressed) {
+        return;
+      }
+
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && active.isContentEditable) {
+        return;
+      }
+      if (
+        active instanceof HTMLInputElement
+        || active instanceof HTMLTextAreaElement
+        || active instanceof HTMLSelectElement
+      ) {
+        if (active === searchInputRef.current) {
+          return;
+        }
+        return;
+      }
+
+      const logicalId = isSearchActiveRef.current
+        ? searchFocusedItemIdRef.current
+        : focusedItemIdRef.current;
+      if (!logicalId || logicalId === SEARCH_INPUT_SENTINEL_ID) {
+        return;
+      }
+
+      const root = elementRegistryRef.current.get(logicalId);
+      if (!root || !document.contains(root)) {
+        return;
+      }
+
+      if (active instanceof HTMLElement && active === root) {
+        return;
+      }
+
+      if (active instanceof HTMLElement && root.contains(active)) {
+        const hostNavigableId = active.closest('[data-navigable-id]')?.getAttribute('data-navigable-id');
+        if (hostNavigableId !== logicalId) {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        handleItemKeyDown(event as unknown as ReactKeyboardEvent<HTMLElement>, logicalId);
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      handleItemKeyDown(event as unknown as ReactKeyboardEvent<HTMLElement>, logicalId);
+    };
+
+    document.addEventListener('keydown', handleCaptureKeyDown, true);
+    return () => {
+      document.removeEventListener('keydown', handleCaptureKeyDown, true);
+    };
+  }, [handleItemKeyDown, isSuppressed, searchInputRef]);
+
+  /**
    * Handler for keydown events on group headers.
    * Extends handleItemKeyDown with group-specific actions.
    */
   const handleGroupHeaderKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLElement>, groupId: string, isCollapsed: boolean) => {
       // First, handle common navigation keys via item handler
-      if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+      if (LIST_NAVIGATION_DOM_KEYS.has(event.key)) {
         // Find the group header item ID to pass to handleItemKeyDown
         const groupItemId = `group-header:${groupId}`;
         handleItemKeyDown(event, groupItemId);
