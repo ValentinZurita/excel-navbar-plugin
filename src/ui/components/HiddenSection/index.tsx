@@ -104,6 +104,7 @@ function HiddenSheetRow({
         });
       }}
     >
+      <span className="sheet-row-nav-highlight" aria-hidden="true" />
       <div className="row-topline">
         <span className="sheet-row-leading" {...clusterPointerProps}>
           <span

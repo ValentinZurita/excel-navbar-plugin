@@ -16,6 +16,7 @@ import {
 } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import type { NavigatorView } from '../../../domain/navigation/types';
+import { deriveActiveVisualItemId } from '../../../domain/navigation/deriveActiveVisualItemId';
 import { buildNavigableItems } from '../../../domain/navigation/navigableItems';
 import { KeyboardNavigationProvider } from '../../navigation/KeyboardNavigationProvider';
 import { GroupSection } from '../../components/GroupSection';
@@ -138,35 +139,6 @@ function buildPinnedDragConfig(
     isDragActive: dragConfig.isDragActive,
     shouldSuppressActivation: dragConfig.shouldSuppressActivation,
   };
-}
-
-function deriveActiveVisualItemId(
-  activeWorksheetId: string | null,
-  navigatorView: NavigatorView,
-  navigableItems: ReturnType<typeof buildNavigableItems>,
-): string | null {
-  if (!activeWorksheetId) {
-    return null;
-  }
-
-  const activeWorksheetItemId = `worksheet:${activeWorksheetId}`;
-  if (navigableItems.some((item) => item.id === activeWorksheetItemId)) {
-    return activeWorksheetItemId;
-  }
-
-  const collapsedOwningGroup = navigatorView.groups.find((group) => (
-    group.isCollapsed
-    && group.worksheets.some((worksheet) => worksheet.worksheetId === activeWorksheetId)
-  ));
-
-  if (!collapsedOwningGroup) {
-    return null;
-  }
-
-  const groupHeaderItemId = `group-header:${collapsedOwningGroup.groupId}`;
-  return navigableItems.some((item) => item.id === groupHeaderItemId)
-    ? groupHeaderItemId
-    : null;
 }
 
 export function TaskpaneSections({

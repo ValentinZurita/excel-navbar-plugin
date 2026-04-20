@@ -1,6 +1,5 @@
 import { createContext, useContext, type ReactNode, type RefObject } from 'react';
 import { useKeyboardNavigation, type UseKeyboardNavigationArgs } from '../../application/navigation/useKeyboardNavigation';
-import { useHighlightLifecycle } from '../../application/navigation/useHighlightLifecycle';
 
 interface KeyboardNavContextValue {
   /** Currently focused item ID, or null if no focus */
@@ -36,7 +35,6 @@ interface KeyboardNavContextValue {
 const KeyboardNavContext = createContext<KeyboardNavContextValue | null>(null);
 
 interface KeyboardNavigationProviderProps extends UseKeyboardNavigationArgs {
-  activeVisualItemId: string | null;
   children: ReactNode;
 }
 
@@ -56,21 +54,12 @@ export function KeyboardNavigationProvider(props: KeyboardNavigationProviderProp
   const { children, ...hookArgs } = props;
 
   const { activeVisualItemId, ...navigationArgs } = hookArgs;
-  const navigation = useKeyboardNavigation(navigationArgs);
-  const isSuppressed = hookArgs.isDragActive || hookArgs.isDialogOpen || hookArgs.isRenaming;
-  const highlightLifecycle = useHighlightLifecycle({
-    logicalFocusedItemId: navigation.focusedItemId,
-    activeVisualItemId,
-    isContextMenuOpen: hookArgs.isContextMenuOpen,
-    contextMenuTargetItemId: hookArgs.contextMenuTargetItemId,
-    isSuppressed,
-    isSearchActive: hookArgs.isSearchActive,
-  });
+  const navigation = useKeyboardNavigation({ ...navigationArgs, activeVisualItemId });
 
   const contextValue: KeyboardNavContextValue = {
     focusedItemId: navigation.focusedItemId,
-    visualFocusedItemId: highlightLifecycle.visualFocusedItemId,
-    visualExitingItemId: highlightLifecycle.visualExitingItemId,
+    visualFocusedItemId: navigation.visualFocusedItemId,
+    visualExitingItemId: navigation.visualExitingItemId,
     navigationInputMode: navigation.navigationInputMode,
     registerElement: navigation.registerElement,
     setPointerFocusItem: navigation.setPointerFocusItem,

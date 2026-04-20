@@ -1,4 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  HIGHLIGHT_EXIT_MS,
+  computeVisualFocusedItemId,
+  isMainListNavigableId,
+} from './useHighlightLifecycle';
 import type { NavigableItem } from '../../domain/navigation/types';
 import {
   getFirstItem,
@@ -63,6 +68,8 @@ export interface UseKeyboardNavigationArgs {
   isDialogOpen: boolean;
   /** True when inline rename is active - suppresses navigation */
   isRenaming: boolean;
+  /** Fallback visual anchor when no logical row focus (e.g. idle pointer clear). */
+  activeVisualItemId: string | null;
   /** True when context menu is open - suppresses navigation */
   isContextMenuOpen: boolean;
   /**
@@ -80,6 +87,10 @@ export interface UseKeyboardNavigationArgs {
 interface UseKeyboardNavigationReturn {
   /** Currently focused item ID, or null if no focus */
   focusedItemId: string | null;
+  /** Strong highlight owner (logical focus, context menu target, or active anchor). */
+  visualFocusedItemId: string | null;
+  /** Row/header id whose highlight layer is fading out after losing ownership. */
+  visualExitingItemId: string | null;
   /** Source of the current navigation focus state (keyboard/pointer). */
   navigationInputMode: NavigationInputMode;
   /** Register a DOM element for the given navigable item ID */
@@ -130,6 +141,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     isDragActive,
     isDialogOpen,
     isRenaming,
+    activeVisualItemId,
     isContextMenuOpen,
     contextMenuTargetItemId,
     hiddenWorksheetIds = [],
@@ -138,6 +150,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
   const [navigationInputMode, setNavigationInputMode] = useState<NavigationInputMode>(null);
   const [searchFocusedItemId, setSearchFocusedItemId] = useState<string | null>(null);
+  const [visualExitingItemId, setVisualExitingItemId] = useState<string | null>(null);
 
   // Registry of DOM elements by navigable item ID
   const elementRegistryRef = useRef<Map<string, HTMLElement>>(new Map());
@@ -150,9 +163,60 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   const previousContextMenuOpenRef = useRef(isContextMenuOpen);
   const contextMenuOwnedFocusRef = useRef(false);
   const lastContextMenuTargetItemIdRef = useRef<string | null>(contextMenuTargetItemId);
+  const exitTimerRef = useRef<number | null>(null);
+  /** Last committed visual highlight owner; updated synchronously each render (after computing outgoing). */
+  const prevVisualOwnerRef = useRef<string | null>(null);
 
   // Check if navigation should be suppressed
   const isSuppressed = isDragActive || isDialogOpen || isRenaming || isContextMenuOpen;
+  const isHighlightSuppressed = isDragActive || isDialogOpen || isRenaming;
+
+  const visualFocusedItemId = useMemo(
+    () => computeVisualFocusedItemId({
+      logicalFocusedItemId: isSearchActive ? searchFocusedItemId : focusedItemId,
+      activeVisualItemId,
+      isContextMenuOpen,
+      contextMenuTargetItemId,
+      isHighlightSuppressed,
+      isSearchActive,
+    }),
+    [
+      activeVisualItemId,
+      contextMenuTargetItemId,
+      focusedItemId,
+      isContextMenuOpen,
+      isDialogOpen,
+      isDragActive,
+      isRenaming,
+      isSearchActive,
+      searchFocusedItemId,
+    ],
+  );
+
+  const prevOwner = prevVisualOwnerRef.current;
+  const syncVisualExitTargetId =
+    prevOwner !== null
+    && prevOwner !== visualFocusedItemId
+    && isMainListNavigableId(prevOwner)
+      ? prevOwner
+      : null;
+  prevVisualOwnerRef.current = visualFocusedItemId;
+
+  const visualExitingItemIdResolved = syncVisualExitTargetId ?? visualExitingItemId;
+
+  const armHighlightExit = useCallback((outgoingMainListId: string) => {
+    if (exitTimerRef.current !== null) {
+      window.clearTimeout(exitTimerRef.current);
+      exitTimerRef.current = null;
+    }
+    setVisualExitingItemId(outgoingMainListId);
+    exitTimerRef.current = window.setTimeout(() => {
+      setVisualExitingItemId((current) => (
+        current === outgoingMainListId ? null : current
+      ));
+      exitTimerRef.current = null;
+    }, HIGHLIGHT_EXIT_MS);
+  }, []);
 
   /**
    * Register or unregister a DOM element for a navigable item.
@@ -184,7 +248,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     // Pointer hover should update keyboard anchor/visual row without stealing
     // text-input focus from the search field.
     suppressNextDomFocusRef.current = true;
-    
+
     if (itemId.startsWith('search:') || itemId === SEARCH_INPUT_SENTINEL_ID) {
       setSearchFocusedItemId(itemId);
     } else {
@@ -283,6 +347,25 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     }
   }, [clearIdleTimeout]);
 
+  /**
+   * Arm the fade-out timer when the visual owner changes. `syncVisualExitTargetId` already exposes
+   * the outgoing id on the first render of the new owner so CSS can animate before this runs.
+   */
+  useLayoutEffect(() => {
+    if (isHighlightSuppressed || isSearchActive) {
+      if (exitTimerRef.current !== null) {
+        window.clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = null;
+      }
+      setVisualExitingItemId(null);
+      return;
+    }
+
+    if (syncVisualExitTargetId) {
+      armHighlightExit(syncVisualExitTargetId);
+    }
+  }, [armHighlightExit, isHighlightSuppressed, isSearchActive, syncVisualExitTargetId]);
+
   const scheduleIdleClear = useCallback(() => {
     clearIdleTimeout();
     idleClearTimeoutRef.current = window.setTimeout(() => {
@@ -299,13 +382,16 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     return () => {
       clearIdleTimeout();
       pendingFocusRestoreAfterSearchClearRef.current = false;
+      if (exitTimerRef.current !== null) {
+        window.clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = null;
+      }
     };
   }, [clearIdleTimeout]);
 
   useEffect(() => {
-    // While search is active, skip syncing context-menu target into focusedItemId.
-    // This matches KeyboardNavigationProvider's useHighlightLifecycle, which returns no
-    // visual anchor (including for sheet context menus) whenever isSearchActive is true.
+    // While search is active, computeVisualFocusedItemId returns no visual anchor (including
+    // for sheet context menus); skip syncing context-menu target into focusedItemId.
     if (isSearchActive) {
       previousContextMenuOpenRef.current = isContextMenuOpen;
       return;
@@ -850,6 +936,8 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
   return {
     focusedItemId: isSearchActive ? searchFocusedItemId : focusedItemId,
+    visualFocusedItemId,
+    visualExitingItemId: visualExitingItemIdResolved,
     navigationInputMode,
     registerElement,
     setPointerFocusItem,

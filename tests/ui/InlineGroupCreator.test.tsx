@@ -176,7 +176,7 @@ describe('InlineGroupCreator', () => {
     await user.type(screen.getByLabelText('Name'), 'Finance');
 
     // Tab to move focus to the first color chip (none)
-    await user.keyboard('{Tab}');
+    await user.tab();
     expect(screen.getByLabelText('No color')).toHaveFocus();
 
     // Press Enter to create group with the focused chip's color
@@ -201,9 +201,9 @@ describe('InlineGroupCreator', () => {
     await user.type(screen.getByLabelText('Name'), 'Operations');
 
     // Tab to none chip (first)
-    await user.keyboard('{Tab}');
+    await user.tab();
     // Tab to blue chip (second)
-    await user.keyboard('{Tab}');
+    await user.tab();
     expect(screen.getByLabelText('Color blue')).toHaveFocus();
 
     // Press Enter to create group with blue color
@@ -229,7 +229,7 @@ describe('InlineGroupCreator', () => {
     });
 
     // Tab to color chip without typing anything (first chip is 'none')
-    await user.keyboard('{Tab}');
+    await user.tab();
     await waitFor(() => {
       expect(screen.getByLabelText('No color')).toHaveFocus();
     });
@@ -256,7 +256,7 @@ describe('InlineGroupCreator', () => {
     await user.type(screen.getByLabelText('Name'), '   ');
 
     // Tab to color chip
-    await user.keyboard('{Tab}');
+    await user.tab();
 
     // Press Enter - should not create group
     await user.keyboard('{Enter}');
@@ -303,15 +303,15 @@ describe('InlineGroupCreator', () => {
     expect(input).toHaveFocus();
 
     // Tab from input to first chip (none)
-    await user.keyboard('{Tab}');
+    await user.tab();
     expect(screen.getByLabelText('No color')).toHaveFocus();
 
     // Tab to second chip (blue)
-    await user.keyboard('{Tab}');
+    await user.tab();
     expect(screen.getByLabelText('Color blue')).toHaveFocus();
 
     // Tab to third chip (green)
-    await user.keyboard('{Tab}');
+    await user.tab();
     expect(screen.getByLabelText('Color green')).toHaveFocus();
   });
 });

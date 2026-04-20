@@ -24,6 +24,7 @@ function createBaseArgs(overrides: Partial<UseKeyboardNavigationArgs> = {}): Use
     isDragActive: false,
     isDialogOpen: false,
     isRenaming: false,
+    activeVisualItemId: 'worksheet:visible-1',
     isContextMenuOpen: false,
     contextMenuTargetItemId: null,
     hiddenWorksheetIds: ['hidden-1'],

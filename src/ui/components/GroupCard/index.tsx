@@ -267,6 +267,7 @@ function GroupCardComponent({
         data-visual-exiting={navigableId ? isVisualExiting : undefined}
         data-active-dimmed={isActiveDimmed ? 'true' : 'false'}
       >
+        <span className="group-header-nav-highlight" aria-hidden="true" />
         <button
           ref={headerButtonRef}
           className="group-toggle"

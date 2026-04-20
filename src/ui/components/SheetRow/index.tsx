@@ -267,6 +267,7 @@ function SheetRowComponent({
       }}
       {...restContainerProps}
     >
+      {!isOverlay ? <span className="sheet-row-nav-highlight" aria-hidden="true" /> : null}
       <div className="row-topline">
         <span className="sheet-row-leading" aria-hidden="true" {...clusterPointerProps}>
           {/* Base indicator - always rendered but visually hidden when action is shown */}

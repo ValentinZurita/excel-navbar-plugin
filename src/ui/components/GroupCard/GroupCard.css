@@ -19,16 +19,15 @@
     transform 160ms ease;
 }
 
-.group-header::before {
-  content: '';
+.group-header-nav-highlight {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
+  z-index: 0;
   background: var(--excel-nav-active-bg);
   opacity: 0;
-  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  box-shadow: none;
+  transition: opacity var(--excel-nav-highlight-fade-ms) var(--excel-nav-highlight-fade-ease);
 }
 
 /* ELIMINADO: Hover no longer has visual background state
@@ -67,19 +66,33 @@
     box-shadow 140ms ease;
 }
 
-.group-header[data-visual-focused='true']::before {
-  opacity: 1;
+.group-header:not([data-visual-exiting='true']) .group-header-nav-highlight {
+  animation: none;
 }
 
-.group-header[data-visual-exiting='true']::before {
-  opacity: 0;
+.group-header[data-visual-focused='true'] .group-header-nav-highlight {
+  animation: excel-nav-highlight-enter var(--excel-nav-highlight-fade-ms) var(--excel-nav-highlight-fade-ease) forwards;
+}
+
+.group-header[data-visual-exiting='true'] .group-header-nav-highlight {
+  animation: excel-nav-highlight-exit var(--excel-nav-highlight-fade-ms) var(--excel-nav-highlight-fade-ease) forwards;
 }
 
 .group-header-active .group-title {
   color: var(--excel-nav-active-fg);
 }
 
+/* Collapsed group header that represents the active sheet while focus lives elsewhere */
+.group-header.group-header-active[data-active='true'][data-active-dimmed='true'] {
+  background: var(--excel-nav-anchor-dim-bg);
+}
+
+.group-header.group-header-active[data-active='true'][data-active-dimmed='true'] .group-title {
+  color: var(--excel-nav-anchor-dim-fg);
+}
+
 .group-toggle {
+  position: relative;
   width: 100%;
   display: flex;
   align-items: center;
@@ -250,4 +263,22 @@
     opacity: 0.35;
     transform: none;
   }
+
+  .group-header,
+  .group-header-nav-highlight,
+  .group-header-active,
+  .group-title {
+    transition-duration: 1ms;
+  }
+
+  .group-header[data-visual-exiting='true'] .group-header-nav-highlight {
+    animation: none;
+    opacity: 0;
+  }
+
+  .group-header[data-visual-focused='true'] .group-header-nav-highlight {
+    animation: none;
+    opacity: 1;
+  }
 }
+
