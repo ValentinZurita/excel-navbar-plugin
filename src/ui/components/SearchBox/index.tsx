@@ -17,6 +17,10 @@ interface SearchBoxProps {
   onSearchKeyDown: KeyboardEventHandler<HTMLInputElement>;
   /** Currently focused item ID for visual focus indicator */
   focusedItemId: string | null;
+  /** Strong highlight owner (e.g. sheet context menu target while searching) */
+  visualFocusedItemId?: string | null;
+  /** While a sheet context menu is open, search rows stay out of the tab order */
+  sheetContextMenuOpen?: boolean;
   /** Current focus source to avoid visual double-highlight in search rows */
   navigationInputMode?: 'keyboard' | 'pointer' | null;
   /** Handler for keyboard navigation on search results */
@@ -44,6 +48,8 @@ export function SearchBox({
   inputRef,
   onSearchKeyDown,
   focusedItemId,
+  visualFocusedItemId = null,
+  sheetContextMenuOpen = false,
   navigationInputMode = null,
   onResultKeyDown,
   registerElement,
@@ -99,6 +105,8 @@ export function SearchBox({
             activeWorksheetId={activeWorksheetId}
             onSelect={onSelect}
             focusedItemId={focusedItemId}
+            visualFocusedItemId={visualFocusedItemId}
+            sheetContextMenuOpen={sheetContextMenuOpen}
             navigationInputMode={navigationInputMode}
             onItemKeyDown={onResultKeyDown}
             registerElement={registerElement}

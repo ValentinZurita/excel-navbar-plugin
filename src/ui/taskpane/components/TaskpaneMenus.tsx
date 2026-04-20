@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { GroupColorToken, WorksheetEntity } from '../../../domain/navigation/types';
 import { selectableGroupColorTokens } from '../../../domain/navigation/constants';
 import type { ContextMenuState, GroupMenuState, SheetMenuState } from '../types/contextMenuTypes';
@@ -86,7 +86,17 @@ function renderMenuActions(actions: MenuAction[]) {
   ));
 }
 
-function ContextMenuLayer({ children, menu, onCloseMenus }: { children: ReactNode; menu: ContextMenuState; onCloseMenus: () => void }) {
+function ContextMenuLayer({
+  children,
+  menu,
+  onCloseMenus,
+  menuPanelRef,
+}: {
+  children: ReactNode;
+  menu: ContextMenuState;
+  onCloseMenus: () => void;
+  menuPanelRef?: RefObject<HTMLDivElement>;
+}) {
   return (
     <div
       className="context-menu-layer"
@@ -97,6 +107,7 @@ function ContextMenuLayer({ children, menu, onCloseMenus }: { children: ReactNod
       }}
     >
       <div
+        ref={menuPanelRef}
         className="context-menu"
         style={getMenuStyle(menu)}
         onClick={(event) => event.stopPropagation()}
@@ -106,6 +117,160 @@ function ContextMenuLayer({ children, menu, onCloseMenus }: { children: ReactNod
       </div>
     </div>
   );
+}
+
+function collectSheetMenuListItems(panel: HTMLElement): HTMLElement[] {
+  return [...panel.querySelectorAll<HTMLElement>('.context-menu-item')].filter(
+    (el) => !(el as HTMLButtonElement).disabled,
+  );
+}
+
+function blurNavigableHostIfFocused() {
+  const ae = document.activeElement;
+  if (!(ae instanceof HTMLElement)) {
+    return;
+  }
+  if (ae.closest('[data-navigable-id]')) {
+    ae.blur();
+  }
+}
+
+/**
+ * Keyboard control when the sheet menu was opened via ArrowRight (not pointer).
+ * Blurs the navigator row first so Excel-green :focus-visible rings do not linger;
+ * registers capture only in this mode so pointer-opened menus behave as before.
+ */
+function useSheetContextMenuListKeyboard(args: {
+  menuPanelRef: RefObject<HTMLDivElement>;
+  isEnabled: boolean;
+  keyboardOpened: boolean;
+  onCloseMenus: () => void;
+  menuInstanceKey: string;
+}) {
+  const { menuPanelRef, isEnabled, keyboardOpened, onCloseMenus, menuInstanceKey } = args;
+
+  useLayoutEffect(() => {
+    if (!isEnabled || !keyboardOpened) {
+      return;
+    }
+
+    let cancelled = false;
+    let innerFrame = 0;
+    const outerFrame = window.requestAnimationFrame(() => {
+      if (cancelled) {
+        return;
+      }
+      blurNavigableHostIfFocused();
+      innerFrame = window.requestAnimationFrame(() => {
+        if (cancelled) {
+          return;
+        }
+        const panel = menuPanelRef.current;
+        const items = panel ? collectSheetMenuListItems(panel) : [];
+        items[0]?.focus({ preventScroll: true });
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(outerFrame);
+      window.cancelAnimationFrame(innerFrame);
+    };
+  }, [isEnabled, keyboardOpened, menuInstanceKey, menuPanelRef]);
+
+  useEffect(() => {
+    if (!isEnabled || !keyboardOpened) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const panel = menuPanelRef.current;
+      if (!panel || !panel.contains(event.target as Node)) {
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        onCloseMenus();
+        return;
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        event.stopPropagation();
+        onCloseMenus();
+        return;
+      }
+
+      const items = collectSheetMenuListItems(panel);
+      if (items.length === 0) {
+        return;
+      }
+
+      const active = document.activeElement;
+      const currentIndex = active instanceof HTMLElement ? items.indexOf(active) : -1;
+
+      if (event.key === 'Enter' && !event.repeat) {
+        if (active instanceof HTMLElement && active.classList.contains('context-menu-item')) {
+          event.preventDefault();
+          event.stopPropagation();
+          (active as HTMLButtonElement).click();
+        }
+        return;
+      }
+
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        event.stopPropagation();
+        const nextIndex = event.shiftKey
+          ? (currentIndex <= 0 ? items.length - 1 : currentIndex - 1)
+          : (currentIndex < 0 || currentIndex >= items.length - 1 ? 0 : currentIndex + 1);
+        items[nextIndex]?.focus({ preventScroll: true });
+        return;
+      }
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        event.stopPropagation();
+        const nextIndex = currentIndex < 0 ? 0 : Math.min(currentIndex + 1, items.length - 1);
+        items[nextIndex]?.focus({ preventScroll: true });
+        return;
+      }
+
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        event.stopPropagation();
+        const nextIndex = currentIndex <= 0 ? items.length - 1 : currentIndex - 1;
+        items[nextIndex]?.focus({ preventScroll: true });
+        return;
+      }
+
+      if (event.key === 'Home') {
+        event.preventDefault();
+        event.stopPropagation();
+        items[0]?.focus({ preventScroll: true });
+        return;
+      }
+
+      if (event.key === 'End') {
+        event.preventDefault();
+        event.stopPropagation();
+        items[items.length - 1]?.focus({ preventScroll: true });
+        return;
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown, true);
+    };
+  }, [isEnabled, keyboardOpened, menuPanelRef, onCloseMenus]);
 }
 
 function buildSheetMenuActions(
@@ -284,8 +449,20 @@ function SheetContextMenu({
     onStartDeleteConfirmation,
   });
 
+  const menuPanelRef = useRef<HTMLDivElement>(null);
+  const isActionList = !isConfirmingDelete && !isCreatingGroup;
+  const keyboardOpened = sheetMenu.openedVia === 'keyboard';
+
+  useSheetContextMenuListKeyboard({
+    menuPanelRef,
+    isEnabled: isActionList,
+    keyboardOpened,
+    onCloseMenus,
+    menuInstanceKey: sheetMenu.worksheet.worksheetId,
+  });
+
   return (
-    <ContextMenuLayer menu={sheetMenu} onCloseMenus={onCloseMenus}>
+    <ContextMenuLayer menu={sheetMenu} onCloseMenus={onCloseMenus} menuPanelRef={menuPanelRef}>
       {isConfirmingDelete && worksheetToDelete ? (
         <InlineDeleteConfirmation
           worksheetName={worksheetToDelete.name}

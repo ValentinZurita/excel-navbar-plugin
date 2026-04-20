@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { WorksheetEntity } from '../../src/domain/navigation/types';
@@ -55,6 +55,44 @@ describe('TaskpaneMenus', () => {
     expect(screen.getByRole('button', { name: 'Pin sheet' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Hide sheet' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Rename' })).toBeInTheDocument();
+  });
+
+  it('focuses the first sheet menu action when opened via keyboard', async () => {
+    renderSheetMenu({
+      activeMenu: {
+        kind: 'sheet',
+        x: 10,
+        y: 20,
+        worksheet: createWorksheet(),
+        openedVia: 'keyboard',
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Pin sheet' })).toHaveFocus();
+    });
+  });
+
+  it('closes the sheet menu when ArrowLeft is pressed from a keyboard-opened menu', async () => {
+    const user = userEvent.setup();
+    const onCloseMenus = vi.fn();
+    renderSheetMenu({
+      onCloseMenus,
+      activeMenu: {
+        kind: 'sheet',
+        x: 10,
+        y: 20,
+        worksheet: createWorksheet(),
+        openedVia: 'keyboard',
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Pin sheet' })).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowLeft}');
+    expect(onCloseMenus).toHaveBeenCalledTimes(1);
   });
 
   it('renders group actions from the active menu kind', () => {

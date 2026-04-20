@@ -78,6 +78,7 @@ function createBaseProps(overrides: Partial<ComponentProps<typeof TaskpaneSectio
     onToggleHiddenSection: vi.fn(),
     onUnhideWorksheet: vi.fn().mockResolvedValue(undefined),
     onOpenSheetMenu: vi.fn(),
+    onRequestSheetContextMenuFromKeyboard: vi.fn(),
     onOpenGroupMenu: vi.fn(),
     searchInputRef: createRef<HTMLInputElement>(),
     ...overrides,
@@ -212,7 +213,43 @@ describe('TaskpaneSections', () => {
     expect(screen.getByRole('button', { name: 'Finance' })).toHaveFocus();
   });
 
-  it('uses ArrowRight/ArrowLeft only on group headers and keeps ArrowDown/ArrowUp for row traversal', async () => {
+  it('opens sheet context menu from keyboard with ArrowRight on a worksheet row', async () => {
+    const user = userEvent.setup();
+    const onRequestSheetContextMenuFromKeyboard = vi.fn();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null }),
+        createWorksheet({ worksheetId: 'sheet-2', name: 'Forecast', groupId: null }),
+      ],
+      hidden: [],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          onRequestSheetContextMenuFromKeyboard,
+        })}
+      />,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    revenueRow.focus();
+
+    await user.keyboard('{ArrowRight}');
+
+    expect(onRequestSheetContextMenuFromKeyboard).toHaveBeenCalledTimes(1);
+    expect(onRequestSheetContextMenuFromKeyboard).toHaveBeenCalledWith({
+      worksheetId: 'sheet-1',
+      anchorElement: revenueRow,
+    });
+  });
+
+  it('uses ArrowRight/ArrowLeft on group headers and keeps ArrowDown/ArrowUp for row traversal', async () => {
     const user = userEvent.setup();
     const onToggleGroupCollapsed = vi.fn();
 
@@ -714,7 +751,7 @@ describe('TaskpaneSections', () => {
     expect(revenueArticle).toHaveAttribute('data-visual-exiting', 'false');
   });
 
-  it('pins context-menu highlight until menu closes, then starts exit fade', () => {
+  it('pins context-menu highlight until menu closes, then restores keyboard anchor on that row', () => {
     vi.useFakeTimers();
 
     const navigatorView: NavigatorView = {
@@ -740,6 +777,7 @@ describe('TaskpaneSections', () => {
     );
 
     const revenueArticle = screen.getByRole('button', { name: 'Revenue' }).closest('[data-navigable-id="worksheet:sheet-1"]');
+    const forecastArticle = screen.getByRole('button', { name: 'Forecast' }).closest('[data-navigable-id="worksheet:sheet-2"]');
 
     expect(revenueArticle).toHaveAttribute('data-visual-focused', 'true');
 
@@ -759,15 +797,12 @@ describe('TaskpaneSections', () => {
       />,
     );
 
-    expect(revenueArticle).toHaveAttribute('data-visual-focused', 'false');
-    expect(revenueArticle).toHaveAttribute('data-visual-exiting', 'true');
-    expect(screen.getByRole('button', { name: 'Forecast' }).closest('[data-navigable-id="worksheet:sheet-2"]')).toHaveAttribute('data-visual-focused', 'true');
-
-    act(() => {
-      vi.advanceTimersByTime(HIGHLIGHT_EXIT_MS);
-    });
-
+    // Closing the menu must keep logical + visual focus on the context row so arrow keys
+    // do not fall through to the scrollable taskpane shell.
+    expect(revenueArticle).toHaveAttribute('data-visual-focused', 'true');
     expect(revenueArticle).toHaveAttribute('data-visual-exiting', 'false');
+    expect(revenueArticle).toHaveAttribute('data-focused', 'true');
+    expect(forecastArticle).toHaveAttribute('data-active-dimmed', 'true');
   });
 
   it('applies visual highlight to group header on pointer selection', () => {

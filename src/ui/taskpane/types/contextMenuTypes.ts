@@ -7,6 +7,8 @@ export interface SheetMenuState {
   x: number;
   y: number;
   worksheet: WorksheetEntity;
+  /** How the menu was opened; keyboard opens skip same-sheet toggle and enable list focus. */
+  openedVia?: 'pointer' | 'keyboard';
 }
 
 export interface GroupMenuState {
@@ -25,6 +27,8 @@ export interface OpenSheetMenuArgs {
   x: number;
   y: number;
   worksheet: WorksheetEntity;
+  /** Default `pointer`: same-sheet pointer opens toggle closed. `keyboard` always opens. */
+  interaction?: 'pointer' | 'keyboard';
 }
 
 export interface OpenGroupMenuArgs {

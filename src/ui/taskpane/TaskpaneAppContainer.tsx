@@ -376,6 +376,28 @@ export function TaskpaneAppContainer() {
     dismissUndoToast();
   }, [controller, dismissUndoToast, undoToast]);
 
+  const handleRequestSheetContextMenuFromKeyboard = useCallback(
+    ({ worksheetId, anchorElement }: { worksheetId: string; anchorElement: HTMLElement | null }) => {
+      const worksheet = controller.state.worksheetsById[worksheetId];
+      if (!worksheet) {
+        return;
+      }
+
+      const rect = anchorElement?.getBoundingClientRect();
+      const x = rect ? Math.max(0, rect.right - 12) : 8;
+      const y = rect ? Math.max(0, rect.top + 6) : 8;
+
+      openSheetMenu({
+        target: anchorElement ?? document.body,
+        x,
+        y,
+        worksheet,
+        interaction: 'keyboard',
+      });
+    },
+    [controller, openSheetMenu],
+  );
+
   return (
     <TaskpaneShell
       banner={controller.banner}
@@ -411,6 +433,7 @@ export function TaskpaneAppContainer() {
         onToggleHiddenSection={controller.toggleHiddenSection}
         onUnhideWorksheet={controller.unhideWorksheet}
         onOpenSheetMenu={openSheetMenu}
+        onRequestSheetContextMenuFromKeyboard={handleRequestSheetContextMenuFromKeyboard}
         onOpenGroupMenu={openGroupMenu}
         onRenameWorksheetSubmit={handleRenameWorksheetSubmit}
         onRenameGroupSubmit={handleRenameGroupSubmit}
@@ -419,6 +442,9 @@ export function TaskpaneAppContainer() {
         isRenaming={renamingWorksheetId !== null || renamingGroupId !== null}
         isContextMenuOpen={activeMenu !== null}
         searchInputRef={searchInputRef}
+        sheetContextMenuOpenedVia={
+          activeMenu?.kind === 'sheet' ? (activeMenu.openedVia ?? 'pointer') : null
+        }
       />
 
       {!dragAndDrop.activeWorksheetId ? (

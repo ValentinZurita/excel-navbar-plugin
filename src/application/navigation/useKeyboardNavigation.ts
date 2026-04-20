@@ -74,6 +74,14 @@ export interface UseKeyboardNavigationArgs {
   /** True when context menu is open - suppresses navigation */
   isContextMenuOpen: boolean;
   /**
+   * ArrowRight on a worksheet or search-result row: open the sheet context menu
+   * anchored to the row element (when provided).
+   */
+  onRequestSheetContextMenuFromKeyboard?: (payload: {
+    worksheetId: string;
+    anchorElement: HTMLElement | null;
+  }) => void;
+  /**
    * Context-menu target id (`worksheet:…`, `group-header:…`, etc.).
    * Worksheet targets may reference the Hidden section, which is not part of `items`.
    */
@@ -83,6 +91,8 @@ export interface UseKeyboardNavigationArgs {
    * and highlight stay consistent without adding hidden rows to the arrow-key list.
    */
   hiddenWorksheetIds?: readonly string[];
+  /** Sheet context menu: how it was opened (affects navigationInputMode while menu is open). */
+  sheetContextMenuOpenedVia?: 'pointer' | 'keyboard' | null;
 }
 
 interface UseKeyboardNavigationReturn {
@@ -122,7 +132,8 @@ interface UseKeyboardNavigationReturn {
  * 2. Maintains a registry of DOM elements for each item
  * 3. Automatically calls .focus() on DOM elements when focusedItemId changes
  * 4. Provides handlers for ArrowDown/ArrowUp/Enter/Home/End on items
- * 5. Provides handlers for ArrowRight/ArrowLeft/Enter on group headers
+ * 5. Provides handlers for ArrowRight/ArrowLeft/Enter on group headers; ArrowRight on
+ *    worksheet/search-result rows opens the sheet context menu when a callback is wired
  * 6. Suppresses all navigation when drag/dialog/rename/menu is active
  *
  * The navigation follows Excel tab-like behavior: linear list, no wrapping,
@@ -146,6 +157,8 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     isContextMenuOpen,
     contextMenuTargetItemId,
     hiddenWorksheetIds = [],
+    onRequestSheetContextMenuFromKeyboard,
+    sheetContextMenuOpenedVia = null,
   } = args;
 
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
@@ -275,6 +288,42 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   }, []);
 
   /**
+   * After closing a context menu, the activeElement often lands on a scrollable shell
+   * (arrow keys then scroll). Re-attach DOM focus to the navigable node on the next frames.
+   */
+  function scheduleDomFocusForNavigableId(itemId: string | null) {
+    if (!itemId || itemId === SEARCH_INPUT_SENTINEL_ID) {
+      return;
+    }
+    const id = itemId;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        const el = elementRegistryRef.current.get(id);
+        if (el && document.contains(el)) {
+          const SUPPRESS_ATTR = 'data-suppress-nav-focus-ring';
+          let cleared = false;
+          const clearSuppress = () => {
+            if (cleared) {
+              return;
+            }
+            cleared = true;
+            el.removeEventListener('blur', onBlur);
+            el.removeAttribute(SUPPRESS_ATTR);
+          };
+          const onBlur = () => {
+            clearSuppress();
+          };
+          el.addEventListener('blur', onBlur, { once: true });
+          el.setAttribute(SUPPRESS_ATTR, 'true');
+          el.focus({ preventScroll: true });
+          // Office webviews often treat programmatic focus like :focus-visible (green ring on .sheet-row).
+          window.setTimeout(clearSuppress, 450);
+        }
+      });
+    });
+  }
+
+  /**
    * Set focus to a specific item ID.
    * This updates state and (via useEffect) focuses the DOM element.
    */
@@ -399,9 +448,37 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   }, [clearIdleTimeout]);
 
   useEffect(() => {
-    // While search is active, computeVisualFocusedItemId returns no visual anchor (including
-    // for sheet context menus); skip syncing context-menu target into focusedItemId.
     if (isSearchActive) {
+      if (
+        isContextMenuOpen
+        && contextMenuTargetItemId?.startsWith('worksheet:')
+      ) {
+        const wid = contextMenuTargetItemId.slice('worksheet:'.length);
+        const searchId = `search:${wid}`;
+        if (hasItem(searchId, items)) {
+          clearIdleTimeout();
+          suppressNextDomFocusRef.current = true;
+          setSearchFocusedItemId(searchId);
+          setNavigationInputMode(sheetContextMenuOpenedVia === 'keyboard' ? 'keyboard' : 'pointer');
+          contextMenuOwnedFocusRef.current = true;
+          lastContextMenuTargetItemIdRef.current = searchId;
+        }
+      } else if (
+        previousContextMenuOpenRef.current
+        && contextMenuOwnedFocusRef.current
+        && !isContextMenuOpen
+      ) {
+        const anchorId = lastContextMenuTargetItemIdRef.current;
+        contextMenuOwnedFocusRef.current = false;
+        if (anchorId) {
+          suppressNextDomFocusRef.current = true;
+          setKeyboardFocusedItem(anchorId);
+          scheduleDomFocusForNavigableId(anchorId);
+        } else {
+          setNavigationInputMode(null);
+        }
+      }
+
       previousContextMenuOpenRef.current = isContextMenuOpen;
       return;
     }
@@ -414,7 +491,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         clearIdleTimeout();
         suppressNextDomFocusRef.current = true;
         setFocusedItemId(contextMenuTargetItemId);
-        setNavigationInputMode('pointer');
+        setNavigationInputMode(sheetContextMenuOpenedVia === 'keyboard' ? 'keyboard' : 'pointer');
         contextMenuOwnedFocusRef.current = true;
         lastContextMenuTargetItemIdRef.current = contextMenuTargetItemId;
       }
@@ -424,12 +501,15 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     }
 
     if (previousContextMenuOpenRef.current && contextMenuOwnedFocusRef.current) {
-      const previousContextMenuTargetItemId = lastContextMenuTargetItemIdRef.current;
+      const anchorId = lastContextMenuTargetItemIdRef.current;
       contextMenuOwnedFocusRef.current = false;
-      setFocusedItemId((currentFocusedItemId) => (
-        currentFocusedItemId === previousContextMenuTargetItemId ? null : currentFocusedItemId
-      ));
-      setNavigationInputMode(null);
+      if (anchorId) {
+        suppressNextDomFocusRef.current = true;
+        setKeyboardFocusedItem(anchorId);
+        scheduleDomFocusForNavigableId(anchorId);
+      } else {
+        setNavigationInputMode(null);
+      }
     }
 
     previousContextMenuOpenRef.current = false;
@@ -440,6 +520,8 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     isContextMenuOpen,
     isSearchActive,
     items,
+    sheetContextMenuOpenedVia,
+    setKeyboardFocusedItem,
   ]);
 
   /**
@@ -654,7 +736,8 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
    */
   useEffect(() => {
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
-      if (isSuppressed || focusedItemId) {
+      const logicalRowFocus = isSearchActive ? searchFocusedItemId : focusedItemId;
+      if (isSuppressed || logicalRowFocus) {
         return;
       }
 
@@ -689,7 +772,16 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     return () => {
       document.removeEventListener('keydown', handleGlobalKeyDown);
     };
-  }, [isSuppressed, focusedItemId, activeWorksheetId, items, setKeyboardFocusedItem, markKeyboardActivity]);
+  }, [
+    isSuppressed,
+    focusedItemId,
+    searchFocusedItemId,
+    isSearchActive,
+    activeWorksheetId,
+    items,
+    setKeyboardFocusedItem,
+    markKeyboardActivity,
+  ]);
 
   /**
    * Handler for keydown events on the search input.
@@ -859,6 +951,25 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
           break;
         }
 
+        case 'ArrowRight': {
+          const worksheetId =
+            currentItem?.kind === 'worksheet' || currentItem?.kind === 'search-result'
+              ? currentItem.worksheetId
+              : undefined;
+          if (!worksheetId || !onRequestSheetContextMenuFromKeyboard) {
+            break;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+          const anchorElement = anchorItemId
+            ? elementRegistryRef.current.get(anchorItemId) ?? null
+            : null;
+          onRequestSheetContextMenuFromKeyboard({ worksheetId, anchorElement });
+          markKeyboardActivity();
+          break;
+        }
+
         case 'ArrowLeft': {
           if (currentItem?.kind === 'worksheet' && currentItem.groupId) {
             event.preventDefault();
@@ -900,6 +1011,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       onFocusSearchInput,
       markKeyboardActivity,
       clearFocus,
+      onRequestSheetContextMenuFromKeyboard,
     ],
   );
 

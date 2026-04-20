@@ -9,14 +9,19 @@ export function useContextMenus() {
     setActiveMenu(null);
   }, []);
 
-  const openSheetMenu = useCallback(({ x, y, worksheet }: OpenSheetMenuArgs) => {
-    // Right-clicking the same worksheet toggles the menu off.
+  const openSheetMenu = useCallback(({ x, y, worksheet, interaction = 'pointer' }: OpenSheetMenuArgs) => {
+    const openedVia = interaction;
     setActiveMenu((currentMenu) => {
-      if (currentMenu?.kind === 'sheet' && currentMenu.worksheet.worksheetId === worksheet.worksheetId) {
+      // Pointer: right-clicking the same worksheet toggles the menu off.
+      if (
+        interaction === 'pointer'
+        && currentMenu?.kind === 'sheet'
+        && currentMenu.worksheet.worksheetId === worksheet.worksheetId
+      ) {
         return null;
       }
 
-      return { kind: 'sheet', x, y, worksheet };
+      return { kind: 'sheet', x, y, worksheet, openedVia };
     });
   }, []);
 

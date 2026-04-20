@@ -29,7 +29,19 @@ export function computeVisualFocusedItemId({
   isHighlightSuppressed,
   isSearchActive,
 }: ComputeVisualFocusedItemIdArgs): string | null {
-  if (isHighlightSuppressed || isSearchActive) {
+  if (isHighlightSuppressed) {
+    return null;
+  }
+
+  // Search mode: map sheet context-menu target to the search row id so highlight stays aligned.
+  if (isSearchActive) {
+    if (
+      isContextMenuOpen
+      && contextMenuTargetItemId?.startsWith('worksheet:')
+    ) {
+      const worksheetId = contextMenuTargetItemId.slice('worksheet:'.length);
+      return `search:${worksheetId}`;
+    }
     return null;
   }
 

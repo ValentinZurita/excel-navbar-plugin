@@ -59,6 +59,11 @@ interface TaskpaneSectionsProps {
   onToggleHiddenSection: () => void;
   onUnhideWorksheet: (worksheetId: string) => void | Promise<void>;
   onOpenSheetMenu: (args: OpenSheetMenuArgs) => void;
+  /** ArrowRight on worksheet / search-result row: open sheet context menu from keyboard. */
+  onRequestSheetContextMenuFromKeyboard?: (payload: {
+    worksheetId: string;
+    anchorElement: HTMLElement | null;
+  }) => void;
   onOpenGroupMenu: (args: OpenGroupMenuArgs) => void;
   onRenameWorksheetSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameGroupSubmit?: (groupId: string, newName: string) => void;
@@ -69,6 +74,8 @@ interface TaskpaneSectionsProps {
   isContextMenuOpen?: boolean;
   /** Ref to the search input, lifted from container for shortcut access */
   searchInputRef: React.RefObject<HTMLInputElement>;
+  /** Present while sheet context menu is open; keeps keyboard vs pointer styling accurate */
+  sheetContextMenuOpenedVia?: 'pointer' | 'keyboard' | null;
 }
 
 const worksheetCollisionDetection: CollisionDetection = (args) => {
@@ -162,6 +169,7 @@ export function TaskpaneSections({
   onToggleHiddenSection,
   onUnhideWorksheet,
   onOpenSheetMenu,
+  onRequestSheetContextMenuFromKeyboard,
   onOpenGroupMenu,
   onRenameWorksheetSubmit,
   onRenameGroupSubmit,
@@ -170,6 +178,7 @@ export function TaskpaneSections({
   isRenaming = false,
   isContextMenuOpen = false,
   searchInputRef,
+  sheetContextMenuOpenedVia = null,
 }: TaskpaneSectionsProps) {
 
   const [isPinnedCollapsed, setIsPinnedCollapsed] = useState(false);
@@ -261,6 +270,8 @@ export function TaskpaneSections({
       contextMenuTargetItemId={contextMenuTargetItemId}
       activeVisualItemId={activeVisualItemId}
       hiddenWorksheetIds={hiddenWorksheetIds}
+      onRequestSheetContextMenuFromKeyboard={onRequestSheetContextMenuFromKeyboard}
+      sheetContextMenuOpenedVia={sheetContextMenuOpenedVia}
     >
       <TaskpaneSectionsContent
         query={query}
@@ -386,6 +397,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
         inputRef={searchInputRef}
         onSearchKeyDown={handleSearchKeyDown}
         focusedItemId={focusedItemId}
+        visualFocusedItemId={visualFocusedItemId}
+        sheetContextMenuOpen={Boolean(contextMenuOpenSheetId)}
         navigationInputMode={navigationInputMode}
         onResultKeyDown={handleItemKeyDown}
         onResultPointerFocus={setPointerFocusItem}

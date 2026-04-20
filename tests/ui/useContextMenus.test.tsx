@@ -45,6 +45,38 @@ describe('useContextMenus', () => {
     expect(result.current.sheetMenu).toBeNull();
   });
 
+  it('keeps the sheet menu open when opening the same worksheet via keyboard twice', () => {
+    const { result } = renderHook(() => useContextMenus());
+    const worksheet = createWorksheet();
+
+    act(() => {
+      result.current.openSheetMenu({
+        target: document.body,
+        x: 12,
+        y: 24,
+        worksheet,
+        interaction: 'keyboard',
+      });
+    });
+
+    expect(result.current.sheetMenu?.worksheet.worksheetId).toBe('sheet-1');
+    expect(result.current.sheetMenu?.openedVia).toBe('keyboard');
+
+    act(() => {
+      result.current.openSheetMenu({
+        target: document.body,
+        x: 20,
+        y: 30,
+        worksheet,
+        interaction: 'keyboard',
+      });
+    });
+
+    expect(result.current.sheetMenu).not.toBeNull();
+    expect(result.current.sheetMenu?.x).toBe(20);
+    expect(result.current.sheetMenu?.y).toBe(30);
+  });
+
   it('keeps only one menu active at a time', () => {
     const { result } = renderHook(() => useContextMenus());
     const worksheet = createWorksheet();

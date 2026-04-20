@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import type { GroupColorToken } from '../../../domain/navigation/types';
 import { selectableGroupColorTokens } from '../../../domain/navigation/constants';
 import './InlineGroupCreator.css';
@@ -28,11 +28,11 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
   const [name, setName] = useState('');
   const [selectedColor, setSelectedColor] = useState<GroupColorToken>(defaultColor);
 
-  useEffect(() => {
+  // Focus once after mount, synchronously before paint. Avoids a deferred rAF focus
+  // racing after Tab and stealing focus from color chips (flaky tests / keyboard flows).
+  useLayoutEffect(() => {
     if (autoFocus) {
-      window.requestAnimationFrame(() => {
-        inputRef.current?.focus();
-      });
+      inputRef.current?.focus();
     }
   }, [autoFocus]);
 
@@ -88,7 +88,6 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
         aria-label="Name"
         onChange={(event) => setName(event.target.value)}
         onKeyDown={handleInputKeyDown}
-        autoFocus={autoFocus}
         spellCheck={false}
       />
 

@@ -164,6 +164,13 @@
   outline: none;
 }
 
+/* Briefly hide the focus ring when focus is restored programmatically (e.g. after closing a context menu). */
+[data-navigable-id][data-suppress-nav-focus-ring='true']:focus,
+[data-navigable-id][data-suppress-nav-focus-ring='true']:focus-visible {
+  outline: none !important;
+  box-shadow: none;
+}
+
 /* Search result focused state */
 .search-result[data-focused="true"]:not([data-pointer-mode-active="true"]) {
   /* Keep keyboard and pointer selection style consistent with search hover. */

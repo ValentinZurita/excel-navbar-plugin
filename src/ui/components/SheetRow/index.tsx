@@ -179,8 +179,10 @@ function SheetRowComponent({
     }
   };
 
-  // Determine tabIndex: use roving tabindex when navigableId is provided
-  const tabIndex = navigableId ? (isFocused ? 0 : -1) : isInteractive ? 0 : -1;
+  // While this row's sheet menu is open, keep it out of the tab order (focus lives in the menu).
+  const tabIndex = navigableId
+    ? (isContextMenuOpen ? -1 : (isFocused ? 0 : -1))
+    : (isInteractive ? 0 : -1);
 
   return (
     <article

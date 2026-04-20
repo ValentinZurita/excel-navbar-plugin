@@ -70,6 +70,13 @@
   color: var(--excel-body-fg);
 }
 
+/* Programmatic focus in Office webviews often matches :focus but not :focus-visible — keep host chrome from drawing a green ring */
+.context-menu-item:focus {
+  outline: none;
+  background: color-mix(in srgb, var(--excel-body-fg) 6%, transparent);
+  color: var(--excel-body-fg);
+}
+
 .context-menu-item:focus-visible {
   outline: none;
   box-shadow: none;

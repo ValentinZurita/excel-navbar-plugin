@@ -9,6 +9,10 @@ interface SearchResultsProps {
   activeWorksheetId?: string | null;
   /** Currently focused item ID for visual focus indicator */
   focusedItemId: string | null;
+  /** Strong highlight (e.g. context menu target) — merged with focusedItemId for row styling */
+  visualFocusedItemId?: string | null;
+  /** Suspend roving tabindex while sheet context menu owns focus */
+  sheetContextMenuOpen?: boolean;
   /** Current focus source to avoid double highlight with pointer hover */
   navigationInputMode?: 'keyboard' | 'pointer' | null;
   /** Handler for keyboard navigation on individual results */
@@ -32,6 +36,8 @@ export function SearchResults({
   onSelect,
   activeWorksheetId = null,
   focusedItemId,
+  visualFocusedItemId = null,
+  sheetContextMenuOpen = false,
   navigationInputMode = null,
   onItemKeyDown,
   registerElement,
@@ -78,7 +84,8 @@ export function SearchResults({
       <div className="sheet-list">
         {results.map((result) => {
           const itemId = `search:${result.worksheetId}`;
-          const isFocused = focusedItemId === itemId;
+          const isStrongHighlight = focusedItemId === itemId || visualFocusedItemId === itemId;
+          const isRovingTarget = focusedItemId === itemId;
           const isActiveWorksheet = activeWorksheetId !== null && activeWorksheetId === result.worksheetId;
 
           return (
@@ -87,7 +94,8 @@ export function SearchResults({
               result={result}
               itemId={itemId}
               isActiveWorksheet={isActiveWorksheet}
-              isFocused={isFocused}
+              isFocused={isStrongHighlight}
+              rovingTabIndex={isRovingTarget && !sheetContextMenuOpen}
               isPointerModeActive={navigationInputMode === 'pointer'}
               onSelect={onSelect}
               onItemKeyDown={onItemKeyDown}
@@ -108,6 +116,7 @@ interface SearchResultItemComponentProps {
   itemId: string;
   isActiveWorksheet: boolean;
   isFocused: boolean;
+  rovingTabIndex: boolean;
   isPointerModeActive: boolean;
   onSelect: (worksheetId: string) => void | Promise<void>;
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>, itemId: string) => void;
@@ -121,6 +130,7 @@ function SearchResultItemComponent({
   itemId,
   isActiveWorksheet,
   isFocused,
+  rovingTabIndex,
   isPointerModeActive,
   onSelect,
   onItemKeyDown,
@@ -152,7 +162,7 @@ function SearchResultItemComponent({
       data-active-worksheet={isActiveWorksheet ? 'true' : undefined}
       data-focused={isFocused}
       data-pointer-mode-active={isPointerModeActive}
-      tabIndex={isFocused ? 0 : -1}
+      tabIndex={rovingTabIndex ? 0 : -1}
       onClick={() => onSelect(result.worksheetId)}
       onKeyDown={(event) => onItemKeyDown?.(event, itemId)}
       onMouseMove={(event) => onPointerFocus?.(itemId, event)}

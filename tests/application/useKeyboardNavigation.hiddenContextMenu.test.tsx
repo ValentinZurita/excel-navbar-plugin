@@ -54,7 +54,7 @@ describe('useKeyboardNavigation — Hidden section context menu', () => {
     expect(result.current.navigationInputMode).toBe('pointer');
   });
 
-  it('clears menu-owned focus when the context menu closes', () => {
+  it('restores keyboard row focus when the context menu closes', () => {
     const { result, rerender } = renderHook(
       (props: UseKeyboardNavigationArgs) => useKeyboardNavigation(props),
       { initialProps: createBaseArgs() },
@@ -80,7 +80,8 @@ describe('useKeyboardNavigation — Hidden section context menu', () => {
       );
     });
 
-    expect(result.current.focusedItemId).toBeNull();
+    expect(result.current.focusedItemId).toBe('worksheet:hidden-1');
+    expect(result.current.navigationInputMode).toBe('keyboard');
   });
 
   it('does not set focus for hidden targets when the id is not listed in hiddenWorksheetIds', () => {
