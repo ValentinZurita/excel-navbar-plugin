@@ -15,7 +15,8 @@ import {
   SEARCH_INPUT_SENTINEL_ID,
 } from '../../domain/navigation/navigableItems';
 
-const TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS = 3000;
+/** After this much time without keyboard navigation activity, transient row focus clears and the wash returns to the active worksheet. */
+export const TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS = 10_000;
 
 type NavigationInputMode = 'keyboard' | 'pointer' | null;
 

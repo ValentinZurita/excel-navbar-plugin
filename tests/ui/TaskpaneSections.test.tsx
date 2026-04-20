@@ -3,6 +3,9 @@ import userEvent from '@testing-library/user-event';
 import { createRef, useState, type ComponentProps, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NavigatorView, WorksheetEntity } from '../../src/domain/navigation/types';
+import {
+  TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS,
+} from '../../src/application/navigation/useKeyboardNavigation';
 import { HIGHLIGHT_EXIT_MS } from '../../src/application/navigation/useHighlightLifecycle';
 import { TaskpaneSections } from '../../src/ui/taskpane/components/TaskpaneSections';
 
@@ -407,9 +410,8 @@ describe('TaskpaneSections', () => {
 
     expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
 
-    // 3 seconds idle timeout for keyboard focus clear
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS);
     });
 
     expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
@@ -452,9 +454,8 @@ describe('TaskpaneSections', () => {
     revenueRow.focus();
     fireEvent.keyDown(revenueRow, { key: 'ArrowDown', code: 'ArrowDown' });
 
-    // Idle clear removes transient keyboard focus state
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS);
     });
     expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
     expect(screen.getByRole('button', { name: 'Forecast' }).closest('[data-navigable-id="worksheet:sheet-2"]')).toHaveAttribute('data-visual-focused', 'true');
@@ -647,7 +648,7 @@ describe('TaskpaneSections', () => {
     expect(forecastArticle).toHaveAttribute('data-active-dimmed', 'true');
 
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS);
     });
 
     expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
@@ -691,7 +692,7 @@ describe('TaskpaneSections', () => {
     expect(revenueArticle).toHaveAttribute('data-visual-focused', 'true');
 
     act(() => {
-      vi.advanceTimersByTime(3000 + HIGHLIGHT_EXIT_MS);
+      vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS + HIGHLIGHT_EXIT_MS);
     });
 
     expect(revenueArticle).toHaveAttribute('data-visual-focused', 'true');
@@ -817,7 +818,7 @@ describe('TaskpaneSections', () => {
     expect(forecastRow.closest('[data-navigable-id="worksheet:sheet-2"]')).toHaveAttribute('data-visual-focused', 'true');
 
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS);
     });
 
     expect(groupHeader).toHaveAttribute('data-visual-focused', 'true');
