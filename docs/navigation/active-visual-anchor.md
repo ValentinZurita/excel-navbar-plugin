@@ -16,3 +16,7 @@ Hidden rows are not mounted while the Hidden section is collapsed. If the active
 ## Search mode
 
 With an active search query, `buildNavigableItems` returns only search hits; `deriveActiveVisualItemId` is still evaluated from the non-search navigator view in `TaskpaneSections`. Keyboard navigation clears the strong visual anchor while search is active via `computeVisualFocusedItemId` (`useHighlightLifecycle.ts`), so the idle anchor does not compete with search results.
+
+## Transient focus idle timeout
+
+After keyboard or pointer navigation, `useKeyboardNavigation` starts a timer (`TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS`). When it fires, logical row focus clears and the strong wash returns to the active worksheet. Pointer movement **inside** an element matching `.taskpane-shell` (the main task pane layout) **resets** that timer while a row still has logical focus, throttled so pointer events do not thrash timers. Movement outside the shell (for example over the Excel grid) does not reset it.

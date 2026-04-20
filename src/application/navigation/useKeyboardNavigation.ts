@@ -167,6 +167,10 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   const exitTimerRef = useRef<number | null>(null);
   /** Last committed visual highlight owner; updated synchronously each render (after computing outgoing). */
   const prevVisualOwnerRef = useRef<string | null>(null);
+  const focusedItemIdRef = useRef<string | null>(null);
+  const searchFocusedItemIdRef = useRef<string | null>(null);
+  const isSearchActiveRef = useRef(isSearchActive);
+  const idleExtendPointerLastAtRef = useRef(0);
 
   // Check if navigation should be suppressed
   const isSuppressed = isDragActive || isDialogOpen || isRenaming || isContextMenuOpen;
@@ -204,6 +208,10 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   prevVisualOwnerRef.current = visualFocusedItemId;
 
   const visualExitingItemIdResolved = syncVisualExitTargetId ?? visualExitingItemId;
+
+  focusedItemIdRef.current = focusedItemId;
+  searchFocusedItemIdRef.current = searchFocusedItemId;
+  isSearchActiveRef.current = isSearchActive;
 
   const armHighlightExit = useCallback((outgoingMainListId: string) => {
     if (exitTimerRef.current !== null) {
@@ -598,6 +606,46 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       document.removeEventListener('pointerdown', handlePointerDown, true);
     };
   }, [clearIdleTimeout, items, isSearchActive, scheduleIdleClear]);
+
+  /**
+   * Moving the pointer inside the task pane shell postpones the idle clear that returns the
+   * strong wash to the active worksheet (throttled so we do not reset timers every frame).
+   */
+  useEffect(() => {
+    if (isSuppressed) {
+      return undefined;
+    }
+
+    const POINTER_IDLE_EXTEND_THROTTLE_MS = 300;
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (!(event.target instanceof Element)) {
+        return;
+      }
+      if (!event.target.closest('.taskpane-shell')) {
+        return;
+      }
+
+      const logicalFocus = isSearchActiveRef.current
+        ? searchFocusedItemIdRef.current
+        : focusedItemIdRef.current;
+      if (logicalFocus === null) {
+        return;
+      }
+
+      const now = performance.now();
+      if (now - idleExtendPointerLastAtRef.current < POINTER_IDLE_EXTEND_THROTTLE_MS) {
+        return;
+      }
+      idleExtendPointerLastAtRef.current = now;
+      scheduleIdleClear();
+    };
+
+    document.addEventListener('pointermove', handlePointerMove, { capture: true, passive: true });
+    return () => {
+      document.removeEventListener('pointermove', handlePointerMove, { capture: true });
+    };
+  }, [isSuppressed, scheduleIdleClear]);
 
   /**
    * Catch global ArrowDown / ArrowUp when no navigable item has focus.

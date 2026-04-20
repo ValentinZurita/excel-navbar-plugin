@@ -426,6 +426,58 @@ describe('TaskpaneSections', () => {
     expect(document.activeElement).toBe(document.body);
   }, 10000);
 
+  it('postpones idle highlight return while the pointer moves inside the task pane shell', () => {
+    vi.useFakeTimers();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' }),
+        createWorksheet({ worksheetId: 'sheet-2', name: 'Forecast' }),
+      ],
+      hidden: [],
+      searchResults: [],
+    };
+
+    const { container } = render(
+      <main className="taskpane-shell">
+        <TaskpaneSections
+          {...createBaseProps({
+            navigatorView,
+            activeWorksheetId: 'sheet-1',
+          })}
+        />
+      </main>,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    revenueRow.focus();
+    fireEvent.keyDown(revenueRow, { key: 'ArrowDown', code: 'ArrowDown' });
+
+    const forecastArticle = screen.getByRole('button', { name: 'Forecast' }).closest('[data-navigable-id="worksheet:sheet-2"]');
+    expect(forecastArticle).toHaveAttribute('data-visual-focused', 'true');
+
+    act(() => {
+      vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS - 100);
+    });
+    expect(forecastArticle).toHaveAttribute('data-visual-focused', 'true');
+
+    fireEvent.pointerMove(revenueRow, { clientX: 2, clientY: 2, bubbles: true });
+
+    act(() => {
+      vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS - 100);
+    });
+    expect(forecastArticle).toHaveAttribute('data-visual-focused', 'true');
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+
+    expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
+    expect(screen.getByRole('button', { name: 'Revenue' }).closest('[data-navigable-id="worksheet:sheet-1"]')).toHaveAttribute('data-visual-focused', 'true');
+  });
+
   it('restarts keyboard navigation from active worksheet after idle clear', () => {
     vi.useFakeTimers();
 
