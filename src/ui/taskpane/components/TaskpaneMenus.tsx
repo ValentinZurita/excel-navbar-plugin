@@ -125,6 +125,19 @@ function collectSheetMenuListItems(panel: HTMLElement): HTMLElement[] {
   );
 }
 
+/** Hosts like Excel webviews may not set keydown.target to the focused node; use focus + closest item. */
+function resolveSheetMenuListItemFocus(panel: HTMLElement): HTMLButtonElement | null {
+  const ae = document.activeElement;
+  if (!(ae instanceof HTMLElement) || !panel.contains(ae)) {
+    return null;
+  }
+  if (ae.classList.contains('context-menu-item') && ae instanceof HTMLButtonElement && !ae.disabled) {
+    return ae;
+  }
+  const host = ae.closest('.context-menu-item');
+  return host instanceof HTMLButtonElement && !host.disabled ? host : null;
+}
+
 function blurNavigableHostIfFocused() {
   const ae = document.activeElement;
   if (!(ae instanceof HTMLElement)) {
@@ -185,7 +198,15 @@ function useSheetContextMenuListKeyboard(args: {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const panel = menuPanelRef.current;
-      if (!panel || !panel.contains(event.target as Node)) {
+      if (!panel) {
+        return;
+      }
+
+      const pathTarget = event.target instanceof Node ? event.target : null;
+      const focusInsidePanel =
+        document.activeElement instanceof Node && panel.contains(document.activeElement);
+      const targetInsidePanel = Boolean(pathTarget && panel.contains(pathTarget));
+      if (!focusInsidePanel && !targetInsidePanel) {
         return;
       }
 
@@ -208,14 +229,14 @@ function useSheetContextMenuListKeyboard(args: {
         return;
       }
 
-      const active = document.activeElement;
-      const currentIndex = active instanceof HTMLElement ? items.indexOf(active) : -1;
+      const focusedItem = resolveSheetMenuListItemFocus(panel);
+      const currentIndex = focusedItem ? items.indexOf(focusedItem) : -1;
 
       if (event.key === 'Enter' && !event.repeat) {
-        if (active instanceof HTMLElement && active.classList.contains('context-menu-item')) {
+        if (focusedItem) {
           event.preventDefault();
           event.stopPropagation();
-          (active as HTMLButtonElement).click();
+          focusedItem.click();
         }
         return;
       }

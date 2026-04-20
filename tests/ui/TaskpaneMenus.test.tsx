@@ -95,6 +95,34 @@ describe('TaskpaneMenus', () => {
     expect(onCloseMenus).toHaveBeenCalledTimes(1);
   });
 
+  it('calls onRenameWorksheet on Enter when Rename is focused in a keyboard-opened sheet menu', async () => {
+    const user = userEvent.setup();
+    const onRenameWorksheet = vi.fn();
+    const worksheet = createWorksheet();
+    renderSheetMenu({
+      onRenameWorksheet,
+      activeMenu: {
+        kind: 'sheet',
+        x: 10,
+        y: 20,
+        worksheet,
+        openedVia: 'keyboard',
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Pin sheet' })).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Rename' })).toHaveFocus();
+    });
+
+    await user.keyboard('{Enter}');
+    expect(onRenameWorksheet).toHaveBeenCalledWith(worksheet);
+  });
+
   it('renders group actions from the active menu kind', () => {
     render(
       <TaskpaneMenus
