@@ -470,7 +470,9 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       ) {
         const anchorId = lastContextMenuTargetItemIdRef.current;
         contextMenuOwnedFocusRef.current = false;
-        if (anchorId) {
+        // Inline rename mounts an input in the row; focusing the row again steals focus
+        // and InlineRenameInput's onBlur cancels rename immediately.
+        if (anchorId && !isRenaming) {
           suppressNextDomFocusRef.current = true;
           setKeyboardFocusedItem(anchorId);
           scheduleDomFocusForNavigableId(anchorId);
@@ -503,7 +505,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     if (previousContextMenuOpenRef.current && contextMenuOwnedFocusRef.current) {
       const anchorId = lastContextMenuTargetItemIdRef.current;
       contextMenuOwnedFocusRef.current = false;
-      if (anchorId) {
+      if (anchorId && !isRenaming) {
         suppressNextDomFocusRef.current = true;
         setKeyboardFocusedItem(anchorId);
         scheduleDomFocusForNavigableId(anchorId);
@@ -518,6 +520,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     contextMenuTargetItemId,
     hiddenWorksheetIds,
     isContextMenuOpen,
+    isRenaming,
     isSearchActive,
     items,
     sheetContextMenuOpenedVia,

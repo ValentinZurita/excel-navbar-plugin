@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BannerState, WorksheetEntity } from '../../src/domain/navigation/types';
@@ -120,6 +120,11 @@ describe('TaskpaneAppContainer', () => {
     const renameInput = await screen.findByLabelText('Name');
     expect(renameInput).toHaveValue('Revenue');
     expect(renameInput).toHaveClass('inline-rename-input');
+    // Regression: post-menu DOM focus restore must not steal focus from the rename field
+    // (blur would call onCancel and end rename immediately).
+    await waitFor(() => {
+      expect(renameInput).toHaveFocus();
+    });
   });
 
   it('creates a group from the sheet menu using the source worksheet id', async () => {
