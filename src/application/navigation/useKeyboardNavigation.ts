@@ -327,8 +327,8 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
           el.addEventListener('blur', onBlur, { once: true });
           el.setAttribute(SUPPRESS_ATTR, 'true');
           el.focus({ preventScroll: true });
-          // Office webviews often treat programmatic focus like :focus-visible (green ring on .sheet-row).
-          window.setTimeout(clearSuppress, 450);
+          // Clearing on a timer let :focus-visible return while focus still sat on the row
+          // (green ring flash). Blur cleanup is enough; keyboard rows hide host outline via CSS.
         }
       });
     });

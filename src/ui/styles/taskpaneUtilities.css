@@ -173,7 +173,7 @@
   outline: none;
 }
 
-/* Briefly hide the focus ring when focus is restored programmatically (e.g. after closing a context menu). */
+/* Hide host focus chrome while this attr is set (e.g. after closing a context menu); cleared on blur. */
 [data-navigable-id][data-suppress-nav-focus-ring='true']:focus,
 [data-navigable-id][data-suppress-nav-focus-ring='true']:focus-visible {
   outline: none !important;

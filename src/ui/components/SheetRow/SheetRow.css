@@ -284,6 +284,14 @@
   outline-offset: -2px;
 }
 
+/* Roving list navigation already paints sheet-row-nav-highlight + data-focused wash.
+   WebViews often promote programmatic focus to :focus-visible; stacking both reads as a
+   flashing Excel ring (notably right after keyboard-driven context menus). */
+.sheet-row[data-focused='true']:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}
+
 .sheet-list-drag-active .sheet-row:focus-visible {
   outline: none;
 }
