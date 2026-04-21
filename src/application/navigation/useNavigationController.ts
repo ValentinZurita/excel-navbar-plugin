@@ -317,6 +317,35 @@ export function useNavigationController() {
         setIsBusy(false);
       }
     },
+    /**
+     * Deletes every worksheet in the group in Excel, then syncs. Caller should confirm aggressively;
+     * errors are thrown (no banner) so the UI can show inline recovery.
+     */
+    async deleteGroupAndWorksheets(groupId: string) {
+      const group = latestStateRef.current.groupsById[groupId];
+      if (!group) {
+        return;
+      }
+
+      const worksheetIds = [...group.worksheetOrder];
+
+      try {
+        setIsBusy(true);
+        for (const worksheetId of worksheetIds) {
+          await adapter.deleteWorksheet(worksheetId);
+          dispatch({ type: 'deleteWorksheet', worksheetId });
+          const snapshot = await adapter.getWorkbookSnapshot();
+          dispatch({ type: 'hydrateFromWorkbook', snapshot });
+        }
+      } catch (error) {
+        if (error instanceof WorksheetDeleteError) {
+          throw error;
+        }
+        throw new WorksheetDeleteError('Failed to delete sheets. Please try again.', 'UNKNOWN');
+      } finally {
+        setIsBusy(false);
+      }
+    },
     reload: load,
   }), [dispatch, load]);
 

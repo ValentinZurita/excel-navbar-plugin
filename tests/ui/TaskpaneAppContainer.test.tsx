@@ -63,6 +63,7 @@ function createControllerMock() {
     createGroup: vi.fn(),
     renameGroup: vi.fn(),
     deleteGroup: vi.fn(),
+    deleteGroupAndWorksheets: vi.fn().mockResolvedValue(undefined),
     assignWorksheetToGroup: vi.fn(),
     removeWorksheetFromGroup: vi.fn(),
     reorderGroupWorksheet: vi.fn(),
@@ -242,6 +243,50 @@ describe('TaskpaneAppContainer', () => {
     await user.click(screen.getByRole('button', { name: 'Confirm ungroup Finance' }));
 
     expect(controller.deleteGroup).toHaveBeenCalledWith('group-1');
+  });
+
+  it('confirms delete group and sheets through inline group menu', async () => {
+    const user = userEvent.setup();
+    const controller = createControllerMock() as any;
+    const group = {
+      groupId: 'group-1',
+      name: 'Finance',
+      colorToken: 'green' as const,
+      isCollapsed: false,
+      worksheets: [],
+    };
+
+    controller.state.groupsById = {
+      'group-1': {
+        groupId: 'group-1',
+        name: 'Finance',
+        colorToken: 'green',
+        isCollapsed: false,
+        worksheetOrder: ['sheet-a', 'sheet-b'],
+        createdAt: 1,
+      },
+    };
+    controller.state.groupOrder = ['group-1'];
+    controller.navigatorView.groups = [group];
+
+    useNavigationControllerMock.mockReturnValue(controller);
+
+    render(<TaskpaneAppContainer />);
+
+    const groupButton = screen.getByRole('button', { name: 'Finance' });
+    const groupRow = groupButton.closest('section');
+
+    expect(groupRow).not.toBeNull();
+    fireEvent.contextMenu(groupRow as HTMLElement, { clientX: 120, clientY: 80 });
+
+    await user.click(screen.getByRole('button', { name: 'Delete group and sheets…' }));
+
+    expect(
+      screen.getByText("Delete group 'Finance' and all 2 sheet(s) in it? This cannot be undone."),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Confirm delete all sheets in group Finance' }));
+
+    expect(controller.deleteGroupAndWorksheets).toHaveBeenCalledWith('group-1');
   });
 
   it('renders warning banners when the controller exposes one', () => {

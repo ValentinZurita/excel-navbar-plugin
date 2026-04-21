@@ -1,7 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { GroupColorToken, WorksheetEntity } from '../../../domain/navigation/types';
 import { selectableGroupColorTokens } from '../../../domain/navigation/constants';
-import type { ContextMenuState, GroupMenuState, SheetMenuState } from '../types/contextMenuTypes';
+import type {
+  ContextMenuState,
+  DeleteGroupRequest,
+  GroupMenuState,
+  SheetMenuState,
+} from '../types/contextMenuTypes';
 import {
   AddGroupMenuIcon,
   DeleteMenuIcon,
@@ -30,6 +35,7 @@ interface MenuAction {
   icon: ReactNode;
   label: string;
   onSelect: () => void;
+  destructive?: boolean;
 }
 
 interface TaskpaneMenusProps {
@@ -42,9 +48,12 @@ interface TaskpaneMenusProps {
   onStartCreatingGroup: (initialWorksheetId?: string) => void;
   onRenameGroup: (groupId: string, groupName: string) => void;
   onDeleteGroup: (groupId: string, groupName: string) => void;
-  deleteGroupRequest: { groupId: string; groupName: string } | null;
+  onDeleteGroupAndSheets: (groupId: string, groupName: string) => void;
+  deleteGroupRequest: DeleteGroupRequest | null;
   onCancelDeleteGroup: () => void;
-  onConfirmDeleteGroup: () => void;
+  onConfirmDeleteGroup: () => void | Promise<void>;
+  isDeletingGroupSheets?: boolean;
+  deleteGroupSheetsError?: string | null;
   onSetGroupColor: (groupId: string, colorToken: GroupColorToken) => void;
   // Inline creation state
   isCreatingGroup: boolean;
@@ -60,9 +69,23 @@ interface TaskpaneMenusProps {
   deleteError: string | null;
 }
 
-function MenuItem({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
+function MenuItem({
+  icon,
+  label,
+  onClick,
+  destructive = false,
+}: {
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+  destructive?: boolean;
+}) {
   return (
-    <button type="button" className="context-menu-item" onClick={onClick}>
+    <button
+      type="button"
+      className={`context-menu-item${destructive ? ' context-menu-item-destructive' : ''}`}
+      onClick={onClick}
+    >
       <span className="context-menu-icon" aria-hidden="true">{icon}</span>
       <span className="context-menu-label">{label}</span>
     </button>
@@ -82,7 +105,13 @@ function getMenuStyle(menu: SheetMenuState | GroupMenuState) {
 
 function renderMenuActions(actions: MenuAction[]) {
   return actions.map((action) => (
-    <MenuItem key={action.key} icon={action.icon} label={action.label} onClick={action.onSelect} />
+    <MenuItem
+      key={action.key}
+      icon={action.icon}
+      label={action.label}
+      onClick={action.onSelect}
+      destructive={action.destructive}
+    />
   ));
 }
 
@@ -387,7 +416,10 @@ function isColorNone(color: GroupColorToken): color is 'none' {
 
 function buildGroupMenuActions(
   groupMenu: GroupMenuState,
-  handlers: Pick<TaskpaneMenusProps, 'onStartCreatingGroup' | 'onRenameGroup' | 'onDeleteGroup' | 'onSetGroupColor'>,
+  handlers: Pick<
+    TaskpaneMenusProps,
+    'onStartCreatingGroup' | 'onRenameGroup' | 'onDeleteGroup' | 'onDeleteGroupAndSheets' | 'onSetGroupColor'
+  >,
   onOpenColorPicker: (open: boolean) => void,
 ): MenuAction[] {
   return [
@@ -416,10 +448,19 @@ function buildGroupMenuActions(
     },
     {
       key: 'ungroup',
-      icon: <DeleteMenuIcon className="context-menu-icon-svg" />,
+      icon: <RemoveMenuIcon className="context-menu-icon-svg" />,
       label: 'Ungroup',
       onSelect: () => {
         handlers.onDeleteGroup(groupMenu.groupId, groupMenu.groupName);
+      },
+    },
+    {
+      key: 'delete-group-sheets',
+      icon: <DeleteMenuIcon className="context-menu-icon-svg" />,
+      label: 'Delete group and sheets…',
+      destructive: true,
+      onSelect: () => {
+        handlers.onDeleteGroupAndSheets(groupMenu.groupId, groupMenu.groupName);
       },
     },
   ];
@@ -514,6 +555,7 @@ function GroupContextMenu({
   onStartCreatingGroup,
   onRenameGroup,
   onDeleteGroup,
+  onDeleteGroupAndSheets,
   deleteGroupRequest,
   onCancelDeleteGroup,
   onConfirmDeleteGroup,
@@ -521,19 +563,24 @@ function GroupContextMenu({
   isCreatingGroup,
   onCancelCreatingGroup,
   onConfirmCreatingGroup,
+  isDeletingGroupSheets,
+  deleteGroupSheetsError,
 }: {
   groupMenu: GroupMenuState;
   onCloseMenus: () => void;
   onStartCreatingGroup: (initialWorksheetId?: string) => void;
   onRenameGroup: (groupId: string, groupName: string) => void;
   onDeleteGroup: (groupId: string, groupName: string) => void;
+  onDeleteGroupAndSheets: (groupId: string, groupName: string) => void;
   onSetGroupColor: (groupId: string, colorToken: GroupColorToken) => void;
-  deleteGroupRequest: { groupId: string; groupName: string } | null;
+  deleteGroupRequest: DeleteGroupRequest | null;
   onCancelDeleteGroup: () => void;
-  onConfirmDeleteGroup: () => void;
+  onConfirmDeleteGroup: () => void | Promise<void>;
   isCreatingGroup: boolean;
   onCancelCreatingGroup: () => void;
   onConfirmCreatingGroup: (name: string, colorToken: GroupColorToken) => void;
+  isDeletingGroupSheets: boolean;
+  deleteGroupSheetsError: string | null;
 }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
@@ -541,6 +588,7 @@ function GroupContextMenu({
     onStartCreatingGroup,
     onRenameGroup,
     onDeleteGroup,
+    onDeleteGroupAndSheets,
     onSetGroupColor,
   }, setIsColorPickerOpen);
 
@@ -561,18 +609,30 @@ function GroupContextMenu({
           onCancel={onCancelCreatingGroup}
           onCloseMenu={onCloseMenus}
         />
-      ) : isConfirmingGroupDelete ? (
+      ) : isConfirmingGroupDelete && deleteGroupRequest ? (
         <InlineDeleteConfirmation
-          message={deleteGroupRequest ? `Ungroup '${deleteGroupRequest.groupName}'? Sheets become independent.` : undefined}
-          confirmLabel="Ungroup"
+          message={
+            deleteGroupRequest.mode === 'deleteSheets'
+              ? `Delete group '${deleteGroupRequest.groupName}' and all ${deleteGroupRequest.sheetCount ?? 0} sheet(s) in it? This cannot be undone.`
+              : `Ungroup '${deleteGroupRequest.groupName}'? Sheets become independent.`
+          }
+          confirmLabel={deleteGroupRequest.mode === 'deleteSheets' ? 'Delete all sheets' : 'Ungroup'}
           cancelLabel="Cancel"
-          confirmAriaLabel={deleteGroupRequest ? `Confirm ungroup ${deleteGroupRequest.groupName}` : 'Confirm ungroup'}
-          cancelAriaLabel="Cancel ungroup"
+          confirmAriaLabel={
+            deleteGroupRequest.mode === 'deleteSheets'
+              ? `Confirm delete all sheets in group ${deleteGroupRequest.groupName}`
+              : `Confirm ungroup ${deleteGroupRequest.groupName}`
+          }
+          cancelAriaLabel={
+            deleteGroupRequest.mode === 'deleteSheets' ? 'Cancel delete group' : 'Cancel ungroup'
+          }
           onConfirm={async () => {
-            onConfirmDeleteGroup();
+            await onConfirmDeleteGroup();
           }}
           onCancel={onCancelDeleteGroup}
           onCloseMenu={onCloseMenus}
+          isDeleting={deleteGroupRequest.mode === 'deleteSheets' ? isDeletingGroupSheets : false}
+          error={deleteGroupRequest.mode === 'deleteSheets' ? deleteGroupSheetsError : null}
         />
       ) : isColorPickerOpen ? (
         <div className="context-menu-color-picker">
@@ -622,6 +682,7 @@ export function TaskpaneMenus({
   onStartCreatingGroup,
   onRenameGroup,
   onDeleteGroup,
+  onDeleteGroupAndSheets,
   deleteGroupRequest,
   onCancelDeleteGroup,
   onConfirmDeleteGroup,
@@ -636,6 +697,8 @@ export function TaskpaneMenus({
   onConfirmDelete,
   isDeleting,
   deleteError,
+  isDeletingGroupSheets = false,
+  deleteGroupSheetsError = null,
 }: TaskpaneMenusProps) {
   if (!activeMenu) {
     return null;
@@ -672,6 +735,7 @@ export function TaskpaneMenus({
       onStartCreatingGroup={onStartCreatingGroup}
       onRenameGroup={onRenameGroup}
       onDeleteGroup={onDeleteGroup}
+      onDeleteGroupAndSheets={onDeleteGroupAndSheets}
       deleteGroupRequest={deleteGroupRequest}
       onCancelDeleteGroup={onCancelDeleteGroup}
       onConfirmDeleteGroup={onConfirmDeleteGroup}
@@ -679,6 +743,8 @@ export function TaskpaneMenus({
       isCreatingGroup={isCreatingGroup}
       onCancelCreatingGroup={onCancelCreatingGroup}
       onConfirmCreatingGroup={onConfirmCreatingGroup}
+      isDeletingGroupSheets={isDeletingGroupSheets}
+      deleteGroupSheetsError={deleteGroupSheetsError}
     />
   );
 }

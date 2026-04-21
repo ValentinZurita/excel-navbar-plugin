@@ -22,6 +22,15 @@ export interface GroupMenuState {
 
 export type ContextMenuState = SheetMenuState | GroupMenuState;
 
+/** Inline confirmation after choosing Ungroup vs Delete group and sheets from the group context menu. */
+export interface DeleteGroupRequest {
+  groupId: string;
+  groupName: string;
+  mode: 'ungroup' | 'deleteSheets';
+  /** Populated when `mode === 'deleteSheets'` (sheets in the group at request time). */
+  sheetCount?: number;
+}
+
 export interface OpenSheetMenuArgs {
   target: HTMLElement;
   x: number;

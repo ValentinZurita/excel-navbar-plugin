@@ -112,6 +112,45 @@
   background: var(--excel-pressed);
 }
 
+/* Destructive actions (e.g. delete group and sheets) — red label, still menu-sized tap targets */
+.context-menu-item-destructive {
+  color: #d13438;
+}
+
+.context-menu-item-destructive .context-menu-icon {
+  color: #d13438;
+}
+
+.context-menu-item-destructive:hover,
+.context-menu-item-destructive:focus {
+  background: color-mix(in srgb, #d13438 14%, transparent);
+  color: #b92d31;
+}
+
+.context-menu-item-destructive:hover .context-menu-icon,
+.context-menu-item-destructive:focus .context-menu-icon {
+  color: #b92d31;
+}
+
+:root[data-office-theme-mode='dark'] .context-menu-item-destructive {
+  color: #ff6b6b;
+}
+
+:root[data-office-theme-mode='dark'] .context-menu-item-destructive .context-menu-icon {
+  color: #ff6b6b;
+}
+
+:root[data-office-theme-mode='dark'] .context-menu-item-destructive:hover,
+:root[data-office-theme-mode='dark'] .context-menu-item-destructive:focus {
+  background: rgba(255, 107, 107, 0.16);
+  color: #ff8787;
+}
+
+:root[data-office-theme-mode='dark'] .context-menu-item-destructive:hover .context-menu-icon,
+:root[data-office-theme-mode='dark'] .context-menu-item-destructive:focus .context-menu-icon {
+  color: #ff8787;
+}
+
 /* Color preview in menu item - small circle showing current group color */
 .context-menu-color-preview {
   width: 14px;

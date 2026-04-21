@@ -7,6 +7,8 @@ import { TextPromptDialog } from '../components/TextPromptDialog';
 import type { WorksheetEntity } from '../../domain/navigation/types';
 import { TaskpaneMenus } from './components/TaskpaneMenus';
 import { TaskpaneSections } from './components/TaskpaneSections';
+import type { DeleteGroupRequest } from './types/contextMenuTypes';
+import { WorksheetDeleteError } from '../../infrastructure/office/WorkbookAdapter';
 import { useContextMenus } from './hooks/useContextMenus';
 import { useWorksheetDnD } from './hooks/useWorksheetDnD';
 import { useTextPromptState } from './hooks/useTextPromptState';
@@ -22,7 +24,9 @@ import type { ShortcutAction } from '../../application/shortcuts/types';
 export function TaskpaneAppContainer() {
   // The controller owns workbook operations and domain state transitions.
   const controller = useNavigationController();
-  const [deleteGroupRequest, setDeleteGroupRequest] = useState<{ groupId: string; groupName: string } | null>(null);
+  const [deleteGroupRequest, setDeleteGroupRequest] = useState<DeleteGroupRequest | null>(null);
+  const [isDeletingGroupSheets, setIsDeletingGroupSheets] = useState(false);
+  const [deleteGroupSheetsError, setDeleteGroupSheetsError] = useState<string | null>(null);
   const { undoToast, scheduleUndoToast, dismissUndoToast } = useUndoToastScheduler();
 
   usePersistenceBannerAutoDismiss(controller.banner, controller.dismissBanner);
@@ -82,6 +86,7 @@ export function TaskpaneAppContainer() {
   const handleCloseMenus = useCallback(() => {
     closeMenus();
     setDeleteGroupRequest(null);
+    setDeleteGroupSheetsError(null);
     if (isCreating) {
       cancelCreatingGroup();
     }
@@ -256,21 +261,48 @@ export function TaskpaneAppContainer() {
   }, [controller.hideWorksheet, controller.unhideWorksheet]);
 
   const handleDeleteGroup = useCallback((groupId: string, groupName: string) => {
-    setDeleteGroupRequest({ groupId, groupName });
+    setDeleteGroupSheetsError(null);
+    setDeleteGroupRequest({ groupId, groupName, mode: 'ungroup' });
   }, []);
 
-  const confirmDeleteGroup = useCallback(() => {
+  const handleDeleteGroupAndSheets = useCallback((groupId: string, groupName: string) => {
+    const group = controller.state.groupsById[groupId];
+    const sheetCount = group?.worksheetOrder.length ?? 0;
+    setDeleteGroupSheetsError(null);
+    setDeleteGroupRequest({ groupId, groupName, mode: 'deleteSheets', sheetCount });
+  }, [controller.state.groupsById]);
+
+  const confirmDeleteGroup = useCallback(async () => {
     if (!deleteGroupRequest) {
       return;
     }
 
-    controller.deleteGroup(deleteGroupRequest.groupId);
-    setDeleteGroupRequest(null);
-    closeMenus();
-  }, [closeMenus, controller.deleteGroup, deleteGroupRequest]);
+    if (deleteGroupRequest.mode === 'ungroup') {
+      controller.deleteGroup(deleteGroupRequest.groupId);
+      setDeleteGroupRequest(null);
+      closeMenus();
+      return;
+    }
+
+    setIsDeletingGroupSheets(true);
+    setDeleteGroupSheetsError(null);
+    try {
+      await controller.deleteGroupAndWorksheets(deleteGroupRequest.groupId);
+      setDeleteGroupRequest(null);
+      closeMenus();
+    } catch (error) {
+      const message = error instanceof WorksheetDeleteError
+        ? error.message
+        : 'Failed to delete sheets. Please try again.';
+      setDeleteGroupSheetsError(message);
+    } finally {
+      setIsDeletingGroupSheets(false);
+    }
+  }, [closeMenus, controller.deleteGroup, controller.deleteGroupAndWorksheets, deleteGroupRequest]);
 
   const cancelDeleteGroup = useCallback(() => {
     setDeleteGroupRequest(null);
+    setDeleteGroupSheetsError(null);
   }, []);
 
   // Inline rename handlers for worksheets.
@@ -465,9 +497,12 @@ export function TaskpaneAppContainer() {
         onStartCreatingGroup={handleStartCreatingGroup}
         onRenameGroup={handleRenameGroupStart}
         onDeleteGroup={handleDeleteGroup}
+        onDeleteGroupAndSheets={handleDeleteGroupAndSheets}
         deleteGroupRequest={deleteGroupRequest}
         onCancelDeleteGroup={cancelDeleteGroup}
         onConfirmDeleteGroup={confirmDeleteGroup}
+        isDeletingGroupSheets={isDeletingGroupSheets}
+        deleteGroupSheetsError={deleteGroupSheetsError}
         onSetGroupColor={controller.setGroupColor}
         isCreatingGroup={isCreating}
         onCancelCreatingGroup={cancelCreatingGroup}
