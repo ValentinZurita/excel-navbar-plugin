@@ -635,6 +635,36 @@ describe('TaskpaneSections', () => {
     expect(container.querySelectorAll('.search-result[data-focused="true"]').length).toBe(1);
   });
 
+  it('keeps focus in search on Tab when the query has no matches', async () => {
+    const user = userEvent.setup();
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' })],
+      hidden: [],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          query: 'nomatch',
+          searchResults: [],
+          navigatorView,
+          activeWorksheetId: 'sheet-1',
+        })}
+      />,
+    );
+
+    const searchInput = screen.getByRole('textbox', { name: 'Search worksheets' });
+    searchInput.focus();
+    expect(screen.getByText('No results')).toBeTruthy();
+
+    await user.tab();
+
+    expect(searchInput).toHaveFocus();
+  });
+
   it('clears search and restores taskpane keyboard anchor on Escape from search result', async () => {
     const user = userEvent.setup();
 

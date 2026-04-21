@@ -36,6 +36,8 @@ interface SearchBoxProps {
  *
  * Integrates with keyboard navigation:
  * - ArrowDown from input moves focus to first result
+ * - Tab with matches autocompletes the first result name (Excel-style)
+ * - Tab with no matches keeps focus in the search field (avoids jumping to the sheet list)
  * - Escape clears search
  * - Click outside closes dropdown
  */
@@ -93,9 +95,19 @@ export function SearchBox({
           if (event.key === 'Tab' && results.length > 0) {
             event.preventDefault();
             onChange(results[0].name);
-          } else {
-            onSearchKeyDown?.(event as any);
+            return;
           }
+          if (
+            event.key === 'Tab'
+            && !event.shiftKey
+            && value.trim().length > 0
+            && results.length === 0
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+          }
+          onSearchKeyDown?.(event as any);
         }} 
       />
       {value ? (
