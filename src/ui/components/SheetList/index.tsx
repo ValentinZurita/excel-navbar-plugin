@@ -21,6 +21,7 @@ interface SheetListProps {
   dragConfig?: SheetListDragConfig;
   onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameCancel?: () => void;
+  onStartRenameWorksheet?: (worksheetId: string) => void;
   /** Logical focus item ID for DOM focus management */
   focusedItemId?: string | null;
   /** Taskpane item with strong visual highlight */
@@ -120,6 +121,7 @@ export function SheetList(props: SheetListProps) {
               onOpenContextMenu={props.onOpenContextMenu}
               onRenameSubmit={props.onRenameSubmit}
               onRenameCancel={props.onRenameCancel}
+              onStartRename={props.onStartRenameWorksheet}
               onItemKeyDown={onItemKeyDown}
               registerElement={registerElement}
             />
@@ -177,6 +179,7 @@ export function SheetList(props: SheetListProps) {
                 onOpenContextMenu={props.onOpenContextMenu}
                 onRenameSubmit={props.onRenameSubmit}
                 onRenameCancel={props.onRenameCancel}
+                onStartRenameWorksheet={props.onStartRenameWorksheet}
                 onItemKeyDown={onItemKeyDown}
                 registerElement={registerElement}
               />

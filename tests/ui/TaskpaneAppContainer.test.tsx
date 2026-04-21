@@ -104,6 +104,20 @@ describe('TaskpaneAppContainer', () => {
     useWorksheetDnDMock.mockReturnValue(createDnDMock());
   });
 
+  it('starts inline rename on two quick clicks on a worksheet row', async () => {
+    const user = userEvent.setup();
+    useNavigationControllerMock.mockReturnValue(createControllerMock());
+
+    render(<TaskpaneAppContainer />);
+
+    const worksheetButton = screen.getByRole('button', { name: 'Revenue' });
+    await user.dblClick(worksheetButton);
+
+    const renameInput = await screen.findByLabelText('Name');
+    expect(renameInput).toHaveValue('Revenue');
+    expect(renameInput).toHaveClass('inline-rename-input');
+  });
+
   it('starts inline rename from worksheet context menu', async () => {
     const user = userEvent.setup();
     useNavigationControllerMock.mockReturnValue(createControllerMock());

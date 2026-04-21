@@ -502,6 +502,54 @@ describe('SheetRow', () => {
     expect(onActivate).not.toHaveBeenCalled();
   });
 
+  it('calls onStartRename on two quick clicks and avoids duplicate activate on the second click', async () => {
+    const user = userEvent.setup();
+    const onActivate = vi.fn();
+    const onStartRename = vi.fn();
+
+    render(
+      <SheetRow
+        worksheet={baseWorksheet}
+        isActive={false}
+        onActivate={onActivate}
+        onTogglePin={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+        onStartRename={onStartRename}
+      />,
+    );
+
+    const row = screen.getByRole('button', { name: 'Revenue' });
+    await user.dblClick(row);
+
+    expect(onActivate).toHaveBeenCalledTimes(1);
+    expect(onStartRename).toHaveBeenCalledWith('sheet-1');
+  });
+
+  it('does not call onStartRename when two clicks are spaced apart (second is a new single click)', async () => {
+    const user = userEvent.setup();
+    const onActivate = vi.fn();
+    const onStartRename = vi.fn();
+
+    render(
+      <SheetRow
+        worksheet={baseWorksheet}
+        isActive={false}
+        onActivate={onActivate}
+        onTogglePin={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+        onStartRename={onStartRename}
+      />,
+    );
+
+    const row = screen.getByRole('button', { name: 'Revenue' });
+    await user.click(row);
+    await new Promise((resolve) => setTimeout(resolve, 350));
+    await user.click(row);
+
+    expect(onStartRename).not.toHaveBeenCalled();
+    expect(onActivate).toHaveBeenCalledTimes(2);
+  });
+
   it('shows pin button when leading button receives keyboard focus', async () => {
     const user = userEvent.setup();
     const { container } = render(

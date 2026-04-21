@@ -68,6 +68,9 @@ interface TaskpaneSectionsProps {
   onRenameWorksheetSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameGroupSubmit?: (groupId: string, newName: string) => void;
   onRenameCancel?: () => void;
+  onStartRenameWorksheet?: (worksheetId: string) => void;
+  /** Prefer closing the search dropdown before inline rename (e.g. double-click in results). */
+  onStartRenameWorksheetFromSearch?: (worksheetId: string) => void;
   /** Suppression flags for keyboard navigation */
   isDialogOpen?: boolean;
   isRenaming?: boolean;
@@ -174,6 +177,8 @@ export function TaskpaneSections({
   onRenameWorksheetSubmit,
   onRenameGroupSubmit,
   onRenameCancel,
+  onStartRenameWorksheet,
+  onStartRenameWorksheetFromSearch,
   isDialogOpen = false,
   isRenaming = false,
   isContextMenuOpen = false,
@@ -310,6 +315,8 @@ export function TaskpaneSections({
         onRenameWorksheetSubmit={onRenameWorksheetSubmit}
         onRenameGroupSubmit={onRenameGroupSubmit}
         onRenameCancel={onRenameCancel}
+        onStartRenameWorksheet={onStartRenameWorksheet}
+        onStartRenameWorksheetFromSearch={onStartRenameWorksheetFromSearch}
       />
     </KeyboardNavigationProvider>
   );
@@ -371,6 +378,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     onRenameWorksheetSubmit,
     onRenameGroupSubmit,
     onRenameCancel,
+    onStartRenameWorksheet,
+    onStartRenameWorksheetFromSearch,
   } = props;
 
   // Get keyboard navigation context
@@ -403,6 +412,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
         onResultKeyDown={handleItemKeyDown}
         onResultPointerFocus={setPointerFocusItem}
         registerElement={registerElement}
+        onStartRenameWorksheet={onStartRenameWorksheetFromSearch ?? onStartRenameWorksheet}
       />
 
       <DndContext
@@ -452,6 +462,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
               onOpenContextMenu={onOpenSheetMenu}
               onRenameSubmit={onRenameWorksheetSubmit}
               onRenameCancel={onRenameCancel}
+              onStartRenameWorksheet={onStartRenameWorksheet}
               onItemKeyDown={handleItemKeyDown}
               registerElement={registerElement}
             />
@@ -467,6 +478,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
               groupMenuOpenId={contextMenuOpenGroupId}
               dragConfig={buildGroupDragConfig(dragConfig)}
               renamingGroupId={renamingGroupId}
+              renamingWorksheetId={renamingWorksheetId}
               focusedItemId={focusedItemId}
               visualFocusedItemId={visualFocusedItemId}
               visualExitingItemId={visualExitingItemId}
@@ -477,6 +489,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
               onOpenSheetMenu={onOpenSheetMenu}
               onRenameSubmit={onRenameGroupSubmit}
               onRenameCancel={onRenameCancel}
+              onRenameWorksheetSubmit={onRenameWorksheetSubmit}
+              onStartRenameWorksheet={onStartRenameWorksheet}
               onGroupHeaderKeyDown={handleGroupHeaderKeyDown}
               onItemKeyDown={handleItemKeyDown}
               registerElement={registerElement}
@@ -501,6 +515,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
                 onOpenContextMenu={onOpenSheetMenu}
                 onRenameSubmit={onRenameWorksheetSubmit}
                 onRenameCancel={onRenameCancel}
+                onStartRenameWorksheet={onStartRenameWorksheet}
                 onItemKeyDown={handleItemKeyDown}
                 registerElement={registerElement}
               />

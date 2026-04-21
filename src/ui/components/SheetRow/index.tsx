@@ -1,5 +1,6 @@
-import { memo, useEffect, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
+import { memo, useEffect, useRef, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
+import { FAST_DOUBLE_CLICK_RENAME_MS } from '../../constants/interactionTiming';
 import { useLeadingClusterInteraction } from '../../hooks/useLeadingClusterInteraction';
 import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 import { InlineRenameInput } from '../InlineRenameInput';
@@ -40,6 +41,8 @@ interface SheetRowProps {
   }) => void;
   onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameCancel?: () => void;
+  /** Two quick primary clicks (see FAST_DOUBLE_CLICK_RENAME_MS) start inline rename. */
+  onStartRename?: (worksheetId: string) => void;
   /** Optional: ID for keyboard navigation. When provided, participates in arrow key navigation. */
   navigableId?: string;
   /** Whether this row has logical keyboard/pointer focus */
@@ -72,6 +75,7 @@ function areSheetRowPropsEqual(left: SheetRowProps, right: SheetRowProps) {
     && left.onOpenContextMenu === right.onOpenContextMenu
     && left.onRenameSubmit === right.onRenameSubmit
     && left.onRenameCancel === right.onRenameCancel
+    && left.onStartRename === right.onStartRename
     && left.navigableId === right.navigableId
     && left.isFocused === right.isFocused
     && left.isVisualFocused === right.isVisualFocused
@@ -97,6 +101,7 @@ function SheetRowComponent({
   onOpenContextMenu,
   onRenameSubmit,
   onRenameCancel,
+  onStartRename,
   navigableId,
   isFocused = false,
   isVisualFocused = false,
@@ -105,6 +110,7 @@ function SheetRowComponent({
   onItemKeyDown,
   registerElement,
 }: SheetRowProps) {
+  const lastPrimaryClickAtRef = useRef(0);
   const { onKeyDown: onContainerKeyDown, ...restContainerProps } = containerProps ?? {};
   const {
     isHovered: isLeadingHovered,
@@ -128,6 +134,7 @@ function SheetRowComponent({
 
   const isInteractive = !isOverlay;
   const canTogglePin = worksheet.visibility === 'Visible' && Boolean(onTogglePin);
+
   const isToggleable = canTogglePin;
 
   // Highlight state now only considers active/context, NOT hover for pin action
@@ -204,10 +211,34 @@ function SheetRowComponent({
       tabIndex={tabIndex}
       aria-hidden={isInteractive ? undefined : true}
       aria-label={worksheet.name}
-      onClick={() => {
-        if (isInteractive) {
-          void onActivate(worksheet.worksheetId);
+      onClick={(event) => {
+        if (!isInteractive) {
+          return;
         }
+
+        const now = performance.now();
+
+        if (event.detail > 1) {
+          const elapsed = now - lastPrimaryClickAtRef.current;
+          const canTryRename = onStartRename
+            && !isRenaming
+            && !isInteractionSuppressed
+            && !isDragged
+            && elapsed > 0
+            && elapsed <= FAST_DOUBLE_CLICK_RENAME_MS;
+
+          if (canTryRename && !hasNestedInteractiveTarget(event.target, event.currentTarget)) {
+            event.preventDefault();
+            event.stopPropagation();
+            onStartRename(worksheet.worksheetId);
+          }
+
+          lastPrimaryClickAtRef.current = 0;
+          return;
+        }
+
+        lastPrimaryClickAtRef.current = now;
+        void onActivate(worksheet.worksheetId);
       }}
       onKeyDown={(event) => {
         if (!isInteractive) {

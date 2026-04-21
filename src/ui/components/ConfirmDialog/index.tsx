@@ -1,5 +1,5 @@
 import { useEffect, useId } from 'react';
-import '../TextPromptDialog/TextPromptDialog.css';
+import './promptDialog.css';
 
 interface ConfirmDialogProps {
   isOpen: boolean;

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { SearchResultItem } from '../../../domain/navigation/types';
+import { FAST_DOUBLE_CLICK_RENAME_MS } from '../../constants/interactionTiming';
 import { EyeOffIcon, GroupFolderIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 
 interface SearchResultsProps {
@@ -21,6 +22,7 @@ interface SearchResultsProps {
   registerElement?: (id: string, element: HTMLElement | null) => void;
   /** Update focused result from mouse hover/pointer movement */
   onPointerFocus?: (itemId: string) => void;
+  onStartRenameWorksheet?: (worksheetId: string) => void;
 }
 
 /**
@@ -42,6 +44,7 @@ export function SearchResults({
   onItemKeyDown,
   registerElement,
   onPointerFocus,
+  onStartRenameWorksheet,
 }: SearchResultsProps) {
   // Track last known physical mouse coordinates. This prevents "ghost hovers"
   // from stationary pointers during list scrolling (e.g. from ArrowDown focus tracking
@@ -101,6 +104,7 @@ export function SearchResults({
               onItemKeyDown={onItemKeyDown}
               registerElement={registerElement}
               onPointerFocus={onPointerFocus ? handlePointerFocus : undefined}
+              onStartRenameWorksheet={onStartRenameWorksheet}
               renderIcon={renderResultIcon}
             />
           );
@@ -122,6 +126,7 @@ interface SearchResultItemComponentProps {
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>, itemId: string) => void;
   registerElement?: (id: string, element: HTMLElement | null) => void;
   onPointerFocus?: (itemId: string, event: React.MouseEvent) => void;
+  onStartRenameWorksheet?: (worksheetId: string) => void;
   renderIcon: (result: SearchResultItem) => React.ReactNode;
 }
 
@@ -136,9 +141,11 @@ function SearchResultItemComponent({
   onItemKeyDown,
   registerElement,
   onPointerFocus,
+  onStartRenameWorksheet,
   renderIcon,
 }: SearchResultItemComponentProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const lastPrimaryClickAtRef = useRef(0);
 
   // Register DOM element for focus management
   useEffect(() => {
@@ -163,7 +170,28 @@ function SearchResultItemComponent({
       data-focused={isFocused}
       data-pointer-mode-active={isPointerModeActive}
       tabIndex={rovingTabIndex ? 0 : -1}
-      onClick={() => onSelect(result.worksheetId)}
+      onClick={(event) => {
+        const now = performance.now();
+
+        if (event.detail > 1) {
+          const elapsed = now - lastPrimaryClickAtRef.current;
+          if (
+            onStartRenameWorksheet
+            && elapsed > 0
+            && elapsed <= FAST_DOUBLE_CLICK_RENAME_MS
+          ) {
+            event.preventDefault();
+            event.stopPropagation();
+            onStartRenameWorksheet(result.worksheetId);
+          }
+
+          lastPrimaryClickAtRef.current = 0;
+          return;
+        }
+
+        lastPrimaryClickAtRef.current = now;
+        void onSelect(result.worksheetId);
+      }}
       onKeyDown={(event) => onItemKeyDown?.(event, itemId)}
       onMouseMove={(event) => onPointerFocus?.(itemId, event)}
       onMouseEnter={(event) => onPointerFocus?.(itemId, event)}

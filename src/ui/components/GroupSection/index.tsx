@@ -11,6 +11,7 @@ interface GroupSectionProps {
   groupMenuOpenId?: string;
   dragConfig?: GroupDragConfig;
   renamingGroupId?: string | null;
+  renamingWorksheetId?: string | null;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onToggleCollapsed: (groupId: string) => void;
   onTogglePin?: (worksheetId: string) => void;
@@ -18,6 +19,8 @@ interface GroupSectionProps {
   onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
   onRenameSubmit?: (groupId: string, newName: string) => void;
   onRenameCancel?: () => void;
+  onRenameWorksheetSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
+  onStartRenameWorksheet?: (worksheetId: string) => void;
   /** Logical focus item ID for DOM focus management */
   focusedItemId?: string | null;
   /** Taskpane item with strong visual highlight */
@@ -39,6 +42,7 @@ export function GroupSection({
   groupMenuOpenId,
   dragConfig,
   renamingGroupId,
+  renamingWorksheetId,
   onActivate,
   onToggleCollapsed,
   onTogglePin,
@@ -46,6 +50,8 @@ export function GroupSection({
   onOpenSheetMenu,
   onRenameSubmit,
   onRenameCancel,
+  onRenameWorksheetSubmit,
+  onStartRenameWorksheet,
   focusedItemId,
   visualFocusedItemId,
   visualExitingItemId,
@@ -73,6 +79,9 @@ export function GroupSection({
             groupMenuOpenId={groupMenuOpenId}
             dragConfig={dragConfig}
             isRenaming={renamingGroupId === group.groupId}
+            renamingWorksheetId={renamingWorksheetId}
+            onRenameWorksheetSubmit={onRenameWorksheetSubmit}
+            onStartRenameWorksheet={onStartRenameWorksheet}
             navigableId={navigableId}
             isFocused={isFocused}
             isVisualFocused={isVisualFocused}

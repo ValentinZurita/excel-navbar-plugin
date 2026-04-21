@@ -3,7 +3,6 @@ import { useNavigationController } from '../../application/navigation/useNavigat
 import { TaskpaneShell } from '../components/TaskpaneShell';
 import { UndoToast } from '../components/UndoToast';
 import { AddWorksheetFab } from '../components/AddWorksheetFab';
-import { TextPromptDialog } from '../components/TextPromptDialog';
 import type { WorksheetEntity } from '../../domain/navigation/types';
 import { TaskpaneMenus } from './components/TaskpaneMenus';
 import { TaskpaneSections } from './components/TaskpaneSections';
@@ -11,7 +10,6 @@ import type { DeleteGroupRequest } from './types/contextMenuTypes';
 import { WorksheetDeleteError } from '../../infrastructure/office/WorkbookAdapter';
 import { useContextMenus } from './hooks/useContextMenus';
 import { useWorksheetDnD } from './hooks/useWorksheetDnD';
-import { useTextPromptState } from './hooks/useTextPromptState';
 import { useGroupCreationState } from './hooks/useGroupCreationState';
 import { useDeleteConfirmationState } from './hooks/useDeleteConfirmationState';
 import { usePersistenceBannerAutoDismiss } from './hooks/usePersistenceBannerAutoDismiss';
@@ -47,18 +45,6 @@ export function TaskpaneAppContainer() {
     openSheetMenu,
     openGroupMenu,
   } = useContextMenus();
-
-  // All create/rename prompts are centralized in one state machine.
-  const {
-    textPrompt,
-    textPromptConfig,
-    closeTextPrompt,
-    submitTextPrompt,
-  } = useTextPromptState({
-    closeMenus,
-    renameGroup: controller.renameGroup,
-    renameWorksheet: controller.renameWorksheet,
-  });
 
   // Inline group creation state (replaces the dialog-based create-group flow).
   const {
@@ -316,14 +302,25 @@ export function TaskpaneAppContainer() {
   }, []);
 
   // Inline rename handlers for worksheets.
-  const handleRenameWorksheetStart = useCallback((worksheet: WorksheetEntity) => {
+  const handleRenameWorksheetStart = useCallback((worksheetId: string) => {
     closeMenus();
-    setRenamingWorksheetId(worksheet.worksheetId);
+    setRenamingGroupId(null);
+    setRenamingWorksheetId(worksheetId);
   }, [closeMenus]);
 
+  const handleRenameWorksheetStartFromSearch = useCallback((worksheetId: string) => {
+    controller.setQuery('');
+    closeMenus();
+    setRenamingGroupId(null);
+    setRenamingWorksheetId(worksheetId);
+  }, [closeMenus, controller.setQuery]);
+
   const handleRenameWorksheetSubmit = useCallback(async (worksheetId: string, newName: string) => {
-    await controller.renameWorksheet(worksheetId, newName);
-    setRenamingWorksheetId(null);
+    try {
+      await controller.renameWorksheet(worksheetId, newName);
+    } finally {
+      setRenamingWorksheetId(null);
+    }
   }, [controller.renameWorksheet]);
 
   const handleRenameWorksheetCancel = useCallback(() => {
@@ -333,6 +330,7 @@ export function TaskpaneAppContainer() {
   // Inline rename handlers for groups.
   const handleRenameGroupStart = useCallback((groupId: string, _groupName: string) => {
     closeMenus();
+    setRenamingWorksheetId(null);
     setRenamingGroupId(groupId);
   }, [closeMenus]);
 
@@ -376,7 +374,7 @@ export function TaskpaneAppContainer() {
 
   // Centralized keyboard shortcuts — suppressed during modal interactions.
   const isShortcutsSuppressed = Boolean(
-    textPrompt || deleteGroupRequest || renamingWorksheetId || renamingGroupId || activeMenu,
+    deleteGroupRequest || renamingWorksheetId || renamingGroupId || activeMenu,
   );
 
   const shortcutActions: ShortcutAction[] = useMemo(() => [
@@ -480,7 +478,9 @@ export function TaskpaneAppContainer() {
         onRenameWorksheetSubmit={handleRenameWorksheetSubmit}
         onRenameGroupSubmit={handleRenameGroupSubmit}
         onRenameCancel={handleRenameCancel}
-        isDialogOpen={Boolean(textPrompt || deleteGroupRequest)}
+        onStartRenameWorksheet={handleRenameWorksheetStart}
+        onStartRenameWorksheetFromSearch={handleRenameWorksheetStartFromSearch}
+        isDialogOpen={Boolean(deleteGroupRequest)}
         isRenaming={renamingWorksheetId !== null || renamingGroupId !== null}
         isContextMenuOpen={activeMenu !== null}
         searchInputRef={searchInputRef}
@@ -502,7 +502,7 @@ export function TaskpaneAppContainer() {
         onCloseMenus={handleCloseMenus}
         onTogglePin={handleTogglePin}
         onToggleVisibility={handleToggleVisibility}
-        onRenameWorksheet={handleRenameWorksheetStart}
+        onRenameWorksheet={(worksheet) => handleRenameWorksheetStart(worksheet.worksheetId)}
         onRemoveFromGroup={handleRemoveFromGroup}
         onStartCreatingGroup={handleStartCreatingGroup}
         onRenameGroup={handleRenameGroupStart}
@@ -524,18 +524,6 @@ export function TaskpaneAppContainer() {
         onConfirmDelete={confirmDelete}
         isDeleting={isDeleting}
         deleteError={deleteError}
-      />
-
-      {/* Shared dialog used by create group and rename flows. */}
-      <TextPromptDialog
-        isOpen={Boolean(textPrompt && textPromptConfig)}
-        title={textPromptConfig?.title ?? ''}
-        description={textPromptConfig?.description}
-        initialValue={textPrompt?.initialValue ?? ''}
-        placeholder={textPromptConfig?.placeholder}
-        submitLabel={textPromptConfig?.submitLabel ?? 'Save'}
-        onCancel={closeTextPrompt}
-        onSubmit={submitTextPrompt}
       />
 
     </TaskpaneShell>

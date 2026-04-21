@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import type { WorksheetContainerId } from '../../taskpane/dnd/worksheetDndModel';
@@ -18,6 +18,7 @@ interface SortableWorksheetRowProps {
   onOpenContextMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: WorksheetEntity }) => void;
   onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameCancel?: () => void;
+  onStartRenameWorksheet?: (worksheetId: string) => void;
   /** Optional: ID for keyboard navigation */
   navigableId?: string;
   /** Whether this row has logical keyboard/pointer focus */
@@ -55,6 +56,7 @@ function areSortableWorksheetRowPropsEqual(
     && left.onOpenContextMenu === right.onOpenContextMenu
     && left.onRenameSubmit === right.onRenameSubmit
     && left.onRenameCancel === right.onRenameCancel
+    && left.onStartRenameWorksheet === right.onStartRenameWorksheet
     && left.navigableId === right.navigableId
     && left.isFocused === right.isFocused
     && left.isVisualFocused === right.isVisualFocused
@@ -78,6 +80,7 @@ function SortableWorksheetRowComponent({
   onOpenContextMenu,
   onRenameSubmit,
   onRenameCancel,
+  onStartRenameWorksheet,
   navigableId,
   isFocused,
   isVisualFocused,
@@ -106,6 +109,14 @@ function SortableWorksheetRowComponent({
     void onActivate(worksheetId);
   };
 
+  const handleStartRename = useCallback((worksheetId: string) => {
+    if (shouldBlockActivation(isDragging, shouldSuppressActivation, worksheetId)) {
+      return;
+    }
+
+    onStartRenameWorksheet?.(worksheetId);
+  }, [isDragging, onStartRenameWorksheet, shouldSuppressActivation]);
+
   return (
     <SheetRow
       worksheet={worksheet}
@@ -129,6 +140,7 @@ function SortableWorksheetRowComponent({
       onOpenContextMenu={onOpenContextMenu}
       onRenameSubmit={onRenameSubmit}
       onRenameCancel={onRenameCancel}
+      onStartRename={onStartRenameWorksheet ? handleStartRename : undefined}
       onItemKeyDown={onItemKeyDown}
       registerElement={registerElement}
     />

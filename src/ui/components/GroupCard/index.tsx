@@ -25,6 +25,10 @@ interface GroupCardProps {
   onTogglePin?: (worksheetId: string) => void;
   onRenameSubmit?: (groupId: string, newName: string) => void;
   onRenameCancel?: () => void;
+  /** Inline worksheet rename inside this group's list */
+  renamingWorksheetId?: string | null;
+  onRenameWorksheetSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
+  onStartRenameWorksheet?: (worksheetId: string) => void;
   /** Optional: ID for keyboard navigation on the group header */
   navigableId?: string;
   /** Whether this group header has logical keyboard/pointer focus */
@@ -128,6 +132,9 @@ function areGroupCardPropsEqual(left: GroupCardProps, right: GroupCardProps) {
     && left.onTogglePin === right.onTogglePin
     && left.onRenameSubmit === right.onRenameSubmit
     && left.onRenameCancel === right.onRenameCancel
+    && left.renamingWorksheetId === right.renamingWorksheetId
+    && left.onRenameWorksheetSubmit === right.onRenameWorksheetSubmit
+    && left.onStartRenameWorksheet === right.onStartRenameWorksheet
     && left.navigableId === right.navigableId
     && left.isFocused === right.isFocused
     && left.isVisualFocused === right.isVisualFocused
@@ -148,6 +155,9 @@ function GroupCardComponent({
   isRenaming,
   onRenameSubmit,
   onRenameCancel,
+  renamingWorksheetId,
+  onRenameWorksheetSubmit,
+  onStartRenameWorksheet,
   navigableId,
   isFocused = false,
   isVisualFocused = false,
@@ -274,7 +284,13 @@ function GroupCardComponent({
           type="button"
           aria-expanded={!group.isCollapsed}
           tabIndex={tabIndex}
-          onClick={handleToggleCollapsed}
+          onClick={() => {
+            if (isRenaming) {
+              return;
+            }
+
+            handleToggleCollapsed();
+          }}
           onKeyDown={(event) => {
             if (navigableId && onGroupHeaderKeyDown) {
               const managedNavigationKey = event.key === 'ArrowDown'
@@ -316,12 +332,16 @@ function GroupCardComponent({
           worksheets={group.worksheets}
           activeWorksheetId={rest.activeWorksheetId}
           contextMenuOpenId={rest.contextMenuOpenId}
+          renamingWorksheetId={renamingWorksheetId}
           dragConfig={sheetListDragConfig}
           visualFocusedItemId={rest.visualFocusedItemId}
           visualExitingItemId={rest.visualExitingItemId}
           onActivate={rest.onActivate}
           onTogglePin={rest.onTogglePin}
           onOpenContextMenu={onOpenSheetMenu}
+          onRenameSubmit={onRenameWorksheetSubmit}
+          onRenameCancel={onRenameCancel}
+          onStartRenameWorksheet={onStartRenameWorksheet}
           onItemKeyDown={rest.onItemKeyDown}
           registerElement={registerElement}
         />

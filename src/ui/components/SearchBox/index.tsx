@@ -29,6 +29,8 @@ interface SearchBoxProps {
   registerElement?: (id: string, element: HTMLElement | null) => void;
   /** Update focused result from mouse hover/pointer movement */
   onResultPointerFocus?: (itemId: string) => void;
+  /** Double-click a result row to start inline worksheet rename */
+  onStartRenameWorksheet?: (worksheetId: string) => void;
 }
 
 /**
@@ -56,6 +58,7 @@ export function SearchBox({
   onResultKeyDown,
   registerElement,
   onResultPointerFocus,
+  onStartRenameWorksheet,
 }: SearchBoxProps) {
   const searchBoxRef = useRef<HTMLDivElement | null>(null);
 
@@ -123,6 +126,7 @@ export function SearchBox({
             onItemKeyDown={onResultKeyDown}
             registerElement={registerElement}
             onPointerFocus={onResultPointerFocus}
+            onStartRenameWorksheet={onStartRenameWorksheet}
           />
         </div>
       ) : null}
