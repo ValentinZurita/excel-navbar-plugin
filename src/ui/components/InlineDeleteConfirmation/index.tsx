@@ -38,6 +38,10 @@ export function InlineDeleteConfirmation({
       }
 
       if (event.key === 'Escape') {
+        if (isDeleting) {
+          event.preventDefault();
+          return;
+        }
         event.preventDefault();
         onCancel();
         onCloseMenu();
@@ -49,7 +53,7 @@ export function InlineDeleteConfirmation({
         void onConfirm();
       }
     },
-    [onCancel, onCloseMenu, onConfirm, isDeleting],
+    [isDeleting, onCancel, onCloseMenu, onConfirm],
   );
 
   // Auto-focus the confirm button on mount

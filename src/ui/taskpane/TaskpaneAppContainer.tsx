@@ -84,6 +84,9 @@ export function TaskpaneAppContainer() {
 
   // Close menus and reset creation/confirmation state when closing from outside.
   const handleCloseMenus = useCallback(() => {
+    if (isDeletingGroupSheets) {
+      return;
+    }
     closeMenus();
     setDeleteGroupRequest(null);
     setDeleteGroupSheetsError(null);
@@ -93,7 +96,14 @@ export function TaskpaneAppContainer() {
     if (isConfirmingDelete) {
       cancelDeleteConfirmation();
     }
-  }, [cancelCreatingGroup, cancelDeleteConfirmation, closeMenus, isConfirmingDelete, isCreating]);
+  }, [
+    cancelCreatingGroup,
+    cancelDeleteConfirmation,
+    closeMenus,
+    isConfirmingDelete,
+    isCreating,
+    isDeletingGroupSheets,
+  ]);
 
   // Mutually exclusive: starting one cancels the other
   const handleStartCreatingGroup = useCallback((worksheetId?: string) => {

@@ -324,7 +324,7 @@ export function useNavigationController() {
     async deleteGroupAndWorksheets(groupId: string) {
       const group = latestStateRef.current.groupsById[groupId];
       if (!group) {
-        return;
+        throw new WorksheetDeleteError('This group is no longer in the workbook.', 'WORKSHEET_NOT_FOUND');
       }
 
       const worksheetIds = [...group.worksheetOrder];
