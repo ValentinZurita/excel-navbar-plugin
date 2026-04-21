@@ -95,6 +95,44 @@ describe('TaskpaneMenus', () => {
     expect(onCloseMenus).toHaveBeenCalledTimes(1);
   });
 
+  it('stops ArrowUp at the first item and ArrowDown at the last (no wrap)', async () => {
+    const user = userEvent.setup();
+    renderSheetMenu({
+      activeMenu: {
+        kind: 'sheet',
+        x: 10,
+        y: 20,
+        worksheet: createWorksheet(),
+        openedVia: 'keyboard',
+      },
+    });
+
+    const pin = screen.getByRole('button', { name: 'Pin sheet' });
+    const deleteSheet = screen.getByRole('button', { name: 'Delete sheet' });
+
+    await waitFor(() => {
+      expect(pin).toHaveFocus();
+    });
+
+    for (let i = 0; i < 8; i++) {
+      await user.keyboard('{ArrowDown}');
+    }
+    await waitFor(() => {
+      expect(deleteSheet).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowDown}');
+    expect(deleteSheet).toHaveFocus();
+
+    await user.keyboard('{Home}');
+    await waitFor(() => {
+      expect(pin).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowUp}');
+    expect(pin).toHaveFocus();
+  });
+
   it('calls onRenameWorksheet on Enter when Rename is focused in a keyboard-opened sheet menu', async () => {
     const user = userEvent.setup();
     const onRenameWorksheet = vi.fn();

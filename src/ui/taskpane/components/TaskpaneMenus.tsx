@@ -262,7 +262,9 @@ function useSheetContextMenuListKeyboard(args: {
       if (event.key === 'ArrowUp') {
         event.preventDefault();
         event.stopPropagation();
-        const nextIndex = currentIndex <= 0 ? items.length - 1 : currentIndex - 1;
+        const nextIndex = currentIndex < 0
+          ? items.length - 1
+          : Math.max(0, currentIndex - 1);
         items[nextIndex]?.focus({ preventScroll: true });
         return;
       }
