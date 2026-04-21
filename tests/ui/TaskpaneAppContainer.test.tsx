@@ -279,7 +279,7 @@ describe('TaskpaneAppContainer', () => {
     expect(groupRow).not.toBeNull();
     fireEvent.contextMenu(groupRow as HTMLElement, { clientX: 120, clientY: 80 });
 
-    await user.click(screen.getByRole('button', { name: 'Delete group and sheets…' }));
+    await user.click(screen.getByRole('button', { name: 'Delete group and sheets' }));
 
     expect(
       screen.getByText("Delete group 'Finance' and all 2 sheet(s) in it? This cannot be undone."),

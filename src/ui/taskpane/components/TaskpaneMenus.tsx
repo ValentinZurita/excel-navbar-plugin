@@ -35,7 +35,6 @@ interface MenuAction {
   icon: ReactNode;
   label: string;
   onSelect: () => void;
-  destructive?: boolean;
 }
 
 interface TaskpaneMenusProps {
@@ -73,17 +72,15 @@ function MenuItem({
   icon,
   label,
   onClick,
-  destructive = false,
 }: {
   icon: ReactNode;
   label: string;
   onClick: () => void;
-  destructive?: boolean;
 }) {
   return (
     <button
       type="button"
-      className={`context-menu-item${destructive ? ' context-menu-item-destructive' : ''}`}
+      className="context-menu-item"
       onClick={onClick}
     >
       <span className="context-menu-icon" aria-hidden="true">{icon}</span>
@@ -110,7 +107,6 @@ function renderMenuActions(actions: MenuAction[]) {
       icon={action.icon}
       label={action.label}
       onClick={action.onSelect}
-      destructive={action.destructive}
     />
   ));
 }
@@ -457,8 +453,7 @@ function buildGroupMenuActions(
     {
       key: 'delete-group-sheets',
       icon: <DeleteMenuIcon className="context-menu-icon-svg" />,
-      label: 'Delete group and sheets…',
-      destructive: true,
+      label: 'Delete group and sheets',
       onSelect: () => {
         handlers.onDeleteGroupAndSheets(groupMenu.groupId, groupMenu.groupName);
       },
