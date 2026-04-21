@@ -206,6 +206,10 @@
   font-weight: 400;
   color: var(--excel-body-fg);
   transition: color 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .group-card .search-result {
