@@ -80,6 +80,7 @@ This list exists so pending work does not get lost between sessions.
   - [x] Extract item-list reconciliation to `useKeyboardNavigationItemsReconcile.ts`
   - [x] Extract search-input keydown handler to `useKeyboardNavigationSearchKeyDown.ts`
   - [x] Extract row keydown handler to `useKeyboardNavigationItemKeyDown.ts`
+  - [x] Extract group-header keydown handler to `useKeyboardNavigationGroupHeaderKeyDown.ts`
 - [x] Extract hardcoded mock data from `OfficeWorkbookAdapter.ts` to a dedicated mock provider
 
 ### Not implemented in current codebase
