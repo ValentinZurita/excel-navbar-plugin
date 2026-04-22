@@ -1,6 +1,5 @@
 import {
   useCallback,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -16,6 +15,7 @@ import {
 } from './domFocusUtils';
 import { useKeyboardNavigationContextMenuFocusSync } from './useKeyboardNavigationContextMenuFocusSync';
 import { useKeyboardNavigationGlobalListeners } from './useKeyboardNavigationGlobalListeners';
+import { useKeyboardNavigationItemsReconcile } from './useKeyboardNavigationItemsReconcile';
 import type { NavigableItem } from '../../domain/navigation/types';
 import {
   getFirstItem,
@@ -536,91 +536,19 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     }
   }, [focusedItemId, searchFocusedItemId, isSearchActive, searchInputRef]);
 
-  /**
-   * Effect: when items change, if the focused item no longer exists,
-   * clear focus or move to first available item.
-   */
-  useEffect(() => {
-    const currentFocusedId = isSearchActive ? searchFocusedItemId : focusedItemId;
-    const wasSearchList = prevItemsRef.current.length > 0
-      && prevItemsRef.current.every((item) => item.kind === 'search-result');
-    const isSearchList = items.length > 0 && items.every((item) => item.kind === 'search-result');
-    const searchJustClosed = wasSearchList && !isSearchList;
-
-    if (searchJustClosed && pendingFocusRestoreAfterSearchClearRef.current) {
-      pendingFocusRestoreAfterSearchClearRef.current = false;
-
-      const activeItemId = activeWorksheetId ? `worksheet:${activeWorksheetId}` : null;
-      if (activeItemId && hasItem(activeItemId, items)) {
-        setKeyboardFocusedItem(activeItemId);
-      } else {
-        const firstItem = getFirstItem(items);
-        if (firstItem) {
-          setKeyboardFocusedItem(firstItem.id);
-        } else {
-          setFocusedItemId(null);
-          setSearchFocusedItemId(null);
-          setNavigationInputMode(null);
-        }
-      }
-
-      prevItemsRef.current = items;
-      return;
-    }
-
-    if (currentFocusedId === null || currentFocusedId === SEARCH_INPUT_SENTINEL_ID) {
-      prevItemsRef.current = items;
-      return;
-    }
-
-    // Check if focused item still exists in the current linear list.
-    if (!hasItem(currentFocusedId, items)) {
-      // If search was just cleared without explicit pending restore, focus first item.
-      const wasSearchCleared = searchJustClosed;
-
-      if (wasSearchCleared) {
-        if (pendingFocusRestoreAfterSearchClearRef.current) {
-          pendingFocusRestoreAfterSearchClearRef.current = false;
-
-          const activeItemId = activeWorksheetId ? `worksheet:${activeWorksheetId}` : null;
-          if (activeItemId && hasItem(activeItemId, items)) {
-            setKeyboardFocusedItem(activeItemId);
-          } else {
-            const firstItem = getFirstItem(items);
-            if (firstItem) {
-              setKeyboardFocusedItem(firstItem.id);
-            } else {
-              setFocusedItemId(null);
-              setSearchFocusedItemId(null);
-              setNavigationInputMode(null);
-            }
-          }
-        } else {
-          const firstItem = getFirstItem(items);
-          if (firstItem) {
-            setKeyboardFocusedItem(firstItem.id);
-          } else {
-            setFocusedItemId(null);
-            setSearchFocusedItemId(null);
-            setNavigationInputMode(null);
-          }
-        }
-      } else {
-        setFocusedItemId(null);
-        setSearchFocusedItemId(null);
-        setNavigationInputMode(null);
-      }
-    }
-
-    prevItemsRef.current = items;
-  }, [
+  useKeyboardNavigationItemsReconcile({
     items,
     focusedItemId,
     searchFocusedItemId,
     isSearchActive,
     activeWorksheetId,
+    prevItemsRef,
+    pendingFocusRestoreAfterSearchClearRef,
     setKeyboardFocusedItem,
-  ]);
+    setFocusedItemId,
+    setSearchFocusedItemId,
+    setNavigationInputMode,
+  });
 
   /**
    * Handler for keydown events on the search input.
