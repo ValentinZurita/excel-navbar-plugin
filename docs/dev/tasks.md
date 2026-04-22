@@ -71,6 +71,7 @@ This list exists so pending work does not get lost between sessions.
 - [ ] Workbook event / sync resilience hardening
 - [ ] Reconcile external workbook tab changes against local sidebar ordering rules
 - [ ] Better error handling around Office runtime failures
+- [x] Batch worksheet-group delete sync to one post-delete workbook rehydrate
 - [x] Update planning docs that still describe already-completed interaction ownership work
 - [ ] Register missing global shortcuts (`focusSearch`, `createWorksheet`) in `index.tsx`
 - [ ] Refactor `useKeyboardNavigation.ts` to break down the 750+ line monolith
@@ -78,7 +79,7 @@ This list exists so pending work does not get lost between sessions.
 
 ### Not implemented in current codebase
 
-- [ ] Delete worksheet from Excel
+- [ ] None currently tracked (add new gaps when discovered)
 
 ### Not part of current MVP unless product scope changes
 
@@ -91,6 +92,5 @@ This list exists so pending work does not get lost between sessions.
 
 ## Notes
 
-- `Delete worksheet` is not implemented and is also not currently documented as MVP in `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/docs/product/mvp.md`.
 - Preview/view-style navigation is explicitly outside current MVP scope in `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/docs/product/mvp.md`.
 - If product scope changes, update `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/docs/product/features.md` and `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/docs/product/mvp.md` before implementation.
