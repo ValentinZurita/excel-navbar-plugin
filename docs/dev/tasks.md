@@ -75,7 +75,9 @@ This list exists so pending work does not get lost between sessions.
 - [x] Update planning docs that still describe already-completed interaction ownership work
 - [x] Register fallback global shortcuts (`focusSearch`, `createWorksheet`) in `index.tsx`
 - [ ] Refactor `useKeyboardNavigation.ts` to break down the 750+ line monolith
-- [ ] Extract hardcoded mock data from `OfficeWorkbookAdapter.ts` to a dedicated mock provider
+  - [x] Extract global listener routing to `useKeyboardNavigationGlobalListeners.ts`
+  - [x] Extract context-menu focus sync to `useKeyboardNavigationContextMenuFocusSync.ts`
+- [x] Extract hardcoded mock data from `OfficeWorkbookAdapter.ts` to a dedicated mock provider
 
 ### Not implemented in current codebase
 
