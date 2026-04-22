@@ -16,6 +16,7 @@ import {
 import { useKeyboardNavigationContextMenuFocusSync } from './useKeyboardNavigationContextMenuFocusSync';
 import { useKeyboardNavigationGlobalListeners } from './useKeyboardNavigationGlobalListeners';
 import { useKeyboardNavigationItemsReconcile } from './useKeyboardNavigationItemsReconcile';
+import { useKeyboardNavigationSearchKeyDown } from './useKeyboardNavigationSearchKeyDown';
 import type { NavigableItem } from '../../domain/navigation/types';
 import {
   getFirstItem,
@@ -550,84 +551,17 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     setNavigationInputMode,
   });
 
-  /**
-   * Handler for keydown events on the search input.
-   * ArrowDown: move focus to first result
-   * Escape: handled by caller (clears search)
-   */
-  const handleSearchKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (isSuppressedRef.current) {
-        return;
-      }
-
-      if (event.key === 'ArrowDown') {
-        event.preventDefault();
-        event.stopPropagation();
-        const searchAnchorItemId = searchFocusedItemId && hasItem(searchFocusedItemId, items)
-          ? searchFocusedItemId
-          : null;
-        const anchorItemId = searchAnchorItemId ?? (focusedItemId && hasItem(focusedItemId, items) ? focusedItemId : null);
-        const nextItem = anchorItemId ? getNextItem(anchorItemId, items) : getFirstItem(items);
-        if (nextItem) {
-          setKeyboardFocusedItem(nextItem.id);
-          markKeyboardActivity();
-        }
-        return;
-      }
-
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        const anchorItemId = searchFocusedItemId ?? (focusedItemId && hasItem(focusedItemId, items) ? focusedItemId : null) ?? getFirstItem(items)?.id;
-        if (anchorItemId) {
-          onActivate(anchorItemId);
-        }
-        return;
-      }
-
-      if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        event.stopPropagation();
-
-        const searchAnchorItemId = searchFocusedItemId && hasItem(searchFocusedItemId, items)
-          ? searchFocusedItemId
-          : null;
-        const anchorItemId = searchAnchorItemId ?? (focusedItemId && hasItem(focusedItemId, items) ? focusedItemId : null);
-        if (!anchorItemId) {
-          const lastItem = getLastItem(items);
-          if (lastItem) {
-            setKeyboardFocusedItem(lastItem.id);
-            markKeyboardActivity();
-          }
-          return;
-        }
-
-        const prevItem = getPrevItem(anchorItemId, items, true);
-        if (prevItem && prevItem.id !== SEARCH_INPUT_SENTINEL_ID) {
-          setKeyboardFocusedItem(prevItem.id);
-          markKeyboardActivity();
-          return;
-        }
-
-        clearFocus();
-        return;
-      }
-
-      if (event.key === 'Escape') {
-        clearFocusAndExitSearchIfNeeded();
-      }
-    },
-    [
-      items,
-      focusedItemId,
-      searchFocusedItemId,
-      markKeyboardActivity,
-      clearFocusAndExitSearchIfNeeded,
-      setKeyboardFocusedItem,
-    ],
-  );
+  const handleSearchKeyDown = useKeyboardNavigationSearchKeyDown({
+    items,
+    focusedItemId,
+    searchFocusedItemId,
+    isSuppressedRef,
+    setKeyboardFocusedItem,
+    markKeyboardActivity,
+    clearFocus,
+    clearFocusAndExitSearchIfNeeded,
+    onActivate,
+  });
 
   /**
    * Handler for keydown events on individual items (worksheets, search results).
