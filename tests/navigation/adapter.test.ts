@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OfficeWorkbookAdapter } from '../../src/infrastructure/office/OfficeWorkbookAdapter';
+import { createMockWorkbookSnapshot } from '../../src/infrastructure/office/mockWorkbookSnapshot';
 import { WorksheetCreateError, WorksheetDeleteError } from '../../src/infrastructure/office/WorkbookAdapter';
 
 describe('OfficeWorkbookAdapter.hideWorksheet', () => {
@@ -66,6 +67,21 @@ describe('OfficeWorkbookAdapter.hideWorksheet', () => {
     expect(globalThis.Excel.run).toHaveBeenCalledOnce();
     expect(worksheet.visibility).toBe('VeryHidden');
     expect(sync).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('OfficeWorkbookAdapter.getWorkbookSnapshot', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    // @ts-expect-error test cleanup for globals
+    delete globalThis.Office;
+    // @ts-expect-error test cleanup for globals
+    delete globalThis.Excel;
+  });
+
+  it('returns mock snapshot when Office runtime is unavailable', async () => {
+    const adapter = new OfficeWorkbookAdapter();
+    await expect(adapter.getWorkbookSnapshot()).resolves.toEqual(createMockWorkbookSnapshot());
   });
 });
 

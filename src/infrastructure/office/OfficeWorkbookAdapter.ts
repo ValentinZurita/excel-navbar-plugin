@@ -7,6 +7,7 @@ import type {
 } from '../../domain/navigation/types';
 import type { WorkbookAdapter } from './WorkbookAdapter';
 import { WorksheetCreateError, WorksheetDeleteError } from './WorkbookAdapter';
+import { createMockWorkbookSnapshot } from './mockWorkbookSnapshot';
 import { WorksheetIdentityRepository } from './WorksheetIdentityRepository';
 
 const worksheetIdentityRepository = new WorksheetIdentityRepository();
@@ -93,36 +94,7 @@ async function loadWorksheets(
 export class OfficeWorkbookAdapter implements WorkbookAdapter {
   async getWorkbookSnapshot(): Promise<WorkbookSnapshot> {
     if (!hasOfficeRuntime()) {
-      return {
-        worksheets: [
-          {
-            worksheetId: 'sheet-1',
-            stableWorksheetId: 'sheet-1',
-            nativeWorksheetId: 'sheet-1',
-            name: 'Overview',
-            visibility: 'Visible',
-            workbookOrder: 0,
-          },
-          {
-            worksheetId: 'sheet-2',
-            stableWorksheetId: 'sheet-2',
-            nativeWorksheetId: 'sheet-2',
-            name: 'Revenue',
-            visibility: 'Visible',
-            workbookOrder: 1,
-          },
-          {
-            worksheetId: 'sheet-3',
-            stableWorksheetId: 'sheet-3',
-            nativeWorksheetId: 'sheet-3',
-            name: 'Archive',
-            visibility: 'Hidden',
-            workbookOrder: 2,
-          },
-        ],
-        activeWorksheetId: 'sheet-1',
-        identityMode: 'native-id',
-      };
+      return createMockWorkbookSnapshot();
     }
 
     const capabilities = getWorkbookCapabilities();
