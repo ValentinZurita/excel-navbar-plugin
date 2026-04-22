@@ -14,6 +14,7 @@ import { useGroupCreationState } from './hooks/useGroupCreationState';
 import { useDeleteConfirmationState } from './hooks/useDeleteConfirmationState';
 import { usePersistenceBannerAutoDismiss } from './hooks/usePersistenceBannerAutoDismiss';
 import { useUndoToastScheduler } from './hooks/useUndoToastScheduler';
+import { buildGroupRemovalUndoToast } from './hooks/groupRemovalUndoToast';
 import { pinnedSectionPolicy } from './dnd/dndPolicies';
 import { useShortcutActions } from '../../application/shortcuts/useShortcutActions';
 import { ShortcutActionId } from '../../application/shortcuts/ShortcutRegistry';
@@ -108,20 +109,14 @@ export function TaskpaneAppContainer() {
 
   const handleAssignWorksheetToGroup = useCallback((worksheetId: string, groupId: string, targetIndex?: number) => {
     const worksheet = controller.state.worksheetsById[worksheetId];
-    if (worksheet?.groupId) {
-      const previousGroup = controller.state.groupsById[worksheet.groupId];
-      if (previousGroup && previousGroup.worksheetOrder.length === 1) {
-        const groupOrderIndex = controller.state.groupOrder.findIndex((candidateId) => candidateId === previousGroup.groupId);
-        scheduleUndoToast({
-          group: {
-            ...previousGroup,
-            worksheetOrder: [...previousGroup.worksheetOrder],
-          },
-          worksheetId,
-          orderIndex: groupOrderIndex >= 0 ? groupOrderIndex : 0,
-          message: `Group ${previousGroup.name} removed.`,
-        });
-      }
+    const undoToastPayload = buildGroupRemovalUndoToast({
+      groupId: worksheet?.groupId,
+      worksheetId,
+      groupsById: controller.state.groupsById,
+      groupOrder: controller.state.groupOrder,
+    });
+    if (undoToastPayload) {
+      scheduleUndoToast(undoToastPayload);
     }
 
     controller.assignWorksheetToGroup(worksheetId, groupId, targetIndex);
@@ -140,18 +135,14 @@ export function TaskpaneAppContainer() {
       return;
     }
 
-    const group = controller.state.groupsById[worksheet.groupId];
-    if (group && group.worksheetOrder.length === 1) {
-      const groupOrderIndex = controller.state.groupOrder.findIndex((groupId) => groupId === group.groupId);
-      scheduleUndoToast({
-        group: {
-          ...group,
-          worksheetOrder: [...group.worksheetOrder],
-        },
-        worksheetId,
-        orderIndex: groupOrderIndex >= 0 ? groupOrderIndex : 0,
-        message: `Group ${group.name} removed.`,
-      });
+    const undoToastPayload = buildGroupRemovalUndoToast({
+      groupId: worksheet.groupId,
+      worksheetId,
+      groupsById: controller.state.groupsById,
+      groupOrder: controller.state.groupOrder,
+    });
+    if (undoToastPayload) {
+      scheduleUndoToast(undoToastPayload);
     }
 
     controller.removeWorksheetFromGroup(worksheetId, targetIndex);
@@ -186,20 +177,14 @@ export function TaskpaneAppContainer() {
   }, [controller.activateWorksheet, controller.setQuery]);
 
   const handleTogglePin = useCallback((worksheet: WorksheetEntity) => {
-    if (worksheet.groupId) {
-      const group = controller.state.groupsById[worksheet.groupId];
-      if (group && group.worksheetOrder.length === 1) {
-        const groupOrderIndex = controller.state.groupOrder.findIndex((groupId) => groupId === group.groupId);
-        scheduleUndoToast({
-          group: {
-            ...group,
-            worksheetOrder: [...group.worksheetOrder],
-          },
-          worksheetId: worksheet.worksheetId,
-          orderIndex: groupOrderIndex >= 0 ? groupOrderIndex : 0,
-          message: `Group ${group.name} removed.`,
-        });
-      }
+    const undoToastPayload = buildGroupRemovalUndoToast({
+      groupId: worksheet.groupId,
+      worksheetId: worksheet.worksheetId,
+      groupsById: controller.state.groupsById,
+      groupOrder: controller.state.groupOrder,
+    });
+    if (undoToastPayload) {
+      scheduleUndoToast(undoToastPayload);
     }
 
     if (worksheet.isPinned) {
@@ -222,20 +207,14 @@ export function TaskpaneAppContainer() {
       return;
     }
 
-    if (worksheet.groupId) {
-      const group = controller.state.groupsById[worksheet.groupId];
-      if (group && group.worksheetOrder.length === 1) {
-        const groupOrderIndex = controller.state.groupOrder.findIndex((groupId) => groupId === group.groupId);
-        scheduleUndoToast({
-          group: {
-            ...group,
-            worksheetOrder: [...group.worksheetOrder],
-          },
-          worksheetId,
-          orderIndex: groupOrderIndex >= 0 ? groupOrderIndex : 0,
-          message: `Group ${group.name} removed.`,
-        });
-      }
+    const undoToastPayload = buildGroupRemovalUndoToast({
+      groupId: worksheet.groupId,
+      worksheetId,
+      groupsById: controller.state.groupsById,
+      groupOrder: controller.state.groupOrder,
+    });
+    if (undoToastPayload) {
+      scheduleUndoToast(undoToastPayload);
     }
 
     controller.pinWorksheet(worksheetId);
