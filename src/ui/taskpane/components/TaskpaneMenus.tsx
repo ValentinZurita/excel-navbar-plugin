@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { GroupColorToken, WorksheetEntity } from '../../../domain/navigation/types';
 import { selectableGroupColorTokens } from '../../../domain/navigation/constants';
+import { focusElementWithManagedRingSuppression } from '../../../application/navigation/domFocusUtils';
 import type {
   ContextMenuState,
   DeleteGroupRequest,
@@ -183,24 +184,7 @@ function focusNavigableHostById(navigableId: string | null | undefined) {
   if (!anchor || !document.contains(anchor)) {
     return;
   }
-
-  const SUPPRESS_ATTR = 'data-suppress-nav-focus-ring';
-  let cleared = false;
-  const clearSuppress = () => {
-    if (cleared) {
-      return;
-    }
-    cleared = true;
-    anchor.removeEventListener('blur', onBlur);
-    anchor.removeAttribute(SUPPRESS_ATTR);
-  };
-  const onBlur = () => {
-    clearSuppress();
-  };
-
-  anchor.addEventListener('blur', onBlur, { once: true });
-  anchor.setAttribute(SUPPRESS_ATTR, 'true');
-  anchor.focus({ preventScroll: true });
+  focusElementWithManagedRingSuppression(anchor);
 }
 
 /**

@@ -12,6 +12,7 @@ import {
   computeVisualFocusedItemId,
   isMainListNavigableId,
 } from './useHighlightLifecycle';
+import { focusElementWithManagedRingSuppression } from './domFocusUtils';
 import type { NavigableItem } from '../../domain/navigation/types';
 import {
   getFirstItem,
@@ -40,7 +41,6 @@ const LIST_LOGICAL_ROUTED_KEYS = new Set([
 ]);
 
 type NavigationInputMode = 'keyboard' | 'pointer' | null;
-const SUPPRESS_NAV_FOCUS_ATTR = 'data-suppress-nav-focus-ring';
 
 function isNestedInteractivePointerTarget(target: EventTarget | null, currentTarget: HTMLElement) {
   if (!(target instanceof HTMLElement) || target === currentTarget) {
@@ -64,31 +64,6 @@ function isNestedInteractivePointerTarget(target: EventTarget | null, currentTar
   );
 
   return Boolean(interactiveTarget && currentTarget.contains(interactiveTarget));
-}
-
-function focusElementWithManagedRingSuppression(
-  element: HTMLElement,
-  options?: { suppressFocusRingAttribute?: boolean },
-) {
-  const suppressFocusRingAttribute = options?.suppressFocusRingAttribute ?? true;
-  let cleared = false;
-  const clearSuppress = () => {
-    if (cleared) {
-      return;
-    }
-    cleared = true;
-    element.removeEventListener('blur', onBlur);
-    element.removeAttribute(SUPPRESS_NAV_FOCUS_ATTR);
-  };
-  const onBlur = () => {
-    clearSuppress();
-  };
-
-  element.addEventListener('blur', onBlur, { once: true });
-  if (suppressFocusRingAttribute) {
-    element.setAttribute(SUPPRESS_NAV_FOCUS_ATTR, 'true');
-  }
-  element.focus({ preventScroll: true });
 }
 
 export interface UseKeyboardNavigationArgs {
