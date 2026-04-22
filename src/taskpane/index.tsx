@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { ShortcutActionId } from '../application/shortcuts/ShortcutRegistry';
 import './styles.css';
 import '../ui/styles/taskpaneUtilities.css';
 
@@ -27,24 +28,37 @@ function registerRibbonActions(): void {
     // onVisibilityModeChanged not available on this platform — toggle may not work.
   }
 
-  Office.actions.associate('toggleTaskpane', async () => {
+  const showTaskpane = async () => {
+    try {
+      await Office.addin.showAsTaskpane();
+      isTaskpaneVisible = true;
+    } catch {
+      // Platform doesn't support programmatic show.
+    }
+  };
+
+  Office.actions.associate(ShortcutActionId.TOGGLE_TASKPANE, async () => {
     try {
       if (isTaskpaneVisible) {
         await Office.addin.hide();
         isTaskpaneVisible = false;
       } else {
-        await Office.addin.showAsTaskpane();
-        isTaskpaneVisible = true;
+        await showTaskpane();
       }
     } catch {
       // Fallback: always try to show if toggle fails.
-      try {
-        await Office.addin.showAsTaskpane();
-        isTaskpaneVisible = true;
-      } catch {
-        // Platform doesn't support programmatic show/hide.
-      }
+      await showTaskpane();
     }
+  });
+
+  // Fallback registrations for actions that are fully handled inside taskpane React layer.
+  // When taskpane runtime already registered richer handlers, those take precedence.
+  Office.actions.associate(ShortcutActionId.FOCUS_SEARCH, async () => {
+    await showTaskpane();
+  });
+
+  Office.actions.associate(ShortcutActionId.CREATE_WORKSHEET, async () => {
+    await showTaskpane();
   });
 }
 

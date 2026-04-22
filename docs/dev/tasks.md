@@ -73,7 +73,7 @@ This list exists so pending work does not get lost between sessions.
 - [ ] Better error handling around Office runtime failures
 - [x] Batch worksheet-group delete sync to one post-delete workbook rehydrate
 - [x] Update planning docs that still describe already-completed interaction ownership work
-- [ ] Register missing global shortcuts (`focusSearch`, `createWorksheet`) in `index.tsx`
+- [x] Register fallback global shortcuts (`focusSearch`, `createWorksheet`) in `index.tsx`
 - [ ] Refactor `useKeyboardNavigation.ts` to break down the 750+ line monolith
 - [ ] Extract hardcoded mock data from `OfficeWorkbookAdapter.ts` to a dedicated mock provider
 
