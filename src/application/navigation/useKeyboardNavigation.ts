@@ -12,7 +12,10 @@ import {
   computeVisualFocusedItemId,
   isMainListNavigableId,
 } from './useHighlightLifecycle';
-import { focusElementWithManagedRingSuppression } from './domFocusUtils';
+import {
+  focusElementWithManagedRingSuppression,
+  isNestedInteractivePointerTarget,
+} from './domFocusUtils';
 import type { NavigableItem } from '../../domain/navigation/types';
 import {
   getFirstItem,
@@ -41,30 +44,6 @@ const LIST_LOGICAL_ROUTED_KEYS = new Set([
 ]);
 
 type NavigationInputMode = 'keyboard' | 'pointer' | null;
-
-function isNestedInteractivePointerTarget(target: EventTarget | null, currentTarget: HTMLElement) {
-  if (!(target instanceof HTMLElement) || target === currentTarget) {
-    return false;
-  }
-
-  const navigableId = currentTarget.getAttribute('data-navigable-id');
-  if (
-    navigableId?.startsWith('group-header:')
-    && target.closest('.group-toggle')
-  ) {
-    return false;
-  }
-
-  if (target.isContentEditable) {
-    return true;
-  }
-
-  const interactiveTarget = target.closest(
-    'input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]',
-  );
-
-  return Boolean(interactiveTarget && currentTarget.contains(interactiveTarget));
-}
 
 export interface UseKeyboardNavigationArgs {
   /** Current list of navigable items, in visual order */

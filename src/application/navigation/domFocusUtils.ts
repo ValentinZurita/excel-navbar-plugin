@@ -1,5 +1,32 @@
 export const SUPPRESS_NAV_FOCUS_ATTR = 'data-suppress-nav-focus-ring';
 
+export function isNestedInteractivePointerTarget(
+  target: EventTarget | null,
+  currentTarget: HTMLElement,
+) {
+  if (!(target instanceof HTMLElement) || target === currentTarget) {
+    return false;
+  }
+
+  const navigableId = currentTarget.getAttribute('data-navigable-id');
+  if (
+    navigableId?.startsWith('group-header:')
+    && target.closest('.group-toggle')
+  ) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  const interactiveTarget = target.closest(
+    'input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]',
+  );
+
+  return Boolean(interactiveTarget && currentTarget.contains(interactiveTarget));
+}
+
 export function focusElementWithManagedRingSuppression(
   element: HTMLElement,
   options?: { suppressFocusRingAttribute?: boolean },
