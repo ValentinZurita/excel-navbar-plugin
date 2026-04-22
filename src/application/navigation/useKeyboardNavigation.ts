@@ -14,6 +14,7 @@ import {
 import {
   focusElementWithManagedRingSuppression,
 } from './domFocusUtils';
+import { useKeyboardNavigationContextMenuFocusSync } from './useKeyboardNavigationContextMenuFocusSync';
 import { useKeyboardNavigationGlobalListeners } from './useKeyboardNavigationGlobalListeners';
 import type { NavigableItem } from '../../domain/navigation/types';
 import {
@@ -287,7 +288,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
    * After closing a context menu, the activeElement often lands on a scrollable shell
    * (arrow keys then scroll). Re-attach DOM focus to the navigable node on the next frames.
    */
-  function scheduleDomFocusForNavigableId(itemId: string | null) {
+  const scheduleDomFocusForNavigableId = useCallback((itemId: string | null) => {
     if (!itemId || itemId === SEARCH_INPUT_SENTINEL_ID) {
       return;
     }
@@ -306,7 +307,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         }
       });
     });
-  }
+  }, []);
 
   /**
    * Set focus to a specific item ID.
@@ -488,84 +489,24 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     };
   }, [clearIdleTimeout]);
 
-  useEffect(() => {
-    if (isSearchActive) {
-      if (
-        isContextMenuOpen
-        && contextMenuTargetItemId?.startsWith('worksheet:')
-      ) {
-        const wid = contextMenuTargetItemId.slice('worksheet:'.length);
-        const searchId = `search:${wid}`;
-        if (hasItem(searchId, items)) {
-          clearIdleTimeout();
-          suppressNextDomFocusRef.current = true;
-          setSearchFocusedItemId(searchId);
-          setNavigationInputMode(sheetContextMenuOpenedVia === 'keyboard' ? 'keyboard' : 'pointer');
-          contextMenuOwnedFocusRef.current = true;
-          lastContextMenuTargetItemIdRef.current = searchId;
-        }
-      } else if (
-        previousContextMenuOpenRef.current
-        && contextMenuOwnedFocusRef.current
-        && !isContextMenuOpen
-      ) {
-        const anchorId = lastContextMenuTargetItemIdRef.current;
-        contextMenuOwnedFocusRef.current = false;
-        // Inline rename mounts an input in the row; focusing the row again steals focus
-        // and InlineRenameInput's onBlur cancels rename immediately.
-        if (anchorId && !isRenaming) {
-          suppressNextDomFocusRef.current = true;
-          setKeyboardFocusedItem(anchorId);
-          scheduleDomFocusForNavigableId(anchorId);
-        } else {
-          setNavigationInputMode(null);
-        }
-      }
-
-      previousContextMenuOpenRef.current = isContextMenuOpen;
-      return;
-    }
-
-    if (isContextMenuOpen) {
-      if (
-        contextMenuTargetItemId
-        && hasItem(contextMenuTargetItemId, items)
-      ) {
-        clearIdleTimeout();
-        suppressNextDomFocusRef.current = true;
-        setFocusedItemId(contextMenuTargetItemId);
-        setNavigationInputMode(sheetContextMenuOpenedVia === 'keyboard' ? 'keyboard' : 'pointer');
-        contextMenuOwnedFocusRef.current = true;
-        lastContextMenuTargetItemIdRef.current = contextMenuTargetItemId;
-      }
-
-      previousContextMenuOpenRef.current = true;
-      return;
-    }
-
-    if (previousContextMenuOpenRef.current && contextMenuOwnedFocusRef.current) {
-      const anchorId = lastContextMenuTargetItemIdRef.current;
-      contextMenuOwnedFocusRef.current = false;
-      if (anchorId && !isRenaming) {
-        suppressNextDomFocusRef.current = true;
-        setKeyboardFocusedItem(anchorId);
-        scheduleDomFocusForNavigableId(anchorId);
-      } else {
-        setNavigationInputMode(null);
-      }
-    }
-
-    previousContextMenuOpenRef.current = false;
-  }, [
-    clearIdleTimeout,
-    contextMenuTargetItemId,
+  useKeyboardNavigationContextMenuFocusSync({
+    items,
+    isSearchActive,
     isContextMenuOpen,
     isRenaming,
-    isSearchActive,
-    items,
+    contextMenuTargetItemId,
     sheetContextMenuOpenedVia,
+    previousContextMenuOpenRef,
+    contextMenuOwnedFocusRef,
+    lastContextMenuTargetItemIdRef,
+    suppressNextDomFocusRef,
+    clearIdleTimeout,
+    scheduleDomFocusForNavigableId,
+    setFocusedItemId,
+    setSearchFocusedItemId,
+    setNavigationInputMode,
     setKeyboardFocusedItem,
-  ]);
+  });
 
   /**
    * Effect: when focusedItemId changes, focus the corresponding DOM element.
