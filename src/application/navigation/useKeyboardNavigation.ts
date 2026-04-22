@@ -5,7 +5,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type KeyboardEvent as ReactKeyboardEvent,
 } from 'react';
 import {
   HIGHLIGHT_EXIT_MS,
@@ -14,8 +13,8 @@ import {
 } from './useHighlightLifecycle';
 import {
   focusElementWithManagedRingSuppression,
-  isNestedInteractivePointerTarget,
 } from './domFocusUtils';
+import { useKeyboardNavigationGlobalListeners } from './useKeyboardNavigationGlobalListeners';
 import type { NavigableItem } from '../../domain/navigation/types';
 import {
   getFirstItem,
@@ -31,17 +30,6 @@ export const TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS = 10_000;
 
 /** Keys handled by worksheet/group list navigation (shared by row handlers and capture routing). */
 const LIST_NAVIGATION_DOM_KEYS = new Set(['ArrowDown', 'ArrowUp', 'Home', 'End']);
-/** Row keys that must still follow logical focus even if DOM focus lags behind one frame. */
-const LIST_LOGICAL_ROUTED_KEYS = new Set([
-  'ArrowDown',
-  'ArrowUp',
-  'Home',
-  'End',
-  'ArrowLeft',
-  'ArrowRight',
-  'Enter',
-  'Escape',
-]);
 
 type NavigationInputMode = 'keyboard' | 'pointer' | null;
 
@@ -694,149 +682,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   ]);
 
   /**
-   * Keep keyboard focus state in sync with pointer interactions.
-   *
-   * If user clicks a different navigable item with mouse/touch, move focusedItemId
-   * to that item so the previous keyboard-highlighted item loses focus state.
-   */
-  useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      const target = event.target;
-      if (!(target instanceof Element)) {
-        return;
-      }
-
-      const navigableElement = target.closest<HTMLElement>('[data-navigable-id]');
-      if (!navigableElement) {
-        return;
-      }
-
-      if (isNestedInteractivePointerTarget(target, navigableElement)) {
-        return;
-      }
-
-      const navigableId = navigableElement.getAttribute('data-navigable-id');
-      if (!navigableId) {
-        return;
-      }
-
-      // Pointer down global synchronization should only affect taskpane mode.
-      // Search mode uses dedicated pointer focus handling at row level.
-      if (!isSearchActive) {
-        if (hasItem(navigableId, items)) {
-          clearIdleTimeout();
-          contextMenuOwnedFocusRef.current = false;
-          setFocusedItemId(navigableId);
-          setNavigationInputMode('pointer');
-          scheduleIdleClear();
-        } else {
-          setFocusedItemId(null);
-          setNavigationInputMode(null);
-        }
-      }
-    };
-
-    // Capture phase helps us synchronize focus state before bubbling handlers.
-    document.addEventListener('pointerdown', handlePointerDown, true);
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown, true);
-    };
-  }, [clearIdleTimeout, items, isSearchActive, scheduleIdleClear]);
-
-  /**
-   * Moving the pointer inside the task pane shell postpones the idle clear that returns the
-   * strong wash to the active worksheet (throttled so we do not reset timers every frame).
-   */
-  useEffect(() => {
-    if (isSuppressedRef.current) {
-      return undefined;
-    }
-
-    const POINTER_IDLE_EXTEND_THROTTLE_MS = 300;
-
-    const handlePointerMove = (event: PointerEvent) => {
-      if (!(event.target instanceof Element)) {
-        return;
-      }
-      if (!event.target.closest('.taskpane-shell')) {
-        return;
-      }
-
-      const logicalFocus = isSearchActiveRef.current
-        ? searchFocusedItemIdRef.current
-        : focusedItemIdRef.current;
-      if (logicalFocus === null) {
-        return;
-      }
-
-      const now = performance.now();
-      if (now - idleExtendPointerLastAtRef.current < POINTER_IDLE_EXTEND_THROTTLE_MS) {
-        return;
-      }
-      idleExtendPointerLastAtRef.current = now;
-      scheduleIdleClear();
-    };
-
-    document.addEventListener('pointermove', handlePointerMove, { capture: true, passive: true });
-    return () => {
-      document.removeEventListener('pointermove', handlePointerMove, { capture: true });
-    };
-  }, [scheduleIdleClear]);
-
-  /**
-   * Catch global ArrowDown / ArrowUp when no navigable item has focus.
-   * This allows the user to immediately start navigating with arrows right after
-   * opening the taskpane via a keyboard shortcut, without needing to click anything first.
-   */
-  useEffect(() => {
-    const handleGlobalKeyDown = (event: KeyboardEvent) => {
-      const logicalRowFocus = isSearchActive ? searchFocusedItemId : focusedItemId;
-      if (isSuppressedRef.current || logicalRowFocus) {
-        return;
-      }
-
-      // Do not intercept if user is typing in a native input/textarea
-      if (document.activeElement && (
-        document.activeElement.tagName === 'INPUT' ||
-        document.activeElement.tagName === 'TEXTAREA'
-      )) {
-        return;
-      }
-
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-        // Find the best item to start navigation from (active worksheet or first item)
-        const activeItemId = activeWorksheetId ? `worksheet:${activeWorksheetId}` : null;
-        let targetId = activeItemId && hasItem(activeItemId, items) ? activeItemId : null;
-        
-        if (!targetId) {
-           const firstItem = getFirstItem(items);
-           targetId = firstItem?.id ?? null;
-        }
-
-        if (targetId) {
-          event.preventDefault();
-          event.stopPropagation();
-          setKeyboardFocusedItem(targetId);
-          markKeyboardActivity();
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleGlobalKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleGlobalKeyDown);
-    };
-  }, [
-    focusedItemId,
-    searchFocusedItemId,
-    isSearchActive,
-    activeWorksheetId,
-    items,
-    setKeyboardFocusedItem,
-    markKeyboardActivity,
-  ]);
-
-  /**
    * Handler for keydown events on the search input.
    * ArrowDown: move focus to first result
    * Escape: handled by caller (clears search)
@@ -1139,87 +984,29 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     ],
   );
 
-  /**
-   * When logical list focus points at a navigable row/header but DOM focus sits on a scrollable
-   * ancestor (common after menus close in Office webviews) or on a nested control (pin button),
-   * route managed keys through the current logical owner instead of letting the shell scroll or
-   * a stale DOM node handle them.
-   */
-  useEffect(() => {
-    const handleCaptureKeyDown = (event: KeyboardEvent) => {
-      if (!LIST_LOGICAL_ROUTED_KEYS.has(event.key)) {
-        return;
-      }
-      if (isSuppressedRef.current) {
-        return;
-      }
-
-      const active = document.activeElement;
-      if (active instanceof HTMLElement && active.isContentEditable) {
-        return;
-      }
-      if (
-        active instanceof HTMLInputElement
-        || active instanceof HTMLTextAreaElement
-        || active instanceof HTMLSelectElement
-      ) {
-        if (active === searchInputRef.current) {
-          return;
-        }
-        return;
-      }
-
-      const logicalId = isSearchActiveRef.current
-        ? searchFocusedItemIdRef.current
-        : focusedItemIdRef.current;
-      if (!logicalId || logicalId === SEARCH_INPUT_SENTINEL_ID) {
-        return;
-      }
-
-      const root = elementRegistryRef.current.get(logicalId);
-      if (!root || !document.contains(root)) {
-        return;
-      }
-
-      const logicalItem = items.find((item) => item.id === logicalId);
-      if (!logicalItem) {
-        return;
-      }
-
-      const routeThroughLogicalOwner = () => {
-        if (logicalItem.kind === 'group-header') {
-          handleGroupHeaderKeyDown(
-            event as unknown as ReactKeyboardEvent<HTMLElement>,
-            logicalItem.groupId ?? '',
-            Boolean(logicalItem.isGroupCollapsed),
-          );
-          return;
-        }
-
-        handleItemKeyDown(event as unknown as ReactKeyboardEvent<HTMLElement>, logicalId);
-      };
-
-      if (active instanceof HTMLElement && root.contains(active)) {
-        const hostNavigableId = active.closest('[data-navigable-id]')?.getAttribute('data-navigable-id');
-        if (hostNavigableId !== logicalId) {
-          return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        routeThroughLogicalOwner();
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-      routeThroughLogicalOwner();
-    };
-
-    document.addEventListener('keydown', handleCaptureKeyDown, true);
-    return () => {
-      document.removeEventListener('keydown', handleCaptureKeyDown, true);
-    };
-  }, [handleGroupHeaderKeyDown, handleItemKeyDown, items, searchInputRef]);
+  useKeyboardNavigationGlobalListeners({
+    items,
+    activeWorksheetId,
+    focusedItemId,
+    searchFocusedItemId,
+    isSearchActive,
+    searchInputRef,
+    elementRegistryRef,
+    focusedItemIdRef,
+    searchFocusedItemIdRef,
+    isSearchActiveRef,
+    isSuppressedRef,
+    idleExtendPointerLastAtRef,
+    contextMenuOwnedFocusRef,
+    clearIdleTimeout,
+    scheduleIdleClear,
+    markKeyboardActivity,
+    setFocusedItemId,
+    setNavigationInputMode,
+    setKeyboardFocusedItem,
+    handleItemKeyDown,
+    handleGroupHeaderKeyDown,
+  });
 
   return {
     focusedItemId: isSearchActive ? searchFocusedItemId : focusedItemId,
