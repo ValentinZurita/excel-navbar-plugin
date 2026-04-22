@@ -40,6 +40,7 @@ const LIST_LOGICAL_ROUTED_KEYS = new Set([
 ]);
 
 type NavigationInputMode = 'keyboard' | 'pointer' | null;
+const SUPPRESS_NAV_FOCUS_ATTR = 'data-suppress-nav-focus-ring';
 
 function isNestedInteractivePointerTarget(target: EventTarget | null, currentTarget: HTMLElement) {
   if (!(target instanceof HTMLElement) || target === currentTarget) {
@@ -63,6 +64,31 @@ function isNestedInteractivePointerTarget(target: EventTarget | null, currentTar
   );
 
   return Boolean(interactiveTarget && currentTarget.contains(interactiveTarget));
+}
+
+function focusElementWithManagedRingSuppression(
+  element: HTMLElement,
+  options?: { suppressFocusRingAttribute?: boolean },
+) {
+  const suppressFocusRingAttribute = options?.suppressFocusRingAttribute ?? true;
+  let cleared = false;
+  const clearSuppress = () => {
+    if (cleared) {
+      return;
+    }
+    cleared = true;
+    element.removeEventListener('blur', onBlur);
+    element.removeAttribute(SUPPRESS_NAV_FOCUS_ATTR);
+  };
+  const onBlur = () => {
+    clearSuppress();
+  };
+
+  element.addEventListener('blur', onBlur, { once: true });
+  if (suppressFocusRingAttribute) {
+    element.setAttribute(SUPPRESS_NAV_FOCUS_ATTR, 'true');
+  }
+  element.focus({ preventScroll: true });
 }
 
 export interface UseKeyboardNavigationArgs {
@@ -332,22 +358,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         }
         const el = elementRegistryRef.current.get(id);
         if (el && document.contains(el)) {
-          const SUPPRESS_ATTR = 'data-suppress-nav-focus-ring';
-          let cleared = false;
-          const clearSuppress = () => {
-            if (cleared) {
-              return;
-            }
-            cleared = true;
-            el.removeEventListener('blur', onBlur);
-            el.removeAttribute(SUPPRESS_ATTR);
-          };
-          const onBlur = () => {
-            clearSuppress();
-          };
-          el.addEventListener('blur', onBlur, { once: true });
-          el.setAttribute(SUPPRESS_ATTR, 'true');
-          el.focus({ preventScroll: true });
+          focusElementWithManagedRingSuppression(el);
           // Clearing on a timer let :focus-visible return while focus still sat on the row
           // (green ring flash). Blur cleanup is enough; keyboard rows hide host outline via CSS.
         }
@@ -410,24 +421,9 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       ? searchInputRef.current
       : elementRegistryRef.current.get(itemId) ?? null;
     if (el && document.contains(el)) {
-      const SUPPRESS_ATTR = 'data-suppress-nav-focus-ring';
-      let cleared = false;
-      const clearSuppress = () => {
-        if (cleared) {
-          return;
-        }
-        cleared = true;
-        el.removeEventListener('blur', onBlur);
-        el.removeAttribute(SUPPRESS_ATTR);
-      };
-      const onBlur = () => {
-        clearSuppress();
-      };
-      el.addEventListener('blur', onBlur, { once: true });
-      if (itemId !== SEARCH_INPUT_SENTINEL_ID) {
-        el.setAttribute(SUPPRESS_ATTR, 'true');
-      }
-      el.focus({ preventScroll: true });
+      focusElementWithManagedRingSuppression(el, {
+        suppressFocusRingAttribute: itemId !== SEARCH_INPUT_SENTINEL_ID,
+      });
       return;
     }
 
@@ -496,6 +492,17 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       document.activeElement.blur();
     }
   }, [clearIdleTimeout]);
+
+  const clearFocusAndExitSearchIfNeeded = useCallback(() => {
+    const shouldExitSearchMode = isSearchActiveRef.current;
+    clearFocus();
+
+    if (shouldExitSearchMode) {
+      pendingFocusRestoreAfterSearchClearRef.current = true;
+      onClearSearch();
+      onFocusSearchInput();
+    }
+  }, [clearFocus, onClearSearch, onFocusSearchInput]);
 
   /**
    * Arm the fade-out timer when the visual owner changes. `syncVisualExitTargetId` already exposes
@@ -941,26 +948,16 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       }
 
       if (event.key === 'Escape') {
-        const shouldExitSearchMode = isSearchActive;
-        clearFocus();
-
-        if (shouldExitSearchMode) {
-          pendingFocusRestoreAfterSearchClearRef.current = true;
-          onClearSearch();
-          onFocusSearchInput();
-        }
+        clearFocusAndExitSearchIfNeeded();
       }
     },
     [
       items,
       focusedItemId,
       searchFocusedItemId,
-      isSearchActive,
       markKeyboardActivity,
-      clearFocus,
+      clearFocusAndExitSearchIfNeeded,
       setKeyboardFocusedItem,
-      onClearSearch,
-      onFocusSearchInput,
     ],
   );
 
@@ -1098,14 +1095,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         case 'Escape': {
           event.preventDefault();
           event.stopPropagation();
-          const shouldExitSearchMode = isSearchActive;
-          clearFocus();
-
-          if (shouldExitSearchMode) {
-            pendingFocusRestoreAfterSearchClearRef.current = true;
-            onClearSearch();
-            onFocusSearchInput();
-          }
+          clearFocusAndExitSearchIfNeeded();
           break;
         }
       }
@@ -1118,10 +1108,8 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       onFocusSearchInput,
       onCollapseGroup,
       setKeyboardFocusedItem,
-      onClearSearch,
-      onFocusSearchInput,
       markKeyboardActivity,
-      clearFocus,
+      clearFocusAndExitSearchIfNeeded,
       onRequestSheetContextMenuFromKeyboard,
     ],
   );
@@ -1183,14 +1171,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         case 'Escape': {
           event.preventDefault();
           event.stopPropagation();
-          const shouldExitSearchMode = isSearchActive;
-          clearFocus();
-
-          if (shouldExitSearchMode) {
-            pendingFocusRestoreAfterSearchClearRef.current = true;
-            onClearSearch();
-            onFocusSearchInput();
-          }
+          clearFocusAndExitSearchIfNeeded();
           break;
         }
       }
@@ -1199,11 +1180,8 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       onExpandGroup,
       onCollapseGroup,
       handleItemKeyDown,
-      isSearchActive,
-      onClearSearch,
-      onFocusSearchInput,
       markKeyboardActivity,
-      clearFocus,
+      clearFocusAndExitSearchIfNeeded,
     ],
   );
 
