@@ -96,6 +96,21 @@ function createModel(overrides: Partial<PersistedNavigationModel> = {}): Persist
   };
 }
 
+function createGroupedModel(groupId: string, worksheetOrder: string[]): PersistedNavigationModel {
+  return createModel({
+    groups: [
+      {
+        groupId,
+        name: 'Finance',
+        colorToken: 'blue',
+        isCollapsed: false,
+        worksheetOrder,
+        createdAt: 1,
+      },
+    ],
+  });
+}
+
 function createDeferred<T>() {
   let resolvePromise!: (value: T | PromiseLike<T>) => void;
   let rejectPromise!: (reason?: unknown) => void;
@@ -463,5 +478,48 @@ describe('useNavigationController', () => {
     });
 
     expect(adapterMock.getWorkbookSnapshot).toHaveBeenCalledTimes(3);
+  });
+
+  it('deletes grouped worksheets with one workbook rehydrate after loop', async () => {
+    adapterMock.getWorkbookSnapshot
+      .mockResolvedValueOnce(createSnapshot({
+        worksheets: [
+          { worksheetId: 'sheet-1', stableWorksheetId: 'sheet-1', nativeWorksheetId: 'native-sheet-1', name: 'Overview', visibility: 'Visible', workbookOrder: 0 },
+          { worksheetId: 'sheet-2', stableWorksheetId: 'sheet-2', nativeWorksheetId: 'native-sheet-2', name: 'Revenue', visibility: 'Visible', workbookOrder: 1 },
+          { worksheetId: 'sheet-3', stableWorksheetId: 'sheet-3', nativeWorksheetId: 'native-sheet-3', name: 'Backlog', visibility: 'Visible', workbookOrder: 2 },
+        ],
+        activeWorksheetId: 'sheet-1',
+      }))
+      .mockResolvedValueOnce(createSnapshot({
+        worksheets: [
+          { worksheetId: 'sheet-3', stableWorksheetId: 'sheet-3', nativeWorksheetId: 'native-sheet-3', name: 'Backlog', visibility: 'Visible', workbookOrder: 0 },
+        ],
+        activeWorksheetId: 'sheet-3',
+      }));
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    adapterMock.deleteWorksheet.mockResolvedValue(undefined);
+    persistenceMock.load.mockResolvedValue({
+      model: createGroupedModel('group-1', ['sheet-1', 'sheet-2']),
+      status: createStatus(),
+    });
+    persistenceMock.save.mockResolvedValue(createStatus());
+
+    const { result } = renderHook(() => useNavigationController(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.state.isReady).toBe(true);
+    });
+
+    await act(async () => {
+      await result.current.deleteGroupAndWorksheets('group-1');
+    });
+
+    expect(adapterMock.deleteWorksheet).toHaveBeenCalledTimes(2);
+    expect(adapterMock.deleteWorksheet).toHaveBeenNthCalledWith(1, 'sheet-1');
+    expect(adapterMock.deleteWorksheet).toHaveBeenNthCalledWith(2, 'sheet-2');
+    expect(adapterMock.getWorkbookSnapshot).toHaveBeenCalledTimes(2);
+    expect(result.current.state.worksheetsById['sheet-1']).toBeUndefined();
+    expect(result.current.state.worksheetsById['sheet-2']).toBeUndefined();
+    expect(result.current.state.activeWorksheetId).toBe('sheet-3');
   });
 });

@@ -334,10 +334,18 @@ export function useNavigationController() {
         for (const worksheetId of worksheetIds) {
           await adapter.deleteWorksheet(worksheetId);
           dispatch({ type: 'deleteWorksheet', worksheetId });
+        }
+
+        const snapshot = await adapter.getWorkbookSnapshot();
+        dispatch({ type: 'hydrateFromWorkbook', snapshot });
+      } catch (error) {
+        try {
           const snapshot = await adapter.getWorkbookSnapshot();
           dispatch({ type: 'hydrateFromWorkbook', snapshot });
+        } catch {
+          // Keep original deletion error as the primary failure signal.
         }
-      } catch (error) {
+
         if (error instanceof WorksheetDeleteError) {
           throw error;
         }
