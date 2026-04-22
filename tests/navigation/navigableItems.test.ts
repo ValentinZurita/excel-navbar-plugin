@@ -6,9 +6,6 @@ import {
   getNextItem,
   getPrevItem,
   hasItem,
-  isNavListItemOrHiddenWorksheet,
-  isWorksheetItemInHiddenSectionList,
-  parseWorksheetNavigableItemId,
 } from '../../src/domain/navigation/navigableItems';
 import type { NavigatorGroupView, SearchResultItem, WorksheetEntity } from '../../src/domain/navigation/types';
 
@@ -58,6 +55,7 @@ describe('buildNavigableItems', () => {
       pinned: [],
       groups: [],
       ungrouped: [],
+      hidden: [],
     });
 
     expect(items).toEqual([]);
@@ -73,6 +71,7 @@ describe('buildNavigableItems', () => {
       pinned: [createWorksheet('sheet-3', 'Pinned Sheet')],
       groups: [createGroupView('group-1', 'Finance', [createWorksheet('sheet-4', 'Budget')])],
       ungrouped: [createWorksheet('sheet-5', 'Ungrouped')],
+      hidden: [createWorksheet('sheet-6', 'Hidden')],
     });
 
     expect(items).toHaveLength(2);
@@ -87,6 +86,7 @@ describe('buildNavigableItems', () => {
       pinned: [],
       groups: [],
       ungrouped: [],
+      hidden: [],
     });
 
     expect(items).toEqual([]);
@@ -102,6 +102,7 @@ describe('buildNavigableItems', () => {
       ],
       groups: [],
       ungrouped: [],
+      hidden: [],
     });
 
     expect(items).toHaveLength(2);
@@ -121,6 +122,7 @@ describe('buildNavigableItems', () => {
         ], false),
       ],
       ungrouped: [],
+      hidden: [],
     });
 
     expect(items).toHaveLength(3);
@@ -138,6 +140,7 @@ describe('buildNavigableItems', () => {
         createGroupView('group-1', 'Finance', [createWorksheet('sheet-1', 'Budget')], true),
       ],
       ungrouped: [],
+      hidden: [],
     });
 
     expect(items).toHaveLength(1);
@@ -158,6 +161,7 @@ describe('buildNavigableItems', () => {
         createGroupView('group-1', 'Finance', [createWorksheet('sheet-2', 'Budget')], false),
       ],
       ungrouped: [createWorksheet('sheet-3', 'Ungrouped')],
+      hidden: [],
     });
 
     expect(items).toHaveLength(4);
@@ -167,6 +171,27 @@ describe('buildNavigableItems', () => {
     expect(items[3]).toMatchObject({ kind: 'worksheet', name: 'Ungrouped' });
   });
 
+  it('includes Hidden worksheets after visible sections when expanded', () => {
+    const hiddenWorksheet = createWorksheet('sheet-hidden', 'Archive');
+    hiddenWorksheet.visibility = 'Hidden';
+
+    const items = buildNavigableItems({
+      query: '',
+      searchResults: [],
+      pinned: [createWorksheet('sheet-1', 'Pinned')],
+      groups: [],
+      ungrouped: [createWorksheet('sheet-2', 'Ungrouped')],
+      hidden: [hiddenWorksheet],
+    });
+
+    expect(items).toHaveLength(3);
+    expect(items[2]).toMatchObject({
+      id: 'worksheet:sheet-hidden',
+      kind: 'hidden-worksheet',
+      name: 'Archive',
+    });
+  });
+
   it('handles whitespace-only query as empty', () => {
     const items = buildNavigableItems({
       query: '   ',
@@ -174,6 +199,7 @@ describe('buildNavigableItems', () => {
       pinned: [createWorksheet('sheet-1', 'Pinned')],
       groups: [],
       ungrouped: [],
+      hidden: [],
     });
 
     expect(items).toHaveLength(1);
@@ -292,44 +318,5 @@ describe('hasItem', () => {
 
   it('returns false for empty list', () => {
     expect(hasItem('worksheet:1', [])).toBe(false);
-  });
-});
-
-describe('parseWorksheetNavigableItemId', () => {
-  it('returns worksheet id for worksheet keys', () => {
-    expect(parseWorksheetNavigableItemId('worksheet:abc')).toBe('abc');
-  });
-
-  it('returns null for non-worksheet keys', () => {
-    expect(parseWorksheetNavigableItemId('group-header:g1')).toBeNull();
-    expect(parseWorksheetNavigableItemId('search:x')).toBeNull();
-  });
-});
-
-describe('isWorksheetItemInHiddenSectionList', () => {
-  it('matches hidden ids', () => {
-    expect(isWorksheetItemInHiddenSectionList('worksheet:h1', ['h1', 'h2'])).toBe(true);
-    expect(isWorksheetItemInHiddenSectionList('worksheet:h9', ['h1', 'h2'])).toBe(false);
-  });
-});
-
-describe('isNavListItemOrHiddenWorksheet', () => {
-  const items = [{ id: 'worksheet:1', kind: 'worksheet' as const, name: 'First' }];
-  const hidden = ['h1'];
-
-  it('accepts ids in the navigable list', () => {
-    expect(isNavListItemOrHiddenWorksheet('worksheet:1', items, hidden)).toBe(true);
-  });
-
-  it('accepts hidden worksheet ids not in the navigable list', () => {
-    expect(isNavListItemOrHiddenWorksheet('worksheet:h1', items, hidden)).toBe(true);
-  });
-
-  it('rejects unknown worksheet ids', () => {
-    expect(isNavListItemOrHiddenWorksheet('worksheet:ghost', items, hidden)).toBe(false);
-  });
-
-  it('rejects null', () => {
-    expect(isNavListItemOrHiddenWorksheet(null, items, hidden)).toBe(false);
   });
 });

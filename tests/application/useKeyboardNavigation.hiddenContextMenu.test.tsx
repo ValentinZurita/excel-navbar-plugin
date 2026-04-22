@@ -10,6 +10,7 @@ import type { NavigableItem } from '../../src/domain/navigation/types';
 function createBaseArgs(overrides: Partial<UseKeyboardNavigationArgs> = {}): UseKeyboardNavigationArgs {
   const items: NavigableItem[] = [
     { id: 'worksheet:visible-1', kind: 'worksheet', worksheetId: 'visible-1', name: 'Visible' },
+    { id: 'worksheet:hidden-1', kind: 'hidden-worksheet', worksheetId: 'hidden-1', name: 'Hidden' },
   ];
   return {
     items,
@@ -27,7 +28,6 @@ function createBaseArgs(overrides: Partial<UseKeyboardNavigationArgs> = {}): Use
     activeVisualItemId: 'worksheet:visible-1',
     isContextMenuOpen: false,
     contextMenuTargetItemId: null,
-    hiddenWorksheetIds: ['hidden-1'],
     ...overrides,
   };
 }
@@ -84,16 +84,24 @@ describe('useKeyboardNavigation — Hidden section context menu', () => {
     expect(result.current.navigationInputMode).toBe('keyboard');
   });
 
-  it('does not set focus for hidden targets when the id is not listed in hiddenWorksheetIds', () => {
+  it('does not set focus for hidden targets when the item is absent from the linear list', () => {
     const { result, rerender } = renderHook(
       (props: UseKeyboardNavigationArgs) => useKeyboardNavigation(props),
-      { initialProps: createBaseArgs({ hiddenWorksheetIds: [] }) },
+      {
+        initialProps: createBaseArgs({
+          items: [
+            { id: 'worksheet:visible-1', kind: 'worksheet', worksheetId: 'visible-1', name: 'Visible' },
+          ],
+        }),
+      },
     );
 
     act(() => {
       rerender(
         createBaseArgs({
-          hiddenWorksheetIds: [],
+          items: [
+            { id: 'worksheet:visible-1', kind: 'worksheet', worksheetId: 'visible-1', name: 'Visible' },
+          ],
           isContextMenuOpen: true,
           contextMenuTargetItemId: 'worksheet:hidden-1',
         }),
@@ -103,14 +111,13 @@ describe('useKeyboardNavigation — Hidden section context menu', () => {
     expect(result.current.focusedItemId).toBeNull();
   });
 
-  it('clears focus when the worksheet is no longer listed as hidden while focus points at it', () => {
+  it('clears focus when hidden item disappears from the linear list while focus points at it', () => {
     const { result, rerender } = renderHook(
       (props: UseKeyboardNavigationArgs) => useKeyboardNavigation(props),
       {
         initialProps: createBaseArgs({
           isContextMenuOpen: true,
           contextMenuTargetItemId: 'worksheet:hidden-1',
-          hiddenWorksheetIds: ['hidden-1'],
         }),
       },
     );
@@ -120,13 +127,55 @@ describe('useKeyboardNavigation — Hidden section context menu', () => {
     act(() => {
       rerender(
         createBaseArgs({
+          items: [
+            { id: 'worksheet:visible-1', kind: 'worksheet', worksheetId: 'visible-1', name: 'Visible' },
+          ],
           isContextMenuOpen: true,
           contextMenuTargetItemId: 'worksheet:hidden-1',
-          hiddenWorksheetIds: [],
         }),
       );
     });
 
     expect(result.current.focusedItemId).toBeNull();
+  });
+
+  it('uses updated logical focus immediately when ArrowRight follows ArrowDown in same frame', () => {
+    const onRequestSheetContextMenuFromKeyboard = vi.fn();
+
+    const { result } = renderHook(
+      (props: UseKeyboardNavigationArgs) => useKeyboardNavigation(props),
+      {
+        initialProps: createBaseArgs({
+          items: [
+            { id: 'worksheet:visible-1', kind: 'worksheet', worksheetId: 'visible-1', name: 'Visible' },
+            { id: 'worksheet:hidden-1', kind: 'hidden-worksheet', worksheetId: 'hidden-1', name: 'Hidden' },
+          ],
+          onRequestSheetContextMenuFromKeyboard,
+        }),
+      },
+    );
+
+    const arrowDownEvent = {
+      key: 'ArrowDown',
+      preventDefault: vi.fn(),
+      stopPropagation: vi.fn(),
+    } as unknown as React.KeyboardEvent<HTMLElement>;
+
+    const arrowRightEvent = {
+      key: 'ArrowRight',
+      preventDefault: vi.fn(),
+      stopPropagation: vi.fn(),
+    } as unknown as React.KeyboardEvent<HTMLElement>;
+
+    act(() => {
+      result.current.handleItemKeyDown(arrowDownEvent, 'worksheet:visible-1');
+      result.current.handleItemKeyDown(arrowRightEvent, 'worksheet:visible-1');
+    });
+
+    expect(onRequestSheetContextMenuFromKeyboard).toHaveBeenCalledTimes(1);
+    expect(onRequestSheetContextMenuFromKeyboard).toHaveBeenCalledWith({
+      worksheetId: 'hidden-1',
+      anchorElement: null,
+    });
   });
 });

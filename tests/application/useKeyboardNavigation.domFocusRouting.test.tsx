@@ -25,7 +25,6 @@ function createArgs(items: NavigableItem[], overrides: Partial<UseKeyboardNaviga
     activeVisualItemId: items[0]?.id ?? null,
     isContextMenuOpen: false,
     contextMenuTargetItemId: null,
-    hiddenWorksheetIds: [],
     ...overrides,
   };
 }
@@ -102,6 +101,42 @@ describe('useKeyboardNavigation — DOM focus vs logical list focus', () => {
       pin.focus();
     });
     expect(document.activeElement).toBe(pin);
+
+    act(() => {
+      fireEvent.keyDown(document, { key: 'ArrowDown', bubbles: true });
+    });
+
+    expect(result.current.focusedItemId).toBe('worksheet:b');
+  });
+
+  it('routes ArrowDown from capture even when DOM focus is already on the logical row root', () => {
+    const items: NavigableItem[] = [
+      { id: 'worksheet:a', kind: 'hidden-worksheet', worksheetId: 'a', name: 'A' },
+      { id: 'worksheet:b', kind: 'hidden-worksheet', worksheetId: 'b', name: 'B' },
+    ];
+
+    const rowA = document.createElement('article');
+    rowA.setAttribute('data-navigable-id', 'worksheet:a');
+    rowA.tabIndex = 0;
+    const rowB = document.createElement('article');
+    rowB.setAttribute('data-navigable-id', 'worksheet:b');
+    rowB.tabIndex = -1;
+
+    document.body.appendChild(rowA);
+    document.body.appendChild(rowB);
+
+    const { result } = renderHook(() => useKeyboardNavigation(createArgs(items)));
+
+    act(() => {
+      result.current.registerElement('worksheet:a', rowA);
+      result.current.registerElement('worksheet:b', rowB);
+      result.current.focusItem('worksheet:a');
+    });
+
+    act(() => {
+      rowA.focus();
+    });
+    expect(document.activeElement).toBe(rowA);
 
     act(() => {
       fireEvent.keyDown(document, { key: 'ArrowDown', bubbles: true });

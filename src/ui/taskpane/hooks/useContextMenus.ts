@@ -9,8 +9,9 @@ export function useContextMenus() {
     setActiveMenu(null);
   }, []);
 
-  const openSheetMenu = useCallback(({ x, y, worksheet, interaction = 'pointer' }: OpenSheetMenuArgs) => {
+  const openSheetMenu = useCallback(({ target, x, y, worksheet, interaction = 'pointer' }: OpenSheetMenuArgs) => {
     const openedVia = interaction;
+    const anchorNavigableId = target.getAttribute('data-navigable-id') ?? `worksheet:${worksheet.worksheetId}`;
     setActiveMenu((currentMenu) => {
       // Pointer: right-clicking the same worksheet toggles the menu off.
       if (
@@ -21,7 +22,14 @@ export function useContextMenus() {
         return null;
       }
 
-      return { kind: 'sheet', x, y, worksheet, openedVia };
+      return {
+        kind: 'sheet',
+        x,
+        y,
+        worksheet,
+        openedVia,
+        anchorNavigableId,
+      };
     });
   }, []);
 

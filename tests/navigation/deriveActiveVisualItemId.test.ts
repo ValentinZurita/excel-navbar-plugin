@@ -31,7 +31,21 @@ describe('deriveActiveVisualItemId', () => {
     expect(deriveActiveVisualItemId('main-1', view, navigable)).toBe('worksheet:main-1');
   });
 
-  it('returns worksheet id when the active sheet is only under Hidden (not in linear list)', () => {
+  it('returns worksheet id when the active hidden sheet is already in expanded linear navigation', () => {
+    const navigable: NavigableItem[] = [
+      { id: 'worksheet:hidden-1', kind: 'hidden-worksheet', worksheetId: 'hidden-1', name: 'Hidden' },
+    ];
+    const view = emptyNavigator({
+      hidden: [worksheet({
+        worksheetId: 'hidden-1',
+        name: 'Hidden',
+        visibility: 'Hidden',
+      })],
+    });
+    expect(deriveActiveVisualItemId('hidden-1', view, navigable)).toBe('worksheet:hidden-1');
+  });
+
+  it('returns worksheet id when the active sheet is only under collapsed Hidden', () => {
     const navigable: NavigableItem[] = [
       { id: 'worksheet:visible-1', kind: 'worksheet', worksheetId: 'visible-1', name: 'Visible' },
     ];

@@ -40,6 +40,7 @@ interface MenuAction {
 interface TaskpaneMenusProps {
   activeMenu: ContextMenuState | null;
   onCloseMenus: () => void;
+  onRestoreKeyboardMenuFocus?: (itemId: string) => void;
   onTogglePin: (worksheet: WorksheetEntity) => void;
   onToggleVisibility: (worksheet: WorksheetEntity) => void;
   onRenameWorksheet: (worksheet: WorksheetEntity) => void;
@@ -173,6 +174,35 @@ function blurNavigableHostIfFocused() {
   }
 }
 
+function focusNavigableHostById(navigableId: string | null | undefined) {
+  if (!navigableId) {
+    return;
+  }
+
+  const anchor = document.querySelector<HTMLElement>(`[data-navigable-id="${navigableId}"]`);
+  if (!anchor || !document.contains(anchor)) {
+    return;
+  }
+
+  const SUPPRESS_ATTR = 'data-suppress-nav-focus-ring';
+  let cleared = false;
+  const clearSuppress = () => {
+    if (cleared) {
+      return;
+    }
+    cleared = true;
+    anchor.removeEventListener('blur', onBlur);
+    anchor.removeAttribute(SUPPRESS_ATTR);
+  };
+  const onBlur = () => {
+    clearSuppress();
+  };
+
+  anchor.addEventListener('blur', onBlur, { once: true });
+  anchor.setAttribute(SUPPRESS_ATTR, 'true');
+  anchor.focus({ preventScroll: true });
+}
+
 /**
  * Keyboard control when the sheet menu was opened via ArrowRight (not pointer).
  * Blurs the navigator row first so Excel-green :focus-visible rings do not linger;
@@ -183,9 +213,19 @@ function useSheetContextMenuListKeyboard(args: {
   isEnabled: boolean;
   keyboardOpened: boolean;
   onCloseMenus: () => void;
+  onRestoreKeyboardMenuFocus?: (itemId: string) => void;
+  anchorNavigableId?: string | null;
   menuInstanceKey: string;
 }) {
-  const { menuPanelRef, isEnabled, keyboardOpened, onCloseMenus, menuInstanceKey } = args;
+  const {
+    menuPanelRef,
+    isEnabled,
+    keyboardOpened,
+    onCloseMenus,
+    onRestoreKeyboardMenuFocus,
+    anchorNavigableId,
+    menuInstanceKey,
+  } = args;
 
   useLayoutEffect(() => {
     if (!isEnabled || !keyboardOpened) {
@@ -221,6 +261,14 @@ function useSheetContextMenuListKeyboard(args: {
       return undefined;
     }
 
+    const closeAndRestoreKeyboardFocus = () => {
+      if (anchorNavigableId) {
+        onRestoreKeyboardMenuFocus?.(anchorNavigableId);
+        focusNavigableHostById(anchorNavigableId);
+      }
+      onCloseMenus();
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
       const panel = menuPanelRef.current;
       if (!panel) {
@@ -238,14 +286,14 @@ function useSheetContextMenuListKeyboard(args: {
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
-        onCloseMenus();
+        closeAndRestoreKeyboardFocus();
         return;
       }
 
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
         event.stopPropagation();
-        onCloseMenus();
+        closeAndRestoreKeyboardFocus();
         return;
       }
 
@@ -318,7 +366,7 @@ function useSheetContextMenuListKeyboard(args: {
     return () => {
       document.removeEventListener('keydown', handleKeyDown, true);
     };
-  }, [isEnabled, keyboardOpened, menuPanelRef, onCloseMenus]);
+  }, [anchorNavigableId, isEnabled, keyboardOpened, menuPanelRef, onCloseMenus, onRestoreKeyboardMenuFocus]);
 }
 
 function buildSheetMenuActions(
@@ -464,6 +512,7 @@ function buildGroupMenuActions(
 function SheetContextMenu({
   sheetMenu,
   onCloseMenus,
+  onRestoreKeyboardMenuFocus,
   onTogglePin,
   onToggleVisibility,
   onRenameWorksheet,
@@ -482,6 +531,7 @@ function SheetContextMenu({
 }: {
   sheetMenu: SheetMenuState;
   onCloseMenus: () => void;
+  onRestoreKeyboardMenuFocus?: (itemId: string) => void;
   onTogglePin: (worksheet: WorksheetEntity) => void;
   onToggleVisibility: (worksheet: WorksheetEntity) => void;
   onRenameWorksheet: (worksheet: WorksheetEntity) => void;
@@ -517,6 +567,8 @@ function SheetContextMenu({
     isEnabled: isActionList,
     keyboardOpened,
     onCloseMenus,
+    onRestoreKeyboardMenuFocus,
+    anchorNavigableId: sheetMenu.anchorNavigableId,
     menuInstanceKey: sheetMenu.worksheet.worksheetId,
   });
 
@@ -670,6 +722,7 @@ function GroupContextMenu({
 export function TaskpaneMenus({
   activeMenu,
   onCloseMenus,
+  onRestoreKeyboardMenuFocus,
   onTogglePin,
   onToggleVisibility,
   onRenameWorksheet,
@@ -704,6 +757,7 @@ export function TaskpaneMenus({
       <SheetContextMenu
         sheetMenu={activeMenu}
         onCloseMenus={onCloseMenus}
+        onRestoreKeyboardMenuFocus={onRestoreKeyboardMenuFocus}
         onTogglePin={onTogglePin}
         onToggleVisibility={onToggleVisibility}
         onRenameWorksheet={onRenameWorksheet}

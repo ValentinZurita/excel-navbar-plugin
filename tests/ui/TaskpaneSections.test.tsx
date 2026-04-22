@@ -249,6 +249,158 @@ describe('TaskpaneSections', () => {
     });
   });
 
+  it('includes expanded Hidden rows in ArrowDown/ArrowUp/Home/End traversal', async () => {
+    const user = userEvent.setup();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null })],
+      hidden: [
+        createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden', groupId: null }),
+        createWorksheet({ worksheetId: 'hidden-2', name: 'Vault', visibility: 'Hidden', groupId: null }),
+      ],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+        })}
+      />,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    revenueRow.focus();
+
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('button', { name: 'Archive' })).toHaveFocus();
+
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('button', { name: 'Vault' })).toHaveFocus();
+
+    await user.keyboard('{ArrowUp}');
+    expect(screen.getByRole('button', { name: 'Archive' })).toHaveFocus();
+
+    await user.keyboard('{Home}');
+    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveFocus();
+
+    await user.keyboard('{End}');
+    expect(screen.getByRole('button', { name: 'Vault' })).toHaveFocus();
+  });
+
+  it('keeps Hidden rows out of traversal when Hidden section is collapsed', async () => {
+    const user = userEvent.setup();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null })],
+      hidden: [
+        createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden', groupId: null }),
+      ],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          isHiddenSectionCollapsed: true,
+        })}
+      />,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    revenueRow.focus();
+
+    await user.keyboard('{End}');
+    expect(revenueRow).toHaveFocus();
+
+    await user.keyboard('{ArrowDown}');
+    expect(revenueRow).toHaveFocus();
+  });
+
+  it('opens sheet context menu from keyboard with ArrowRight and Enter on Hidden rows', async () => {
+    const user = userEvent.setup();
+    const onRequestSheetContextMenuFromKeyboard = vi.fn();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null })],
+      hidden: [
+        createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden', groupId: null }),
+      ],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          onRequestSheetContextMenuFromKeyboard,
+        })}
+      />,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    revenueRow.focus();
+    await user.keyboard('{ArrowDown}');
+
+    const archiveRow = screen.getByRole('button', { name: 'Archive' });
+    expect(archiveRow).toHaveFocus();
+
+    await user.keyboard('{ArrowRight}');
+    expect(onRequestSheetContextMenuFromKeyboard).toHaveBeenNthCalledWith(1, {
+      worksheetId: 'hidden-1',
+      anchorElement: archiveRow,
+    });
+
+    await user.keyboard('{Enter}');
+    expect(onRequestSheetContextMenuFromKeyboard).toHaveBeenNthCalledWith(2, {
+      worksheetId: 'hidden-1',
+      anchorElement: archiveRow,
+    });
+  });
+
+  it('keeps logical Hidden anchor when ArrowRight follows ArrowDown immediately', async () => {
+    const user = userEvent.setup();
+    const onRequestSheetContextMenuFromKeyboard = vi.fn();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null })],
+      hidden: [
+        createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden', groupId: null }),
+      ],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          onRequestSheetContextMenuFromKeyboard,
+        })}
+      />,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    const archiveRow = screen.getByRole('button', { name: 'Archive' });
+    revenueRow.focus();
+
+    await user.keyboard('{ArrowDown}{ArrowRight}');
+
+    expect(onRequestSheetContextMenuFromKeyboard).toHaveBeenCalledTimes(1);
+    expect(onRequestSheetContextMenuFromKeyboard).toHaveBeenCalledWith({
+      worksheetId: 'hidden-1',
+      anchorElement: archiveRow,
+    });
+  });
+
   it('uses ArrowRight/ArrowLeft on group headers and keeps ArrowDown/ArrowUp for row traversal', async () => {
     const user = userEvent.setup();
     const onToggleGroupCollapsed = vi.fn();
@@ -835,6 +987,49 @@ describe('TaskpaneSections', () => {
     expect(forecastArticle).toHaveAttribute('data-active-dimmed', 'true');
   });
 
+  it('restores Hidden row keyboard anchor after sheet menu closes', () => {
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' })],
+      hidden: [
+        createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden' }),
+      ],
+      searchResults: [],
+    };
+
+    const { rerender } = render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          activeWorksheetId: 'sheet-1',
+          isContextMenuOpen: true,
+          contextMenuOpenSheetId: 'hidden-1',
+        })}
+      />,
+    );
+
+    const archiveArticle = screen.getByRole('button', { name: 'Archive' }).closest('[data-navigable-id="worksheet:hidden-1"]');
+    const revenueArticle = screen.getByRole('button', { name: 'Revenue' }).closest('[data-navigable-id="worksheet:sheet-1"]');
+
+    expect(archiveArticle).toHaveAttribute('data-visual-focused', 'true');
+
+    rerender(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          activeWorksheetId: 'sheet-1',
+          isContextMenuOpen: false,
+        })}
+      />,
+    );
+
+    expect(archiveArticle).toHaveAttribute('data-visual-focused', 'true');
+    expect(archiveArticle).not.toHaveAttribute('data-visual-exiting');
+    expect(archiveArticle).toHaveAttribute('data-focused', 'true');
+    expect(revenueArticle).toHaveAttribute('data-active-dimmed', 'true');
+  });
+
   it('applies visual highlight to group header on pointer selection', () => {
     const navigatorView: NavigatorView = {
       pinned: [],
@@ -967,7 +1162,7 @@ describe('TaskpaneSections', () => {
     expect(hiddenRow).toBeTruthy();
     expect(hiddenRow).toHaveAttribute('data-visual-focused', 'true');
     expect(hiddenRow).toHaveAttribute('data-context-open', 'true');
-    expect(hiddenRow).not.toHaveAttribute('data-navigable-id');
+    expect(hiddenRow).toHaveAttribute('data-navigable-id', 'worksheet:hid-1');
   });
 
   it('does not apply context-menu visual highlight while search is active (global policy)', () => {

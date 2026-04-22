@@ -28,6 +28,8 @@ interface KeyboardNavContextValue {
   clearFocus: () => void;
   /** Set focus to a specific item */
   focusItem: (itemId: string) => void;
+  /** Restore anchor focus immediately when a keyboard-opened menu is dismissed. */
+  restoreFocusAfterMenuDismiss: (itemId: string) => void;
   /** Ref to the search input for programmatic focus */
   searchInputRef: RefObject<HTMLInputElement | null>;
 }
@@ -68,6 +70,7 @@ export function KeyboardNavigationProvider(props: KeyboardNavigationProviderProp
     handleGroupHeaderKeyDown: navigation.handleGroupHeaderKeyDown,
     clearFocus: navigation.clearFocus,
     focusItem: navigation.focusItem,
+    restoreFocusAfterMenuDismiss: navigation.restoreFocusAfterMenuDismiss,
     searchInputRef: hookArgs.searchInputRef,
   };
 

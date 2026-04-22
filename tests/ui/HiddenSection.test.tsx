@@ -181,7 +181,7 @@ describe('HiddenSection', () => {
     expect(row?.classList.contains('sheet-row-context-open')).toBe(true);
   });
 
-  it('does not set data-navigable-id on hidden rows', () => {
+  it('sets data-navigable-id on hidden rows for shared keyboard navigation', () => {
     const { container } = render(
       <HiddenSection
         isCollapsed={false}
@@ -192,6 +192,6 @@ describe('HiddenSection', () => {
       />,
     );
 
-    expect(container.querySelector('.hidden-row')).not.toHaveAttribute('data-navigable-id');
+    expect(container.querySelector('.hidden-row')).toHaveAttribute('data-navigable-id', 'worksheet:hidden-1');
   });
 });

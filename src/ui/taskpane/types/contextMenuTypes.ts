@@ -9,6 +9,8 @@ export interface SheetMenuState {
   worksheet: WorksheetEntity;
   /** How the menu was opened; keyboard opens skip same-sheet toggle and enable list focus. */
   openedVia?: 'pointer' | 'keyboard';
+  /** Navigable row id that owns keyboard return focus when menu closes. */
+  anchorNavigableId?: string | null;
 }
 
 export interface GroupMenuState {

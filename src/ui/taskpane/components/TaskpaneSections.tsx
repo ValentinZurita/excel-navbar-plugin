@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type MutableRefObject } from 'react';
 import {
   type CollisionDetection,
   DndContext,
@@ -79,6 +79,10 @@ interface TaskpaneSectionsProps {
   searchInputRef: React.RefObject<HTMLInputElement>;
   /** Present while sheet context menu is open; keeps keyboard vs pointer styling accurate */
   sheetContextMenuOpenedVia?: 'pointer' | 'keyboard' | null;
+  /** Imperative bridge so sibling menu layer can restore keyboard focus without prop-drilling hook internals. */
+  keyboardNavigationApiRef?: MutableRefObject<{
+    restoreFocusAfterMenuDismiss: (itemId: string) => void;
+  } | null>;
 }
 
 const worksheetCollisionDetection: CollisionDetection = (args) => {
@@ -184,6 +188,7 @@ export function TaskpaneSections({
   isContextMenuOpen = false,
   searchInputRef,
   sheetContextMenuOpenedVia = null,
+  keyboardNavigationApiRef,
 }: TaskpaneSectionsProps) {
 
   const [isPinnedCollapsed, setIsPinnedCollapsed] = useState(false);
@@ -198,6 +203,7 @@ export function TaskpaneSections({
       pinned: isPinnedCollapsed ? [] : navigatorView.pinned,
       groups: isGroupsCollapsed ? [] : navigatorView.groups,
       ungrouped: isSheetsCollapsed ? [] : navigatorView.ungrouped,
+      hidden: isHiddenSectionCollapsed ? [] : navigatorView.hidden,
     });
   }, [
     query,
@@ -205,9 +211,11 @@ export function TaskpaneSections({
     navigatorView.pinned,
     navigatorView.groups,
     navigatorView.ungrouped,
+    navigatorView.hidden,
     isPinnedCollapsed,
     isGroupsCollapsed,
     isSheetsCollapsed,
+    isHiddenSectionCollapsed,
   ]);
 
   const shouldShowPinnedSection = navigatorView.pinned.length > 0;
@@ -216,10 +224,6 @@ export function TaskpaneSections({
   const shouldShowHiddenSection = navigatorView.hidden.length > 0;
   const shouldShowSessionOnlyGroupsHint = shouldShowGroupsSection && isSessionOnlyPersistence;
   const isSearchActive = Boolean(query.trim());
-  const hiddenWorksheetIds = useMemo(
-    () => navigatorView.hidden.map((w) => w.worksheetId),
-    [navigatorView.hidden],
-  );
   const contextMenuTargetItemId = contextMenuOpenSheetId
     ? `worksheet:${contextMenuOpenSheetId}`
     : contextMenuOpenGroupId
@@ -274,7 +278,6 @@ export function TaskpaneSections({
       isContextMenuOpen={isContextMenuOpen}
       contextMenuTargetItemId={contextMenuTargetItemId}
       activeVisualItemId={activeVisualItemId}
-      hiddenWorksheetIds={hiddenWorksheetIds}
       onRequestSheetContextMenuFromKeyboard={onRequestSheetContextMenuFromKeyboard}
       sheetContextMenuOpenedVia={sheetContextMenuOpenedVia}
     >
@@ -317,6 +320,7 @@ export function TaskpaneSections({
         onRenameCancel={onRenameCancel}
         onStartRenameWorksheet={onStartRenameWorksheet}
         onStartRenameWorksheetFromSearch={onStartRenameWorksheetFromSearch}
+        keyboardNavigationApiRef={keyboardNavigationApiRef}
       />
     </KeyboardNavigationProvider>
   );
@@ -380,6 +384,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     onRenameCancel,
     onStartRenameWorksheet,
     onStartRenameWorksheetFromSearch,
+    keyboardNavigationApiRef,
   } = props;
 
   // Get keyboard navigation context
@@ -393,7 +398,21 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     handleItemKeyDown,
     handleGroupHeaderKeyDown,
     registerElement,
+    restoreFocusAfterMenuDismiss,
   } = useKeyboardNavContext();
+
+  useEffect(() => {
+    if (!keyboardNavigationApiRef) {
+      return undefined;
+    }
+
+    keyboardNavigationApiRef.current = { restoreFocusAfterMenuDismiss };
+    return () => {
+      if (keyboardNavigationApiRef.current?.restoreFocusAfterMenuDismiss === restoreFocusAfterMenuDismiss) {
+        keyboardNavigationApiRef.current = null;
+      }
+    };
+  }, [keyboardNavigationApiRef, restoreFocusAfterMenuDismiss]);
 
   return (
     <>
@@ -535,6 +554,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
           onToggle={onToggleHiddenSection}
           onUnhide={onUnhideWorksheet}
           onOpenContextMenu={onOpenSheetMenu}
+          onItemKeyDown={handleItemKeyDown}
           registerElement={registerElement}
         />
       ) : null}

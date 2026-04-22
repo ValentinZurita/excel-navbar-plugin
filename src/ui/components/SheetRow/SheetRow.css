@@ -278,15 +278,10 @@
   }
 }
 
-/* Keyboard focus style: outline only, no background change. */
-.sheet-row:focus-visible {
-  outline: 2px solid var(--excel-accent);
-  outline-offset: -2px;
-}
-
-/* Roving list navigation already paints sheet-row-nav-highlight + data-focused wash.
-   WebViews often promote programmatic focus to :focus-visible; stacking both reads as a
-   flashing Excel ring (notably right after keyboard-driven context menus). */
+/* Rows use our custom navigation highlight system, not browser/host :focus-visible chrome.
+   Keeping native outline here causes transient Excel-green rings during cross-section handoff
+   (e.g. leaving Sheets into Hidden) when DOM focus lags one frame behind logical focus. */
+.sheet-row:focus-visible,
 .sheet-row[data-focused='true']:focus-visible {
   outline: none;
   outline-offset: 0;

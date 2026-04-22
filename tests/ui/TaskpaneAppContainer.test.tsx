@@ -444,4 +444,119 @@ describe('TaskpaneAppContainer', () => {
 
     expect(screen.queryByRole('button', { name: 'Add worksheet' })).not.toBeInTheDocument();
   });
+
+  it('restores keyboard navigation after closing a keyboard-opened sheet menu from Hidden', async () => {
+    const user = userEvent.setup();
+    const controller = createControllerMock();
+    const visible = createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible' });
+    const hidden = createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden' });
+    controller.state.worksheetsById = {
+      [visible.worksheetId]: visible,
+      [hidden.worksheetId]: hidden,
+    };
+    controller.navigatorView.ungrouped = [visible];
+    controller.navigatorView.hidden = [hidden];
+
+    useNavigationControllerMock.mockReturnValue(controller);
+
+    render(<TaskpaneAppContainer />);
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    revenueRow.focus();
+
+    await user.keyboard('{ArrowDown}');
+    const archiveRow = await screen.findByRole('button', { name: 'Archive' });
+    expect(archiveRow).toHaveFocus();
+
+    await user.keyboard('{ArrowRight}');
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Pin sheet' })).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowLeft}');
+
+    await waitFor(() => {
+      expect(archiveRow).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowUp}');
+    expect(revenueRow).toHaveFocus();
+  });
+
+  it('keeps arrow navigation alive when closing Hidden menu and navigating again immediately', async () => {
+    const user = userEvent.setup();
+    const controller = createControllerMock();
+    const visible = createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible' });
+    const hidden = createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden' });
+    controller.state.worksheetsById = {
+      [visible.worksheetId]: visible,
+      [hidden.worksheetId]: hidden,
+    };
+    controller.navigatorView.ungrouped = [visible];
+    controller.navigatorView.hidden = [hidden];
+
+    useNavigationControllerMock.mockReturnValue(controller);
+
+    render(<TaskpaneAppContainer />);
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    revenueRow.focus();
+
+    await user.keyboard('{ArrowDown}');
+    const archiveRow = await screen.findByRole('button', { name: 'Archive' });
+    expect(archiveRow).toHaveFocus();
+
+    await user.keyboard('{ArrowRight}');
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Pin sheet' })).toHaveFocus();
+    });
+
+    await user.keyboard('{ArrowLeft}{ArrowUp}');
+
+    await waitFor(() => {
+      expect(revenueRow).toHaveFocus();
+    });
+  });
+
+  it('restores arrow handling even when next key lands before passive effects after menu close', async () => {
+    const controller = createControllerMock();
+    const visible = createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible' });
+    const hidden = createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden' });
+    controller.state.worksheetsById = {
+      [visible.worksheetId]: visible,
+      [hidden.worksheetId]: hidden,
+    };
+    controller.navigatorView.ungrouped = [visible];
+    controller.navigatorView.hidden = [hidden];
+
+    useNavigationControllerMock.mockReturnValue(controller);
+
+    render(<TaskpaneAppContainer />);
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    const archiveRow = screen.getByRole('button', { name: 'Archive' });
+    revenueRow.focus();
+
+    fireEvent.keyDown(revenueRow, { key: 'ArrowDown' });
+
+    await waitFor(() => {
+      expect(archiveRow).toHaveFocus();
+    });
+
+    fireEvent.keyDown(archiveRow, { key: 'ArrowRight' });
+
+    const pinSheetButton = await screen.findByRole('button', { name: 'Pin sheet' });
+    await waitFor(() => {
+      expect(pinSheetButton).toHaveFocus();
+    });
+
+    act(() => {
+      fireEvent.keyDown(pinSheetButton, { key: 'ArrowLeft' });
+      fireEvent.keyDown(document, { key: 'ArrowUp' });
+    });
+
+    await waitFor(() => {
+      expect(revenueRow).toHaveFocus();
+    });
+  });
 });

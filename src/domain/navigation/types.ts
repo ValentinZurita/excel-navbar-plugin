@@ -153,7 +153,7 @@ export interface NavigatorView {
  */
 export interface NavigableItem {
   id: string;
-  kind: 'search-result' | 'worksheet' | 'group-header';
+  kind: 'search-result' | 'worksheet' | 'hidden-worksheet' | 'group-header';
   worksheetId?: string;
   groupId?: string;
   isGroupCollapsed?: boolean;

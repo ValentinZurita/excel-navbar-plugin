@@ -19,7 +19,6 @@ import {
   getNextItem,
   getPrevItem,
   hasItem,
-  isNavListItemOrHiddenWorksheet,
   SEARCH_INPUT_SENTINEL_ID,
 } from '../../domain/navigation/navigableItems';
 
@@ -28,6 +27,17 @@ export const TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS = 10_000;
 
 /** Keys handled by worksheet/group list navigation (shared by row handlers and capture routing). */
 const LIST_NAVIGATION_DOM_KEYS = new Set(['ArrowDown', 'ArrowUp', 'Home', 'End']);
+/** Row keys that must still follow logical focus even if DOM focus lags behind one frame. */
+const LIST_LOGICAL_ROUTED_KEYS = new Set([
+  'ArrowDown',
+  'ArrowUp',
+  'Home',
+  'End',
+  'ArrowLeft',
+  'ArrowRight',
+  'Enter',
+  'Escape',
+]);
 
 type NavigationInputMode = 'keyboard' | 'pointer' | null;
 
@@ -94,14 +104,9 @@ export interface UseKeyboardNavigationArgs {
   }) => void;
   /**
    * Context-menu target id (`worksheet:…`, `group-header:…`, etc.).
-   * Worksheet targets may reference the Hidden section, which is not part of `items`.
+   * Worksheet targets may reference Hidden rows, which share same linear item IDs.
    */
   contextMenuTargetItemId: string | null;
-  /**
-   * Worksheet ids currently shown under the Hidden section. Used so context-menu focus
-   * and highlight stay consistent without adding hidden rows to the arrow-key list.
-   */
-  hiddenWorksheetIds?: readonly string[];
   /** Sheet context menu: how it was opened (affects navigationInputMode while menu is open). */
   sheetContextMenuOpenedVia?: 'pointer' | 'keyboard' | null;
 }
@@ -133,6 +138,8 @@ interface UseKeyboardNavigationReturn {
   clearFocus: () => void;
   /** Set focus to a specific item ID */
   focusItem: (itemId: string) => void;
+  /** Prime keyboard focus refs/DOM immediately when a keyboard-opened menu is dismissed. */
+  restoreFocusAfterMenuDismiss: (itemId: string) => void;
 }
 
 /**
@@ -167,7 +174,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     activeVisualItemId,
     isContextMenuOpen,
     contextMenuTargetItemId,
-    hiddenWorksheetIds = [],
     onRequestSheetContextMenuFromKeyboard,
     sheetContextMenuOpenedVia = null,
   } = args;
@@ -195,10 +201,12 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   const searchFocusedItemIdRef = useRef<string | null>(null);
   const isSearchActiveRef = useRef(isSearchActive);
   const idleExtendPointerLastAtRef = useRef(0);
+  const pendingDomFocusRestoreTokenRef = useRef(0);
 
   // Check if navigation should be suppressed
   const isSuppressed = isDragActive || isDialogOpen || isRenaming || isContextMenuOpen;
   const isHighlightSuppressed = isDragActive || isDialogOpen || isRenaming;
+  const isSuppressedRef = useRef(isSuppressed);
 
   const visualFocusedItemId = useMemo(
     () => computeVisualFocusedItemId({
@@ -236,6 +244,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   focusedItemIdRef.current = focusedItemId;
   searchFocusedItemIdRef.current = searchFocusedItemId;
   isSearchActiveRef.current = isSearchActive;
+  isSuppressedRef.current = isSuppressed;
 
   const armHighlightExit = useCallback((outgoingMainListId: string) => {
     if (exitTimerRef.current !== null) {
@@ -267,13 +276,16 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     if (!hasItem(itemId, items)) {
       return;
     }
+    pendingDomFocusRestoreTokenRef.current += 1;
 
     // Pointer interaction always switches mode to pointer, even when hovering
     // the same item that keyboard focused. This ensures CSS hover styles are
     // restored after keyboard navigation.
     setNavigationInputMode('pointer');
 
-    const currentFocused = isSearchActive ? searchFocusedItemId : focusedItemId;
+    const currentFocused = isSearchActiveRef.current
+      ? searchFocusedItemIdRef.current
+      : focusedItemIdRef.current;
     if (currentFocused === itemId) {
       return;
     }
@@ -283,16 +295,21 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     suppressNextDomFocusRef.current = true;
 
     if (itemId.startsWith('search:') || itemId === SEARCH_INPUT_SENTINEL_ID) {
+      searchFocusedItemIdRef.current = itemId;
       setSearchFocusedItemId(itemId);
     } else {
+      focusedItemIdRef.current = itemId;
       setFocusedItemId(itemId);
     }
-  }, [items, focusedItemId, searchFocusedItemId, isSearchActive]);
+  }, [items]);
 
   const setKeyboardFocusedItem = useCallback((itemId: string) => {
+    pendingDomFocusRestoreTokenRef.current += 1;
     if (itemId.startsWith('search:') || itemId === SEARCH_INPUT_SENTINEL_ID) {
+      searchFocusedItemIdRef.current = itemId;
       setSearchFocusedItemId(itemId);
     } else {
+      focusedItemIdRef.current = itemId;
       setFocusedItemId(itemId);
     }
     setNavigationInputMode('keyboard');
@@ -307,8 +324,12 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       return;
     }
     const id = itemId;
+    const token = ++pendingDomFocusRestoreTokenRef.current;
     window.requestAnimationFrame(() => {
       window.requestAnimationFrame(() => {
+        if (pendingDomFocusRestoreTokenRef.current !== token) {
+          return;
+        }
         const el = elementRegistryRef.current.get(id);
         if (el && document.contains(el)) {
           const SUPPRESS_ATTR = 'data-suppress-nav-focus-ring';
@@ -339,7 +360,10 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
    * This updates state and (via useEffect) focuses the DOM element.
    */
   const focusItem = useCallback((itemId: string | null) => {
+    pendingDomFocusRestoreTokenRef.current += 1;
     if (itemId === null) {
+      focusedItemIdRef.current = null;
+      searchFocusedItemIdRef.current = null;
       setFocusedItemId(null);
       setSearchFocusedItemId(null);
       setNavigationInputMode(null);
@@ -361,17 +385,71 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     }
   }, []);
 
+  const restoreFocusAfterMenuDismiss = useCallback((itemId: string) => {
+    if (!hasItem(itemId, items)) {
+      return;
+    }
+
+    pendingDomFocusRestoreTokenRef.current += 1;
+    clearIdleTimeout();
+    contextMenuOwnedFocusRef.current = false;
+    lastContextMenuTargetItemIdRef.current = itemId;
+    suppressNextDomFocusRef.current = false;
+    isSuppressedRef.current = false;
+
+    if (itemId.startsWith('search:') || itemId === SEARCH_INPUT_SENTINEL_ID) {
+      searchFocusedItemIdRef.current = itemId;
+      setSearchFocusedItemId(itemId);
+    } else {
+      focusedItemIdRef.current = itemId;
+      setFocusedItemId(itemId);
+    }
+    setNavigationInputMode('keyboard');
+
+    const el = itemId === SEARCH_INPUT_SENTINEL_ID
+      ? searchInputRef.current
+      : elementRegistryRef.current.get(itemId) ?? null;
+    if (el && document.contains(el)) {
+      const SUPPRESS_ATTR = 'data-suppress-nav-focus-ring';
+      let cleared = false;
+      const clearSuppress = () => {
+        if (cleared) {
+          return;
+        }
+        cleared = true;
+        el.removeEventListener('blur', onBlur);
+        el.removeAttribute(SUPPRESS_ATTR);
+      };
+      const onBlur = () => {
+        clearSuppress();
+      };
+      el.addEventListener('blur', onBlur, { once: true });
+      if (itemId !== SEARCH_INPUT_SENTINEL_ID) {
+        el.setAttribute(SUPPRESS_ATTR, 'true');
+      }
+      el.focus({ preventScroll: true });
+      return;
+    }
+
+    if (itemId === SEARCH_INPUT_SENTINEL_ID) {
+      searchInputRef.current?.focus();
+      return;
+    }
+
+    scheduleDomFocusForNavigableId(itemId);
+  }, [clearIdleTimeout, items, searchInputRef]);
+
   const getKeyboardAnchorItemId = useCallback((fallbackItemId: string): string | null => {
     // In search mode there is no active worksheet concept for navigation anchoring.
     // Prefer latest search-focused item (pointer/keyboard), then focusedItemId,
     // then fallback/list bounds.
     if (isSearchActive) {
-      if (searchFocusedItemId && hasItem(searchFocusedItemId, items)) {
-        return searchFocusedItemId;
+      if (searchFocusedItemIdRef.current && hasItem(searchFocusedItemIdRef.current, items)) {
+        return searchFocusedItemIdRef.current;
       }
 
-      if (focusedItemId && hasItem(focusedItemId, items)) {
-        return focusedItemId;
+      if (focusedItemIdRef.current && hasItem(focusedItemIdRef.current, items)) {
+        return focusedItemIdRef.current;
       }
 
       if (hasItem(fallbackItemId, items)) {
@@ -382,8 +460,8 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       return firstSearchItem?.id ?? null;
     }
 
-    if (focusedItemId && hasItem(focusedItemId, items)) {
-      return focusedItemId;
+    if (focusedItemIdRef.current && hasItem(focusedItemIdRef.current, items)) {
+      return focusedItemIdRef.current;
     }
 
     if (activeWorksheetId) {
@@ -399,13 +477,16 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
     const firstItem = getFirstItem(items);
     return firstItem?.id ?? null;
-  }, [searchFocusedItemId, focusedItemId, activeWorksheetId, items, isSearchActive]);
+  }, [activeWorksheetId, items, isSearchActive]);
 
   /**
    * Clear focus entirely.
    */
   const clearFocus = useCallback(() => {
     clearIdleTimeout();
+    pendingDomFocusRestoreTokenRef.current += 1;
+    focusedItemIdRef.current = null;
+    searchFocusedItemIdRef.current = null;
     setFocusedItemId(null);
     setSearchFocusedItemId(null);
     setNavigationInputMode(null);
@@ -447,7 +528,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     scheduleIdleClear();
   }, [scheduleIdleClear]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     return () => {
       clearIdleTimeout();
       pendingFocusRestoreAfterSearchClearRef.current = false;
@@ -499,7 +580,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     if (isContextMenuOpen) {
       if (
         contextMenuTargetItemId
-        && isNavListItemOrHiddenWorksheet(contextMenuTargetItemId, items, hiddenWorksheetIds)
+        && hasItem(contextMenuTargetItemId, items)
       ) {
         clearIdleTimeout();
         suppressNextDomFocusRef.current = true;
@@ -529,7 +610,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   }, [
     clearIdleTimeout,
     contextMenuTargetItemId,
-    hiddenWorksheetIds,
     isContextMenuOpen,
     isRenaming,
     isSearchActive,
@@ -542,7 +622,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
    * Effect: when focusedItemId changes, focus the corresponding DOM element.
    * Also handles the special case of focusing the search input.
    */
-  useEffect(() => {
+  useLayoutEffect(() => {
     const targetFocusedItemId = isSearchActive ? searchFocusedItemId : focusedItemId;
 
     if (targetFocusedItemId === null) {
@@ -562,7 +642,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
     const element = elementRegistryRef.current.get(targetFocusedItemId);
     if (element && document.contains(element)) {
-      element.focus();
+      element.focus({ preventScroll: true });
     }
   }, [focusedItemId, searchFocusedItemId, isSearchActive, searchInputRef]);
 
@@ -603,8 +683,8 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       return;
     }
 
-    // Check if focused item still exists (main list or Hidden section rows)
-    if (!isNavListItemOrHiddenWorksheet(currentFocusedId, items, hiddenWorksheetIds)) {
+    // Check if focused item still exists in the current linear list.
+    if (!hasItem(currentFocusedId, items)) {
       // If search was just cleared without explicit pending restore, focus first item.
       const wasSearchCleared = searchJustClosed;
 
@@ -650,7 +730,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     isSearchActive,
     activeWorksheetId,
     setKeyboardFocusedItem,
-    hiddenWorksheetIds,
   ]);
 
   /**
@@ -708,7 +787,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
    * strong wash to the active worksheet (throttled so we do not reset timers every frame).
    */
   useEffect(() => {
-    if (isSuppressed) {
+    if (isSuppressedRef.current) {
       return undefined;
     }
 
@@ -741,7 +820,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     return () => {
       document.removeEventListener('pointermove', handlePointerMove, { capture: true });
     };
-  }, [isSuppressed, scheduleIdleClear]);
+  }, [scheduleIdleClear]);
 
   /**
    * Catch global ArrowDown / ArrowUp when no navigable item has focus.
@@ -751,7 +830,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   useEffect(() => {
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
       const logicalRowFocus = isSearchActive ? searchFocusedItemId : focusedItemId;
-      if (isSuppressed || logicalRowFocus) {
+      if (isSuppressedRef.current || logicalRowFocus) {
         return;
       }
 
@@ -787,7 +866,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       document.removeEventListener('keydown', handleGlobalKeyDown);
     };
   }, [
-    isSuppressed,
     focusedItemId,
     searchFocusedItemId,
     isSearchActive,
@@ -804,7 +882,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
    */
   const handleSearchKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (isSuppressed) {
+      if (isSuppressedRef.current) {
         return;
       }
 
@@ -874,7 +952,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       }
     },
     [
-      isSuppressed,
       items,
       focusedItemId,
       searchFocusedItemId,
@@ -892,9 +969,14 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
    */
   const handleItemKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLElement>, itemId: string) => {
-      if (isSuppressed) {
+      if (isSuppressedRef.current) {
         return;
       }
+
+      // Once the user starts navigating again, any stale "don't focus DOM yet"
+      // flag from menu-close restoration must be cleared so the newly selected row
+      // can reclaim real DOM focus instead of leaving focus stuck on the old row.
+      suppressNextDomFocusRef.current = false;
 
       const anchorItemId = getKeyboardAnchorItemId(itemId);
       const currentItem = anchorItemId
@@ -939,6 +1021,20 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         case 'Enter': {
           event.preventDefault();
           event.stopPropagation();
+          if (currentItem?.kind === 'hidden-worksheet') {
+            const worksheetId = currentItem.worksheetId;
+            if (!worksheetId || !onRequestSheetContextMenuFromKeyboard) {
+              break;
+            }
+
+            const anchorElement = anchorItemId
+              ? elementRegistryRef.current.get(anchorItemId) ?? null
+              : null;
+            onRequestSheetContextMenuFromKeyboard({ worksheetId, anchorElement });
+            markKeyboardActivity();
+            break;
+          }
+
           onActivate(anchorItemId ?? itemId);
           break;
         }
@@ -967,7 +1063,9 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
         case 'ArrowRight': {
           const worksheetId =
-            currentItem?.kind === 'worksheet' || currentItem?.kind === 'search-result'
+            currentItem?.kind === 'worksheet'
+            || currentItem?.kind === 'hidden-worksheet'
+            || currentItem?.kind === 'search-result'
               ? currentItem.worksheetId
               : undefined;
           if (!worksheetId || !onRequestSheetContextMenuFromKeyboard) {
@@ -1013,7 +1111,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       }
     },
     [
-      isSuppressed,
       items,
       getKeyboardAnchorItemId,
       isSearchActive,
@@ -1030,79 +1127,13 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   );
 
   /**
-   * When logical list focus points at a navigable row/header but DOM focus sits on a scrollable
-   * ancestor (common after menus close in Office webviews) or on a nested control (pin button),
-   * Arrow/Home/End would scroll the pane instead of moving selection. Catch those keys in the
-   * capture phase and route them through the same navigation handler as the row.
-   */
-  useEffect(() => {
-    const handleCaptureKeyDown = (event: KeyboardEvent) => {
-      if (!LIST_NAVIGATION_DOM_KEYS.has(event.key)) {
-        return;
-      }
-      if (isSuppressed) {
-        return;
-      }
-
-      const active = document.activeElement;
-      if (active instanceof HTMLElement && active.isContentEditable) {
-        return;
-      }
-      if (
-        active instanceof HTMLInputElement
-        || active instanceof HTMLTextAreaElement
-        || active instanceof HTMLSelectElement
-      ) {
-        if (active === searchInputRef.current) {
-          return;
-        }
-        return;
-      }
-
-      const logicalId = isSearchActiveRef.current
-        ? searchFocusedItemIdRef.current
-        : focusedItemIdRef.current;
-      if (!logicalId || logicalId === SEARCH_INPUT_SENTINEL_ID) {
-        return;
-      }
-
-      const root = elementRegistryRef.current.get(logicalId);
-      if (!root || !document.contains(root)) {
-        return;
-      }
-
-      if (active instanceof HTMLElement && active === root) {
-        return;
-      }
-
-      if (active instanceof HTMLElement && root.contains(active)) {
-        const hostNavigableId = active.closest('[data-navigable-id]')?.getAttribute('data-navigable-id');
-        if (hostNavigableId !== logicalId) {
-          return;
-        }
-        event.preventDefault();
-        event.stopPropagation();
-        handleItemKeyDown(event as unknown as ReactKeyboardEvent<HTMLElement>, logicalId);
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-      handleItemKeyDown(event as unknown as ReactKeyboardEvent<HTMLElement>, logicalId);
-    };
-
-    document.addEventListener('keydown', handleCaptureKeyDown, true);
-    return () => {
-      document.removeEventListener('keydown', handleCaptureKeyDown, true);
-    };
-  }, [handleItemKeyDown, isSuppressed, searchInputRef]);
-
-  /**
    * Handler for keydown events on group headers.
    * Extends handleItemKeyDown with group-specific actions.
    */
   const handleGroupHeaderKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLElement>, groupId: string, isCollapsed: boolean) => {
+      suppressNextDomFocusRef.current = false;
+
       // First, handle common navigation keys via item handler
       if (LIST_NAVIGATION_DOM_KEYS.has(event.key)) {
         // Find the group header item ID to pass to handleItemKeyDown
@@ -1111,7 +1142,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
         return;
       }
 
-      if (isSuppressed) {
+      if (isSuppressedRef.current) {
         return;
       }
 
@@ -1165,7 +1196,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       }
     },
     [
-      isSuppressed,
       onExpandGroup,
       onCollapseGroup,
       handleItemKeyDown,
@@ -1176,6 +1206,88 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       clearFocus,
     ],
   );
+
+  /**
+   * When logical list focus points at a navigable row/header but DOM focus sits on a scrollable
+   * ancestor (common after menus close in Office webviews) or on a nested control (pin button),
+   * route managed keys through the current logical owner instead of letting the shell scroll or
+   * a stale DOM node handle them.
+   */
+  useEffect(() => {
+    const handleCaptureKeyDown = (event: KeyboardEvent) => {
+      if (!LIST_LOGICAL_ROUTED_KEYS.has(event.key)) {
+        return;
+      }
+      if (isSuppressedRef.current) {
+        return;
+      }
+
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && active.isContentEditable) {
+        return;
+      }
+      if (
+        active instanceof HTMLInputElement
+        || active instanceof HTMLTextAreaElement
+        || active instanceof HTMLSelectElement
+      ) {
+        if (active === searchInputRef.current) {
+          return;
+        }
+        return;
+      }
+
+      const logicalId = isSearchActiveRef.current
+        ? searchFocusedItemIdRef.current
+        : focusedItemIdRef.current;
+      if (!logicalId || logicalId === SEARCH_INPUT_SENTINEL_ID) {
+        return;
+      }
+
+      const root = elementRegistryRef.current.get(logicalId);
+      if (!root || !document.contains(root)) {
+        return;
+      }
+
+      const logicalItem = items.find((item) => item.id === logicalId);
+      if (!logicalItem) {
+        return;
+      }
+
+      const routeThroughLogicalOwner = () => {
+        if (logicalItem.kind === 'group-header') {
+          handleGroupHeaderKeyDown(
+            event as unknown as ReactKeyboardEvent<HTMLElement>,
+            logicalItem.groupId ?? '',
+            Boolean(logicalItem.isGroupCollapsed),
+          );
+          return;
+        }
+
+        handleItemKeyDown(event as unknown as ReactKeyboardEvent<HTMLElement>, logicalId);
+      };
+
+      if (active instanceof HTMLElement && root.contains(active)) {
+        const hostNavigableId = active.closest('[data-navigable-id]')?.getAttribute('data-navigable-id');
+        if (hostNavigableId !== logicalId) {
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        routeThroughLogicalOwner();
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      routeThroughLogicalOwner();
+    };
+
+    document.addEventListener('keydown', handleCaptureKeyDown, true);
+    return () => {
+      document.removeEventListener('keydown', handleCaptureKeyDown, true);
+    };
+  }, [handleGroupHeaderKeyDown, handleItemKeyDown, items, searchInputRef]);
 
   return {
     focusedItemId: isSearchActive ? searchFocusedItemId : focusedItemId,
@@ -1189,5 +1301,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     handleGroupHeaderKeyDown,
     clearFocus,
     focusItem,
+    restoreFocusAfterMenuDismiss,
   };
 }

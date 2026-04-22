@@ -1,10 +1,23 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import { useLeadingClusterInteraction } from '../../hooks/useLeadingClusterInteraction';
 import { ChevronDownIcon, ChevronRightIcon, EyeIcon, EyeOffIcon } from '../../icons';
 import '../SheetRow/SheetRow.css';
 import './HiddenSection.css';
 import '../Section/Section.css';
+
+function hasNestedInteractiveTarget(target: EventTarget | null, currentTarget: HTMLElement) {
+  if (!(target instanceof HTMLElement) || target === currentTarget) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  const interactiveTarget = target.closest('input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]');
+  return Boolean(interactiveTarget && currentTarget.contains(interactiveTarget));
+}
 
 interface HiddenSectionProps {
   isCollapsed: boolean;
@@ -21,6 +34,7 @@ interface HiddenSectionProps {
     y: number;
     worksheet: WorksheetEntity;
   }) => void;
+  onItemKeyDown?: (event: ReactKeyboardEvent<HTMLElement>, itemId: string) => void;
   registerElement?: (id: string, element: HTMLElement | null) => void;
 }
 
@@ -38,13 +52,13 @@ interface HiddenSheetRowProps {
     y: number;
     worksheet: WorksheetEntity;
   }) => void;
+  onItemKeyDown?: (event: ReactKeyboardEvent<HTMLElement>, itemId: string) => void;
   registerElement?: (id: string, element: HTMLElement | null) => void;
 }
 
 /**
  * Same leading-slot pattern as SheetRow pin: muted base icon, overlay action on hover/focus with motion.
- * Intentionally omits `data-navigable-id`: hidden rows are not in `buildNavigableItems`, and the global
- * pointer-sync listener would otherwise clear focus when their id is missing from the main list.
+ * Hidden rows now participate in same roving-focus contract as normal worksheet rows.
  */
 function HiddenSheetRow({
   worksheet,
@@ -55,6 +69,7 @@ function HiddenSheetRow({
   isActiveDimmed = false,
   onUnhide,
   onOpenContextMenu,
+  onItemKeyDown,
   registerElement,
 }: HiddenSheetRowProps) {
   const { isHovered, isFocused: isLeadingFocused, clusterPointerProps, actionFocusProps } = useLeadingClusterInteraction();
@@ -62,6 +77,7 @@ function HiddenSheetRow({
   const showUnhideAction = !isVeryHidden && (isHovered || isLeadingFocused);
   const navigableId = `worksheet:${worksheet.worksheetId}`;
   const isHighlighted = Boolean(isContextMenuOpen);
+  const tabIndex = isContextMenuOpen ? -1 : (isFocused ? 0 : -1);
 
   useEffect(() => {
     if (!registerElement) {
@@ -89,13 +105,41 @@ function HiddenSheetRow({
       data-pin-visible="false"
       data-leading-state="indicator"
       data-interaction-suppressed="false"
+      data-navigable-id={navigableId}
       data-focused={isFocused ? 'true' : undefined}
       data-visual-focused={isVisualFocused ? 'true' : undefined}
       data-visual-exiting={isVisualExiting ? 'true' : undefined}
       data-active-dimmed={isActiveDimmed ? 'true' : 'false'}
+      role="button"
+      tabIndex={tabIndex}
+      aria-label={worksheet.name}
+      aria-haspopup="menu"
       title={isVeryHidden ? 'Cannot unhide Very Hidden sheet' : undefined}
+      onKeyDown={(event) => {
+        if (hasNestedInteractiveTarget(event.target, event.currentTarget)) {
+          return;
+        }
+
+        const managedNavigationKey = event.key === 'ArrowDown'
+          || event.key === 'ArrowUp'
+          || event.key === 'Enter'
+          || event.key === 'Home'
+          || event.key === 'End'
+          || event.key === 'ArrowLeft'
+          || event.key === 'ArrowRight';
+
+        if (onItemKeyDown && managedNavigationKey) {
+          onItemKeyDown(event, navigableId);
+          return;
+        }
+
+        if (onItemKeyDown) {
+          onItemKeyDown(event, navigableId);
+        }
+      }}
       onContextMenu={(event) => {
         event.preventDefault();
+        event.stopPropagation();
         onOpenContextMenu({
           target: event.currentTarget,
           x: event.clientX,
@@ -152,6 +196,7 @@ export function HiddenSection({
   onToggle,
   onUnhide,
   onOpenContextMenu,
+  onItemKeyDown,
   registerElement,
 }: HiddenSectionProps) {
   return (
@@ -186,6 +231,7 @@ export function HiddenSection({
                 isActiveDimmed={isActiveDimmed}
                 onUnhide={onUnhide}
                 onOpenContextMenu={onOpenContextMenu}
+                onItemKeyDown={onItemKeyDown}
                 registerElement={registerElement}
               />
             );

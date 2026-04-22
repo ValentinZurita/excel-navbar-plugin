@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigationController } from '../../application/navigation/useNavigationController';
 import { TaskpaneShell } from '../components/TaskpaneShell';
 import { UndoToast } from '../components/UndoToast';
@@ -402,6 +402,19 @@ export function TaskpaneAppContainer() {
     },
   ], [controller.createWorksheet]);
 
+  const keyboardSheetMenuOpenFrameRef = useRef<number | null>(null);
+  const keyboardNavigationApiRef = useRef<{
+    restoreFocusAfterMenuDismiss: (itemId: string) => void;
+  } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (keyboardSheetMenuOpenFrameRef.current !== null) {
+        window.cancelAnimationFrame(keyboardSheetMenuOpenFrameRef.current);
+      }
+    };
+  }, []);
+
   useShortcutActions({
     actions: shortcutActions,
     isSuppressed: isShortcutsSuppressed,
@@ -423,16 +436,36 @@ export function TaskpaneAppContainer() {
         return;
       }
 
-      const rect = anchorElement?.getBoundingClientRect();
-      const x = rect ? Math.max(0, rect.right - 12) : 8;
-      const y = rect ? Math.max(0, rect.top + 6) : 8;
+      if (keyboardSheetMenuOpenFrameRef.current !== null) {
+        window.cancelAnimationFrame(keyboardSheetMenuOpenFrameRef.current);
+        keyboardSheetMenuOpenFrameRef.current = null;
+      }
 
-      openSheetMenu({
-        target: anchorElement ?? document.body,
-        x,
-        y,
-        worksheet,
-        interaction: 'keyboard',
+      const resolveAnchor = () => {
+        if (anchorElement && document.contains(anchorElement)) {
+          return anchorElement;
+        }
+
+        return document.querySelector<HTMLElement>(`[data-navigable-id="worksheet:${worksheetId}"]`);
+      };
+
+      keyboardSheetMenuOpenFrameRef.current = window.requestAnimationFrame(() => {
+        keyboardSheetMenuOpenFrameRef.current = window.requestAnimationFrame(() => {
+          const resolvedAnchor = resolveAnchor();
+          const rect = resolvedAnchor?.getBoundingClientRect();
+          const x = rect ? Math.max(0, rect.right - 12) : 8;
+          const y = rect ? Math.max(0, rect.top + 6) : 8;
+
+          openSheetMenu({
+            target: resolvedAnchor ?? document.body,
+            x,
+            y,
+            worksheet,
+            interaction: 'keyboard',
+          });
+
+          keyboardSheetMenuOpenFrameRef.current = null;
+        });
       });
     },
     [controller, openSheetMenu],
@@ -487,6 +520,7 @@ export function TaskpaneAppContainer() {
         sheetContextMenuOpenedVia={
           activeMenu?.kind === 'sheet' ? (activeMenu.openedVia ?? 'pointer') : null
         }
+        keyboardNavigationApiRef={keyboardNavigationApiRef}
       />
 
       {!dragAndDrop.activeWorksheetId ? (
@@ -524,6 +558,9 @@ export function TaskpaneAppContainer() {
         onConfirmDelete={confirmDelete}
         isDeleting={isDeleting}
         deleteError={deleteError}
+        onRestoreKeyboardMenuFocus={(itemId) => {
+          keyboardNavigationApiRef.current?.restoreFocusAfterMenuDismiss(itemId);
+        }}
       />
 
     </TaskpaneShell>
