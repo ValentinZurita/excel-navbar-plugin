@@ -14,6 +14,7 @@ import {
   focusElementWithManagedRingSuppression,
 } from './domFocusUtils';
 import { useKeyboardNavigationAnchor } from './useKeyboardNavigationAnchor';
+import { useKeyboardNavigationCleanup } from './useKeyboardNavigationCleanup';
 import { useKeyboardNavigationClearFocus } from './useKeyboardNavigationClearFocus';
 import { useKeyboardNavigationContextMenuFocusSync } from './useKeyboardNavigationContextMenuFocusSync';
 import { useKeyboardNavigationDomFocusRestore } from './useKeyboardNavigationDomFocusRestore';
@@ -327,16 +328,11 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     }
   }, [armHighlightExit, isHighlightSuppressed, isSearchActive, syncVisualExitTargetId]);
 
-  useLayoutEffect(() => {
-    return () => {
-      clearIdleTimeout();
-      pendingFocusRestoreAfterSearchClearRef.current = false;
-      if (exitTimerRef.current !== null) {
-        window.clearTimeout(exitTimerRef.current);
-        exitTimerRef.current = null;
-      }
-    };
-  }, [clearIdleTimeout]);
+  useKeyboardNavigationCleanup({
+    clearIdleTimeout,
+    pendingFocusRestoreAfterSearchClearRef,
+    exitTimerRef,
+  });
 
   useKeyboardNavigationContextMenuFocusSync({
     items,
