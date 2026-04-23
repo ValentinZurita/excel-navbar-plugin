@@ -15,6 +15,7 @@ import {
 } from './domFocusUtils';
 import { useKeyboardNavigationAnchor } from './useKeyboardNavigationAnchor';
 import { useKeyboardNavigationContextMenuFocusSync } from './useKeyboardNavigationContextMenuFocusSync';
+import { useKeyboardNavigationFocusSetters } from './useKeyboardNavigationFocusSetters';
 import { useKeyboardNavigationGroupHeaderKeyDown } from './useKeyboardNavigationGroupHeaderKeyDown';
 import { useKeyboardNavigationGlobalListeners } from './useKeyboardNavigationGlobalListeners';
 import { useKeyboardNavigationItemKeyDown } from './useKeyboardNavigationItemKeyDown';
@@ -238,48 +239,17 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     }
   }, []);
 
-  const setPointerFocusItem = useCallback((itemId: string) => {
-    if (!hasItem(itemId, items)) {
-      return;
-    }
-    pendingDomFocusRestoreTokenRef.current += 1;
-
-    // Pointer interaction always switches mode to pointer, even when hovering
-    // the same item that keyboard focused. This ensures CSS hover styles are
-    // restored after keyboard navigation.
-    setNavigationInputMode('pointer');
-
-    const currentFocused = isSearchActiveRef.current
-      ? searchFocusedItemIdRef.current
-      : focusedItemIdRef.current;
-    if (currentFocused === itemId) {
-      return;
-    }
-
-    // Pointer hover should update keyboard anchor/visual row without stealing
-    // text-input focus from the search field.
-    suppressNextDomFocusRef.current = true;
-
-    if (itemId.startsWith('search:') || itemId === SEARCH_INPUT_SENTINEL_ID) {
-      searchFocusedItemIdRef.current = itemId;
-      setSearchFocusedItemId(itemId);
-    } else {
-      focusedItemIdRef.current = itemId;
-      setFocusedItemId(itemId);
-    }
-  }, [items]);
-
-  const setKeyboardFocusedItem = useCallback((itemId: string) => {
-    pendingDomFocusRestoreTokenRef.current += 1;
-    if (itemId.startsWith('search:') || itemId === SEARCH_INPUT_SENTINEL_ID) {
-      searchFocusedItemIdRef.current = itemId;
-      setSearchFocusedItemId(itemId);
-    } else {
-      focusedItemIdRef.current = itemId;
-      setFocusedItemId(itemId);
-    }
-    setNavigationInputMode('keyboard');
-  }, []);
+  const { setPointerFocusItem, setKeyboardFocusedItem } = useKeyboardNavigationFocusSetters({
+    items,
+    isSearchActiveRef,
+    focusedItemIdRef,
+    searchFocusedItemIdRef,
+    pendingDomFocusRestoreTokenRef,
+    suppressNextDomFocusRef,
+    setNavigationInputMode,
+    setFocusedItemId,
+    setSearchFocusedItemId,
+  });
 
   /**
    * After closing a context menu, the activeElement often lands on a scrollable shell
