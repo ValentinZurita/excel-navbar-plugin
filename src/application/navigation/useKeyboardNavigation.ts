@@ -15,6 +15,7 @@ import {
 } from './domFocusUtils';
 import { useKeyboardNavigationAnchor } from './useKeyboardNavigationAnchor';
 import { useKeyboardNavigationContextMenuFocusSync } from './useKeyboardNavigationContextMenuFocusSync';
+import { useKeyboardNavigationDomFocusRestore } from './useKeyboardNavigationDomFocusRestore';
 import { useKeyboardNavigationFocusSetters } from './useKeyboardNavigationFocusSetters';
 import { useKeyboardNavigationGroupHeaderKeyDown } from './useKeyboardNavigationGroupHeaderKeyDown';
 import { useKeyboardNavigationGlobalListeners } from './useKeyboardNavigationGlobalListeners';
@@ -251,30 +252,29 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     setSearchFocusedItemId,
   });
 
-  /**
-   * After closing a context menu, the activeElement often lands on a scrollable shell
-   * (arrow keys then scroll). Re-attach DOM focus to the navigable node on the next frames.
-   */
-  const scheduleDomFocusForNavigableId = useCallback((itemId: string | null) => {
-    if (!itemId || itemId === SEARCH_INPUT_SENTINEL_ID) {
-      return;
+  const clearIdleTimeout = useCallback(() => {
+    if (idleClearTimeoutRef.current !== null) {
+      window.clearTimeout(idleClearTimeoutRef.current);
+      idleClearTimeoutRef.current = null;
     }
-    const id = itemId;
-    const token = ++pendingDomFocusRestoreTokenRef.current;
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        if (pendingDomFocusRestoreTokenRef.current !== token) {
-          return;
-        }
-        const el = elementRegistryRef.current.get(id);
-        if (el && document.contains(el)) {
-          focusElementWithManagedRingSuppression(el);
-          // Clearing on a timer let :focus-visible return while focus still sat on the row
-          // (green ring flash). Blur cleanup is enough; keyboard rows hide host outline via CSS.
-        }
-      });
-    });
   }, []);
+
+  const { scheduleDomFocusForNavigableId, restoreFocusAfterMenuDismiss } = useKeyboardNavigationDomFocusRestore({
+    items,
+    searchInputRef,
+    elementRegistryRef,
+    pendingDomFocusRestoreTokenRef,
+    contextMenuOwnedFocusRef,
+    lastContextMenuTargetItemIdRef,
+    suppressNextDomFocusRef,
+    isSuppressedRef,
+    focusedItemIdRef,
+    searchFocusedItemIdRef,
+    clearIdleTimeout,
+    setNavigationInputMode,
+    setFocusedItemId,
+    setSearchFocusedItemId,
+  });
 
   /**
    * Set focus to a specific item ID.
@@ -298,52 +298,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
 
     setKeyboardFocusedItem(itemId);
   }, [items, setKeyboardFocusedItem]);
-
-  const clearIdleTimeout = useCallback(() => {
-    if (idleClearTimeoutRef.current !== null) {
-      window.clearTimeout(idleClearTimeoutRef.current);
-      idleClearTimeoutRef.current = null;
-    }
-  }, []);
-
-  const restoreFocusAfterMenuDismiss = useCallback((itemId: string) => {
-    if (!hasItem(itemId, items)) {
-      return;
-    }
-
-    pendingDomFocusRestoreTokenRef.current += 1;
-    clearIdleTimeout();
-    contextMenuOwnedFocusRef.current = false;
-    lastContextMenuTargetItemIdRef.current = itemId;
-    suppressNextDomFocusRef.current = false;
-    isSuppressedRef.current = false;
-
-    if (itemId.startsWith('search:') || itemId === SEARCH_INPUT_SENTINEL_ID) {
-      searchFocusedItemIdRef.current = itemId;
-      setSearchFocusedItemId(itemId);
-    } else {
-      focusedItemIdRef.current = itemId;
-      setFocusedItemId(itemId);
-    }
-    setNavigationInputMode('keyboard');
-
-    const el = itemId === SEARCH_INPUT_SENTINEL_ID
-      ? searchInputRef.current
-      : elementRegistryRef.current.get(itemId) ?? null;
-    if (el && document.contains(el)) {
-      focusElementWithManagedRingSuppression(el, {
-        suppressFocusRingAttribute: itemId !== SEARCH_INPUT_SENTINEL_ID,
-      });
-      return;
-    }
-
-    if (itemId === SEARCH_INPUT_SENTINEL_ID) {
-      searchInputRef.current?.focus();
-      return;
-    }
-
-    scheduleDomFocusForNavigableId(itemId);
-  }, [clearIdleTimeout, items, searchInputRef]);
 
   const getKeyboardAnchorItemId = useKeyboardNavigationAnchor({
     items,
