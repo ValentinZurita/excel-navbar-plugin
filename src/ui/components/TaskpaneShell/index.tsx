@@ -14,7 +14,7 @@ export function TaskpaneShell({ children, banner, onDismissBanner, toast }: Task
     <main className="taskpane-shell">
       {banner ? <StatusBanner banner={banner} onDismiss={onDismissBanner} /> : null}
       {toast ? <div className="taskpane-toast-slot">{toast}</div> : null}
-      <section className="taskpane-content">{children}</section>
+      {children}
     </main>
   );
 }

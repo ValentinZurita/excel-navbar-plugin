@@ -415,122 +415,72 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
   }, [keyboardNavigationApiRef, restoreFocusAfterMenuDismiss]);
 
   return (
-    <>
-      <SearchBox
-        value={query}
-        onChange={onChangeQuery}
-        results={searchResults}
-        activeWorksheetId={activeWorksheetId}
-        onSelect={onSelectSearchResult}
-        inputRef={searchInputRef}
-        onSearchKeyDown={handleSearchKeyDown}
-        focusedItemId={focusedItemId}
-        visualFocusedItemId={visualFocusedItemId}
-        sheetContextMenuOpen={Boolean(contextMenuOpenSheetId)}
-        navigationInputMode={navigationInputMode}
-        onResultKeyDown={handleItemKeyDown}
-        onResultPointerFocus={setPointerFocusItem}
-        registerElement={registerElement}
-        onStartRenameWorksheet={onStartRenameWorksheetFromSearch ?? onStartRenameWorksheet}
-      />
+    <div className="taskpane-navigator">
+      <div className="taskpane-navigator-header">
+        <SearchBox
+          value={query}
+          onChange={onChangeQuery}
+          results={searchResults}
+          activeWorksheetId={activeWorksheetId}
+          onSelect={onSelectSearchResult}
+          inputRef={searchInputRef}
+          onSearchKeyDown={handleSearchKeyDown}
+          focusedItemId={focusedItemId}
+          visualFocusedItemId={visualFocusedItemId}
+          sheetContextMenuOpen={Boolean(contextMenuOpenSheetId)}
+          navigationInputMode={navigationInputMode}
+          onResultKeyDown={handleItemKeyDown}
+          onResultPointerFocus={setPointerFocusItem}
+          registerElement={registerElement}
+          onStartRenameWorksheet={onStartRenameWorksheetFromSearch ?? onStartRenameWorksheet}
+        />
+      </div>
 
-      <DndContext
-        sensors={dragConfig.sensors}
-        collisionDetection={worksheetCollisionDetection}
-        modifiers={[restrictToVerticalAxis]}
-        measuring={{
-          droppable: {
-            strategy: MeasuringStrategy.Always,
-          },
-        }}
-        onDragStart={dragConfig.onDragStart}
-        onDragOver={dragConfig.onDragOver}
-        onDragEnd={dragConfig.onDragEnd}
-        onDragCancel={dragConfig.onDragCancel}
-      >
-        <DragOverlay
-          dropAnimation={null}
-          className="worksheet-drag-overlay"
-          modifiers={[worksheetDragOverlayOffset]}
-          zIndex={20}
+      <div className="taskpane-navigator-body">
+        <DndContext
+          sensors={dragConfig.sensors}
+          collisionDetection={worksheetCollisionDetection}
+          modifiers={[restrictToVerticalAxis]}
+          measuring={{
+            droppable: {
+              strategy: MeasuringStrategy.Always,
+            },
+          }}
+          onDragStart={dragConfig.onDragStart}
+          onDragOver={dragConfig.onDragOver}
+          onDragEnd={dragConfig.onDragEnd}
+          onDragCancel={dragConfig.onDragCancel}
         >
-          {dragConfig.activeDragWorksheet ? (
-            <SheetRow
-              worksheet={dragConfig.activeDragWorksheet}
-              isActive={dragConfig.activeDragWorksheet.worksheetId === activeWorksheetId}
-              isOverlay
-              onActivate={() => Promise.resolve()}
-              onOpenContextMenu={() => undefined}
-            />
-          ) : null}
-        </DragOverlay>
+          <DragOverlay
+            dropAnimation={null}
+            className="worksheet-drag-overlay"
+            modifiers={[worksheetDragOverlayOffset]}
+            zIndex={20}
+          >
+            {dragConfig.activeDragWorksheet ? (
+              <SheetRow
+                worksheet={dragConfig.activeDragWorksheet}
+                isActive={dragConfig.activeDragWorksheet.worksheetId === activeWorksheetId}
+                isOverlay
+                onActivate={() => Promise.resolve()}
+                onOpenContextMenu={() => undefined}
+              />
+            ) : null}
+          </DragOverlay>
 
-        {shouldShowPinnedSection ? (
-          <Section title="Pinned" isCollapsed={isPinnedCollapsed} onToggle={setIsPinnedCollapsed}>
-            <SheetList
-              worksheets={navigatorView.pinned}
-              activeWorksheetId={activeWorksheetId}
-              contextMenuOpenId={contextMenuOpenSheetId}
-              dragConfig={buildPinnedDragConfig(dragConfig, 'pinned')}
-              renamingWorksheetId={renamingWorksheetId}
-              focusedItemId={focusedItemId}
-              visualFocusedItemId={visualFocusedItemId}
-              visualExitingItemId={visualExitingItemId}
-              onActivate={onActivateWorksheet}
-              onTogglePin={onUnpinWorksheet}
-              onOpenContextMenu={onOpenSheetMenu}
-              onRenameSubmit={onRenameWorksheetSubmit}
-              onRenameCancel={onRenameCancel}
-              onStartRenameWorksheet={onStartRenameWorksheet}
-              onItemKeyDown={handleItemKeyDown}
-              registerElement={registerElement}
-            />
-          </Section>
-        ) : null}
-
-        {shouldShowGroupsSection ? (
-          <Section title="Groups" headerAccessory={groupsSessionOnlyHint} isCollapsed={isGroupsCollapsed} onToggle={setIsGroupsCollapsed}>
-            <GroupSection
-              groups={navigatorView.groups}
-              activeWorksheetId={activeWorksheetId}
-              contextMenuOpenId={contextMenuOpenSheetId}
-              groupMenuOpenId={contextMenuOpenGroupId}
-              dragConfig={buildGroupDragConfig(dragConfig)}
-              renamingGroupId={renamingGroupId}
-              renamingWorksheetId={renamingWorksheetId}
-              focusedItemId={focusedItemId}
-              visualFocusedItemId={visualFocusedItemId}
-              visualExitingItemId={visualExitingItemId}
-              onActivate={onActivateWorksheet}
-              onToggleCollapsed={onToggleGroupCollapsed}
-              onTogglePin={onPinWorksheet}
-              onOpenGroupMenu={onOpenGroupMenu}
-              onOpenSheetMenu={onOpenSheetMenu}
-              onRenameSubmit={onRenameGroupSubmit}
-              onRenameCancel={onRenameCancel}
-              onRenameWorksheetSubmit={onRenameWorksheetSubmit}
-              onStartRenameWorksheet={onStartRenameWorksheet}
-              onGroupHeaderKeyDown={handleGroupHeaderKeyDown}
-              onItemKeyDown={handleItemKeyDown}
-              registerElement={registerElement}
-            />
-          </Section>
-        ) : null}
-
-        {shouldShowUngroupedSection ? (
-          <Section title="Sheets" isCollapsed={isSheetsCollapsed} onToggle={setIsSheetsCollapsed}>
-            <div className="primary-tabs">
+          {shouldShowPinnedSection ? (
+            <Section title="Pinned" isCollapsed={isPinnedCollapsed} onToggle={setIsPinnedCollapsed}>
               <SheetList
-                worksheets={navigatorView.ungrouped}
+                worksheets={navigatorView.pinned}
                 activeWorksheetId={activeWorksheetId}
                 contextMenuOpenId={contextMenuOpenSheetId}
-                dragConfig={buildSheetListDragConfig(dragConfig, 'sheets')}
+                dragConfig={buildPinnedDragConfig(dragConfig, 'pinned')}
                 renamingWorksheetId={renamingWorksheetId}
                 focusedItemId={focusedItemId}
                 visualFocusedItemId={visualFocusedItemId}
                 visualExitingItemId={visualExitingItemId}
                 onActivate={onActivateWorksheet}
-                onTogglePin={onPinWorksheet}
+                onTogglePin={onUnpinWorksheet}
                 onOpenContextMenu={onOpenSheetMenu}
                 onRenameSubmit={onRenameWorksheetSubmit}
                 onRenameCancel={onRenameCancel}
@@ -538,26 +488,80 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
                 onItemKeyDown={handleItemKeyDown}
                 registerElement={registerElement}
               />
-            </div>
-          </Section>
-        ) : null}
-      </DndContext>
+            </Section>
+          ) : null}
 
-      {shouldShowHiddenSection ? (
-        <HiddenSection
-          isCollapsed={isHiddenSectionCollapsed}
-          worksheets={navigatorView.hidden}
-          contextMenuOpenSheetId={contextMenuOpenSheetId}
-          focusedItemId={focusedItemId}
-          visualFocusedItemId={visualFocusedItemId}
-          visualExitingItemId={visualExitingItemId}
-          onToggle={onToggleHiddenSection}
-          onUnhide={onUnhideWorksheet}
-          onOpenContextMenu={onOpenSheetMenu}
-          onItemKeyDown={handleItemKeyDown}
-          registerElement={registerElement}
-        />
-      ) : null}
-    </>
+          {shouldShowGroupsSection ? (
+            <Section title="Groups" headerAccessory={groupsSessionOnlyHint} isCollapsed={isGroupsCollapsed} onToggle={setIsGroupsCollapsed}>
+              <GroupSection
+                groups={navigatorView.groups}
+                activeWorksheetId={activeWorksheetId}
+                contextMenuOpenId={contextMenuOpenSheetId}
+                groupMenuOpenId={contextMenuOpenGroupId}
+                dragConfig={buildGroupDragConfig(dragConfig)}
+                renamingGroupId={renamingGroupId}
+                renamingWorksheetId={renamingWorksheetId}
+                focusedItemId={focusedItemId}
+                visualFocusedItemId={visualFocusedItemId}
+                visualExitingItemId={visualExitingItemId}
+                onActivate={onActivateWorksheet}
+                onToggleCollapsed={onToggleGroupCollapsed}
+                onTogglePin={onPinWorksheet}
+                onOpenGroupMenu={onOpenGroupMenu}
+                onOpenSheetMenu={onOpenSheetMenu}
+                onRenameSubmit={onRenameGroupSubmit}
+                onRenameCancel={onRenameCancel}
+                onRenameWorksheetSubmit={onRenameWorksheetSubmit}
+                onStartRenameWorksheet={onStartRenameWorksheet}
+                onGroupHeaderKeyDown={handleGroupHeaderKeyDown}
+                onItemKeyDown={handleItemKeyDown}
+                registerElement={registerElement}
+              />
+            </Section>
+          ) : null}
+
+          {shouldShowUngroupedSection ? (
+            <Section title="Sheets" isCollapsed={isSheetsCollapsed} onToggle={setIsSheetsCollapsed}>
+              <div className="primary-tabs">
+                <SheetList
+                  worksheets={navigatorView.ungrouped}
+                  activeWorksheetId={activeWorksheetId}
+                  contextMenuOpenId={contextMenuOpenSheetId}
+                  dragConfig={buildSheetListDragConfig(dragConfig, 'sheets')}
+                  renamingWorksheetId={renamingWorksheetId}
+                  focusedItemId={focusedItemId}
+                  visualFocusedItemId={visualFocusedItemId}
+                  visualExitingItemId={visualExitingItemId}
+                  onActivate={onActivateWorksheet}
+                  onTogglePin={onPinWorksheet}
+                  onOpenContextMenu={onOpenSheetMenu}
+                  onRenameSubmit={onRenameWorksheetSubmit}
+                  onRenameCancel={onRenameCancel}
+                  onStartRenameWorksheet={onStartRenameWorksheet}
+                  onItemKeyDown={handleItemKeyDown}
+                  registerElement={registerElement}
+                />
+              </div>
+            </Section>
+          ) : null}
+        </DndContext>
+
+        {shouldShowHiddenSection ? (
+          <HiddenSection
+            isCollapsed={isHiddenSectionCollapsed}
+            worksheets={navigatorView.hidden}
+            contextMenuOpenSheetId={contextMenuOpenSheetId}
+            focusedItemId={focusedItemId}
+            visualFocusedItemId={visualFocusedItemId}
+            visualExitingItemId={visualExitingItemId}
+            onToggle={onToggleHiddenSection}
+            onUnhide={onUnhideWorksheet}
+            onOpenContextMenu={onOpenSheetMenu}
+            onItemKeyDown={handleItemKeyDown}
+            registerElement={registerElement}
+          />
+        ) : null}
+      </div>
+    </div>
   );
 }
