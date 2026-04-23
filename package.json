@@ -16,6 +16,7 @@
     "quality": "npm run check:component-imports && npm run lint:css && npm run lint:md && npm run format:check && npm run lint:eslint",
     "manifest:dev": "node scripts/render-manifest.mjs --base-url=https://localhost:3000 --output=manifest.xml",
     "manifest:prod": "node scripts/render-manifest.mjs --output=dist/manifest.xml",
+    "manifest:validate": "office-addin-manifest validate dist/manifest.xml",
     "release:check": "node scripts/release-check.mjs",
     "package:release": "npm run release:check && npm run build && npm run manifest:prod",
     "test": "vitest run",
@@ -30,7 +31,8 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "^9.39.4",
+    "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
@@ -47,6 +49,7 @@
     "html-webpack-plugin": "^5.6.3",
     "jsdom": "^25.0.1",
     "markdownlint-cli2": "^0.15.0",
+    "office-addin-manifest": "^2.1.3",
     "prettier": "^3.8.3",
     "style-loader": "^4.0.0",
     "stylelint": "^16.9.0",

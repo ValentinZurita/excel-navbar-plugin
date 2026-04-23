@@ -25,7 +25,6 @@ import {
   type PolicyEvaluationState,
 } from '../dnd/dndPolicies';
 
-
 interface UseWorksheetDnDParams {
   assignWorksheetToGroup: (worksheetId: string, groupId: string, targetIndex?: number) => void;
   removeWorksheetFromGroup: (worksheetId: string, targetIndex?: number) => void;

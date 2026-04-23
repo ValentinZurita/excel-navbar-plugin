@@ -58,6 +58,9 @@ jobs:
             exit 1
           fi
 
+      - name: Validate manifest against Office schema
+        run: npm run manifest:validate
+
       - name: Report bundle size
         run: |
           echo "Bundle size report:"

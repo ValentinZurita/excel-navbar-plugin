@@ -1,11 +1,7 @@
 import { createDefaultNavigationState } from './defaultState';
 import { groupColorTokens } from './constants';
 import { applyMoveAmongUngroupedVisibleSheets } from './sheetSectionVisibleOrder';
-import {
-  dedupeWorksheetIds,
-  moveWorksheetId,
-  reconcileSheetSectionOrder,
-} from './utils';
+import { dedupeWorksheetIds, moveWorksheetId, reconcileSheetSectionOrder } from './utils';
 import type {
   GroupColorToken,
   GroupEntity,
