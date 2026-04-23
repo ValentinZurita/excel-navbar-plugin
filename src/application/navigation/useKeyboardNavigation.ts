@@ -1,13 +1,9 @@
 import {
   useCallback,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
-import {
-  computeVisualFocusedItemId,
-} from './useHighlightLifecycle';
 import {
   focusElementWithManagedRingSuppression,
 } from './domFocusUtils';
@@ -26,6 +22,7 @@ import { useKeyboardNavigationIdleLifecycle } from './useKeyboardNavigationIdleL
 import { useKeyboardNavigationItemKeyDown } from './useKeyboardNavigationItemKeyDown';
 import { useKeyboardNavigationItemsReconcile } from './useKeyboardNavigationItemsReconcile';
 import { useKeyboardNavigationSearchKeyDown } from './useKeyboardNavigationSearchKeyDown';
+import { useKeyboardNavigationVisualFocus } from './useKeyboardNavigationVisualFocus';
 import type { NavigableItem } from '../../domain/navigation/types';
 
 /** After this much time without keyboard navigation activity, transient row focus clears and the wash returns to the active worksheet. */
@@ -176,27 +173,15 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   const isHighlightSuppressed = isDragActive || isDialogOpen || isRenaming;
   const isSuppressedRef = useRef(isSuppressed);
 
-  const visualFocusedItemId = useMemo(
-    () => computeVisualFocusedItemId({
-      logicalFocusedItemId: isSearchActive ? searchFocusedItemId : focusedItemId,
-      activeVisualItemId,
-      isContextMenuOpen,
-      contextMenuTargetItemId,
-      isHighlightSuppressed,
-      isSearchActive,
-    }),
-    [
-      activeVisualItemId,
-      contextMenuTargetItemId,
-      focusedItemId,
-      isContextMenuOpen,
-      isDialogOpen,
-      isDragActive,
-      isRenaming,
-      isSearchActive,
-      searchFocusedItemId,
-    ],
-  );
+  const visualFocusedItemId = useKeyboardNavigationVisualFocus({
+    focusedItemId,
+    searchFocusedItemId,
+    activeVisualItemId,
+    isContextMenuOpen,
+    contextMenuTargetItemId,
+    isHighlightSuppressed,
+    isSearchActive,
+  });
 
   const visualExitingItemIdResolved = useKeyboardNavigationHighlightExit({
     visualFocusedItemId,
