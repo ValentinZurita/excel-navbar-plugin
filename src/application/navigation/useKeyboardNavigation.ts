@@ -17,6 +17,7 @@ import { useKeyboardNavigationAnchor } from './useKeyboardNavigationAnchor';
 import { useKeyboardNavigationClearFocus } from './useKeyboardNavigationClearFocus';
 import { useKeyboardNavigationContextMenuFocusSync } from './useKeyboardNavigationContextMenuFocusSync';
 import { useKeyboardNavigationDomFocusRestore } from './useKeyboardNavigationDomFocusRestore';
+import { useKeyboardNavigationFocusItem } from './useKeyboardNavigationFocusItem';
 import { useKeyboardNavigationFocusSetters } from './useKeyboardNavigationFocusSetters';
 import { useKeyboardNavigationGroupHeaderKeyDown } from './useKeyboardNavigationGroupHeaderKeyDown';
 import { useKeyboardNavigationGlobalListeners } from './useKeyboardNavigationGlobalListeners';
@@ -26,7 +27,6 @@ import { useKeyboardNavigationItemsReconcile } from './useKeyboardNavigationItem
 import { useKeyboardNavigationSearchKeyDown } from './useKeyboardNavigationSearchKeyDown';
 import type { NavigableItem } from '../../domain/navigation/types';
 import {
-  hasItem,
   SEARCH_INPUT_SENTINEL_ID,
 } from '../../domain/navigation/navigableItems';
 
@@ -254,28 +254,16 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     setSearchFocusedItemId,
   });
 
-  /**
-   * Set focus to a specific item ID.
-   * This updates state and (via useEffect) focuses the DOM element.
-   */
-  const focusItem = useCallback((itemId: string | null) => {
-    pendingDomFocusRestoreTokenRef.current += 1;
-    if (itemId === null) {
-      focusedItemIdRef.current = null;
-      searchFocusedItemIdRef.current = null;
-      setFocusedItemId(null);
-      setSearchFocusedItemId(null);
-      setNavigationInputMode(null);
-      return;
-    }
-
-    // Validate the ID exists in current items
-    if (!hasItem(itemId, items)) {
-      return;
-    }
-
-    setKeyboardFocusedItem(itemId);
-  }, [items, setKeyboardFocusedItem]);
+  const focusItem = useKeyboardNavigationFocusItem({
+    items,
+    pendingDomFocusRestoreTokenRef,
+    focusedItemIdRef,
+    searchFocusedItemIdRef,
+    setFocusedItemId,
+    setSearchFocusedItemId,
+    setNavigationInputMode,
+    setKeyboardFocusedItem,
+  });
 
   const getKeyboardAnchorItemId = useKeyboardNavigationAnchor({
     items,
