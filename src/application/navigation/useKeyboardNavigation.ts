@@ -17,6 +17,7 @@ import { useKeyboardNavigationAnchor } from './useKeyboardNavigationAnchor';
 import { useKeyboardNavigationClearFocus } from './useKeyboardNavigationClearFocus';
 import { useKeyboardNavigationContextMenuFocusSync } from './useKeyboardNavigationContextMenuFocusSync';
 import { useKeyboardNavigationDomFocusRestore } from './useKeyboardNavigationDomFocusRestore';
+import { useKeyboardNavigationDomFocusSync } from './useKeyboardNavigationDomFocusSync';
 import { useKeyboardNavigationFocusItem } from './useKeyboardNavigationFocusItem';
 import { useKeyboardNavigationFocusSetters } from './useKeyboardNavigationFocusSetters';
 import { useKeyboardNavigationGroupHeaderKeyDown } from './useKeyboardNavigationGroupHeaderKeyDown';
@@ -26,9 +27,6 @@ import { useKeyboardNavigationItemKeyDown } from './useKeyboardNavigationItemKey
 import { useKeyboardNavigationItemsReconcile } from './useKeyboardNavigationItemsReconcile';
 import { useKeyboardNavigationSearchKeyDown } from './useKeyboardNavigationSearchKeyDown';
 import type { NavigableItem } from '../../domain/navigation/types';
-import {
-  SEARCH_INPUT_SENTINEL_ID,
-} from '../../domain/navigation/navigableItems';
 
 /** After this much time without keyboard navigation activity, transient row focus clears and the wash returns to the active worksheet. */
 export const TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS = 10_000;
@@ -359,33 +357,14 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     setKeyboardFocusedItem,
   });
 
-  /**
-   * Effect: when focusedItemId changes, focus the corresponding DOM element.
-   * Also handles the special case of focusing the search input.
-   */
-  useLayoutEffect(() => {
-    const targetFocusedItemId = isSearchActive ? searchFocusedItemId : focusedItemId;
-
-    if (targetFocusedItemId === null) {
-      return;
-    }
-
-    if (suppressNextDomFocusRef.current) {
-      suppressNextDomFocusRef.current = false;
-      return;
-    }
-
-    // Special sentinel: focus the search input
-    if (targetFocusedItemId === SEARCH_INPUT_SENTINEL_ID) {
-      searchInputRef.current?.focus();
-      return;
-    }
-
-    const element = elementRegistryRef.current.get(targetFocusedItemId);
-    if (element && document.contains(element)) {
-      element.focus({ preventScroll: true });
-    }
-  }, [focusedItemId, searchFocusedItemId, isSearchActive, searchInputRef]);
+  useKeyboardNavigationDomFocusSync({
+    focusedItemId,
+    searchFocusedItemId,
+    isSearchActive,
+    searchInputRef,
+    suppressNextDomFocusRef,
+    elementRegistryRef,
+  });
 
   useKeyboardNavigationItemsReconcile({
     items,
