@@ -24,9 +24,14 @@ Modern Excel worksheet navigation as a task pane add-in.
 - `npm run dev` — start local webpack dev server
 - `npm run build` — create production bundle in `dist/`
 - `npm run lint` — type-check the project
+- `npm run lint:eslint` — lint JavaScript/TypeScript with ESLint
 - `npm run test` — run unit/component tests
-- `npm run quality` — run architecture/style/docs quality gates
+- `npm run test:watch` — run tests in watch mode
+- `npm run quality` — run architecture/style/docs/format/eslint quality gates
+- `npm run format` — format all files with Prettier
+- `npm run format:check` — verify Prettier formatting without writing
 - `npm run manifest:dev` — regenerate local `manifest.xml` with `https://localhost:3000`
+- `npm run manifest:validate` — validate manifest against Office schema
 - `npm run package:release` — release packaging flow (`ADDIN_BASE_URL` required)
 
 ## Release packaging
