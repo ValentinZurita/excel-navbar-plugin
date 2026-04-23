@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { configureAxe } from 'jest-axe';
 import { describe, expect, it, vi } from 'vitest';
 import type { WorksheetEntity } from '../../src/domain/navigation/types';
 import { SheetRow } from '../../src/ui/components/SheetRow';
@@ -44,6 +45,31 @@ describe('SheetRow', () => {
     // Pin button exists in DOM but is not visible
     expect(container.querySelector('.sheet-pin-button')).toBeInTheDocument();
     expect(isPinButtonVisible(container)).toBe(false);
+  });
+
+  it('has no accessibility violations (baseline)', async () => {
+    const { container } = render(
+      <SheetRow
+        worksheet={baseWorksheet}
+        isActive={false}
+        onActivate={vi.fn()}
+        onTogglePin={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+      />,
+    );
+    // SheetRow uses <article role="button"> with nested interactive children
+    // (pin button). This is a known a11y gap that requires a structural refactor
+    // (e.g. converting to <li> with a wrapping action button and non-interactive
+    // pin indicator). The rules below are disabled so the gate can still catch
+    // NEW a11y regressions while the existing issue is tracked separately.
+    const configuredAxe = configureAxe({
+      rules: {
+        'aria-allowed-role': { enabled: false },
+        'nested-interactive': { enabled: false },
+      },
+    });
+    const results = await configuredAxe(container);
+    expect(results).toHaveNoViolations();
   });
 
   it('renders a worksheet icon for visible unpinned sheets inside a group', () => {

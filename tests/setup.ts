@@ -1,4 +1,7 @@
 import '@testing-library/jest-dom';
+import { toHaveNoViolations } from 'jest-axe';
+
+expect.extend(toHaveNoViolations);
 
 /**
  * Node may expose a partial `localStorage` when webstorage CLI flags are mis-set,
