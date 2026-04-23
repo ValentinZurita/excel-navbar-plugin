@@ -68,6 +68,7 @@ This list exists so pending work does not get lost between sessions.
 ### Pending implementation or hardening
 
 - [ ] Context-menu behavior cleanup without changing visuals
+  - [x] Limit sheet pointer-toggle close behavior to same worksheet row anchor (`anchorNavigableId`)
 - [ ] Workbook event / sync resilience hardening
 - [ ] Reconcile external workbook tab changes against local sidebar ordering rules
 - [ ] Better error handling around Office runtime failures
