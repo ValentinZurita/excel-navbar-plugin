@@ -24,7 +24,7 @@ import {
   type DnDPolicy,
   type PolicyEvaluationState,
 } from '../dnd/dndPolicies';
-import type { WorksheetEntity } from '../../../domain/navigation/types';
+
 
 interface UseWorksheetDnDParams {
   assignWorksheetToGroup: (worksheetId: string, groupId: string, targetIndex?: number) => void;

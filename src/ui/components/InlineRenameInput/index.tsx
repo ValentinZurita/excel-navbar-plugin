@@ -54,7 +54,7 @@ export function InlineRenameInput({
   }
 
   // Handle click outside - cancel rename
-  function handlePointerDown(event: React.PointerEvent) {
+  function handlePointerDown(_event: React.PointerEvent) {
     // Don't prevent default - we want to allow blur to happen naturally
     // The onBlur handler will cancel if needed
   }

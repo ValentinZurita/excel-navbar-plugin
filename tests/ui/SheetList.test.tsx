@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { useState } from 'react';
+
 import { DndContext } from '@dnd-kit/core';
 import type { WorksheetEntity } from '../../src/domain/navigation/types';
 import { SheetList } from '../../src/ui/components/SheetList';

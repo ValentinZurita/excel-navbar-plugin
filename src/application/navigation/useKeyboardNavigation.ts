@@ -1,5 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { focusElementWithManagedRingSuppression } from './domFocusUtils';
+import { useCallback, useRef, useState } from 'react';
 import { useKeyboardNavigationAnchor } from './useKeyboardNavigationAnchor';
 import { useKeyboardNavigationCleanup } from './useKeyboardNavigationCleanup';
 import { useKeyboardNavigationClearFocus } from './useKeyboardNavigationClearFocus';

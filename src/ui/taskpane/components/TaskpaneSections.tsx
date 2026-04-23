@@ -370,7 +370,6 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     contextMenuOpenGroupId,
     renamingWorksheetId,
     renamingGroupId,
-    isSessionOnlyPersistence,
     dragConfig,
     groupsSessionOnlyHint,
     shouldShowPinnedSection,

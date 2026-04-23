@@ -512,7 +512,7 @@ describe('TaskpaneMenus', () => {
   });
 
   it('shows inline group creator when isCreatingGroup is true', async () => {
-    const user = userEvent.setup();
+    const _user = userEvent.setup();
     const onConfirmCreatingGroup = vi.fn();
     const onCancelCreatingGroup = vi.fn();
 
