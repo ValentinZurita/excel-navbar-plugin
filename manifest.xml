@@ -21,6 +21,7 @@
   </Hosts>
   <Requirements>
     <Sets DefaultMinVersion="1.1">
+      <Set Name="ExcelApi" MinVersion="1.12"/>
       <Set Name="SharedRuntime" MinVersion="1.1"/>
     </Sets>
   </Requirements>
