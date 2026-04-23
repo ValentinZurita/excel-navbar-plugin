@@ -13,11 +13,12 @@ export function useContextMenus() {
     const openedVia = interaction;
     const anchorNavigableId = target.getAttribute('data-navigable-id') ?? `worksheet:${worksheet.worksheetId}`;
     setActiveMenu((currentMenu) => {
-      // Pointer: right-clicking the same worksheet toggles the menu off.
+      // Pointer: right-clicking the same worksheet row toggles menu off.
       if (
         interaction === 'pointer'
         && currentMenu?.kind === 'sheet'
         && currentMenu.worksheet.worksheetId === worksheet.worksheetId
+        && currentMenu.anchorNavigableId === anchorNavigableId
       ) {
         return null;
       }

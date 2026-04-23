@@ -45,6 +45,42 @@ describe('useContextMenus', () => {
     expect(result.current.sheetMenu).toBeNull();
   });
 
+  it('keeps sheet menu open when right-clicking same worksheet from different row anchors', () => {
+    const { result } = renderHook(() => useContextMenus());
+    const worksheet = createWorksheet();
+
+    const searchRow = document.createElement('button');
+    searchRow.setAttribute('data-navigable-id', 'search:sheet-1');
+
+    const sheetRow = document.createElement('button');
+    sheetRow.setAttribute('data-navigable-id', 'worksheet:sheet-1');
+
+    act(() => {
+      result.current.openSheetMenu({
+        target: searchRow,
+        x: 12,
+        y: 24,
+        worksheet,
+      });
+    });
+
+    expect(result.current.sheetMenu?.anchorNavigableId).toBe('search:sheet-1');
+
+    act(() => {
+      result.current.openSheetMenu({
+        target: sheetRow,
+        x: 16,
+        y: 28,
+        worksheet,
+      });
+    });
+
+    expect(result.current.sheetMenu).not.toBeNull();
+    expect(result.current.sheetMenu?.anchorNavigableId).toBe('worksheet:sheet-1');
+    expect(result.current.sheetMenu?.x).toBe(16);
+    expect(result.current.sheetMenu?.y).toBe(28);
+  });
+
   it('keeps the sheet menu open when opening the same worksheet via keyboard twice', () => {
     const { result } = renderHook(() => useContextMenus());
     const worksheet = createWorksheet();
