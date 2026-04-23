@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type MutableRefObject } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import {
   type CollisionDetection,
   DndContext,
@@ -414,6 +414,31 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     };
   }, [keyboardNavigationApiRef, restoreFocusAfterMenuDismiss]);
 
+  // Ref to the scrollable body so we can keep keyboard-focused rows in view.
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  // Keep the keyboard-focused item visible inside the scrolleable body.
+  useLayoutEffect(() => {
+    if (!focusedItemId || !bodyRef.current) {
+      return;
+    }
+
+    const element = document.querySelector<HTMLElement>(`[data-navigable-id="${focusedItemId}"]`);
+    if (!element) {
+      return;
+    }
+
+    const body = bodyRef.current;
+    const bodyRect = body.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+
+    if (elementRect.top < bodyRect.top) {
+      body.scrollTop -= (bodyRect.top - elementRect.top);
+    } else if (elementRect.bottom > bodyRect.bottom) {
+      body.scrollTop += (elementRect.bottom - bodyRect.bottom);
+    }
+  }, [focusedItemId]);
+
   return (
     <div className="taskpane-navigator">
       <div className="taskpane-navigator-header">
@@ -436,7 +461,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
         />
       </div>
 
-      <div className="taskpane-navigator-body">
+      <div className="taskpane-navigator-body" ref={bodyRef}>
         <DndContext
           sensors={dragConfig.sensors}
           collisionDetection={worksheetCollisionDetection}

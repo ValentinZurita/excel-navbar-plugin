@@ -39,9 +39,6 @@ export function useKeyboardNavigationDomFocusSync({
     const element = elementRegistryRef.current.get(targetFocusedItemId);
     if (element && document.contains(element)) {
       element.focus({ preventScroll: true });
-      if (typeof element.scrollIntoView === 'function') {
-        element.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      }
     }
   }, [
     elementRegistryRef,
