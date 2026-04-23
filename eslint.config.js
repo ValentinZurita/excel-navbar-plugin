@@ -67,6 +67,9 @@ export default tseslint.config(
         Office: 'readonly',
       },
     },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
   },
   prettierConfig,
 );

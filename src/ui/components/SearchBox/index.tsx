@@ -110,7 +110,7 @@ export function SearchBox({
             event.stopPropagation();
             return;
           }
-          onSearchKeyDown?.(event as any);
+          onSearchKeyDown?.(event as React.KeyboardEvent<HTMLInputElement>);
         }}
       />
       {value ? (

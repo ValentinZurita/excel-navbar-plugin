@@ -1,3 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps --
+   useMemo hooks list specific state slices in dependency arrays
+   to avoid recomputation when unrelated state changes.
+*/
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   createPersistedModelFingerprint,

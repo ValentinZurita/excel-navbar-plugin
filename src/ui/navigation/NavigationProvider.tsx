@@ -1,3 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps --
+   useMemo hooks list specific state slices in dependency arrays
+   to avoid recomputation when unrelated state changes.
+*/
 import { createContext, useContext, useMemo, useReducer } from 'react';
 import type { Dispatch, ReactNode } from 'react';
 import { createDefaultNavigationState } from '../../domain/navigation/defaultState';

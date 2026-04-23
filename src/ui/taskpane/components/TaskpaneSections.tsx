@@ -32,6 +32,7 @@ import { SearchBox } from '../../components/SearchBox';
 import { Section } from '../../components/Section';
 import { SheetList } from '../../components/SheetList';
 import { SheetRow } from '../../components/SheetRow';
+import type { SensorOptions } from '@dnd-kit/core';
 import type {
   GroupDragVisualConfig,
   WorksheetDragVisualConfig,
@@ -41,7 +42,7 @@ import type { WorksheetEntity } from '../../../domain/navigation/types';
 
 interface WorksheetDragConfig extends GroupDragVisualConfig {
   activeDragWorksheet: WorksheetEntity | null;
-  sensors: SensorDescriptor<any>[];
+  sensors: SensorDescriptor<SensorOptions>[];
   onDragStart: (event: DragStartEvent) => void;
   onDragOver: (event: DragOverEvent) => void;
   onDragEnd: (event: DragEndEvent) => void;

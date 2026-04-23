@@ -57,7 +57,7 @@ export function useShortcutActions({
         // This is expected on platforms without SharedRuntime support.
       }
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- intentionally stable
+  }, []);
 
   // Taskpane-scoped fallback: catch Ctrl+Alt+<key> / Cmd+Option+<key>
   // when the taskpane is focused. This covers platforms where global

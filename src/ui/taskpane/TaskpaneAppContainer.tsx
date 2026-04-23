@@ -1,3 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps --
+   This component accesses controller.state.field and controller.method
+   inside useCallback/useMemo but lists only stable field references
+   in dependency arrays. Including the full controller object would
+   recreate callbacks on every render because controller is recreated
+   each time useNavigationController returns.
+*/
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigationController } from '../../application/navigation/useNavigationController';
 import { TaskpaneShell } from '../components/TaskpaneShell';
