@@ -35,7 +35,17 @@ export function useContextMenus() {
   }, []);
 
   const openGroupMenu = useCallback(({ x, y, groupId, groupName, colorToken }: OpenGroupMenuArgs) => {
-    setActiveMenu({ kind: 'group', x, y, groupId, groupName, colorToken });
+    setActiveMenu((currentMenu) => {
+      // Pointer: right-clicking the same group toggles the menu off.
+      if (
+        currentMenu?.kind === 'group'
+        && currentMenu.groupId === groupId
+      ) {
+        return null;
+      }
+
+      return { kind: 'group', x, y, groupId, groupName, colorToken };
+    });
   }, []);
 
   const sheetMenu = activeMenu?.kind === 'sheet' ? activeMenu : null;

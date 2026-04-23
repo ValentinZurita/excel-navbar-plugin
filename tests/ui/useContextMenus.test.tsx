@@ -145,4 +145,34 @@ describe('useContextMenus', () => {
     expect(result.current.sheetMenu).toBeNull();
     expect(result.current.groupMenu?.groupId).toBe('group-1');
   });
+
+  it('toggles group menu off when right-clicking same group again', () => {
+    const { result } = renderHook(() => useContextMenus());
+
+    act(() => {
+      result.current.openGroupMenu({
+        target: document.body,
+        x: 20,
+        y: 20,
+        groupId: 'group-1',
+        groupName: 'Finance',
+        colorToken: 'blue',
+      });
+    });
+
+    expect(result.current.groupMenu?.groupId).toBe('group-1');
+
+    act(() => {
+      result.current.openGroupMenu({
+        target: document.body,
+        x: 26,
+        y: 24,
+        groupId: 'group-1',
+        groupName: 'Finance',
+        colorToken: 'blue',
+      });
+    });
+
+    expect(result.current.groupMenu).toBeNull();
+  });
 });
