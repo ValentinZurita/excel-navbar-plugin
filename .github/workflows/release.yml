@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Production base URL for the add-in (must be https and not localhost)'
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Package release
+        run: npm run package:release
+        env:
+          ADDIN_BASE_URL: ${{ inputs.base_url }}
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dist
+          path: dist/
+          retention-days: 30
