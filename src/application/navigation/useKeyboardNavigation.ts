@@ -21,6 +21,7 @@ import { useKeyboardNavigationHighlightExit } from './useKeyboardNavigationHighl
 import { useKeyboardNavigationIdleLifecycle } from './useKeyboardNavigationIdleLifecycle';
 import { useKeyboardNavigationItemKeyDown } from './useKeyboardNavigationItemKeyDown';
 import { useKeyboardNavigationItemsReconcile } from './useKeyboardNavigationItemsReconcile';
+import { useKeyboardNavigationRefSync } from './useKeyboardNavigationRefSync';
 import { useKeyboardNavigationSearchKeyDown } from './useKeyboardNavigationSearchKeyDown';
 import { useKeyboardNavigationVisualFocus } from './useKeyboardNavigationVisualFocus';
 import type { NavigableItem } from '../../domain/navigation/types';
@@ -193,10 +194,16 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     setVisualExitingItemId,
   });
 
-  focusedItemIdRef.current = focusedItemId;
-  searchFocusedItemIdRef.current = searchFocusedItemId;
-  isSearchActiveRef.current = isSearchActive;
-  isSuppressedRef.current = isSuppressed;
+  useKeyboardNavigationRefSync({
+    focusedItemId,
+    searchFocusedItemId,
+    isSearchActive,
+    isSuppressed,
+    focusedItemIdRef,
+    searchFocusedItemIdRef,
+    isSearchActiveRef,
+    isSuppressedRef,
+  });
 
   /**
    * Register or unregister a DOM element for a navigable item.
