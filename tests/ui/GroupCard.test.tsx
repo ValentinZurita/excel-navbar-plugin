@@ -52,10 +52,10 @@ describe('GroupCard', () => {
     );
 
     const worksheetButton = screen.getByRole('button', { name: 'Revenue' });
-    const worksheetRow = worksheetButton.closest('article');
+    const worksheetRow = worksheetButton.closest('.sheet-row');
 
     expect(worksheetRow).not.toBeNull();
-    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+    fireEvent.contextMenu(worksheetButton, { clientX: 120, clientY: 80 });
 
     expect(onOpenSheetMenu).toHaveBeenCalledTimes(1);
     expect(onOpenGroupMenu).not.toHaveBeenCalled();

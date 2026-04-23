@@ -117,7 +117,8 @@ describe('TaskpaneSections', () => {
 
     const overlayRows = overlayRoot.querySelectorAll('.sheet-row-overlay');
     expect(overlayRows).toHaveLength(1);
-    expect(overlayRows[0]).toHaveAttribute('aria-label', 'Revenue');
+    const overlayAction = overlayRows[0].querySelector('.sheet-row-action');
+    expect(overlayAction).toHaveAttribute('aria-label', 'Revenue');
   });
 
   it('renders a subtle groups session-only hint only when groups exist', () => {

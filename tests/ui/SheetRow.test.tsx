@@ -57,18 +57,7 @@ describe('SheetRow', () => {
         onOpenContextMenu={vi.fn()}
       />,
     );
-    // SheetRow uses <article role="button"> with nested interactive children
-    // (pin button). This is a known a11y gap that requires a structural refactor
-    // (e.g. converting to <li> with a wrapping action button and non-interactive
-    // pin indicator). The rules below are disabled so the gate can still catch
-    // NEW a11y regressions while the existing issue is tracked separately.
-    const configuredAxe = configureAxe({
-      rules: {
-        'aria-allowed-role': { enabled: false },
-        'nested-interactive': { enabled: false },
-      },
-    });
-    const results = await configuredAxe(container);
+    const results = await configureAxe()(container);
     expect(results).toHaveNoViolations();
   });
 
@@ -491,7 +480,8 @@ describe('SheetRow', () => {
     );
 
     const row = container.querySelector('.sheet-row');
-    expect(row).toHaveAttribute('tabindex', '-1');
+    const action = container.querySelector('.sheet-row-action');
+    expect(action).toHaveAttribute('tabindex', '-1');
     expect(row).toHaveAttribute('aria-hidden', 'true');
     expect(row).not.toHaveAttribute('role', 'button');
     expect(row).toHaveAttribute('data-leading-state', 'indicator');

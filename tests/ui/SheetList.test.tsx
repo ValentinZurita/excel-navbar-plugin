@@ -140,14 +140,10 @@ describe('SheetList', () => {
       </DndContext>,
     );
 
-    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveAttribute(
-      'data-leading-state',
-      'indicator',
-    );
-    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveAttribute(
-      'data-pin-visible',
-      'false',
-    );
+    const revenueButton = screen.getByRole('button', { name: 'Revenue' });
+    const revenueRow = revenueButton.closest('.sheet-row');
+    expect(revenueRow).toHaveAttribute('data-leading-state', 'indicator');
+    expect(revenueRow).toHaveAttribute('data-pin-visible', 'false');
   });
 
   it('does not activate the end divider when projected target is the same-group header', () => {
@@ -252,16 +248,18 @@ describe('SheetList', () => {
       />,
     );
 
-    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
-    const budgetRow = screen.getByRole('button', { name: 'Budget' });
+    const revenueButton = screen.getByRole('button', { name: 'Revenue' });
+    const budgetButton = screen.getByRole('button', { name: 'Budget' });
+    const revenueRow = revenueButton.closest('.sheet-row');
+    const budgetRow = budgetButton.closest('.sheet-row');
 
     // Hover row - should NOT show pin (pin only shows on leading area hover)
     // The row hover tracking was removed as part of icon-only interaction refactor
-    await user.hover(revenueRow);
+    await user.hover(revenueRow!);
     expect(revenueRow).toHaveAttribute('data-leading-state', 'indicator');
     expect(revenueRow).not.toHaveAttribute('data-hovered');
 
-    await user.hover(budgetRow);
+    await user.hover(budgetRow!);
     expect(budgetRow).toHaveAttribute('data-leading-state', 'indicator');
     expect(budgetRow).not.toHaveAttribute('data-hovered');
   });

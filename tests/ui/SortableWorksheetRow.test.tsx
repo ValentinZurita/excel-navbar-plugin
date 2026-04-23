@@ -48,7 +48,7 @@ describe('SortableWorksheetRow', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Revenue' }));
+    await user.click(screen.getByLabelText('Revenue'));
 
     expect(onActivate).toHaveBeenCalledWith('sheet-1');
   });
@@ -75,10 +75,12 @@ describe('SortableWorksheetRow', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Revenue' }));
+    await user.click(screen.getByLabelText('Revenue'));
 
     expect(onActivate).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveClass('sheet-row-dragging');
+    const revenueButton = screen.getByLabelText('Revenue');
+    const revenueRow = revenueButton.closest('.sheet-row');
+    expect(revenueRow).toHaveClass('sheet-row-dragging');
   });
 
   it('does not activate when suppression says the click belongs to drag cleanup', async () => {
@@ -98,7 +100,7 @@ describe('SortableWorksheetRow', () => {
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: 'Revenue' }));
+    await user.click(screen.getByLabelText('Revenue'));
 
     expect(shouldSuppressActivation).toHaveBeenCalledWith('sheet-1');
     expect(onActivate).not.toHaveBeenCalled();

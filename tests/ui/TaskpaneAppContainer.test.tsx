@@ -125,10 +125,10 @@ describe('TaskpaneAppContainer', () => {
     render(<TaskpaneAppContainer />);
 
     const worksheetButton = screen.getByRole('button', { name: 'Revenue' });
-    const worksheetRow = worksheetButton.closest('article');
+    const worksheetRow = worksheetButton.closest('.sheet-row');
 
     expect(worksheetRow).not.toBeNull();
-    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+    fireEvent.contextMenu(worksheetButton, { clientX: 120, clientY: 80 });
 
     await user.click(screen.getByRole('button', { name: 'Rename' }));
 
@@ -150,10 +150,10 @@ describe('TaskpaneAppContainer', () => {
     render(<TaskpaneAppContainer />);
 
     const worksheetButton = screen.getByRole('button', { name: 'Revenue' });
-    const worksheetRow = worksheetButton.closest('article');
+    const worksheetRow = worksheetButton.closest('.sheet-row');
 
     expect(worksheetRow).not.toBeNull();
-    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+    fireEvent.contextMenu(worksheetButton, { clientX: 120, clientY: 80 });
 
     // Click "New group" to start inline creation
     await user.click(screen.getByRole('button', { name: 'New group' }));
@@ -177,10 +177,10 @@ describe('TaskpaneAppContainer', () => {
     render(<TaskpaneAppContainer />);
 
     const worksheetButton = screen.getByRole('button', { name: 'Revenue' });
-    const worksheetRow = worksheetButton.closest('article');
+    const worksheetRow = worksheetButton.closest('.sheet-row');
 
     expect(worksheetRow).not.toBeNull();
-    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+    fireEvent.contextMenu(worksheetButton, { clientX: 120, clientY: 80 });
 
     // Start inline creation
     await user.click(screen.getByRole('button', { name: 'New group' }));
@@ -194,7 +194,7 @@ describe('TaskpaneAppContainer', () => {
     expect(screen.queryByRole('button', { name: 'New group' })).not.toBeInTheDocument();
 
     // Open menu again - should show action menu, not creation
-    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+    fireEvent.contextMenu(worksheetButton, { clientX: 120, clientY: 80 });
     expect(screen.getByRole('button', { name: 'Pin sheet' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'New group' })).toBeInTheDocument();
     // Should NOT show the inline creator
@@ -207,13 +207,13 @@ describe('TaskpaneAppContainer', () => {
     render(<TaskpaneAppContainer />);
 
     const worksheetButton = screen.getByRole('button', { name: 'Revenue' });
-    const worksheetRow = worksheetButton.closest('article');
+    const worksheetRow = worksheetButton.closest('.sheet-row');
 
     expect(worksheetRow).not.toBeNull();
-    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+    fireEvent.contextMenu(worksheetButton, { clientX: 120, clientY: 80 });
     expect(screen.getByRole('button', { name: 'Rename' })).toBeInTheDocument();
 
-    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+    fireEvent.contextMenu(worksheetButton, { clientX: 120, clientY: 80 });
     expect(screen.queryByRole('button', { name: 'Rename' })).not.toBeInTheDocument();
   });
 
@@ -426,9 +426,9 @@ describe('TaskpaneAppContainer', () => {
     render(<TaskpaneAppContainer />);
 
     const worksheetButton = screen.getByRole('button', { name: 'Revenue' });
-    const worksheetRow = worksheetButton.closest('article');
+    const worksheetRow = worksheetButton.closest('.sheet-row');
     expect(worksheetRow).not.toBeNull();
-    fireEvent.contextMenu(worksheetRow as HTMLElement, { clientX: 120, clientY: 80 });
+    fireEvent.contextMenu(worksheetButton, { clientX: 120, clientY: 80 });
 
     await user.click(screen.getByRole('button', { name: 'Remove from group' }));
 
