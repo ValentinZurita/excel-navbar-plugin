@@ -3,6 +3,7 @@
 .sheet-row {
   position: relative;
   display: grid;
+  grid-template-areas: 'content';
   gap: 2px;
   padding: 8px 10px;
   border-radius: 4px;
@@ -12,7 +13,6 @@
     background-color 140ms ease,
     border-color 140ms ease,
     box-shadow 140ms ease;
-  cursor: pointer;
 }
 
 /* Indent child rows in grouped worksheet hierarchies. */
@@ -220,13 +220,38 @@
     0 2px 6px rgba(0, 0, 0, 0.16);
 }
 
-/* Action button positioned over the row leading area for pin/unpin. */
+/* Primary action button covering the entire row for activation.
+   The pin button is a sibling (not nested) to avoid a11y nested-interactive violations. */
+.sheet-row-action {
+  grid-area: content;
+  display: flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+  z-index: 1;
+}
+
+.sheet-row-action:focus-visible {
+  outline: none;
+}
+
+/* Action button positioned over the row leading area for pin/unpin.
+   Now a sibling of .sheet-row-action in the same grid cell. */
 .sheet-pin-button {
-  position: absolute;
-  inset: 0;
+  grid-area: content;
+  justify-self: start;
+  align-self: center;
+  position: relative;
+  inset: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 20px;
+  min-width: 20px;
   height: 20px;
   padding: 0;
   background: transparent;
@@ -283,13 +308,13 @@
 /* Rows use our custom navigation highlight system, not browser/host :focus-visible chrome.
    Keeping native outline here causes transient Excel-green rings during cross-section handoff
    (e.g. leaving Sheets into Hidden) when DOM focus lags one frame behind logical focus. */
-.sheet-row:focus-visible,
-.sheet-row[data-focused='true']:focus-visible {
+.sheet-row-action:focus-visible,
+.sheet-row-action[data-focused='true']:focus-visible {
   outline: none;
   outline-offset: 0;
 }
 
-.sheet-list-drag-active .sheet-row:focus-visible {
+.sheet-list-drag-active .sheet-row-action:focus-visible {
   outline: none;
 }
 

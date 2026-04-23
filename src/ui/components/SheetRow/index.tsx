@@ -118,7 +118,13 @@ function SheetRowComponent({
   registerElement,
 }: SheetRowProps) {
   const lastPrimaryClickAtRef = useRef(0);
-  const { onKeyDown: onContainerKeyDown, ...restContainerProps } = containerProps ?? {};
+  const actionButtonRef = useRef<HTMLButtonElement | null>(null);
+  const {
+    onKeyDown: onContainerKeyDown,
+    role: _containerRole,
+    tabIndex: _containerTabIndex,
+    ...restContainerProps
+  } = containerProps ?? {};
   const {
     isHovered: isLeadingHovered,
     isFocused: isLeadingFocused,
@@ -126,14 +132,14 @@ function SheetRowComponent({
     actionFocusProps,
   } = useLeadingClusterInteraction();
 
+  const { onPointerEnter, onPointerLeave } = clusterPointerProps;
+
   // Register DOM element for focus management when navigableId is provided
   useEffect(() => {
     if (!navigableId || !registerElement) {
       return undefined;
     }
 
-    // We need to find the article element. Since containerRef is passed from parent,
-    // we need a different approach. We'll use a callback ref pattern.
     return () => {
       registerElement(navigableId, null);
     };
@@ -178,16 +184,19 @@ function SheetRowComponent({
     return <WorksheetIcon className="sheet-row-icon" />;
   }
 
-  // Create a combined ref callback that handles both containerRef and element registration
-  const setArticleRef = (element: HTMLElement | null) => {
-    // Handle containerRef if it's a callback ref
+  // Ref callback for the container div (used by dnd-kit via containerRef)
+  const setContainerRef = (element: HTMLElement | null) => {
     if (typeof containerRef === 'function') {
       containerRef(element);
     } else if (containerRef && 'current' in containerRef) {
       (containerRef as React.MutableRefObject<HTMLElement | null>).current = element;
     }
+  };
 
-    // Register element for keyboard navigation
+  // Ref callback for the action button (used by keyboard navigation)
+  const setActionRef = (element: HTMLButtonElement | null) => {
+    actionButtonRef.current = element;
+
     if (navigableId && registerElement) {
       registerElement(navigableId, element);
     }
@@ -204,9 +213,103 @@ function SheetRowComponent({
       ? 0
       : -1;
 
+  function handleClick(event: React.MouseEvent<HTMLButtonElement>) {
+    if (!isInteractive) {
+      return;
+    }
+
+    const now = performance.now();
+
+    if (event.detail > 1) {
+      const elapsed = now - lastPrimaryClickAtRef.current;
+      const canTryRename =
+        onStartRename &&
+        !isRenaming &&
+        !isInteractionSuppressed &&
+        !isDragged &&
+        elapsed > 0 &&
+        elapsed <= FAST_DOUBLE_CLICK_RENAME_MS;
+
+      if (canTryRename && !hasNestedInteractiveTarget(event.target, event.currentTarget)) {
+        event.preventDefault();
+        event.stopPropagation();
+        onStartRename(worksheet.worksheetId);
+      }
+
+      lastPrimaryClickAtRef.current = 0;
+      return;
+    }
+
+    lastPrimaryClickAtRef.current = now;
+    void onActivate(worksheet.worksheetId);
+  }
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
+    if (!isInteractive) {
+      return;
+    }
+
+    if (hasNestedInteractiveTarget(event.target, event.currentTarget)) {
+      return;
+    }
+
+    const managedNavigationKey =
+      event.key === 'ArrowDown' ||
+      event.key === 'ArrowUp' ||
+      event.key === 'Enter' ||
+      event.key === 'Home' ||
+      event.key === 'End' ||
+      event.key === 'ArrowLeft' ||
+      event.key === 'ArrowRight';
+
+    // If we have keyboard navigation context, prioritize it for navigation keys.
+    // This prevents dnd-kit sortable listeners from stealing Arrow/Enter events.
+    if (navigableId && onItemKeyDown && managedNavigationKey) {
+      onItemKeyDown(event, navigableId);
+      return;
+    }
+
+    onContainerKeyDown?.(event);
+
+    if (event.defaultPrevented) {
+      return;
+    }
+
+    // If we have keyboard navigation context for non-managed keys, delegate now.
+    if (navigableId && onItemKeyDown) {
+      onItemKeyDown(event, navigableId);
+      if (event.defaultPrevented) {
+        return;
+      }
+    }
+
+    // Fallback to default behavior (Enter/Space to activate)
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      void onActivate(worksheet.worksheetId);
+    }
+  }
+
+  function handleContextMenu(event: React.MouseEvent<HTMLButtonElement>) {
+    if (!isInteractive) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    const interaction = inferContextMenuInteraction(event);
+    onOpenContextMenu({
+      target: event.currentTarget,
+      x: event.clientX,
+      y: event.clientY,
+      worksheet,
+      interaction,
+    });
+  }
+
   return (
-    <article
-      ref={setArticleRef}
+    <div
+      ref={setContainerRef}
       className={`sheet-row ${isActive ? 'sheet-row-active' : ''} ${isContextMenuOpen ? 'sheet-row-context-open' : ''} ${isToggleable ? 'sheet-row-pin-toggleable' : ''} ${worksheet.groupId ? 'sheet-row-grouped' : 'sheet-row-standalone'} ${isDragged ? 'sheet-row-dragging' : ''} ${isOverlay ? 'sheet-row-overlay' : ''}`}
       data-active={isActive ? 'true' : 'false'}
       data-highlighted={isHighlighted ? 'true' : 'false'}
@@ -222,150 +325,72 @@ function SheetRowComponent({
       data-visual-exiting={navigableId ? isVisualExiting : undefined}
       data-active-dimmed={isActiveDimmed ? 'true' : 'false'}
       style={containerStyle}
-      role={isInteractive ? 'button' : undefined}
-      tabIndex={tabIndex}
       aria-hidden={isInteractive ? undefined : true}
-      aria-label={worksheet.name}
-      onClick={(event) => {
-        if (!isInteractive) {
-          return;
-        }
-
-        const now = performance.now();
-
-        if (event.detail > 1) {
-          const elapsed = now - lastPrimaryClickAtRef.current;
-          const canTryRename =
-            onStartRename &&
-            !isRenaming &&
-            !isInteractionSuppressed &&
-            !isDragged &&
-            elapsed > 0 &&
-            elapsed <= FAST_DOUBLE_CLICK_RENAME_MS;
-
-          if (canTryRename && !hasNestedInteractiveTarget(event.target, event.currentTarget)) {
-            event.preventDefault();
-            event.stopPropagation();
-            onStartRename(worksheet.worksheetId);
-          }
-
-          lastPrimaryClickAtRef.current = 0;
-          return;
-        }
-
-        lastPrimaryClickAtRef.current = now;
-        void onActivate(worksheet.worksheetId);
-      }}
-      onKeyDown={(event) => {
-        if (!isInteractive) {
-          return;
-        }
-
-        if (hasNestedInteractiveTarget(event.target, event.currentTarget)) {
-          return;
-        }
-
-        const managedNavigationKey =
-          event.key === 'ArrowDown' ||
-          event.key === 'ArrowUp' ||
-          event.key === 'Enter' ||
-          event.key === 'Home' ||
-          event.key === 'End' ||
-          event.key === 'ArrowLeft' ||
-          event.key === 'ArrowRight';
-
-        // If we have keyboard navigation context, prioritize it for navigation keys.
-        // This prevents dnd-kit sortable listeners from stealing Arrow/Enter events.
-        if (navigableId && onItemKeyDown && managedNavigationKey) {
-          onItemKeyDown(event, navigableId);
-          return;
-        }
-
-        onContainerKeyDown?.(event);
-
-        if (event.defaultPrevented) {
-          return;
-        }
-
-        // If we have keyboard navigation context for non-managed keys, delegate now.
-        if (navigableId && onItemKeyDown) {
-          onItemKeyDown(event, navigableId);
-          if (event.defaultPrevented) {
-            return;
-          }
-        }
-
-        // Fallback to default behavior (Enter/Space to activate)
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          void onActivate(worksheet.worksheetId);
-        }
-      }}
-      onContextMenu={(event) => {
-        if (!isInteractive) {
-          return;
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-        const interaction = inferContextMenuInteraction(event);
-        onOpenContextMenu({
-          target: event.currentTarget,
-          x: event.clientX,
-          y: event.clientY,
-          worksheet,
-          interaction,
-        });
-      }}
       {...restContainerProps}
     >
       {!isOverlay ? <span className="sheet-row-nav-highlight" aria-hidden="true" /> : null}
-      <div className="row-topline">
-        <span className="sheet-row-leading" aria-hidden="true" {...clusterPointerProps}>
-          {/* Base indicator - always rendered but visually hidden when action is shown */}
-          <span
-            className={`sheet-row-base-indicator ${leadingState === 'indicator' || leadingState === 'pinned-indicator' ? 'sheet-row-base-indicator-visible' : ''}`}
-          >
-            {renderBaseIndicator()}
+
+      {/* Primary action button: covers the entire row for activation.
+          The pin button is a sibling (not nested) to avoid a11y nested-interactive violations. */}
+      <button
+        ref={setActionRef}
+        className="sheet-row-action"
+        type="button"
+        tabIndex={tabIndex}
+        aria-label={worksheet.name}
+        data-navigable-action="true"
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        onContextMenu={handleContextMenu}
+      >
+        <span className="row-topline">
+          <span className="sheet-row-leading" aria-hidden="true" {...clusterPointerProps}>
+            {/* Base indicator - always rendered but visually hidden when action is shown */}
+            <span
+              className={`sheet-row-base-indicator ${leadingState === 'indicator' || leadingState === 'pinned-indicator' ? 'sheet-row-base-indicator-visible' : ''}`}
+            >
+              {renderBaseIndicator()}
+            </span>
           </span>
 
-          {/* Pin button - always rendered but visually hidden when not in action state */}
-          {canTogglePin && (
-            <button
-              className={`sheet-pin-button ${leadingState === 'pin-action' || leadingState === 'unpin-action' ? 'sheet-pin-button-visible' : ''} ${leadingState === 'unpin-action' ? 'sheet-pin-button-active' : ''}`}
-              type="button"
-              aria-label={
-                leadingState === 'unpin-action'
-                  ? `Unpin ${worksheet.name}`
-                  : `Pin ${worksheet.name}`
-              }
-              onClick={(event) => {
-                event.stopPropagation();
-                onTogglePin?.(worksheet.worksheetId);
-              }}
-              onFocus={actionFocusProps.onFocus}
-              onBlur={actionFocusProps.onBlur}
-            >
-              <WorksheetPinIcon
-                className={`sheet-pin-icon ${leadingState === 'unpin-action' ? 'sheet-pin-icon-active' : ''}`}
+          <span className="sheet-link">
+            {isRenaming && onRenameSubmit ? (
+              <InlineRenameInput
+                initialValue={worksheet.name}
+                onSubmit={(newName) => onRenameSubmit(worksheet.worksheetId, newName)}
+                onCancel={onRenameCancel ?? (() => {})}
               />
-            </button>
-          )}
+            ) : (
+              <span className="sheet-title">{worksheet.name}</span>
+            )}
+          </span>
         </span>
+      </button>
 
-        <div className="sheet-link">
-          {isRenaming && onRenameSubmit ? (
-            <InlineRenameInput
-              initialValue={worksheet.name}
-              onSubmit={(newName) => onRenameSubmit(worksheet.worksheetId, newName)}
-              onCancel={onRenameCancel ?? (() => {})}
-            />
-          ) : (
-            <span className="sheet-title">{worksheet.name}</span>
-          )}
-        </div>
-      </div>
-    </article>
+      {/* Pin button - sibling of the action button, positioned over the leading area.
+          This separation prevents nested-interactive a11y violations. */}
+      {canTogglePin && (
+        <button
+          className={`sheet-pin-button ${leadingState === 'pin-action' || leadingState === 'unpin-action' ? 'sheet-pin-button-visible' : ''} ${leadingState === 'unpin-action' ? 'sheet-pin-button-active' : ''}`}
+          type="button"
+          aria-label={
+            leadingState === 'unpin-action' ? `Unpin ${worksheet.name}` : `Pin ${worksheet.name}`
+          }
+          onClick={(event) => {
+            event.stopPropagation();
+            onTogglePin?.(worksheet.worksheetId);
+          }}
+          onFocus={actionFocusProps.onFocus}
+          onBlur={actionFocusProps.onBlur}
+          onPointerEnter={onPointerEnter}
+          onPointerLeave={onPointerLeave}
+        >
+          <WorksheetPinIcon
+            className={`sheet-pin-icon ${leadingState === 'unpin-action' ? 'sheet-pin-icon-active' : ''}`}
+          />
+        </button>
+      )}
+    </div>
   );
 }
 
