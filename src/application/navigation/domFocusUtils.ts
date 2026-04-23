@@ -21,6 +21,10 @@ export function isNestedInteractivePointerTarget(
     'input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]',
   );
 
+  if (interactiveTarget && (interactiveTarget as HTMLElement).dataset.navigableAction === 'true') {
+    return false;
+  }
+
   return Boolean(interactiveTarget && currentTarget.contains(interactiveTarget));
 }
 
