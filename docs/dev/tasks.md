@@ -87,6 +87,7 @@ This list exists so pending work does not get lost between sessions.
   - [x] Extract clear-focus lifecycle to `useKeyboardNavigationClearFocus.ts`
   - [x] Extract idle lifecycle to `useKeyboardNavigationIdleLifecycle.ts`
   - [x] Extract `focusItem` handler to `useKeyboardNavigationFocusItem.ts`
+  - [x] Extract DOM focus-sync effect to `useKeyboardNavigationDomFocusSync.ts`
 - [x] Extract hardcoded mock data from `OfficeWorkbookAdapter.ts` to a dedicated mock provider
 
 ### Not implemented in current codebase
