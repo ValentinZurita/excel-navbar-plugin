@@ -1,4 +1,3 @@
-import { createDefaultNavigationState } from './defaultState';
 import { groupColorTokens } from './constants';
 import { applyMoveAmongUngroupedVisibleSheets } from './sheetSectionVisibleOrder';
 import { dedupeWorksheetIds, moveWorksheetId, reconcileSheetSectionOrder } from './utils';
@@ -619,15 +618,4 @@ export function navigationReducer(
     default:
       return state;
   }
-}
-
-export function createHydratedState(
-  snapshot: WorkbookSnapshot,
-  persistedModel: PersistedNavigationModel | null,
-): NavigationState {
-  const baseState = navigationReducer(createDefaultNavigationState(), {
-    type: 'hydrateFromWorkbook',
-    snapshot,
-  });
-  return navigationReducer(baseState, { type: 'hydrateFromPersistence', model: persistedModel });
 }

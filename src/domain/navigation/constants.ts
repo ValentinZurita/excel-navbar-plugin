@@ -1,6 +1,5 @@
 import type { GroupColorToken } from './types';
 
-export const legacyMetadataVersion = 1;
 export const persistedSchemaVersion = 2;
 export const workbookSettingsKey = 'sheetNavigator.navigation';
 export const workbookSettingsFallbackKey = 'sheetNavigator.navigation.fallback';

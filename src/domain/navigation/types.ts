@@ -168,9 +168,3 @@ export interface NavigableItem {
   isGroupCollapsed?: boolean;
   name: string;
 }
-
-/**
- * Sentinel ID for representing the search input when navigating from first result back up.
- * Not a real DOM element ID, used as a return value from navigation functions.
- */
-export const SEARCH_INPUT_SENTINEL_ID = '__search_input__';

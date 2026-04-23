@@ -6,12 +6,6 @@ export function getStableWorksheetId(
   return worksheet.stableWorksheetId ?? worksheet.worksheetId;
 }
 
-export function getNativeWorksheetId(
-  worksheet: Pick<WorksheetEntity, 'worksheetId' | 'nativeWorksheetId'>,
-): string {
-  return worksheet.nativeWorksheetId ?? worksheet.worksheetId;
-}
-
 /**
  * Comparator for sorting worksheets by their workbook order.
  */

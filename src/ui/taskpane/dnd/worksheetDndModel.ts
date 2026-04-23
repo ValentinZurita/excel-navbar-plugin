@@ -67,10 +67,6 @@ export function isSheetContainer(containerId: WorksheetContainerId) {
   return containerId === 'sheets';
 }
 
-export function isPinnedContainer(containerId: WorksheetContainerId) {
-  return containerId === 'pinned';
-}
-
 export function findWorksheetLocation(
   layout: WorksheetDragLayout,
   worksheetId: string,
