@@ -3,7 +3,7 @@ import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction 
 type NavigationInputMode = 'keyboard' | 'pointer' | null;
 
 interface UseKeyboardNavigationClearFocusArgs {
-  clearIdleTimeout: () => void;
+  idleClearTimeoutRef: MutableRefObject<number | null>;
   pendingDomFocusRestoreTokenRef: MutableRefObject<number>;
   focusedItemIdRef: MutableRefObject<string | null>;
   searchFocusedItemIdRef: MutableRefObject<string | null>;
@@ -17,7 +17,7 @@ interface UseKeyboardNavigationClearFocusArgs {
 }
 
 export function useKeyboardNavigationClearFocus({
-  clearIdleTimeout,
+  idleClearTimeoutRef,
   pendingDomFocusRestoreTokenRef,
   focusedItemIdRef,
   searchFocusedItemIdRef,
@@ -30,7 +30,10 @@ export function useKeyboardNavigationClearFocus({
   setNavigationInputMode,
 }: UseKeyboardNavigationClearFocusArgs) {
   const clearFocus = useCallback(() => {
-    clearIdleTimeout();
+    if (idleClearTimeoutRef.current !== null) {
+      window.clearTimeout(idleClearTimeoutRef.current);
+      idleClearTimeoutRef.current = null;
+    }
     pendingDomFocusRestoreTokenRef.current += 1;
     focusedItemIdRef.current = null;
     searchFocusedItemIdRef.current = null;
@@ -43,8 +46,8 @@ export function useKeyboardNavigationClearFocus({
       document.activeElement.blur();
     }
   }, [
-    clearIdleTimeout,
     focusedItemIdRef,
+    idleClearTimeoutRef,
     pendingDomFocusRestoreTokenRef,
     searchFocusedItemIdRef,
     setFocusedItemId,

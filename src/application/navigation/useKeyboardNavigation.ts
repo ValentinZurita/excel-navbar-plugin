@@ -20,6 +20,7 @@ import { useKeyboardNavigationDomFocusRestore } from './useKeyboardNavigationDom
 import { useKeyboardNavigationFocusSetters } from './useKeyboardNavigationFocusSetters';
 import { useKeyboardNavigationGroupHeaderKeyDown } from './useKeyboardNavigationGroupHeaderKeyDown';
 import { useKeyboardNavigationGlobalListeners } from './useKeyboardNavigationGlobalListeners';
+import { useKeyboardNavigationIdleLifecycle } from './useKeyboardNavigationIdleLifecycle';
 import { useKeyboardNavigationItemKeyDown } from './useKeyboardNavigationItemKeyDown';
 import { useKeyboardNavigationItemsReconcile } from './useKeyboardNavigationItemsReconcile';
 import { useKeyboardNavigationSearchKeyDown } from './useKeyboardNavigationSearchKeyDown';
@@ -253,30 +254,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     setSearchFocusedItemId,
   });
 
-  const clearIdleTimeout = useCallback(() => {
-    if (idleClearTimeoutRef.current !== null) {
-      window.clearTimeout(idleClearTimeoutRef.current);
-      idleClearTimeoutRef.current = null;
-    }
-  }, []);
-
-  const { scheduleDomFocusForNavigableId, restoreFocusAfterMenuDismiss } = useKeyboardNavigationDomFocusRestore({
-    items,
-    searchInputRef,
-    elementRegistryRef,
-    pendingDomFocusRestoreTokenRef,
-    contextMenuOwnedFocusRef,
-    lastContextMenuTargetItemIdRef,
-    suppressNextDomFocusRef,
-    isSuppressedRef,
-    focusedItemIdRef,
-    searchFocusedItemIdRef,
-    clearIdleTimeout,
-    setNavigationInputMode,
-    setFocusedItemId,
-    setSearchFocusedItemId,
-  });
-
   /**
    * Set focus to a specific item ID.
    * This updates state and (via useEffect) focuses the DOM element.
@@ -309,7 +286,7 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
   });
 
   const { clearFocus, clearFocusAndExitSearchIfNeeded } = useKeyboardNavigationClearFocus({
-    clearIdleTimeout,
+    idleClearTimeoutRef,
     pendingDomFocusRestoreTokenRef,
     focusedItemIdRef,
     searchFocusedItemIdRef,
@@ -320,6 +297,29 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     setFocusedItemId,
     setSearchFocusedItemId,
     setNavigationInputMode,
+  });
+
+  const { clearIdleTimeout, scheduleIdleClear, markKeyboardActivity } = useKeyboardNavigationIdleLifecycle({
+    idleClearTimeoutRef,
+    clearFocus,
+    idleTimeoutMs: TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS,
+  });
+
+  const { scheduleDomFocusForNavigableId, restoreFocusAfterMenuDismiss } = useKeyboardNavigationDomFocusRestore({
+    items,
+    searchInputRef,
+    elementRegistryRef,
+    pendingDomFocusRestoreTokenRef,
+    contextMenuOwnedFocusRef,
+    lastContextMenuTargetItemIdRef,
+    suppressNextDomFocusRef,
+    isSuppressedRef,
+    focusedItemIdRef,
+    searchFocusedItemIdRef,
+    clearIdleTimeout,
+    setNavigationInputMode,
+    setFocusedItemId,
+    setSearchFocusedItemId,
   });
 
   /**
@@ -340,18 +340,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
       armHighlightExit(syncVisualExitTargetId);
     }
   }, [armHighlightExit, isHighlightSuppressed, isSearchActive, syncVisualExitTargetId]);
-
-  const scheduleIdleClear = useCallback(() => {
-    clearIdleTimeout();
-    idleClearTimeoutRef.current = window.setTimeout(() => {
-      clearFocus();
-      idleClearTimeoutRef.current = null;
-    }, TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS);
-  }, [clearIdleTimeout, clearFocus]);
-
-  const markKeyboardActivity = useCallback(() => {
-    scheduleIdleClear();
-  }, [scheduleIdleClear]);
 
   useLayoutEffect(() => {
     return () => {
