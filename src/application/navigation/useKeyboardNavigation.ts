@@ -6,9 +6,7 @@ import {
   useState,
 } from 'react';
 import {
-  HIGHLIGHT_EXIT_MS,
   computeVisualFocusedItemId,
-  isMainListNavigableId,
 } from './useHighlightLifecycle';
 import {
   focusElementWithManagedRingSuppression,
@@ -23,6 +21,7 @@ import { useKeyboardNavigationFocusItem } from './useKeyboardNavigationFocusItem
 import { useKeyboardNavigationFocusSetters } from './useKeyboardNavigationFocusSetters';
 import { useKeyboardNavigationGroupHeaderKeyDown } from './useKeyboardNavigationGroupHeaderKeyDown';
 import { useKeyboardNavigationGlobalListeners } from './useKeyboardNavigationGlobalListeners';
+import { useKeyboardNavigationHighlightExit } from './useKeyboardNavigationHighlightExit';
 import { useKeyboardNavigationIdleLifecycle } from './useKeyboardNavigationIdleLifecycle';
 import { useKeyboardNavigationItemKeyDown } from './useKeyboardNavigationItemKeyDown';
 import { useKeyboardNavigationItemsReconcile } from './useKeyboardNavigationItemsReconcile';
@@ -199,35 +198,20 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     ],
   );
 
-  const prevOwner = prevVisualOwnerRef.current;
-  const syncVisualExitTargetId =
-    prevOwner !== null
-    && prevOwner !== visualFocusedItemId
-    && isMainListNavigableId(prevOwner)
-      ? prevOwner
-      : null;
-  prevVisualOwnerRef.current = visualFocusedItemId;
-
-  const visualExitingItemIdResolved = syncVisualExitTargetId ?? visualExitingItemId;
+  const visualExitingItemIdResolved = useKeyboardNavigationHighlightExit({
+    visualFocusedItemId,
+    visualExitingItemId,
+    prevVisualOwnerRef,
+    exitTimerRef,
+    isHighlightSuppressed,
+    isSearchActive,
+    setVisualExitingItemId,
+  });
 
   focusedItemIdRef.current = focusedItemId;
   searchFocusedItemIdRef.current = searchFocusedItemId;
   isSearchActiveRef.current = isSearchActive;
   isSuppressedRef.current = isSuppressed;
-
-  const armHighlightExit = useCallback((outgoingMainListId: string) => {
-    if (exitTimerRef.current !== null) {
-      window.clearTimeout(exitTimerRef.current);
-      exitTimerRef.current = null;
-    }
-    setVisualExitingItemId(outgoingMainListId);
-    exitTimerRef.current = window.setTimeout(() => {
-      setVisualExitingItemId((current) => (
-        current === outgoingMainListId ? null : current
-      ));
-      exitTimerRef.current = null;
-    }, HIGHLIGHT_EXIT_MS);
-  }, []);
 
   /**
    * Register or unregister a DOM element for a navigable item.
@@ -308,25 +292,6 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     setFocusedItemId,
     setSearchFocusedItemId,
   });
-
-  /**
-   * Arm the fade-out timer when the visual owner changes. `syncVisualExitTargetId` already exposes
-   * the outgoing id on the first render of the new owner so CSS can animate before this runs.
-   */
-  useLayoutEffect(() => {
-    if (isHighlightSuppressed || isSearchActive) {
-      if (exitTimerRef.current !== null) {
-        window.clearTimeout(exitTimerRef.current);
-        exitTimerRef.current = null;
-      }
-      setVisualExitingItemId(null);
-      return;
-    }
-
-    if (syncVisualExitTargetId) {
-      armHighlightExit(syncVisualExitTargetId);
-    }
-  }, [armHighlightExit, isHighlightSuppressed, isSearchActive, syncVisualExitTargetId]);
 
   useKeyboardNavigationCleanup({
     clearIdleTimeout,
