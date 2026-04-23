@@ -84,6 +84,7 @@ This list exists so pending work does not get lost between sessions.
   - [x] Extract anchor resolver to `useKeyboardNavigationAnchor.ts`
   - [x] Extract focus setters to `useKeyboardNavigationFocusSetters.ts`
   - [x] Extract DOM focus restore flow to `useKeyboardNavigationDomFocusRestore.ts`
+  - [x] Extract clear-focus lifecycle to `useKeyboardNavigationClearFocus.ts`
 - [x] Extract hardcoded mock data from `OfficeWorkbookAdapter.ts` to a dedicated mock provider
 
 ### Not implemented in current codebase
