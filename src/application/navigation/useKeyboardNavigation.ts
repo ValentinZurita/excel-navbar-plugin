@@ -14,6 +14,7 @@ import {
   focusElementWithManagedRingSuppression,
 } from './domFocusUtils';
 import { useKeyboardNavigationAnchor } from './useKeyboardNavigationAnchor';
+import { useKeyboardNavigationClearFocus } from './useKeyboardNavigationClearFocus';
 import { useKeyboardNavigationContextMenuFocusSync } from './useKeyboardNavigationContextMenuFocusSync';
 import { useKeyboardNavigationDomFocusRestore } from './useKeyboardNavigationDomFocusRestore';
 import { useKeyboardNavigationFocusSetters } from './useKeyboardNavigationFocusSetters';
@@ -307,34 +308,19 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     searchFocusedItemIdRef,
   });
 
-  /**
-   * Clear focus entirely.
-   */
-  const clearFocus = useCallback(() => {
-    clearIdleTimeout();
-    pendingDomFocusRestoreTokenRef.current += 1;
-    focusedItemIdRef.current = null;
-    searchFocusedItemIdRef.current = null;
-    setFocusedItemId(null);
-    setSearchFocusedItemId(null);
-    setNavigationInputMode(null);
-    // Remove native focus ring from previously focused element to avoid
-    // residual browser/host focus outline after keyboard highlight clears.
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-  }, [clearIdleTimeout]);
-
-  const clearFocusAndExitSearchIfNeeded = useCallback(() => {
-    const shouldExitSearchMode = isSearchActiveRef.current;
-    clearFocus();
-
-    if (shouldExitSearchMode) {
-      pendingFocusRestoreAfterSearchClearRef.current = true;
-      onClearSearch();
-      onFocusSearchInput();
-    }
-  }, [clearFocus, onClearSearch, onFocusSearchInput]);
+  const { clearFocus, clearFocusAndExitSearchIfNeeded } = useKeyboardNavigationClearFocus({
+    clearIdleTimeout,
+    pendingDomFocusRestoreTokenRef,
+    focusedItemIdRef,
+    searchFocusedItemIdRef,
+    isSearchActiveRef,
+    pendingFocusRestoreAfterSearchClearRef,
+    onClearSearch,
+    onFocusSearchInput,
+    setFocusedItemId,
+    setSearchFocusedItemId,
+    setNavigationInputMode,
+  });
 
   /**
    * Arm the fade-out timer when the visual owner changes. `syncVisualExitTargetId` already exposes
