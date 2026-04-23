@@ -115,6 +115,11 @@ export interface PersistenceStatus {
   lastError?: string;
 }
 
+export interface SaveResult {
+  status: PersistenceStatus;
+  savedUpdatedAt: number;
+}
+
 export interface NavigationState {
   worksheetsById: Record<string, WorksheetEntity>;
   groupsById: Record<string, GroupEntity>;

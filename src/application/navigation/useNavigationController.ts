@@ -36,6 +36,10 @@ export function useNavigationController() {
   const persistenceContextRef = useRef<WorkbookPersistenceContext | null>(null);
   const latestPersistedModelRef = useRef(toPersistedModel(state));
   const syncStateRef = useRef({ inFlight: false, pendingRerun: false });
+  const isBusyRef = useRef(isBusy);
+  const queryRef = useRef(state.query);
+  const lastOwnSavedUpdatedAtRef = useRef<number>(0);
+  const isSyncReloadingRef = useRef(false);
 
   const persistedModel = useMemo(
     () => toPersistedModel(state),
@@ -58,6 +62,10 @@ export function useNavigationController() {
     latestStateRef.current = state;
     latestPersistedModelRef.current = persistedModel;
   }, [persistedModel, state]);
+
+  useEffect(() => {
+    queryRef.current = state.query;
+  }, [state.query]);
 
   const applyPersistenceStatus = useCallback(
     (status: Pick<PersistenceStatus, 'mode' | 'banner'>) => {
@@ -103,7 +111,11 @@ export function useNavigationController() {
       Boolean(persistenceContext.stableWorkbookKey);
 
     if (transitionedToStable) {
-      const status = await persistence.save(persistenceContext, latestPersistedModelRef.current);
+      const { status, savedUpdatedAt } = await persistence.save(
+        persistenceContext,
+        latestPersistedModelRef.current,
+      );
+      lastOwnSavedUpdatedAtRef.current = savedUpdatedAt;
       applyPersistenceStatus(status);
       return;
     }
@@ -118,6 +130,29 @@ export function useNavigationController() {
 
     setIsSessionOnlyPersistence(false);
     setBanner((currentBanner) => (currentBanner?.tone === 'warning' ? currentBanner : null));
+
+    // Reload persisted model if another instance wrote a newer one.
+    if (!persistenceContext.supportsCustomXml) {
+      return;
+    }
+
+    try {
+      const { model: loadedModel } = await persistence.load(persistenceContext, snapshot);
+      if (
+        loadedModel &&
+        loadedModel.updatedAt > lastOwnSavedUpdatedAtRef.current &&
+        !isSyncReloadingRef.current &&
+        !isBusyRef.current &&
+        !queryRef.current
+      ) {
+        isSyncReloadingRef.current = true;
+        dispatch({ type: 'hydrateFromPersistence', model: loadedModel });
+      }
+    } catch {
+      // Silent: periodic sync should not fail because of this.
+    } finally {
+      isSyncReloadingRef.current = false;
+    }
   }, [applyPersistenceStatus, dispatch, resolvePersistenceContext]);
 
   const syncFromWorkbook = useCallback(async () => {
@@ -143,6 +178,7 @@ export function useNavigationController() {
 
   const load = useCallback(async () => {
     setIsBusy(true);
+    isBusyRef.current = true;
     setBanner(null);
 
     try {
@@ -156,6 +192,7 @@ export function useNavigationController() {
       );
       dispatch({ type: 'hydrateFromWorkbook', snapshot });
       dispatch({ type: 'hydrateFromPersistence', model: loadedPersistedModel });
+      lastOwnSavedUpdatedAtRef.current = loadedPersistedModel?.updatedAt ?? 0;
       applyPersistenceStatus(status);
       hasLoaded.current = true;
     } catch (error) {
@@ -166,6 +203,7 @@ export function useNavigationController() {
       });
     } finally {
       setIsBusy(false);
+      isBusyRef.current = false;
     }
   }, [applyPersistenceStatus, dispatch, resolvePersistenceContext]);
 
@@ -185,7 +223,8 @@ export function useNavigationController() {
 
     void persistence
       .save(persistenceContext, latestPersistedModelRef.current)
-      .then((status) => {
+      .then(({ status, savedUpdatedAt }) => {
+        lastOwnSavedUpdatedAtRef.current = savedUpdatedAt;
         applyPersistenceStatus(status);
       })
       .catch((error) => {
@@ -263,6 +302,7 @@ export function useNavigationController() {
       async createWorksheet() {
         try {
           setIsBusy(true);
+          isBusyRef.current = true;
           await adapter.createWorksheet();
           const snapshot = await adapter.getWorkbookSnapshot();
           dispatch({ type: 'hydrateFromWorkbook', snapshot });
@@ -281,6 +321,7 @@ export function useNavigationController() {
           throw error;
         } finally {
           setIsBusy(false);
+          isBusyRef.current = false;
         }
       },
       pinWorksheet(worksheetId: string) {
@@ -308,6 +349,7 @@ export function useNavigationController() {
       async deleteWorksheet(worksheetId: string) {
         try {
           setIsBusy(true);
+          isBusyRef.current = true;
 
           // 1. Execute deletion in Excel
           await adapter.deleteWorksheet(worksheetId);
@@ -335,6 +377,7 @@ export function useNavigationController() {
           throw error; // Re-throw so caller can react
         } finally {
           setIsBusy(false);
+          isBusyRef.current = false;
         }
       },
       /**
@@ -354,6 +397,7 @@ export function useNavigationController() {
 
         try {
           setIsBusy(true);
+          isBusyRef.current = true;
           for (const worksheetId of worksheetIds) {
             await adapter.deleteWorksheet(worksheetId);
             dispatch({ type: 'deleteWorksheet', worksheetId });
@@ -375,6 +419,7 @@ export function useNavigationController() {
           throw new WorksheetDeleteError('Failed to delete sheets. Please try again.', 'UNKNOWN');
         } finally {
           setIsBusy(false);
+          isBusyRef.current = false;
         }
       },
       reload: load,

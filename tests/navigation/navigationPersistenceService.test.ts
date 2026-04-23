@@ -276,7 +276,7 @@ describe('NavigationPersistence', () => {
     const office = installOfficeSettings({ initialValue: null });
     const persistence = new NavigationPersistence();
 
-    const status = await persistence.save(
+    const { status } = await persistence.save(
       createStableContext({
         supportsCustomXml: false,
         supportsWorksheetCustomProperties: false,
@@ -303,7 +303,7 @@ describe('NavigationPersistence', () => {
     installOfficeSettings({ initialValue: null });
     const persistence = new NavigationPersistence();
 
-    const status = await persistence.save(
+    const { status } = await persistence.save(
       createStableContext(),
       createModel({ hiddenSectionCollapsed: false }),
     );

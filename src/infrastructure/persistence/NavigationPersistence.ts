@@ -6,6 +6,7 @@ import type {
   PersistenceDiagnosticCode,
   PersistenceMetadata,
   PersistenceStatus,
+  SaveResult,
   WorkbookPersistenceContext,
   WorkbookSnapshot,
 } from '../../domain/navigation/types';
@@ -120,6 +121,8 @@ export class NavigationPersistence {
   private lastSavedFingerprint: string | null = null;
 
   private lastSavedWorkbookKey: string | null = null;
+
+  private lastSavedUpdatedAt: number = 0;
 
   private decorateDiagnostics(
     context: WorkbookPersistenceContext,
@@ -286,7 +289,7 @@ export class NavigationPersistence {
   async save(
     context: WorkbookPersistenceContext,
     model: PersistedNavigationModel,
-  ): Promise<PersistenceStatus> {
+  ): Promise<SaveResult> {
     this.localCacheRepository.cleanupLegacyGlobalCache();
 
     const diagnostics = this.decorateDiagnostics(context, []);
@@ -294,11 +297,14 @@ export class NavigationPersistence {
     const workbookKey = context.stableWorkbookKey ?? 'session-only';
 
     if (this.lastSavedFingerprint === fingerprint && this.lastSavedWorkbookKey === workbookKey) {
-      return createHealthyStatus(
-        context,
-        context.supportsCustomXml ? 'custom-xml' : 'settings-fallback',
-        diagnostics,
-      );
+      return {
+        status: createHealthyStatus(
+          context,
+          context.supportsCustomXml ? 'custom-xml' : 'settings-fallback',
+          diagnostics,
+        ),
+        savedUpdatedAt: this.lastSavedUpdatedAt,
+      };
     }
 
     const modelToWrite: PersistedNavigationModel = {
@@ -319,19 +325,29 @@ export class NavigationPersistence {
 
       this.lastSavedFingerprint = fingerprint;
       this.lastSavedWorkbookKey = workbookKey;
+      this.lastSavedUpdatedAt = modelToWrite.updatedAt;
 
-      return createHealthyStatus(context, lastSource, diagnostics);
+      return {
+        status: createHealthyStatus(context, lastSource, diagnostics),
+        savedUpdatedAt: modelToWrite.updatedAt,
+      };
     } catch (error) {
       try {
         if (context.stableWorkbookKey) {
           this.localCacheRepository.write(context.stableWorkbookKey, modelToWrite);
-          return createDegradedStatus(context, 'scoped-local-cache', diagnostics, error);
+          return {
+            status: createDegradedStatus(context, 'scoped-local-cache', diagnostics, error),
+            savedUpdatedAt: modelToWrite.updatedAt,
+          };
         }
       } catch {
         // fall through to degraded-without-cache
       }
 
-      return createDegradedStatus(context, 'none', diagnostics, error);
+      return {
+        status: createDegradedStatus(context, 'none', diagnostics, error),
+        savedUpdatedAt: modelToWrite.updatedAt,
+      };
     }
   }
 }

@@ -164,8 +164,8 @@ describe('useNavigationController', () => {
         },
       }),
     });
-    persistenceMock.save.mockResolvedValue(
-      createStatus({
+    persistenceMock.save.mockResolvedValue({
+      status: createStatus({
         mode: 'session-only',
         banner: {
           tone: 'info',
@@ -173,7 +173,8 @@ describe('useNavigationController', () => {
             'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
         },
       }),
-    );
+      savedUpdatedAt: 1,
+    });
 
     const { result } = renderHook(() => useNavigationController(), { wrapper });
 
@@ -190,8 +191,8 @@ describe('useNavigationController', () => {
       model: createModel(),
       status: createStatus(),
     });
-    persistenceMock.save.mockResolvedValue(
-      createStatus({
+    persistenceMock.save.mockResolvedValue({
+      status: createStatus({
         mode: 'degraded',
         banner: {
           tone: 'warning',
@@ -200,7 +201,8 @@ describe('useNavigationController', () => {
         },
         lastSource: 'scoped-local-cache',
       }),
-    );
+      savedUpdatedAt: 1,
+    });
 
     const { result } = renderHook(() => useNavigationController(), { wrapper });
 
@@ -230,15 +232,16 @@ describe('useNavigationController', () => {
         },
       }),
     });
-    persistenceMock.save.mockResolvedValue(
-      createStatus({
+    persistenceMock.save.mockResolvedValue({
+      status: createStatus({
         mode: 'custom-xml',
         banner: null,
         lastSource: 'custom-xml',
       }),
-    );
-    persistenceMock.save.mockResolvedValueOnce(
-      createStatus({
+      savedUpdatedAt: 1,
+    });
+    persistenceMock.save.mockResolvedValueOnce({
+      status: createStatus({
         mode: 'session-only',
         banner: {
           tone: 'info',
@@ -246,7 +249,8 @@ describe('useNavigationController', () => {
             'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
         },
       }),
-    );
+      savedUpdatedAt: 1,
+    });
 
     const { result } = renderHook(() => useNavigationController(), { wrapper });
 
@@ -307,7 +311,7 @@ describe('useNavigationController', () => {
       model: createModel(),
       status: createStatus(),
     });
-    persistenceMock.save.mockResolvedValue(createStatus());
+    persistenceMock.save.mockResolvedValue({ status: createStatus(), savedUpdatedAt: 1 });
 
     const { result } = renderHook(() => useNavigationController(), { wrapper });
 
@@ -331,7 +335,7 @@ describe('useNavigationController', () => {
       model: createModel(),
       status: createStatus(),
     });
-    persistenceMock.save.mockResolvedValue(createStatus());
+    persistenceMock.save.mockResolvedValue({ status: createStatus(), savedUpdatedAt: 1 });
 
     const { result } = renderHook(() => useNavigationController(), { wrapper });
 
@@ -387,7 +391,7 @@ describe('useNavigationController', () => {
       model: createModel({ sheetSectionOrder: ['sheet-1', 'sheet-2'] }),
       status: createStatus(),
     });
-    persistenceMock.save.mockResolvedValue(createStatus());
+    persistenceMock.save.mockResolvedValue({ status: createStatus(), savedUpdatedAt: 1 });
 
     const { result } = renderHook(() => useNavigationController(), { wrapper });
 
@@ -446,7 +450,7 @@ describe('useNavigationController', () => {
       model: createModel({ sheetSectionOrder: ['sheet-1', 'sheet-2'] }),
       status: createStatus(),
     });
-    persistenceMock.save.mockResolvedValue(createStatus());
+    persistenceMock.save.mockResolvedValue({ status: createStatus(), savedUpdatedAt: 1 });
 
     const { result } = renderHook(() => useNavigationController(), { wrapper });
 
@@ -469,7 +473,7 @@ describe('useNavigationController', () => {
       model: createModel(),
       status: createStatus(),
     });
-    persistenceMock.save.mockResolvedValue(createStatus());
+    persistenceMock.save.mockResolvedValue({ status: createStatus(), savedUpdatedAt: 1 });
 
     renderHook(() => useNavigationController(), { wrapper });
 
@@ -505,7 +509,7 @@ describe('useNavigationController', () => {
       model: createModel(),
       status: createStatus(),
     });
-    persistenceMock.save.mockResolvedValue(createStatus());
+    persistenceMock.save.mockResolvedValue({ status: createStatus(), savedUpdatedAt: 1 });
 
     renderHook(() => useNavigationController(), { wrapper });
 
@@ -597,7 +601,7 @@ describe('useNavigationController', () => {
       model: createGroupedModel('group-1', ['sheet-1', 'sheet-2']),
       status: createStatus(),
     });
-    persistenceMock.save.mockResolvedValue(createStatus());
+    persistenceMock.save.mockResolvedValue({ status: createStatus(), savedUpdatedAt: 1 });
 
     const { result } = renderHook(() => useNavigationController(), { wrapper });
 
@@ -616,5 +620,113 @@ describe('useNavigationController', () => {
     expect(result.current.state.worksheetsById['sheet-1']).toBeUndefined();
     expect(result.current.state.worksheetsById['sheet-2']).toBeUndefined();
     expect(result.current.state.activeWorksheetId).toBe('sheet-3');
+  });
+
+  it('reloads persisted model during sync when another instance wrote a newer model', async () => {
+    vi.useFakeTimers();
+    const newerModel = createGroupedModel('group-remote', ['sheet-1']);
+    newerModel.updatedAt = 9999;
+
+    adapterMock.getWorkbookSnapshot
+      .mockResolvedValueOnce(createSnapshot())
+      .mockResolvedValueOnce(createSnapshot());
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    persistenceMock.load
+      .mockResolvedValueOnce({ model: createModel(), status: createStatus() })
+      .mockResolvedValueOnce({ model: newerModel, status: createStatus() });
+    persistenceMock.save.mockResolvedValue({ status: createStatus(), savedUpdatedAt: 100 });
+
+    const { result } = renderHook(() => useNavigationController(), { wrapper });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(15000);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(persistenceMock.load).toHaveBeenCalledTimes(2);
+    expect(result.current.state.groupsById['group-remote']).toBeDefined();
+    expect(result.current.state.groupOrder).toContain('group-remote');
+  });
+
+  it('does not reload persisted model during sync while busy', async () => {
+    vi.useFakeTimers();
+    const newerModel = createGroupedModel('group-remote', ['sheet-1']);
+    newerModel.updatedAt = 9999;
+
+    adapterMock.getWorkbookSnapshot
+      .mockResolvedValueOnce(createSnapshot())
+      .mockResolvedValueOnce(createSnapshot());
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    adapterMock.createWorksheet.mockImplementation(() => new Promise(() => {}));
+    persistenceMock.load
+      .mockResolvedValueOnce({ model: createModel(), status: createStatus() })
+      .mockResolvedValueOnce({ model: newerModel, status: createStatus() });
+    persistenceMock.save.mockResolvedValue({ status: createStatus(), savedUpdatedAt: 100 });
+
+    const { result } = renderHook(() => useNavigationController(), { wrapper });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    // Start an operation that leaves isBusy = true
+    void result.current.createWorksheet();
+
+    // Wait for isBusy to flip inside React before advancing timers
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.isBusy).toBe(true);
+
+    await act(async () => {
+      vi.advanceTimersByTime(15000);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(persistenceMock.load).toHaveBeenCalledTimes(2);
+    expect(result.current.state.groupsById['group-remote']).toBeUndefined();
+  });
+
+  it('does not reload persisted model during sync while searching', async () => {
+    vi.useFakeTimers();
+    const newerModel = createGroupedModel('group-remote', ['sheet-1']);
+    newerModel.updatedAt = 9999;
+
+    adapterMock.getWorkbookSnapshot
+      .mockResolvedValueOnce(createSnapshot())
+      .mockResolvedValueOnce(createSnapshot());
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    persistenceMock.load
+      .mockResolvedValueOnce({ model: createModel(), status: createStatus() })
+      .mockResolvedValueOnce({ model: newerModel, status: createStatus() });
+    persistenceMock.save.mockResolvedValue({ status: createStatus(), savedUpdatedAt: 100 });
+
+    const { result } = renderHook(() => useNavigationController(), { wrapper });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    act(() => {
+      result.current.setQuery('find');
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(15000);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(persistenceMock.load).toHaveBeenCalledTimes(2);
+    expect(result.current.state.groupsById['group-remote']).toBeUndefined();
   });
 });
