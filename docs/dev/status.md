@@ -18,7 +18,9 @@ Implemented and documented so far:
 - Local persisted ordering for the Sheets section without changing Excel workbook tab order
 - Workbook sync coordinator with event-aware refresh plus polling fallback
 - Design baseline + next-phase docs aligned with the current product direction
-- Quality gates for TypeScript, component import boundaries, CSS, and Markdown
+- Quality gates for TypeScript, component import boundaries, CSS, Markdown, import cycles, test coverage thresholds, dead code (knip), bundle size, Office.js API requirements, mock drift detection, lockfile sync, and accessibility (jest-axe)
+- Pre-commit hooks with husky + lint-staged + commitlint for immediate feedback
+- ErrorBoundary to prevent blank task pane crashes
 - Test coverage for navigation behavior and core task pane interactions
 
 ## Verified So Far
@@ -26,8 +28,16 @@ Implemented and documented so far:
 Verified in this session:
 
 - `npm run lint` ✅
-- `npm run test` ✅
+- `npm run test:coverage` ✅ (79.88% stmts, 81.26% branch, 78.47% funcs, 79.88% lines)
+- `npm run check:import-cycles` ✅ (141 files, no cycles)
+- `npm run check:knip` ✅ (no unused files/exports/deps)
+- `npm run check:bundle-size` ✅ (388.5 KiB / 400 KiB limit)
+- `npm run check:office-api-requirements` ✅
+- `npm run check:mock-drift` ✅ (advisory — 8 APIs need mock coverage)
+- `npm run check:lockfile-sync` ✅
 - `npm run quality` ✅
+- Pre-commit hooks (husky + lint-staged + commitlint) ✅
+- jest-axe accessibility baseline ✅
 
 ## Critical Blocker (P0)
 
