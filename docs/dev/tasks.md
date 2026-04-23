@@ -91,6 +91,7 @@ This list exists so pending work does not get lost between sessions.
   - [x] Extract unmount cleanup effect to `useKeyboardNavigationCleanup.ts`
   - [x] Extract highlight-exit lifecycle to `useKeyboardNavigationHighlightExit.ts`
   - [x] Extract visual-focused-item selector to `useKeyboardNavigationVisualFocus.ts`
+  - [x] Extract runtime ref sync to `useKeyboardNavigationRefSync.ts`
 - [x] Extract hardcoded mock data from `OfficeWorkbookAdapter.ts` to a dedicated mock provider
 
 ### Not implemented in current codebase
