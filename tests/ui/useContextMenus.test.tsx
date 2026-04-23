@@ -113,6 +113,42 @@ describe('useContextMenus', () => {
     expect(result.current.sheetMenu?.y).toBe(30);
   });
 
+  it('keeps sheet menu open when pointer opens same worksheet after keyboard open', () => {
+    const { result } = renderHook(() => useContextMenus());
+    const worksheet = createWorksheet();
+
+    const sheetRow = document.createElement('button');
+    sheetRow.setAttribute('data-navigable-id', 'worksheet:sheet-1');
+
+    act(() => {
+      result.current.openSheetMenu({
+        target: sheetRow,
+        x: 12,
+        y: 24,
+        worksheet,
+        interaction: 'keyboard',
+      });
+    });
+
+    expect(result.current.sheetMenu?.worksheet.worksheetId).toBe('sheet-1');
+    expect(result.current.sheetMenu?.openedVia).toBe('keyboard');
+
+    act(() => {
+      result.current.openSheetMenu({
+        target: sheetRow,
+        x: 22,
+        y: 34,
+        worksheet,
+        interaction: 'pointer',
+      });
+    });
+
+    expect(result.current.sheetMenu).not.toBeNull();
+    expect(result.current.sheetMenu?.openedVia).toBe('pointer');
+    expect(result.current.sheetMenu?.x).toBe(22);
+    expect(result.current.sheetMenu?.y).toBe(34);
+  });
+
   it('keeps only one menu active at a time', () => {
     const { result } = renderHook(() => useContextMenus());
     const worksheet = createWorksheet();

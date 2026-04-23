@@ -18,6 +18,7 @@ export function useContextMenus() {
         interaction === 'pointer'
         && currentMenu?.kind === 'sheet'
         && currentMenu.worksheet.worksheetId === worksheet.worksheetId
+        && currentMenu.openedVia === 'pointer'
         && currentMenu.anchorNavigableId === anchorNavigableId
       ) {
         return null;
