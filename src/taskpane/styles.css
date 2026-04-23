@@ -167,6 +167,15 @@ button {
   margin-top: 0;
 }
 
+/* Keep search field reachable while scrolling worksheet/group sections. */
+.taskpane-search-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: var(--excel-body-bg);
+  padding-top: 2px;
+}
+
 .taskpane-toast-slot {
   margin-top: 8px;
   /* Breathing room before the navigator (search sits first inside taskpane-content). */

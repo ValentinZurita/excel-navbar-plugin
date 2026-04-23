@@ -416,23 +416,25 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
 
   return (
     <>
-      <SearchBox
-        value={query}
-        onChange={onChangeQuery}
-        results={searchResults}
-        activeWorksheetId={activeWorksheetId}
-        onSelect={onSelectSearchResult}
-        inputRef={searchInputRef}
-        onSearchKeyDown={handleSearchKeyDown}
-        focusedItemId={focusedItemId}
-        visualFocusedItemId={visualFocusedItemId}
-        sheetContextMenuOpen={Boolean(contextMenuOpenSheetId)}
-        navigationInputMode={navigationInputMode}
-        onResultKeyDown={handleItemKeyDown}
-        onResultPointerFocus={setPointerFocusItem}
-        registerElement={registerElement}
-        onStartRenameWorksheet={onStartRenameWorksheetFromSearch ?? onStartRenameWorksheet}
-      />
+      <div className="taskpane-search-sticky">
+        <SearchBox
+          value={query}
+          onChange={onChangeQuery}
+          results={searchResults}
+          activeWorksheetId={activeWorksheetId}
+          onSelect={onSelectSearchResult}
+          inputRef={searchInputRef}
+          onSearchKeyDown={handleSearchKeyDown}
+          focusedItemId={focusedItemId}
+          visualFocusedItemId={visualFocusedItemId}
+          sheetContextMenuOpen={Boolean(contextMenuOpenSheetId)}
+          navigationInputMode={navigationInputMode}
+          onResultKeyDown={handleItemKeyDown}
+          onResultPointerFocus={setPointerFocusItem}
+          registerElement={registerElement}
+          onStartRenameWorksheet={onStartRenameWorksheetFromSearch ?? onStartRenameWorksheet}
+        />
+      </div>
 
       <DndContext
         sensors={dragConfig.sensors}

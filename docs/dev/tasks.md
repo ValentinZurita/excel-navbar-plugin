@@ -32,6 +32,7 @@ This list exists so pending work does not get lost between sessions.
 
 - [x] Sidebar navigator task pane
 - [x] Search by sheet name
+- [x] Sticky search field while scrolling the taskpane
 - [x] Manual groups
 - [x] Group management:
   - [x] create group
