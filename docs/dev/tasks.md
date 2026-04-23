@@ -71,6 +71,7 @@ This list exists so pending work does not get lost between sessions.
   - [x] Limit sheet pointer-toggle close behavior to same worksheet row anchor (`anchorNavigableId`)
   - [x] Add group pointer-toggle parity (same-group right-click closes menu)
   - [x] Keep group menu open when switching from keyboard-open to pointer right-click on same group
+  - [x] Normalize keyboard-vs-pointer contextmenu detection via shared helper (sheet + group rows)
 - [ ] Workbook event / sync resilience hardening
 - [ ] Reconcile external workbook tab changes against local sidebar ordering rules
 - [ ] Better error handling around Office runtime failures

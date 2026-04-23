@@ -2,6 +2,8 @@ import { memo, useEffect, useRef, type CSSProperties, type HTMLAttributes, type 
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import { FAST_DOUBLE_CLICK_RENAME_MS } from '../../constants/interactionTiming';
 import { useLeadingClusterInteraction } from '../../hooks/useLeadingClusterInteraction';
+import type { ContextMenuInteraction } from '../../taskpane/utils/contextMenuInteraction';
+import { inferContextMenuInteraction } from '../../taskpane/utils/contextMenuInteraction';
 import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 import { InlineRenameInput } from '../InlineRenameInput';
 import { resolveLeadingState, type LeadingState } from './resolveLeadingState';
@@ -38,6 +40,7 @@ interface SheetRowProps {
     x: number;
     y: number;
     worksheet: WorksheetEntity;
+    interaction?: ContextMenuInteraction;
   }) => void;
   onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameCancel?: () => void;
@@ -291,11 +294,13 @@ function SheetRowComponent({
 
         event.preventDefault();
         event.stopPropagation();
+        const interaction = inferContextMenuInteraction(event);
         onOpenContextMenu({
           target: event.currentTarget,
           x: event.clientX,
           y: event.clientY,
           worksheet,
+          interaction,
         });
       }}
       {...restContainerProps}

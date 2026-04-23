@@ -4,6 +4,7 @@ import type { GroupColorToken, NavigatorGroupView } from '../../../domain/naviga
 import type { WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
 import type { GroupDragVisualConfig } from '../../taskpane/types/worksheetDragVisualConfig';
 import { toGroupContainerId } from '../../taskpane/dnd/worksheetDndModel';
+import { inferContextMenuInteraction } from '../../taskpane/utils/contextMenuInteraction';
 import { GroupFolderIcon } from '../../icons';
 import { SheetList } from '../SheetList';
 import { InlineRenameInput } from '../InlineRenameInput';
@@ -265,10 +266,7 @@ function GroupCardComponent({
       className="group-card"
       onContextMenu={(event) => {
         event.preventDefault();
-        const keyboardTriggered = event.button === 0
-          && event.detail === 0
-          && event.clientX === 0
-          && event.clientY === 0;
+        const interaction = inferContextMenuInteraction(event);
         const rawTarget = event.target;
         const targetElement = rawTarget instanceof Element
           ? rawTarget
@@ -283,7 +281,7 @@ function GroupCardComponent({
           groupId: group.groupId,
           groupName: group.name,
           colorToken: group.colorToken,
-          interaction: keyboardTriggered ? 'keyboard' : 'pointer',
+          interaction,
         });
       }}
     >

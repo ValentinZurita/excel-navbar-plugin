@@ -578,4 +578,31 @@ describe('SheetRow', () => {
     const row = container.querySelector('.sheet-row');
     expect(row).toHaveAttribute('data-leading-state', 'pin-action');
   });
+
+  it('marks context menu interaction as keyboard for keyboard-triggered contextmenu events', () => {
+    const onOpenContextMenu = vi.fn();
+
+    render(
+      <SheetRow
+        worksheet={baseWorksheet}
+        isActive={false}
+        onActivate={vi.fn()}
+        onOpenContextMenu={onOpenContextMenu}
+      />,
+    );
+
+    const row = screen.getByRole('button', { name: 'Revenue' });
+    fireEvent.contextMenu(row, {
+      button: 0,
+      detail: 0,
+      clientX: 0,
+      clientY: 0,
+    });
+
+    expect(onOpenContextMenu).toHaveBeenCalledTimes(1);
+    expect(onOpenContextMenu).toHaveBeenCalledWith(expect.objectContaining({
+      interaction: 'keyboard',
+      worksheet: baseWorksheet,
+    }));
+  });
 });
