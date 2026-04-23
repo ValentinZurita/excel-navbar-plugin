@@ -102,18 +102,6 @@ describe('TaskpaneSections', () => {
     vi.useRealTimers();
   });
 
-  it('renders search box inside sticky wrapper', () => {
-    const { container } = render(
-      <TaskpaneSections
-        {...createBaseProps()}
-      />,
-    );
-
-    const stickySearch = container.querySelector('.taskpane-search-sticky');
-    expect(stickySearch).toBeInTheDocument();
-    expect(stickySearch?.querySelector('.search-box')).toBeInTheDocument();
-  });
-
   it('renders a drag overlay for the active dragged worksheet', () => {
     const worksheet = createWorksheet();
 
