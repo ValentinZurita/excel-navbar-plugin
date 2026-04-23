@@ -20,6 +20,10 @@ export interface GroupMenuState {
   groupId: string;
   groupName: string;
   colorToken: GroupColorToken;
+  /** How the menu was opened; used to avoid pointer-toggle close after keyboard opens. */
+  openedVia?: 'pointer' | 'keyboard';
+  /** Navigable header id that opened the group menu (for pointer-toggle parity). */
+  anchorNavigableId?: string | null;
 }
 
 export type ContextMenuState = SheetMenuState | GroupMenuState;
@@ -49,4 +53,6 @@ export interface OpenGroupMenuArgs {
   groupId: string;
   groupName: string;
   colorToken: GroupColorToken;
+  /** Default `pointer`: same-group pointer opens toggle closed. `keyboard` always opens. */
+  interaction?: 'pointer' | 'keyboard';
 }

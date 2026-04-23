@@ -20,7 +20,15 @@ interface GroupCardProps {
   isRenaming?: boolean;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onToggleCollapsed: (groupId: string) => void;
-  onOpenGroupMenu: (args: { target: HTMLElement; x: number; y: number; groupId: string; groupName: string; colorToken: GroupColorToken }) => void;
+  onOpenGroupMenu: (args: {
+    target: HTMLElement;
+    x: number;
+    y: number;
+    groupId: string;
+    groupName: string;
+    colorToken: GroupColorToken;
+    interaction?: 'pointer' | 'keyboard';
+  }) => void;
   onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
   onTogglePin?: (worksheetId: string) => void;
   onRenameSubmit?: (groupId: string, newName: string) => void;
@@ -257,13 +265,25 @@ function GroupCardComponent({
       className="group-card"
       onContextMenu={(event) => {
         event.preventDefault();
+        const keyboardTriggered = event.button === 0
+          && event.detail === 0
+          && event.clientX === 0
+          && event.clientY === 0;
+        const rawTarget = event.target;
+        const targetElement = rawTarget instanceof Element
+          ? rawTarget
+          : rawTarget instanceof Node
+            ? rawTarget.parentElement
+            : null;
+        const anchorTarget = targetElement?.closest<HTMLElement>('[data-navigable-id]') ?? null;
         onOpenGroupMenu({
-          target: event.currentTarget,
+          target: anchorTarget ?? event.currentTarget,
           x: event.clientX,
           y: event.clientY,
           groupId: group.groupId,
           groupName: group.name,
           colorToken: group.colorToken,
+          interaction: keyboardTriggered ? 'keyboard' : 'pointer',
         });
       }}
     >

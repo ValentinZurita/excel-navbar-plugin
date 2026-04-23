@@ -61,6 +61,36 @@ describe('GroupCard', () => {
     expect(onOpenGroupMenu).not.toHaveBeenCalled();
   });
 
+  it('marks group context-menu interaction as keyboard for keyboard-triggered contextmenu events', () => {
+    const onOpenGroupMenu = vi.fn();
+
+    render(
+      <DndContext>
+        <GroupCard
+          group={createGroup()}
+          activeWorksheetId={null}
+          onActivate={vi.fn()}
+          onToggleCollapsed={vi.fn()}
+          onOpenGroupMenu={onOpenGroupMenu}
+          onOpenSheetMenu={vi.fn()}
+        />
+      </DndContext>,
+    );
+
+    const groupButton = screen.getByRole('button', { name: 'Finance' });
+    fireEvent.contextMenu(groupButton, {
+      detail: 0,
+      clientX: 0,
+      clientY: 0,
+    });
+
+    expect(onOpenGroupMenu).toHaveBeenCalledTimes(1);
+    expect(onOpenGroupMenu).toHaveBeenCalledWith(expect.objectContaining({
+      interaction: 'keyboard',
+      target: expect.any(HTMLElement),
+    }));
+  });
+
   it('activates the group header only for group-header targets in the same container', () => {
     const group = createGroup();
     const { container, rerender } = render(

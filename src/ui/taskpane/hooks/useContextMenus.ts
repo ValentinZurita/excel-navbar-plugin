@@ -34,17 +34,31 @@ export function useContextMenus() {
     });
   }, []);
 
-  const openGroupMenu = useCallback(({ x, y, groupId, groupName, colorToken }: OpenGroupMenuArgs) => {
+  const openGroupMenu = useCallback(({ target, x, y, groupId, groupName, colorToken, interaction = 'pointer' }: OpenGroupMenuArgs) => {
+    const openedVia = interaction;
+    const anchorNavigableId = target.getAttribute('data-navigable-id') ?? `group-header:${groupId}`;
     setActiveMenu((currentMenu) => {
       // Pointer: right-clicking the same group toggles the menu off.
       if (
-        currentMenu?.kind === 'group'
+        interaction === 'pointer'
+        && currentMenu?.kind === 'group'
         && currentMenu.groupId === groupId
+        && currentMenu.openedVia === 'pointer'
+        && currentMenu.anchorNavigableId === anchorNavigableId
       ) {
         return null;
       }
 
-      return { kind: 'group', x, y, groupId, groupName, colorToken };
+      return {
+        kind: 'group',
+        x,
+        y,
+        groupId,
+        groupName,
+        colorToken,
+        openedVia,
+        anchorNavigableId,
+      };
     });
   }, []);
 

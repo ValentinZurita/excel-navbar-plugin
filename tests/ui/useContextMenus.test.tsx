@@ -175,4 +175,43 @@ describe('useContextMenus', () => {
 
     expect(result.current.groupMenu).toBeNull();
   });
+
+  it('keeps group menu open when pointer opens same group after keyboard open', () => {
+    const { result } = renderHook(() => useContextMenus());
+
+    const groupHeader = document.createElement('div');
+    groupHeader.setAttribute('data-navigable-id', 'group-header:group-1');
+
+    act(() => {
+      result.current.openGroupMenu({
+        target: groupHeader,
+        x: 20,
+        y: 20,
+        groupId: 'group-1',
+        groupName: 'Finance',
+        colorToken: 'blue',
+        interaction: 'keyboard',
+      });
+    });
+
+    expect(result.current.groupMenu?.groupId).toBe('group-1');
+    expect(result.current.groupMenu?.openedVia).toBe('keyboard');
+
+    act(() => {
+      result.current.openGroupMenu({
+        target: groupHeader,
+        x: 32,
+        y: 40,
+        groupId: 'group-1',
+        groupName: 'Finance',
+        colorToken: 'blue',
+        interaction: 'pointer',
+      });
+    });
+
+    expect(result.current.groupMenu).not.toBeNull();
+    expect(result.current.groupMenu?.openedVia).toBe('pointer');
+    expect(result.current.groupMenu?.x).toBe(32);
+    expect(result.current.groupMenu?.y).toBe(40);
+  });
 });
