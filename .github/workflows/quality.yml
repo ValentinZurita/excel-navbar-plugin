@@ -31,20 +31,38 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lockfile sync check
+        run: npm run check:lockfile-sync
+
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=moderate
 
       - name: TypeScript lint
         run: npm run lint
 
-      - name: Tests
-        run: npm run test
+      - name: Tests with coverage
+        run: npm run test:coverage
+
+      - name: Check for import cycles
+        run: npm run check:import-cycles
 
       - name: Architecture and content checks
         run: npm run quality
 
+      - name: Check for unused code and dependencies
+        run: npm run check:knip
+
+      - name: Office.js API requirements validation
+        run: npm run check:office-api-requirements
+
+      - name: Mock drift detection
+        run: npm run check:mock-drift
+
       - name: Build
         run: npm run build
+
+      - name: Bundle size gate
+        run: npm run check:bundle-size
 
       - name: Generate production manifest
         run: npm run manifest:prod
@@ -61,15 +79,15 @@ jobs:
       - name: Validate manifest against Office schema
         run: npm run manifest:validate
 
-      - name: Report bundle size
-        run: |
-          echo "Bundle size report:"
-          ls -lh dist/*.js dist/*.html 2>/dev/null || true
+      - name: Build bundle analyzer report
+        run: npm run analyze:bundle
 
-      - name: Upload coverage report
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-report
-          path: coverage/
+          name: quality-artifacts
+          path: |
+            coverage/
+            dist/bundle-report.html
           retention-days: 7
