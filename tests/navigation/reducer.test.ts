@@ -18,9 +18,7 @@ describe('navigationReducer', () => {
     };
     state.sheetSectionOrder = ['one'];
 
-    vi.spyOn(Date, 'now')
-      .mockReturnValueOnce(100)
-      .mockReturnValueOnce(100);
+    vi.spyOn(Date, 'now').mockReturnValueOnce(100).mockReturnValueOnce(100);
 
     const nextState = navigationReducer(state, {
       type: 'createGroup',
@@ -40,9 +38,33 @@ describe('navigationReducer', () => {
     const state = createDefaultNavigationState();
     state.sheetSectionOrder = ['one', 'two', 'three'];
     state.worksheetsById = {
-      one: { worksheetId: 'one', name: 'One', visibility: 'Visible', workbookOrder: 0, isPinned: false, groupId: null, lastKnownStructuralState: null },
-      two: { worksheetId: 'two', name: 'Two', visibility: 'Visible', workbookOrder: 1, isPinned: false, groupId: null, lastKnownStructuralState: null },
-      three: { worksheetId: 'three', name: 'Three', visibility: 'Visible', workbookOrder: 2, isPinned: false, groupId: null, lastKnownStructuralState: null },
+      one: {
+        worksheetId: 'one',
+        name: 'One',
+        visibility: 'Visible',
+        workbookOrder: 0,
+        isPinned: false,
+        groupId: null,
+        lastKnownStructuralState: null,
+      },
+      two: {
+        worksheetId: 'two',
+        name: 'Two',
+        visibility: 'Visible',
+        workbookOrder: 1,
+        isPinned: false,
+        groupId: null,
+        lastKnownStructuralState: null,
+      },
+      three: {
+        worksheetId: 'three',
+        name: 'Three',
+        visibility: 'Visible',
+        workbookOrder: 2,
+        isPinned: false,
+        groupId: null,
+        lastKnownStructuralState: null,
+      },
     };
 
     const nextState = navigationReducer(state, {
@@ -69,9 +91,33 @@ describe('navigationReducer', () => {
       },
     };
     state.worksheetsById = {
-      one: { worksheetId: 'one', name: 'One', visibility: 'Visible', workbookOrder: 0, isPinned: false, groupId: null, lastKnownStructuralState: null },
-      two: { worksheetId: 'two', name: 'Two', visibility: 'Visible', workbookOrder: 1, isPinned: false, groupId: 'group-1', lastKnownStructuralState: { kind: 'group', groupId: 'group-1' } },
-      three: { worksheetId: 'three', name: 'Three', visibility: 'Visible', workbookOrder: 2, isPinned: false, groupId: null, lastKnownStructuralState: null },
+      one: {
+        worksheetId: 'one',
+        name: 'One',
+        visibility: 'Visible',
+        workbookOrder: 0,
+        isPinned: false,
+        groupId: null,
+        lastKnownStructuralState: null,
+      },
+      two: {
+        worksheetId: 'two',
+        name: 'Two',
+        visibility: 'Visible',
+        workbookOrder: 1,
+        isPinned: false,
+        groupId: 'group-1',
+        lastKnownStructuralState: { kind: 'group', groupId: 'group-1' },
+      },
+      three: {
+        worksheetId: 'three',
+        name: 'Three',
+        visibility: 'Visible',
+        workbookOrder: 2,
+        isPinned: false,
+        groupId: null,
+        lastKnownStructuralState: null,
+      },
     };
 
     const nextState = navigationReducer(state, {
@@ -101,12 +147,60 @@ describe('navigationReducer', () => {
       },
     };
     state.worksheetsById = {
-      a: { worksheetId: 'a', name: 'A', visibility: 'Visible', workbookOrder: 0, isPinned: false, groupId: null, lastKnownStructuralState: null },
-      g1: { worksheetId: 'g1', name: 'G1', visibility: 'Visible', workbookOrder: 1, isPinned: false, groupId: 'grp', lastKnownStructuralState: { kind: 'group', groupId: 'grp' } },
-      g2: { worksheetId: 'g2', name: 'G2', visibility: 'Visible', workbookOrder: 2, isPinned: false, groupId: 'grp', lastKnownStructuralState: { kind: 'group', groupId: 'grp' } },
-      b: { worksheetId: 'b', name: 'B', visibility: 'Visible', workbookOrder: 3, isPinned: false, groupId: null, lastKnownStructuralState: null },
-      c: { worksheetId: 'c', name: 'C', visibility: 'Visible', workbookOrder: 4, isPinned: false, groupId: null, lastKnownStructuralState: null },
-      x: { worksheetId: 'x', name: 'X', visibility: 'Visible', workbookOrder: 5, isPinned: false, groupId: 'grp', lastKnownStructuralState: { kind: 'group', groupId: 'grp' } },
+      a: {
+        worksheetId: 'a',
+        name: 'A',
+        visibility: 'Visible',
+        workbookOrder: 0,
+        isPinned: false,
+        groupId: null,
+        lastKnownStructuralState: null,
+      },
+      g1: {
+        worksheetId: 'g1',
+        name: 'G1',
+        visibility: 'Visible',
+        workbookOrder: 1,
+        isPinned: false,
+        groupId: 'grp',
+        lastKnownStructuralState: { kind: 'group', groupId: 'grp' },
+      },
+      g2: {
+        worksheetId: 'g2',
+        name: 'G2',
+        visibility: 'Visible',
+        workbookOrder: 2,
+        isPinned: false,
+        groupId: 'grp',
+        lastKnownStructuralState: { kind: 'group', groupId: 'grp' },
+      },
+      b: {
+        worksheetId: 'b',
+        name: 'B',
+        visibility: 'Visible',
+        workbookOrder: 3,
+        isPinned: false,
+        groupId: null,
+        lastKnownStructuralState: null,
+      },
+      c: {
+        worksheetId: 'c',
+        name: 'C',
+        visibility: 'Visible',
+        workbookOrder: 4,
+        isPinned: false,
+        groupId: null,
+        lastKnownStructuralState: null,
+      },
+      x: {
+        worksheetId: 'x',
+        name: 'X',
+        visibility: 'Visible',
+        workbookOrder: 5,
+        isPinned: false,
+        groupId: 'grp',
+        lastKnownStructuralState: { kind: 'group', groupId: 'grp' },
+      },
     };
 
     const nextState = navigationReducer(state, {
@@ -294,15 +388,16 @@ describe('navigationReducer', () => {
     expect(nextState.groupsById['group-1']).toBeDefined();
     expect(nextState.groupsById['group-1'].worksheetOrder).toEqual(['one']);
     expect(nextState.worksheetsById.one.groupId).toBe('group-1');
-    expect(nextState.worksheetsById.one.lastKnownStructuralState).toEqual({ kind: 'group', groupId: 'group-1' });
+    expect(nextState.worksheetsById.one.lastKnownStructuralState).toEqual({
+      kind: 'group',
+      groupId: 'group-1',
+    });
   });
 
   it('creates a group with no color when colorToken is none', () => {
     const state = createDefaultNavigationState();
 
-    vi.spyOn(Date, 'now')
-      .mockReturnValueOnce(200)
-      .mockReturnValueOnce(200);
+    vi.spyOn(Date, 'now').mockReturnValueOnce(200).mockReturnValueOnce(200);
 
     const nextState = navigationReducer(state, {
       type: 'createGroup',
@@ -362,9 +457,7 @@ describe('navigationReducer', () => {
   it('never assigns none as the automatic group color', () => {
     const state = createDefaultNavigationState();
 
-    vi.spyOn(Date, 'now')
-      .mockReturnValueOnce(300)
-      .mockReturnValueOnce(300);
+    vi.spyOn(Date, 'now').mockReturnValueOnce(300).mockReturnValueOnce(300);
 
     // createGroup without explicit colorToken falls back to nextGroupColor
     // which rotates through groupColorTokens (excludes 'none')

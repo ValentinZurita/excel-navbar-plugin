@@ -29,12 +29,12 @@ describe('WorksheetDropZone', () => {
     );
 
     expect(screen.queryByTestId('drop-zone')).toBeInTheDocument();
-    
+
     // Check that useDroppable was called with disabled: true
     expect(useDroppableMock).toHaveBeenCalledWith(
       expect.objectContaining({
         disabled: true,
-      })
+      }),
     );
   });
 

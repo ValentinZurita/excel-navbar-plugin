@@ -97,6 +97,7 @@ Not yet verified in this session:
 - `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/tests/ui/`
 
 ## Next Recommended Step
+
 ### Immediate next step
 
 **Resolve the task pane DnD ghost-highlight and insertion-line drift blocker before any other work.**
@@ -109,6 +110,7 @@ Why this is next:
 - A robust root-cause investigation is required, not quick UI masking.
 
 ## After That
+
 Once sideloading is confirmed, the next implementation pass should focus on:
 
 1. non-visual interaction cleanup for contextual actions
@@ -153,6 +155,7 @@ When docs, memory, and code disagree:
 4. then planning docs
 
 ## Last Session Outcome
+
 This project has moved beyond the initial scaffold stage, with interaction ownership largely in place, but it is still **not yet validated inside Excel itself**.
 
 ## Persistence Notes

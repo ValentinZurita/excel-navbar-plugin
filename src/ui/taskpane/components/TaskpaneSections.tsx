@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MutableRefObject,
+} from 'react';
 import {
   type CollisionDetection,
   DndContext,
@@ -25,7 +32,10 @@ import { SearchBox } from '../../components/SearchBox';
 import { Section } from '../../components/Section';
 import { SheetList } from '../../components/SheetList';
 import { SheetRow } from '../../components/SheetRow';
-import type { GroupDragVisualConfig, WorksheetDragVisualConfig } from '../types/worksheetDragVisualConfig';
+import type {
+  GroupDragVisualConfig,
+  WorksheetDragVisualConfig,
+} from '../types/worksheetDragVisualConfig';
 import type { OpenGroupMenuArgs, OpenSheetMenuArgs } from '../types/contextMenuTypes';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 
@@ -190,7 +200,6 @@ export function TaskpaneSections({
   sheetContextMenuOpenedVia = null,
   keyboardNavigationApiRef,
 }: TaskpaneSectionsProps) {
-
   const [isPinnedCollapsed, setIsPinnedCollapsed] = useState(false);
   const [isGroupsCollapsed, setIsGroupsCollapsed] = useState(false);
   const [isSheetsCollapsed, setIsSheetsCollapsed] = useState(false);
@@ -220,7 +229,10 @@ export function TaskpaneSections({
 
   const shouldShowPinnedSection = navigatorView.pinned.length > 0;
   const shouldShowGroupsSection = navigatorView.groups.length > 0;
-  const shouldShowUngroupedSection = shouldRenderUngroupedSection(navigatorView, dragConfig.isDragActive);
+  const shouldShowUngroupedSection = shouldRenderUngroupedSection(
+    navigatorView,
+    dragConfig.isDragActive,
+  );
   const shouldShowHiddenSection = navigatorView.hidden.length > 0;
   const shouldShowSessionOnlyGroupsHint = shouldShowGroupsSection && isSessionOnlyPersistence;
   const isSearchActive = Boolean(query.trim());
@@ -329,7 +341,10 @@ export function TaskpaneSections({
 // Internal component that consumes the keyboard navigation context
 import { useKeyboardNavContext } from '../../navigation/KeyboardNavigationProvider';
 
-interface TaskpaneSectionsContentProps extends Omit<TaskpaneSectionsProps, 'isDialogOpen' | 'isRenaming' | 'isContextMenuOpen'> {
+interface TaskpaneSectionsContentProps extends Omit<
+  TaskpaneSectionsProps,
+  'isDialogOpen' | 'isRenaming' | 'isContextMenuOpen'
+> {
   groupsSessionOnlyHint: React.ReactNode;
   shouldShowPinnedSection: boolean;
   shouldShowGroupsSection: boolean;
@@ -408,7 +423,10 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
 
     keyboardNavigationApiRef.current = { restoreFocusAfterMenuDismiss };
     return () => {
-      if (keyboardNavigationApiRef.current?.restoreFocusAfterMenuDismiss === restoreFocusAfterMenuDismiss) {
+      if (
+        keyboardNavigationApiRef.current?.restoreFocusAfterMenuDismiss ===
+        restoreFocusAfterMenuDismiss
+      ) {
         keyboardNavigationApiRef.current = null;
       }
     };
@@ -433,9 +451,9 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     const elementRect = element.getBoundingClientRect();
 
     if (elementRect.top < bodyRect.top) {
-      body.scrollTop -= (bodyRect.top - elementRect.top);
+      body.scrollTop -= bodyRect.top - elementRect.top;
     } else if (elementRect.bottom > bodyRect.bottom) {
-      body.scrollTop += (elementRect.bottom - bodyRect.bottom);
+      body.scrollTop += elementRect.bottom - bodyRect.bottom;
     }
   }, [focusedItemId]);
 
@@ -517,7 +535,12 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
           ) : null}
 
           {shouldShowGroupsSection ? (
-            <Section title="Groups" headerAccessory={groupsSessionOnlyHint} isCollapsed={isGroupsCollapsed} onToggle={setIsGroupsCollapsed}>
+            <Section
+              title="Groups"
+              headerAccessory={groupsSessionOnlyHint}
+              isCollapsed={isGroupsCollapsed}
+              onToggle={setIsGroupsCollapsed}
+            >
               <GroupSection
                 groups={navigatorView.groups}
                 activeWorksheetId={activeWorksheetId}

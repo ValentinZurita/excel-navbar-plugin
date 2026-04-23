@@ -3,9 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { createRef, useState, type ComponentProps, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NavigatorView, WorksheetEntity } from '../../src/domain/navigation/types';
-import {
-  TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS,
-} from '../../src/application/navigation/useKeyboardNavigation';
+import { TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS } from '../../src/application/navigation/useKeyboardNavigation';
 import { HIGHLIGHT_EXIT_MS } from '../../src/application/navigation/useHighlightLifecycle';
 import { TaskpaneSections } from '../../src/ui/taskpane/components/TaskpaneSections';
 
@@ -13,13 +11,7 @@ vi.mock('@dnd-kit/core', async () => {
   const actual = await vi.importActual<typeof import('@dnd-kit/core')>('@dnd-kit/core');
   return {
     ...actual,
-    DragOverlay: ({
-      children,
-      className,
-    }: {
-      children?: ReactNode;
-      className?: string;
-    }) => (
+    DragOverlay: ({ children, className }: { children?: ReactNode; className?: string }) => (
       <div data-testid="drag-overlay" className={className}>
         {children}
       </div>
@@ -85,16 +77,12 @@ function createBaseProps(overrides: Partial<ComponentProps<typeof TaskpaneSectio
   };
 }
 
-function SearchQueryHarness(props: Omit<ComponentProps<typeof TaskpaneSections>, 'query' | 'onChangeQuery'>) {
+function SearchQueryHarness(
+  props: Omit<ComponentProps<typeof TaskpaneSections>, 'query' | 'onChangeQuery'>,
+) {
   const [query, setQuery] = useState(props.searchResults.length > 0 ? 're' : '');
 
-  return (
-    <TaskpaneSections
-      {...props}
-      query={query}
-      onChangeQuery={setQuery}
-    />
-  );
+  return <TaskpaneSections {...props} query={query} onChangeQuery={setQuery} />;
 }
 
 describe('TaskpaneSections', () => {
@@ -134,13 +122,15 @@ describe('TaskpaneSections', () => {
 
   it('renders a subtle groups session-only hint only when groups exist', () => {
     const navigatorView = createNavigatorView();
-    navigatorView.groups = [{
-      groupId: 'group-1',
-      name: 'Finance',
-      colorToken: 'green',
-      isCollapsed: false,
-      worksheets: [],
-    }];
+    navigatorView.groups = [
+      {
+        groupId: 'group-1',
+        name: 'Finance',
+        colorToken: 'green',
+        isCollapsed: false,
+        worksheets: [],
+      },
+    ];
 
     render(
       <TaskpaneSections
@@ -151,9 +141,14 @@ describe('TaskpaneSections', () => {
       />,
     );
 
-    expect(screen.getByRole('button', {
-      name: 'This workbook has not been saved yet. Group changes persist only for this session.',
-    })).toHaveAttribute('title', 'This workbook has not been saved yet. Group changes persist only for this session.');
+    expect(
+      screen.getByRole('button', {
+        name: 'This workbook has not been saved yet. Group changes persist only for this session.',
+      }),
+    ).toHaveAttribute(
+      'title',
+      'This workbook has not been saved yet. Group changes persist only for this session.',
+    );
   });
 
   it('navigates continuously through expanded group header and worksheets with ArrowDown/ArrowUp', async () => {
@@ -161,7 +156,14 @@ describe('TaskpaneSections', () => {
     const onActivateWorksheet = vi.fn().mockResolvedValue(undefined);
 
     const navigatorView: NavigatorView = {
-      pinned: [createWorksheet({ worksheetId: 'pinned-1', name: 'Pinned One', isPinned: true, groupId: null })],
+      pinned: [
+        createWorksheet({
+          worksheetId: 'pinned-1',
+          name: 'Pinned One',
+          isPinned: true,
+          groupId: null,
+        }),
+      ],
       groups: [
         {
           groupId: 'group-1',
@@ -170,11 +172,17 @@ describe('TaskpaneSections', () => {
           isCollapsed: false,
           worksheets: [
             createWorksheet({ worksheetId: 'group-1-sheet-1', name: 'Budget', groupId: 'group-1' }),
-            createWorksheet({ worksheetId: 'group-1-sheet-2', name: 'Forecast', groupId: 'group-1' }),
+            createWorksheet({
+              worksheetId: 'group-1-sheet-2',
+              name: 'Forecast',
+              groupId: 'group-1',
+            }),
           ],
         },
       ],
-      ungrouped: [createWorksheet({ worksheetId: 'sheet-ungrouped-1', name: 'Summary', groupId: null })],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-ungrouped-1', name: 'Summary', groupId: null }),
+      ],
       hidden: [],
       searchResults: [],
     };
@@ -257,8 +265,18 @@ describe('TaskpaneSections', () => {
       groups: [],
       ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null })],
       hidden: [
-        createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden', groupId: null }),
-        createWorksheet({ worksheetId: 'hidden-2', name: 'Vault', visibility: 'Hidden', groupId: null }),
+        createWorksheet({
+          worksheetId: 'hidden-1',
+          name: 'Archive',
+          visibility: 'Hidden',
+          groupId: null,
+        }),
+        createWorksheet({
+          worksheetId: 'hidden-2',
+          name: 'Vault',
+          visibility: 'Hidden',
+          groupId: null,
+        }),
       ],
       searchResults: [],
     };
@@ -298,7 +316,12 @@ describe('TaskpaneSections', () => {
       groups: [],
       ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null })],
       hidden: [
-        createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden', groupId: null }),
+        createWorksheet({
+          worksheetId: 'hidden-1',
+          name: 'Archive',
+          visibility: 'Hidden',
+          groupId: null,
+        }),
       ],
       searchResults: [],
     };
@@ -331,7 +354,12 @@ describe('TaskpaneSections', () => {
       groups: [],
       ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null })],
       hidden: [
-        createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden', groupId: null }),
+        createWorksheet({
+          worksheetId: 'hidden-1',
+          name: 'Archive',
+          visibility: 'Hidden',
+          groupId: null,
+        }),
       ],
       searchResults: [],
     };
@@ -374,7 +402,12 @@ describe('TaskpaneSections', () => {
       groups: [],
       ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null })],
       hidden: [
-        createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden', groupId: null }),
+        createWorksheet({
+          worksheetId: 'hidden-1',
+          name: 'Archive',
+          visibility: 'Hidden',
+          groupId: null,
+        }),
       ],
       searchResults: [],
     };
@@ -418,7 +451,9 @@ describe('TaskpaneSections', () => {
           ],
         },
       ],
-      ungrouped: [createWorksheet({ worksheetId: 'sheet-ungrouped-1', name: 'Summary', groupId: null })],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-ungrouped-1', name: 'Summary', groupId: null }),
+      ],
       hidden: [],
       searchResults: [],
     };
@@ -462,11 +497,17 @@ describe('TaskpaneSections', () => {
           isCollapsed: false,
           worksheets: [
             createWorksheet({ worksheetId: 'group-1-sheet-1', name: 'Budget', groupId: 'group-1' }),
-            createWorksheet({ worksheetId: 'group-1-sheet-2', name: 'Forecast', groupId: 'group-1' }),
+            createWorksheet({
+              worksheetId: 'group-1-sheet-2',
+              name: 'Forecast',
+              groupId: 'group-1',
+            }),
           ],
         },
       ],
-      ungrouped: [createWorksheet({ worksheetId: 'sheet-ungrouped-1', name: 'Summary', groupId: null })],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-ungrouped-1', name: 'Summary', groupId: null }),
+      ],
       hidden: [],
       searchResults: [],
     };
@@ -604,7 +645,11 @@ describe('TaskpaneSections', () => {
     });
 
     expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
-    expect(screen.getByRole('button', { name: 'Revenue' }).closest('[data-navigable-id="worksheet:sheet-1"]')).toHaveAttribute('data-visual-focused', 'true');
+    expect(
+      screen
+        .getByRole('button', { name: 'Revenue' })
+        .closest('[data-navigable-id="worksheet:sheet-1"]'),
+    ).toHaveAttribute('data-visual-focused', 'true');
     expect(container.querySelectorAll('[data-visual-exiting="true"]').length).toBe(1);
 
     act(() => {
@@ -644,7 +689,9 @@ describe('TaskpaneSections', () => {
     revenueRow.focus();
     fireEvent.keyDown(revenueRow, { key: 'ArrowDown', code: 'ArrowDown' });
 
-    const forecastArticle = screen.getByRole('button', { name: 'Forecast' }).closest('[data-navigable-id="worksheet:sheet-2"]');
+    const forecastArticle = screen
+      .getByRole('button', { name: 'Forecast' })
+      .closest('[data-navigable-id="worksheet:sheet-2"]');
     expect(forecastArticle).toHaveAttribute('data-visual-focused', 'true');
 
     act(() => {
@@ -664,7 +711,11 @@ describe('TaskpaneSections', () => {
     });
 
     expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
-    expect(screen.getByRole('button', { name: 'Revenue' }).closest('[data-navigable-id="worksheet:sheet-1"]')).toHaveAttribute('data-visual-focused', 'true');
+    expect(
+      screen
+        .getByRole('button', { name: 'Revenue' })
+        .closest('[data-navigable-id="worksheet:sheet-1"]'),
+    ).toHaveAttribute('data-visual-focused', 'true');
   });
 
   it('restarts keyboard navigation from active worksheet after idle clear', () => {
@@ -699,13 +750,19 @@ describe('TaskpaneSections', () => {
       vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS);
     });
     expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
-    expect(screen.getByRole('button', { name: 'Forecast' }).closest('[data-navigable-id="worksheet:sheet-2"]')).toHaveAttribute('data-visual-focused', 'true');
+    expect(
+      screen
+        .getByRole('button', { name: 'Forecast' })
+        .closest('[data-navigable-id="worksheet:sheet-2"]'),
+    ).toHaveAttribute('data-visual-focused', 'true');
 
     // Next arrow key should anchor from active worksheet (Forecast) and move to Summary.
     const activeRow = screen.getByRole('button', { name: 'Forecast' });
     fireEvent.keyDown(activeRow, { key: 'ArrowDown', code: 'ArrowDown' });
 
-    const summaryArticle = screen.getByRole('button', { name: 'Summary' }).closest('[data-navigable-id="worksheet:sheet-3"]');
+    const summaryArticle = screen
+      .getByRole('button', { name: 'Summary' })
+      .closest('[data-navigable-id="worksheet:sheet-3"]');
     expect(summaryArticle).toHaveAttribute('data-visual-focused', 'true');
   });
 
@@ -781,7 +838,9 @@ describe('TaskpaneSections', () => {
     expect(summaryItem).toHaveAttribute('data-focused', 'true');
     expect(summaryItem).toHaveAttribute('data-pointer-mode-active', 'false');
     expect(forecastItem).toHaveAttribute('data-focused', 'false');
-    expect(document.querySelector('.search-results-wrapper')?.getAttribute('data-navigation-input-mode')).toBe('keyboard');
+    expect(
+      document.querySelector('.search-results-wrapper')?.getAttribute('data-navigation-input-mode'),
+    ).toBe('keyboard');
 
     // Only one focused search result at any time.
     expect(container.querySelectorAll('.search-result[data-focused="true"]').length).toBe(1);
@@ -867,7 +926,9 @@ describe('TaskpaneSections', () => {
 
     const searchResultsPanel = document.querySelector('.search-results');
     expect(searchResultsPanel).toBeTruthy();
-    const revenueResult = within(searchResultsPanel as HTMLElement).getByRole('button', { name: /Revenue/i });
+    const revenueResult = within(searchResultsPanel as HTMLElement).getByRole('button', {
+      name: /Revenue/i,
+    });
     revenueResult.focus();
     await user.keyboard('{Escape}');
 
@@ -882,7 +943,10 @@ describe('TaskpaneSections', () => {
     await user.keyboard('{ArrowDown}');
 
     const summaryRow = screen.getByRole('button', { name: 'Summary' });
-    expect(summaryRow.closest('[data-navigable-id="worksheet:sheet-3"]')).toHaveAttribute('data-visual-focused', 'true');
+    expect(summaryRow.closest('[data-navigable-id="worksheet:sheet-3"]')).toHaveAttribute(
+      'data-visual-focused',
+      'true',
+    );
   });
 
   it('fades transient highlight out and returns active ghost after pointer idle clear', () => {
@@ -910,7 +974,9 @@ describe('TaskpaneSections', () => {
 
     const revenueRow = screen.getByRole('button', { name: 'Revenue' });
     const revenueArticle = revenueRow.closest('[data-navigable-id="worksheet:sheet-1"]');
-    const forecastArticle = screen.getByRole('button', { name: 'Forecast' }).closest('[data-navigable-id="worksheet:sheet-2"]');
+    const forecastArticle = screen
+      .getByRole('button', { name: 'Forecast' })
+      .closest('[data-navigable-id="worksheet:sheet-2"]');
 
     fireEvent.pointerDown(revenueRow);
 
@@ -958,8 +1024,12 @@ describe('TaskpaneSections', () => {
       />,
     );
 
-    const revenueArticle = screen.getByRole('button', { name: 'Revenue' }).closest('[data-navigable-id="worksheet:sheet-1"]');
-    const forecastArticle = screen.getByRole('button', { name: 'Forecast' }).closest('[data-navigable-id="worksheet:sheet-2"]');
+    const revenueArticle = screen
+      .getByRole('button', { name: 'Revenue' })
+      .closest('[data-navigable-id="worksheet:sheet-1"]');
+    const forecastArticle = screen
+      .getByRole('button', { name: 'Forecast' })
+      .closest('[data-navigable-id="worksheet:sheet-2"]');
 
     expect(revenueArticle).toHaveAttribute('data-visual-focused', 'true');
 
@@ -992,9 +1062,7 @@ describe('TaskpaneSections', () => {
       pinned: [],
       groups: [],
       ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' })],
-      hidden: [
-        createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden' }),
-      ],
+      hidden: [createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden' })],
       searchResults: [],
     };
 
@@ -1009,8 +1077,12 @@ describe('TaskpaneSections', () => {
       />,
     );
 
-    const archiveArticle = screen.getByRole('button', { name: 'Archive' }).closest('[data-navigable-id="worksheet:hidden-1"]');
-    const revenueArticle = screen.getByRole('button', { name: 'Revenue' }).closest('[data-navigable-id="worksheet:sheet-1"]');
+    const archiveArticle = screen
+      .getByRole('button', { name: 'Archive' })
+      .closest('[data-navigable-id="worksheet:hidden-1"]');
+    const revenueArticle = screen
+      .getByRole('button', { name: 'Revenue' })
+      .closest('[data-navigable-id="worksheet:sheet-1"]');
 
     expect(archiveArticle).toHaveAttribute('data-visual-focused', 'true');
 
@@ -1039,7 +1111,9 @@ describe('TaskpaneSections', () => {
           name: 'Finance',
           colorToken: 'green',
           isCollapsed: false,
-          worksheets: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: 'group-1' })],
+          worksheets: [
+            createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: 'group-1' }),
+          ],
         },
       ],
       ungrouped: [],
@@ -1073,7 +1147,9 @@ describe('TaskpaneSections', () => {
           name: 'Finance',
           colorToken: 'green',
           isCollapsed: false,
-          worksheets: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: 'group-1' })],
+          worksheets: [
+            createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: 'group-1' }),
+          ],
         },
       ],
       ungrouped: [],
@@ -1091,7 +1167,9 @@ describe('TaskpaneSections', () => {
       />,
     );
 
-    const groupHeader = screen.getByRole('button', { name: 'Finance' }).closest('[data-navigable-id="group-header:group-1"]');
+    const groupHeader = screen
+      .getByRole('button', { name: 'Finance' })
+      .closest('[data-navigable-id="group-header:group-1"]');
     expect(groupHeader).toHaveAttribute('data-visual-focused', 'true');
   });
 
@@ -1106,7 +1184,9 @@ describe('TaskpaneSections', () => {
           name: 'Finance',
           colorToken: 'green',
           isCollapsed: true,
-          worksheets: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: 'group-1' })],
+          worksheets: [
+            createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: 'group-1' }),
+          ],
         },
       ],
       ungrouped: [createWorksheet({ worksheetId: 'sheet-2', name: 'Forecast' })],
@@ -1124,10 +1204,15 @@ describe('TaskpaneSections', () => {
     );
 
     const forecastRow = screen.getByRole('button', { name: 'Forecast' });
-    const groupHeader = screen.getByRole('button', { name: 'Finance' }).closest('[data-navigable-id="group-header:group-1"]');
+    const groupHeader = screen
+      .getByRole('button', { name: 'Finance' })
+      .closest('[data-navigable-id="group-header:group-1"]');
 
     fireEvent.pointerDown(forecastRow);
-    expect(forecastRow.closest('[data-navigable-id="worksheet:sheet-2"]')).toHaveAttribute('data-visual-focused', 'true');
+    expect(forecastRow.closest('[data-navigable-id="worksheet:sheet-2"]')).toHaveAttribute(
+      'data-visual-focused',
+      'true',
+    );
 
     act(() => {
       vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS);
@@ -1141,9 +1226,7 @@ describe('TaskpaneSections', () => {
       pinned: [],
       groups: [],
       ungrouped: [createWorksheet({ worksheetId: 'vis-1', name: 'Visible' })],
-      hidden: [
-        createWorksheet({ worksheetId: 'hid-1', name: 'Archived', visibility: 'Hidden' }),
-      ],
+      hidden: [createWorksheet({ worksheetId: 'hid-1', name: 'Archived', visibility: 'Hidden' })],
       searchResults: [],
     };
 
@@ -1170,9 +1253,7 @@ describe('TaskpaneSections', () => {
       pinned: [],
       groups: [],
       ungrouped: [],
-      hidden: [
-        createWorksheet({ worksheetId: 'hid-1', name: 'Archived', visibility: 'Hidden' }),
-      ],
+      hidden: [createWorksheet({ worksheetId: 'hid-1', name: 'Archived', visibility: 'Hidden' })],
       searchResults: [],
     };
 

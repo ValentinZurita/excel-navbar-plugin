@@ -61,9 +61,13 @@ export function ConfirmDialog({
         onContextMenu={(event) => event.stopPropagation()}
       >
         <header className="prompt-dialog-header">
-          <h2 id={titleId} className="prompt-dialog-title">{title}</h2>
+          <h2 id={titleId} className="prompt-dialog-title">
+            {title}
+          </h2>
           {description ? (
-            <p id={descriptionId} className="prompt-dialog-description">{description}</p>
+            <p id={descriptionId} className="prompt-dialog-description">
+              {description}
+            </p>
           ) : null}
         </header>
 

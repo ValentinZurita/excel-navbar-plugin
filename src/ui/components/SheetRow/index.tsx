@@ -18,7 +18,9 @@ function hasNestedInteractiveTarget(target: EventTarget | null, currentTarget: H
     return true;
   }
 
-  const interactiveTarget = target.closest('input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]');
+  const interactiveTarget = target.closest(
+    'input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]',
+  );
   return Boolean(interactiveTarget && currentTarget.contains(interactiveTarget));
 }
 
@@ -63,29 +65,31 @@ interface SheetRowProps {
 }
 
 function areSheetRowPropsEqual(left: SheetRowProps, right: SheetRowProps) {
-  return left.worksheet === right.worksheet
-    && left.isActive === right.isActive
-    && left.isRenaming === right.isRenaming
-    && left.isContextMenuOpen === right.isContextMenuOpen
-    && left.isDragged === right.isDragged
-    && left.isOverlay === right.isOverlay
-    && left.isInteractionSuppressed === right.isInteractionSuppressed
-    && left.containerRef === right.containerRef
-    && left.containerStyle === right.containerStyle
-    && left.containerProps === right.containerProps
-    && left.onActivate === right.onActivate
-    && left.onTogglePin === right.onTogglePin
-    && left.onOpenContextMenu === right.onOpenContextMenu
-    && left.onRenameSubmit === right.onRenameSubmit
-    && left.onRenameCancel === right.onRenameCancel
-    && left.onStartRename === right.onStartRename
-    && left.navigableId === right.navigableId
-    && left.isFocused === right.isFocused
-    && left.isVisualFocused === right.isVisualFocused
-    && left.isVisualExiting === right.isVisualExiting
-    && left.isActiveDimmed === right.isActiveDimmed
-    && left.onItemKeyDown === right.onItemKeyDown
-    && left.registerElement === right.registerElement;
+  return (
+    left.worksheet === right.worksheet &&
+    left.isActive === right.isActive &&
+    left.isRenaming === right.isRenaming &&
+    left.isContextMenuOpen === right.isContextMenuOpen &&
+    left.isDragged === right.isDragged &&
+    left.isOverlay === right.isOverlay &&
+    left.isInteractionSuppressed === right.isInteractionSuppressed &&
+    left.containerRef === right.containerRef &&
+    left.containerStyle === right.containerStyle &&
+    left.containerProps === right.containerProps &&
+    left.onActivate === right.onActivate &&
+    left.onTogglePin === right.onTogglePin &&
+    left.onOpenContextMenu === right.onOpenContextMenu &&
+    left.onRenameSubmit === right.onRenameSubmit &&
+    left.onRenameCancel === right.onRenameCancel &&
+    left.onStartRename === right.onStartRename &&
+    left.navigableId === right.navigableId &&
+    left.isFocused === right.isFocused &&
+    left.isVisualFocused === right.isVisualFocused &&
+    left.isVisualExiting === right.isVisualExiting &&
+    left.isActiveDimmed === right.isActiveDimmed &&
+    left.onItemKeyDown === right.onItemKeyDown &&
+    left.registerElement === right.registerElement
+  );
 }
 
 function SheetRowComponent({
@@ -191,8 +195,14 @@ function SheetRowComponent({
 
   // While this row's sheet menu is open, keep it out of the tab order (focus lives in the menu).
   const tabIndex = navigableId
-    ? (isContextMenuOpen ? -1 : (isFocused ? 0 : -1))
-    : (isInteractive ? 0 : -1);
+    ? isContextMenuOpen
+      ? -1
+      : isFocused
+        ? 0
+        : -1
+    : isInteractive
+      ? 0
+      : -1;
 
   return (
     <article
@@ -201,7 +211,9 @@ function SheetRowComponent({
       data-active={isActive ? 'true' : 'false'}
       data-highlighted={isHighlighted ? 'true' : 'false'}
       data-context-open={isContextMenuOpen ? 'true' : 'false'}
-      data-pin-visible={(leadingState === 'pin-action' || leadingState === 'unpin-action') ? 'true' : 'false'}
+      data-pin-visible={
+        leadingState === 'pin-action' || leadingState === 'unpin-action' ? 'true' : 'false'
+      }
       data-leading-state={leadingState}
       data-interaction-suppressed={isInteractionSuppressed ? 'true' : 'false'}
       data-navigable-id={navigableId}
@@ -223,12 +235,13 @@ function SheetRowComponent({
 
         if (event.detail > 1) {
           const elapsed = now - lastPrimaryClickAtRef.current;
-          const canTryRename = onStartRename
-            && !isRenaming
-            && !isInteractionSuppressed
-            && !isDragged
-            && elapsed > 0
-            && elapsed <= FAST_DOUBLE_CLICK_RENAME_MS;
+          const canTryRename =
+            onStartRename &&
+            !isRenaming &&
+            !isInteractionSuppressed &&
+            !isDragged &&
+            elapsed > 0 &&
+            elapsed <= FAST_DOUBLE_CLICK_RENAME_MS;
 
           if (canTryRename && !hasNestedInteractiveTarget(event.target, event.currentTarget)) {
             event.preventDefault();
@@ -252,13 +265,14 @@ function SheetRowComponent({
           return;
         }
 
-        const managedNavigationKey = event.key === 'ArrowDown'
-          || event.key === 'ArrowUp'
-          || event.key === 'Enter'
-          || event.key === 'Home'
-          || event.key === 'End'
-          || event.key === 'ArrowLeft'
-          || event.key === 'ArrowRight';
+        const managedNavigationKey =
+          event.key === 'ArrowDown' ||
+          event.key === 'ArrowUp' ||
+          event.key === 'Enter' ||
+          event.key === 'Home' ||
+          event.key === 'End' ||
+          event.key === 'ArrowLeft' ||
+          event.key === 'ArrowRight';
 
         // If we have keyboard navigation context, prioritize it for navigation keys.
         // This prevents dnd-kit sortable listeners from stealing Arrow/Enter events.
@@ -309,16 +323,22 @@ function SheetRowComponent({
       <div className="row-topline">
         <span className="sheet-row-leading" aria-hidden="true" {...clusterPointerProps}>
           {/* Base indicator - always rendered but visually hidden when action is shown */}
-          <span className={`sheet-row-base-indicator ${leadingState === 'indicator' || leadingState === 'pinned-indicator' ? 'sheet-row-base-indicator-visible' : ''}`}>
+          <span
+            className={`sheet-row-base-indicator ${leadingState === 'indicator' || leadingState === 'pinned-indicator' ? 'sheet-row-base-indicator-visible' : ''}`}
+          >
             {renderBaseIndicator()}
           </span>
-          
+
           {/* Pin button - always rendered but visually hidden when not in action state */}
           {canTogglePin && (
             <button
               className={`sheet-pin-button ${leadingState === 'pin-action' || leadingState === 'unpin-action' ? 'sheet-pin-button-visible' : ''} ${leadingState === 'unpin-action' ? 'sheet-pin-button-active' : ''}`}
               type="button"
-              aria-label={leadingState === 'unpin-action' ? `Unpin ${worksheet.name}` : `Pin ${worksheet.name}`}
+              aria-label={
+                leadingState === 'unpin-action'
+                  ? `Unpin ${worksheet.name}`
+                  : `Pin ${worksheet.name}`
+              }
               onClick={(event) => {
                 event.stopPropagation();
                 onTogglePin?.(worksheet.worksheetId);
@@ -326,7 +346,9 @@ function SheetRowComponent({
               onFocus={actionFocusProps.onFocus}
               onBlur={actionFocusProps.onBlur}
             >
-              <WorksheetPinIcon className={`sheet-pin-icon ${leadingState === 'unpin-action' ? 'sheet-pin-icon-active' : ''}`} />
+              <WorksheetPinIcon
+                className={`sheet-pin-icon ${leadingState === 'unpin-action' ? 'sheet-pin-icon-active' : ''}`}
+              />
             </button>
           )}
         </span>

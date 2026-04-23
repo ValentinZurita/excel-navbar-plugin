@@ -263,7 +263,9 @@ describe('worksheetDndModel', () => {
         'sheet-3',
         'sheet-4',
       ]);
-      expect(getWorksheetIdsForContainer(layout, toGroupContainerId('group-2'))).toEqual(['sheet-5']);
+      expect(getWorksheetIdsForContainer(layout, toGroupContainerId('group-2'))).toEqual([
+        'sheet-5',
+      ]);
     });
 
     it('returns empty array for non-existent group', () => {
@@ -308,10 +310,13 @@ describe('worksheetDndModel', () => {
     });
 
     it('returns fallback when layout is null', () => {
-      const fallbackEntities = [
-        { ...worksheetsById['sheet-1'], name: 'Fallback' },
-      ];
-      const entities = getWorksheetEntitiesForContainer(null, 'sheets', fallbackEntities, worksheetsById);
+      const fallbackEntities = [{ ...worksheetsById['sheet-1'], name: 'Fallback' }];
+      const entities = getWorksheetEntitiesForContainer(
+        null,
+        'sheets',
+        fallbackEntities,
+        worksheetsById,
+      );
       expect(entities).toBe(fallbackEntities);
     });
 

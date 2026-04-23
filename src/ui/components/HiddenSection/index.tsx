@@ -15,7 +15,9 @@ function hasNestedInteractiveTarget(target: EventTarget | null, currentTarget: H
     return true;
   }
 
-  const interactiveTarget = target.closest('input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]');
+  const interactiveTarget = target.closest(
+    'input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]',
+  );
   return Boolean(interactiveTarget && currentTarget.contains(interactiveTarget));
 }
 
@@ -72,12 +74,17 @@ function HiddenSheetRow({
   onItemKeyDown,
   registerElement,
 }: HiddenSheetRowProps) {
-  const { isHovered, isFocused: isLeadingFocused, clusterPointerProps, actionFocusProps } = useLeadingClusterInteraction();
+  const {
+    isHovered,
+    isFocused: isLeadingFocused,
+    clusterPointerProps,
+    actionFocusProps,
+  } = useLeadingClusterInteraction();
   const isVeryHidden = worksheet.visibility === 'VeryHidden';
   const showUnhideAction = !isVeryHidden && (isHovered || isLeadingFocused);
   const navigableId = `worksheet:${worksheet.worksheetId}`;
   const isHighlighted = Boolean(isContextMenuOpen);
-  const tabIndex = isContextMenuOpen ? -1 : (isFocused ? 0 : -1);
+  const tabIndex = isContextMenuOpen ? -1 : isFocused ? 0 : -1;
 
   useEffect(() => {
     if (!registerElement) {
@@ -88,11 +95,14 @@ function HiddenSheetRow({
     };
   }, [navigableId, registerElement]);
 
-  const setArticleRef = useCallback((element: HTMLElement | null) => {
-    if (registerElement) {
-      registerElement(navigableId, element);
-    }
-  }, [navigableId, registerElement]);
+  const setArticleRef = useCallback(
+    (element: HTMLElement | null) => {
+      if (registerElement) {
+        registerElement(navigableId, element);
+      }
+    },
+    [navigableId, registerElement],
+  );
 
   return (
     <article
@@ -120,13 +130,14 @@ function HiddenSheetRow({
           return;
         }
 
-        const managedNavigationKey = event.key === 'ArrowDown'
-          || event.key === 'ArrowUp'
-          || event.key === 'Enter'
-          || event.key === 'Home'
-          || event.key === 'End'
-          || event.key === 'ArrowLeft'
-          || event.key === 'ArrowRight';
+        const managedNavigationKey =
+          event.key === 'ArrowDown' ||
+          event.key === 'ArrowUp' ||
+          event.key === 'Enter' ||
+          event.key === 'Home' ||
+          event.key === 'End' ||
+          event.key === 'ArrowLeft' ||
+          event.key === 'ArrowRight';
 
         if (onItemKeyDown && managedNavigationKey) {
           onItemKeyDown(event, navigableId);
@@ -204,7 +215,11 @@ export function HiddenSection({
       <header className="section-header section-header-clickable" onClick={onToggle}>
         <div className="section-copy inline-header">
           <span className="inline-chevron">
-            {isCollapsed ? <ChevronRightIcon width="12" height="12" /> : <ChevronDownIcon width="12" height="12" />}
+            {isCollapsed ? (
+              <ChevronRightIcon width="12" height="12" />
+            ) : (
+              <ChevronDownIcon width="12" height="12" />
+            )}
           </span>
           <h2>Hidden</h2>
         </div>
@@ -218,7 +233,9 @@ export function HiddenSection({
             const isFocused = focusedItemId === navigableId;
             const isVisualFocused = visualFocusedItemId === navigableId;
             const isVisualExiting = visualExitingItemId === navigableId;
-            const isActiveDimmed = Boolean(visualFocusedItemId && visualFocusedItemId !== navigableId);
+            const isActiveDimmed = Boolean(
+              visualFocusedItemId && visualFocusedItemId !== navigableId,
+            );
 
             return (
               <HiddenSheetRow

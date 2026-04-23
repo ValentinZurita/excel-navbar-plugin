@@ -4,18 +4,14 @@ import { useGroupCreationState } from '../../src/ui/taskpane/hooks/useGroupCreat
 
 describe('useGroupCreationState', () => {
   it('starts not creating', () => {
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup: vi.fn() }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup: vi.fn() }));
 
     expect(result.current.isCreating).toBe(false);
     expect(result.current.initialWorksheetId).toBeUndefined();
   });
 
   it('enters creating mode on startCreating', () => {
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup: vi.fn() }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup: vi.fn() }));
 
     act(() => {
       result.current.startCreating('sheet-1');
@@ -26,9 +22,7 @@ describe('useGroupCreationState', () => {
   });
 
   it('enters creating mode without worksheet id', () => {
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup: vi.fn() }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup: vi.fn() }));
 
     act(() => {
       result.current.startCreating();
@@ -39,9 +33,7 @@ describe('useGroupCreationState', () => {
   });
 
   it('exits creating mode on cancelCreating', () => {
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup: vi.fn() }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup: vi.fn() }));
 
     act(() => {
       result.current.startCreating('sheet-1');
@@ -59,9 +51,7 @@ describe('useGroupCreationState', () => {
 
   it('calls onCreateGroup with name and worksheet id on confirmCreating', () => {
     const onCreateGroup = vi.fn();
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup }));
 
     act(() => {
       result.current.startCreating('sheet-1');
@@ -76,9 +66,7 @@ describe('useGroupCreationState', () => {
 
   it('calls onCreateGroup with only name when no worksheet id', () => {
     const onCreateGroup = vi.fn();
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup }));
 
     act(() => {
       result.current.startCreating();
@@ -93,9 +81,7 @@ describe('useGroupCreationState', () => {
 
   it('does not call onCreateGroup with empty name', () => {
     const onCreateGroup = vi.fn();
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup }));
 
     act(() => {
       result.current.startCreating('sheet-1');
@@ -110,9 +96,7 @@ describe('useGroupCreationState', () => {
 
   it('does not call onCreateGroup with whitespace-only name', () => {
     const onCreateGroup = vi.fn();
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup }));
 
     act(() => {
       result.current.startCreating('sheet-1');
@@ -127,9 +111,7 @@ describe('useGroupCreationState', () => {
 
   it('trims name before calling onCreateGroup', () => {
     const onCreateGroup = vi.fn();
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup }));
 
     act(() => {
       result.current.startCreating('sheet-1');
@@ -143,9 +125,7 @@ describe('useGroupCreationState', () => {
   });
 
   it('exits creating mode after successful confirmation', () => {
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup: vi.fn() }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup: vi.fn() }));
 
     act(() => {
       result.current.startCreating('sheet-1');
@@ -164,9 +144,7 @@ describe('useGroupCreationState', () => {
   it('calls onSuccess callback after successful confirmation', () => {
     const onCreateGroup = vi.fn();
     const onSuccess = vi.fn();
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup, onSuccess }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup, onSuccess }));
 
     act(() => {
       result.current.startCreating('sheet-1');
@@ -182,9 +160,7 @@ describe('useGroupCreationState', () => {
   it('does not call onSuccess with empty name', () => {
     const onCreateGroup = vi.fn();
     const onSuccess = vi.fn();
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup, onSuccess }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup, onSuccess }));
 
     act(() => {
       result.current.startCreating('sheet-1');
@@ -200,9 +176,7 @@ describe('useGroupCreationState', () => {
   it('does not call onSuccess on cancel', () => {
     const onCreateGroup = vi.fn();
     const onSuccess = vi.fn();
-    const { result } = renderHook(() =>
-      useGroupCreationState({ onCreateGroup, onSuccess }),
-    );
+    const { result } = renderHook(() => useGroupCreationState({ onCreateGroup, onSuccess }));
 
     act(() => {
       result.current.startCreating('sheet-1');

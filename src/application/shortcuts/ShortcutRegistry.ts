@@ -5,4 +5,4 @@ export const ShortcutActionId = {
   CREATE_WORKSHEET: 'createWorksheet',
 } as const;
 
-export type ShortcutActionIdValue = typeof ShortcutActionId[keyof typeof ShortcutActionId];
+export type ShortcutActionIdValue = (typeof ShortcutActionId)[keyof typeof ShortcutActionId];

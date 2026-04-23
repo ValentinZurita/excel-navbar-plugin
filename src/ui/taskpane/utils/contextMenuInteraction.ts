@@ -10,9 +10,7 @@ export function inferContextMenuInteraction(event: {
   clientX: number;
   clientY: number;
 }): ContextMenuInteraction {
-  const keyboardTriggered = event.button === 0
-    && event.detail === 0
-    && event.clientX === 0
-    && event.clientY === 0;
+  const keyboardTriggered =
+    event.button === 0 && event.detail === 0 && event.clientX === 0 && event.clientY === 0;
   return keyboardTriggered ? 'keyboard' : 'pointer';
 }

@@ -5,16 +5,15 @@ import type { NavigationState, PersistedNavigationModel, StructuralState } from 
 export function toPersistedModel(state: NavigationState): PersistedNavigationModel {
   const priorStructuralStateByWorksheetId = Object.values(state.worksheetsById).reduce<
     Record<string, StructuralState | null>
-  >(
-    (accumulator, worksheet) => {
-      accumulator[getStableWorksheetId(worksheet)] = worksheet.lastKnownStructuralState;
-      return accumulator;
-    },
-    {},
-  );
+  >((accumulator, worksheet) => {
+    accumulator[getStableWorksheetId(worksheet)] = worksheet.lastKnownStructuralState;
+    return accumulator;
+  }, {});
 
   const pinnedWorksheetOrder = state.pinnedWorksheetOrder.length
-    ? dedupeWorksheetIds(state.pinnedWorksheetOrder).filter((id) => state.worksheetsById[id]?.isPinned)
+    ? dedupeWorksheetIds(state.pinnedWorksheetOrder).filter(
+        (id) => state.worksheetsById[id]?.isPinned,
+      )
     : Object.values(state.worksheetsById)
         .filter((worksheet) => worksheet.isPinned)
         .sort((left, right) => left.workbookOrder - right.workbookOrder)

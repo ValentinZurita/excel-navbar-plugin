@@ -3,7 +3,8 @@ import { applyMoveAmongUngroupedVisibleSheets } from '../../src/domain/navigatio
 import type { WorksheetEntity } from '../../src/domain/navigation/types';
 
 function worksheet(
-  overrides: Partial<WorksheetEntity> & Pick<WorksheetEntity, 'worksheetId' | 'name' | 'workbookOrder'>,
+  overrides: Partial<WorksheetEntity> &
+    Pick<WorksheetEntity, 'worksheetId' | 'name' | 'workbookOrder'>,
 ): WorksheetEntity {
   return {
     visibility: 'Visible',
@@ -62,12 +63,7 @@ describe('applyMoveAmongUngroupedVisibleSheets', () => {
 
     const sheetSectionOrder = ['a', 'g1', 'g2', 'b', 'c', 'x'];
 
-    const next = applyMoveAmongUngroupedVisibleSheets(
-      sheetSectionOrder,
-      worksheetsById,
-      'x',
-      1,
-    );
+    const next = applyMoveAmongUngroupedVisibleSheets(sheetSectionOrder, worksheetsById, 'x', 1);
 
     expect(next).toEqual(['a', 'g1', 'g2', 'x', 'b', 'c']);
   });
@@ -102,12 +98,7 @@ describe('applyMoveAmongUngroupedVisibleSheets', () => {
       b: worksheet({ worksheetId: 'b', name: 'B', workbookOrder: 2 }),
     };
 
-    const next = applyMoveAmongUngroupedVisibleSheets(
-      ['a', 'p', 'b'],
-      worksheetsById,
-      'a',
-      1,
-    );
+    const next = applyMoveAmongUngroupedVisibleSheets(['a', 'p', 'b'], worksheetsById, 'a', 1);
 
     expect(next).toEqual(['b', 'p', 'a']);
   });
@@ -125,12 +116,7 @@ describe('applyMoveAmongUngroupedVisibleSheets', () => {
       }),
     };
 
-    const next = applyMoveAmongUngroupedVisibleSheets(
-      ['a', 'hidden'],
-      worksheetsById,
-      'hidden',
-      0,
-    );
+    const next = applyMoveAmongUngroupedVisibleSheets(['a', 'hidden'], worksheetsById, 'hidden', 0);
 
     expect(next).toEqual(['a', 'hidden']);
   });

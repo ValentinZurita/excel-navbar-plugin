@@ -89,7 +89,9 @@ describe('dndPolicies', () => {
         const state = createPolicyState({ 'sheet-1': worksheet });
 
         expect(pinnedSectionPolicy.canDrop(worksheet, 'pinned', 'sheets', state)).toBe(false);
-        expect(pinnedSectionPolicy.canDrop(worksheet, 'pinned', 'group:group-1', state)).toBe(false);
+        expect(pinnedSectionPolicy.canDrop(worksheet, 'pinned', 'group:group-1', state)).toBe(
+          false,
+        );
       });
 
       it('prevents dropping from other sections to pinned', () => {
@@ -97,7 +99,9 @@ describe('dndPolicies', () => {
         const state = createPolicyState({ 'sheet-1': worksheet });
 
         expect(pinnedSectionPolicy.canDrop(worksheet, 'sheets', 'pinned', state)).toBe(false);
-        expect(pinnedSectionPolicy.canDrop(worksheet, 'group:group-1', 'pinned', state)).toBe(false);
+        expect(pinnedSectionPolicy.canDrop(worksheet, 'group:group-1', 'pinned', state)).toBe(
+          false,
+        );
       });
 
       it('allows drops between non-pinned sections', () => {
@@ -106,7 +110,9 @@ describe('dndPolicies', () => {
 
         expect(pinnedSectionPolicy.canDrop(worksheet, 'sheets', 'group:group-1', state)).toBe(true);
         expect(pinnedSectionPolicy.canDrop(worksheet, 'group:group-1', 'sheets', state)).toBe(true);
-        expect(pinnedSectionPolicy.canDrop(worksheet, 'group:group-1', 'group:group-2', state)).toBe(true);
+        expect(
+          pinnedSectionPolicy.canDrop(worksheet, 'group:group-1', 'group:group-2', state),
+        ).toBe(true);
       });
     });
   });

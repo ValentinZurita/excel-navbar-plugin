@@ -40,7 +40,10 @@
   border-radius: 4px;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
 }
 
 .inline-delete-button:disabled {

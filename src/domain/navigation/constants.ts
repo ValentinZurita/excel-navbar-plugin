@@ -16,13 +16,7 @@ export function buildScopedLocalCacheKey(stableWorkbookKey: string) {
 
 // Colors used for automatic color rotation on group creation.
 // 'none' is intentionally excluded: it is a deliberate user choice, never a default.
-export const groupColorTokens: GroupColorToken[] = [
-  'blue',
-  'green',
-  'yellow',
-  'purple',
-  'red',
-];
+export const groupColorTokens: GroupColorToken[] = ['blue', 'green', 'yellow', 'purple', 'red'];
 
 // All colors the user can explicitly pick, including the "no color" option.
 export const selectableGroupColorTokens: GroupColorToken[] = [

@@ -175,10 +175,11 @@ export function useKeyboardNavigationGlobalListeners({
         return;
       }
 
-      if (document.activeElement && (
-        document.activeElement.tagName === 'INPUT'
-        || document.activeElement.tagName === 'TEXTAREA'
-      )) {
+      if (
+        document.activeElement &&
+        (document.activeElement.tagName === 'INPUT' ||
+          document.activeElement.tagName === 'TEXTAREA')
+      ) {
         return;
       }
 
@@ -229,9 +230,9 @@ export function useKeyboardNavigationGlobalListeners({
         return;
       }
       if (
-        active instanceof HTMLInputElement
-        || active instanceof HTMLTextAreaElement
-        || active instanceof HTMLSelectElement
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLTextAreaElement ||
+        active instanceof HTMLSelectElement
       ) {
         if (active === searchInputRef.current) {
           return;
@@ -270,7 +271,9 @@ export function useKeyboardNavigationGlobalListeners({
       };
 
       if (active instanceof HTMLElement && root.contains(active)) {
-        const hostNavigableId = active.closest('[data-navigable-id]')?.getAttribute('data-navigable-id');
+        const hostNavigableId = active
+          .closest('[data-navigable-id]')
+          ?.getAttribute('data-navigable-id');
         if (hostNavigableId !== logicalId) {
           return;
         }

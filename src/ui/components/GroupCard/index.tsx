@@ -30,7 +30,12 @@ interface GroupCardProps {
     colorToken: GroupColorToken;
     interaction?: 'pointer' | 'keyboard';
   }) => void;
-  onOpenSheetMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: NavigatorGroupView['worksheets'][number] }) => void;
+  onOpenSheetMenu: (args: {
+    target: HTMLElement;
+    x: number;
+    y: number;
+    worksheet: NavigatorGroupView['worksheets'][number];
+  }) => void;
   onTogglePin?: (worksheetId: string) => void;
   onRenameSubmit?: (groupId: string, newName: string) => void;
   onRenameCancel?: () => void;
@@ -49,7 +54,11 @@ interface GroupCardProps {
   /** Whether active ghost should dim while another item owns highlight */
   isActiveDimmed?: boolean;
   /** Handler for group header keyboard navigation (ArrowRight/Left, Enter) */
-  onGroupHeaderKeyDown?: (event: React.KeyboardEvent<HTMLElement>, groupId: string, isCollapsed: boolean) => void;
+  onGroupHeaderKeyDown?: (
+    event: React.KeyboardEvent<HTMLElement>,
+    groupId: string,
+    isCollapsed: boolean,
+  ) => void;
   /** Register DOM element for focus management */
   registerElement?: (id: string, element: HTMLElement | null) => void;
   /** Taskpane item with strong visual highlight */
@@ -85,11 +94,13 @@ function areWorksheetListsEqual(
 }
 
 function areGroupViewsEqual(left: NavigatorGroupView, right: NavigatorGroupView) {
-  return left.groupId === right.groupId
-    && left.name === right.name
-    && left.colorToken === right.colorToken
-    && left.isCollapsed === right.isCollapsed
-    && areWorksheetListsEqual(left.worksheets, right.worksheets);
+  return (
+    left.groupId === right.groupId &&
+    left.name === right.name &&
+    left.colorToken === right.colorToken &&
+    left.isCollapsed === right.isCollapsed &&
+    areWorksheetListsEqual(left.worksheets, right.worksheets)
+  );
 }
 
 function areProjectedDropTargetsEqual(
@@ -104,9 +115,9 @@ function areProjectedDropTargetsEqual(
     return false;
   }
 
-  return left.containerId === right.containerId
-    && left.index === right.index
-    && left.kind === right.kind;
+  return (
+    left.containerId === right.containerId && left.index === right.index && left.kind === right.kind
+  );
 }
 
 function areGroupDragConfigsEqual(
@@ -121,39 +132,43 @@ function areGroupDragConfigsEqual(
     return false;
   }
 
-  return areProjectedDropTargetsEqual(left.projectedDropTarget, right.projectedDropTarget)
-    && left.flashedGroupId === right.flashedGroupId
-    && left.isDragActive === right.isDragActive
-    && left.shouldSuppressActivation === right.shouldSuppressActivation;
+  return (
+    areProjectedDropTargetsEqual(left.projectedDropTarget, right.projectedDropTarget) &&
+    left.flashedGroupId === right.flashedGroupId &&
+    left.isDragActive === right.isDragActive &&
+    left.shouldSuppressActivation === right.shouldSuppressActivation
+  );
 }
 
 function areGroupCardPropsEqual(left: GroupCardProps, right: GroupCardProps) {
-  return areGroupViewsEqual(left.group, right.group)
-    && left.activeWorksheetId === right.activeWorksheetId
-    && left.contextMenuOpenId === right.contextMenuOpenId
-    && left.groupMenuOpenId === right.groupMenuOpenId
-    && areGroupDragConfigsEqual(left.dragConfig, right.dragConfig)
-    && left.isRenaming === right.isRenaming
-    && left.onActivate === right.onActivate
-    && left.onToggleCollapsed === right.onToggleCollapsed
-    && left.onOpenGroupMenu === right.onOpenGroupMenu
-    && left.onOpenSheetMenu === right.onOpenSheetMenu
-    && left.onTogglePin === right.onTogglePin
-    && left.onRenameSubmit === right.onRenameSubmit
-    && left.onRenameCancel === right.onRenameCancel
-    && left.renamingWorksheetId === right.renamingWorksheetId
-    && left.onRenameWorksheetSubmit === right.onRenameWorksheetSubmit
-    && left.onStartRenameWorksheet === right.onStartRenameWorksheet
-    && left.navigableId === right.navigableId
-    && left.isFocused === right.isFocused
-    && left.isVisualFocused === right.isVisualFocused
-    && left.isVisualExiting === right.isVisualExiting
-    && left.isActiveDimmed === right.isActiveDimmed
-    && left.onGroupHeaderKeyDown === right.onGroupHeaderKeyDown
-    && left.registerElement === right.registerElement
-    && left.visualFocusedItemId === right.visualFocusedItemId
-    && left.visualExitingItemId === right.visualExitingItemId
-    && left.onItemKeyDown === right.onItemKeyDown;
+  return (
+    areGroupViewsEqual(left.group, right.group) &&
+    left.activeWorksheetId === right.activeWorksheetId &&
+    left.contextMenuOpenId === right.contextMenuOpenId &&
+    left.groupMenuOpenId === right.groupMenuOpenId &&
+    areGroupDragConfigsEqual(left.dragConfig, right.dragConfig) &&
+    left.isRenaming === right.isRenaming &&
+    left.onActivate === right.onActivate &&
+    left.onToggleCollapsed === right.onToggleCollapsed &&
+    left.onOpenGroupMenu === right.onOpenGroupMenu &&
+    left.onOpenSheetMenu === right.onOpenSheetMenu &&
+    left.onTogglePin === right.onTogglePin &&
+    left.onRenameSubmit === right.onRenameSubmit &&
+    left.onRenameCancel === right.onRenameCancel &&
+    left.renamingWorksheetId === right.renamingWorksheetId &&
+    left.onRenameWorksheetSubmit === right.onRenameWorksheetSubmit &&
+    left.onStartRenameWorksheet === right.onStartRenameWorksheet &&
+    left.navigableId === right.navigableId &&
+    left.isFocused === right.isFocused &&
+    left.isVisualFocused === right.isVisualFocused &&
+    left.isVisualExiting === right.isVisualExiting &&
+    left.isActiveDimmed === right.isActiveDimmed &&
+    left.onGroupHeaderKeyDown === right.onGroupHeaderKeyDown &&
+    left.registerElement === right.registerElement &&
+    left.visualFocusedItemId === right.visualFocusedItemId &&
+    left.visualExitingItemId === right.visualExitingItemId &&
+    left.onItemKeyDown === right.onItemKeyDown
+  );
 }
 
 function GroupCardComponent({
@@ -240,10 +255,13 @@ function GroupCardComponent({
     disabled: !dragConfig?.isDragActive,
   });
 
-  const isDropActive = isGroupHeaderDropActive(dragConfig?.projectedDropTarget ?? null, containerId);
+  const isDropActive = isGroupHeaderDropActive(
+    dragConfig?.projectedDropTarget ?? null,
+    containerId,
+  );
   const isFolderFlashing = dragConfig?.flashedGroupId === group.groupId;
   const containsActiveWorksheet = group.worksheets.some(
-    (w) => w.worksheetId === rest.activeWorksheetId
+    (w) => w.worksheetId === rest.activeWorksheetId,
   );
   const isActiveGroupHeader = group.isCollapsed && containsActiveWorksheet;
   const shouldShowEmptyGhost = isEmptyFeedbackActive && group.worksheets.length === 0;
@@ -268,11 +286,12 @@ function GroupCardComponent({
         event.preventDefault();
         const interaction = inferContextMenuInteraction(event);
         const rawTarget = event.target;
-        const targetElement = rawTarget instanceof Element
-          ? rawTarget
-          : rawTarget instanceof Node
-            ? rawTarget.parentElement
-            : null;
+        const targetElement =
+          rawTarget instanceof Element
+            ? rawTarget
+            : rawTarget instanceof Node
+              ? rawTarget.parentElement
+              : null;
         const anchorTarget = targetElement?.closest<HTMLElement>('[data-navigable-id]') ?? null;
         onOpenGroupMenu({
           target: anchorTarget ?? event.currentTarget,
@@ -311,13 +330,14 @@ function GroupCardComponent({
           }}
           onKeyDown={(event) => {
             if (navigableId && onGroupHeaderKeyDown) {
-              const managedNavigationKey = event.key === 'ArrowDown'
-                || event.key === 'ArrowUp'
-                || event.key === 'ArrowRight'
-                || event.key === 'ArrowLeft'
-                || event.key === 'Enter'
-                || event.key === 'Home'
-                || event.key === 'End';
+              const managedNavigationKey =
+                event.key === 'ArrowDown' ||
+                event.key === 'ArrowUp' ||
+                event.key === 'ArrowRight' ||
+                event.key === 'ArrowLeft' ||
+                event.key === 'Enter' ||
+                event.key === 'Home' ||
+                event.key === 'End';
 
               if (managedNavigationKey) {
                 onGroupHeaderKeyDown(event, group.groupId, group.isCollapsed);
@@ -326,7 +346,10 @@ function GroupCardComponent({
             }
           }}
         >
-          <span className={`group-leading group-leading-${group.colorToken} ${isFolderFlashing ? 'group-leading-flash' : ''}`} aria-hidden="true">
+          <span
+            className={`group-leading group-leading-${group.colorToken} ${isFolderFlashing ? 'group-leading-flash' : ''}`}
+            aria-hidden="true"
+          >
             <GroupFolderIcon className="group-folder-icon" />
           </span>
           <span className="group-copy">

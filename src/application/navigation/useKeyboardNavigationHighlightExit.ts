@@ -22,9 +22,7 @@ export function useKeyboardNavigationHighlightExit({
 }: UseKeyboardNavigationHighlightExitArgs) {
   const prevOwner = prevVisualOwnerRef.current;
   const syncVisualExitTargetId =
-    prevOwner !== null
-    && prevOwner !== visualFocusedItemId
-    && isMainListNavigableId(prevOwner)
+    prevOwner !== null && prevOwner !== visualFocusedItemId && isMainListNavigableId(prevOwner)
       ? prevOwner
       : null;
   prevVisualOwnerRef.current = visualFocusedItemId;
@@ -49,9 +47,7 @@ export function useKeyboardNavigationHighlightExit({
     }
     setVisualExitingItemId(syncVisualExitTargetId);
     exitTimerRef.current = window.setTimeout(() => {
-      setVisualExitingItemId((current) => (
-        current === syncVisualExitTargetId ? null : current
-      ));
+      setVisualExitingItemId((current) => (current === syncVisualExitTargetId ? null : current));
       exitTimerRef.current = null;
     }, HIGHLIGHT_EXIT_MS);
   }, [

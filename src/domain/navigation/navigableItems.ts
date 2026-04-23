@@ -27,14 +27,7 @@ interface BuildNavigableItemsArgs {
  * ]
  */
 export function buildNavigableItems(args: BuildNavigableItemsArgs): NavigableItem[] {
-  const {
-    query,
-    searchResults,
-    pinned,
-    groups,
-    ungrouped,
-    hidden,
-  } = args;
+  const { query, searchResults, pinned, groups, ungrouped, hidden } = args;
   const items: NavigableItem[] = [];
 
   // When searching, only search results are navigable

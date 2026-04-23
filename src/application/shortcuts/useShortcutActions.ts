@@ -27,7 +27,10 @@ interface UseShortcutActionsOptions {
  * The fallback listener handles the same shortcuts when the taskpane has focus,
  * since global shortcuts may not fire inside the webview on all platforms.
  */
-export function useShortcutActions({ actions, isSuppressed = false }: UseShortcutActionsOptions): void {
+export function useShortcutActions({
+  actions,
+  isSuppressed = false,
+}: UseShortcutActionsOptions): void {
   const actionsRef = useRef(actions);
   actionsRef.current = actions;
 

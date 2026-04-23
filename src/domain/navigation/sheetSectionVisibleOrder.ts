@@ -19,10 +19,7 @@ function isUngroupedVisibleSheetSlot(
 ): boolean {
   const worksheet = worksheetsById[worksheetId];
   return Boolean(
-    worksheet
-    && !worksheet.groupId
-    && !worksheet.isPinned
-    && worksheet.visibility === 'Visible',
+    worksheet && !worksheet.groupId && !worksheet.isPinned && worksheet.visibility === 'Visible',
   );
 }
 

@@ -38,7 +38,12 @@ describe('buildNavigatorView', () => {
       one: worksheet({ worksheetId: 'one', name: 'Overview', isPinned: true }),
       two: worksheet({ worksheetId: 'two', name: 'Revenue', groupId: 'group-1', workbookOrder: 1 }),
       three: worksheet({ worksheetId: 'three', name: 'Draft', workbookOrder: 2 }),
-      four: worksheet({ worksheetId: 'four', name: 'Archive', visibility: 'Hidden', workbookOrder: 3 }),
+      four: worksheet({
+        worksheetId: 'four',
+        name: 'Archive',
+        visibility: 'Hidden',
+        workbookOrder: 3,
+      }),
     };
     state.groupsById = { 'group-1': group({ worksheetOrder: ['two'] }) };
     state.groupOrder = ['group-1'];
@@ -95,7 +100,12 @@ describe('buildNavigatorView', () => {
     state.worksheetsById = {
       one: worksheet({ worksheetId: 'one', name: 'Overview', workbookOrder: 0 }),
       two: worksheet({ worksheetId: 'two', name: 'Revenue', workbookOrder: 1, isPinned: true }),
-      three: worksheet({ worksheetId: 'three', name: 'Archive', visibility: 'Hidden', workbookOrder: 2 }),
+      three: worksheet({
+        worksheetId: 'three',
+        name: 'Archive',
+        visibility: 'Hidden',
+        workbookOrder: 2,
+      }),
     };
 
     const structureWithoutQuery = buildNavigatorStructure(state);
@@ -122,7 +132,12 @@ describe('buildNavigatorView', () => {
     state.worksheetsById = {
       one: worksheet({ worksheetId: 'one', name: 'Overview', isPinned: true, workbookOrder: 0 }),
       two: worksheet({ worksheetId: 'two', name: 'Revenue', groupId: 'group-1', workbookOrder: 1 }),
-      three: worksheet({ worksheetId: 'three', name: 'Archive', visibility: 'Hidden', workbookOrder: 2 }),
+      three: worksheet({
+        worksheetId: 'three',
+        name: 'Archive',
+        visibility: 'Hidden',
+        workbookOrder: 2,
+      }),
     };
     state.groupsById = { 'group-1': group({ name: 'Finance', worksheetOrder: ['two'] }) };
     state.groupOrder = ['group-1'];
@@ -150,15 +165,29 @@ describe('buildNavigatorView', () => {
   it('appends grouped worksheets missing from persisted order using workbook order', () => {
     const state = createDefaultNavigationState();
     state.worksheetsById = {
-      one: worksheet({ worksheetId: 'one', name: 'Overview', groupId: 'group-1', workbookOrder: 0 }),
+      one: worksheet({
+        worksheetId: 'one',
+        name: 'Overview',
+        groupId: 'group-1',
+        workbookOrder: 0,
+      }),
       two: worksheet({ worksheetId: 'two', name: 'Revenue', groupId: 'group-1', workbookOrder: 2 }),
-      three: worksheet({ worksheetId: 'three', name: 'Budget', groupId: 'group-1', workbookOrder: 1 }),
+      three: worksheet({
+        worksheetId: 'three',
+        name: 'Budget',
+        groupId: 'group-1',
+        workbookOrder: 1,
+      }),
     };
     state.groupsById = { 'group-1': group({ worksheetOrder: ['two'] }) };
     state.groupOrder = ['group-1'];
 
     const view = buildNavigatorView(state);
 
-    expect(view.groups[0].worksheets.map((item) => item.worksheetId)).toEqual(['two', 'one', 'three']);
+    expect(view.groups[0].worksheets.map((item) => item.worksheetId)).toEqual([
+      'two',
+      'one',
+      'three',
+    ]);
   });
 });

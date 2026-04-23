@@ -233,12 +233,16 @@ describe('useWorksheetDnD', () => {
     });
 
     act(() => {
-      result.current.onDragOver(createDropTargetEvent('group:group-1', 0, 'gap', worksheet.worksheetId, 'sheets', 0));
+      result.current.onDragOver(
+        createDropTargetEvent('group:group-1', 0, 'gap', worksheet.worksheetId, 'sheets', 0),
+      );
     });
     const firstProjectedTarget = result.current.projectedDropTarget;
 
     act(() => {
-      result.current.onDragOver(createDropTargetEvent('group:group-1', 0, 'gap', worksheet.worksheetId, 'sheets', 0));
+      result.current.onDragOver(
+        createDropTargetEvent('group:group-1', 0, 'gap', worksheet.worksheetId, 'sheets', 0),
+      );
     });
 
     expect(result.current.projectedDropTarget).toBe(firstProjectedTarget);
@@ -300,9 +304,7 @@ describe('useWorksheetDnD', () => {
 
       // Start dragging from pinned
       act(() => {
-        result.current.onDragStart(
-          createDragStartEvent(pinnedWorksheet.worksheetId, 'pinned', 0),
-        );
+        result.current.onDragStart(createDragStartEvent(pinnedWorksheet.worksheetId, 'pinned', 0));
       });
 
       expect(result.current.projectedDropTarget).toEqual({
@@ -337,9 +339,7 @@ describe('useWorksheetDnD', () => {
       );
 
       act(() => {
-        result.current.onDragStart(
-          createDragStartEvent(worksheet.worksheetId, 'sheets', 0),
-        );
+        result.current.onDragStart(createDragStartEvent(worksheet.worksheetId, 'sheets', 0));
       });
 
       act(() => {
@@ -376,9 +376,7 @@ describe('useWorksheetDnD', () => {
 
       // Start dragging from pinned
       act(() => {
-        result.current.onDragStart(
-          createDragStartEvent(pinnedWorksheet.worksheetId, 'pinned', 0),
-        );
+        result.current.onDragStart(createDragStartEvent(pinnedWorksheet.worksheetId, 'pinned', 0));
       });
 
       // Drag to another position within pinned (should be allowed)
@@ -421,9 +419,7 @@ describe('useWorksheetDnD', () => {
 
       // Start dragging from sheets
       act(() => {
-        result.current.onDragStart(
-          createDragStartEvent(worksheet.worksheetId, 'sheets', 0),
-        );
+        result.current.onDragStart(createDragStartEvent(worksheet.worksheetId, 'sheets', 0));
       });
 
       // Drag to group (should be allowed by policy)
@@ -466,9 +462,7 @@ describe('useWorksheetDnD', () => {
 
       // Start dragging from sheets
       act(() => {
-        result.current.onDragStart(
-          createDragStartEvent(worksheet.worksheetId, 'sheets', 0),
-        );
+        result.current.onDragStart(createDragStartEvent(worksheet.worksheetId, 'sheets', 0));
       });
 
       // Try to drag to pinned (should be prohibited by policy)
@@ -507,9 +501,7 @@ describe('useWorksheetDnD', () => {
       );
 
       act(() => {
-        result.current.onDragStart(
-          createDragStartEvent(pinnedWorksheet.worksheetId, 'pinned', 0),
-        );
+        result.current.onDragStart(createDragStartEvent(pinnedWorksheet.worksheetId, 'pinned', 0));
       });
 
       act(() => {
@@ -519,7 +511,9 @@ describe('useWorksheetDnD', () => {
       });
 
       act(() => {
-        result.current.onDragEnd(createDragEndEvent(pinnedWorksheet.worksheetId, 'pinned', 0, null));
+        result.current.onDragEnd(
+          createDragEndEvent(pinnedWorksheet.worksheetId, 'pinned', 0, null),
+        );
       });
 
       expect(reorderPinnedWorksheet).toHaveBeenCalledWith('sheet-1', 1);
@@ -551,9 +545,7 @@ describe('useWorksheetDnD', () => {
       );
 
       act(() => {
-        result.current.onDragStart(
-          createDragStartEvent(pinnedWorksheet.worksheetId, 'pinned', 0),
-        );
+        result.current.onDragStart(createDragStartEvent(pinnedWorksheet.worksheetId, 'pinned', 0));
       });
 
       act(() => {
@@ -586,9 +578,7 @@ describe('useWorksheetDnD', () => {
 
       // Start dragging
       act(() => {
-        result.current.onDragStart(
-          createDragStartEvent(worksheet.worksheetId, 'pinned', 0),
-        );
+        result.current.onDragStart(createDragStartEvent(worksheet.worksheetId, 'pinned', 0));
       });
 
       // Drag anywhere - should show feedback since no policy restricts it

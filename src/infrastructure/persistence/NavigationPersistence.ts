@@ -21,7 +21,8 @@ function createSessionOnlyStatus(
     mode: 'session-only',
     banner: {
       tone: 'info',
-      message: 'This workbook does not have a stable file identity yet. Local recovery is unavailable until the file is saved.',
+      message:
+        'This workbook does not have a stable file identity yet. Local recovery is unavailable until the file is saved.',
     },
     lastSource,
     diagnostics,
@@ -42,7 +43,8 @@ function createHealthyStatus(
       mode: 'settings-fallback',
       banner: {
         tone: 'warning',
-        message: 'This Excel host is using a compatibility persistence path because Custom XML storage is unavailable.',
+        message:
+          'This Excel host is using a compatibility persistence path because Custom XML storage is unavailable.',
       },
       lastSource,
       diagnostics,
@@ -70,7 +72,8 @@ function createDegradedStatus(
       mode: 'degraded',
       banner: {
         tone: 'warning',
-        message: 'We could not save to the workbook canonical store, but your navigation state was cached locally for this workbook on this device.',
+        message:
+          'We could not save to the workbook canonical store, but your navigation state was cached locally for this workbook on this device.',
       },
       lastSource,
       diagnostics,
@@ -82,7 +85,8 @@ function createDegradedStatus(
     mode: 'degraded',
     banner: {
       tone: 'warning',
-      message: 'We could not save this workbook state, and local recovery is unavailable until the file is saved.',
+      message:
+        'We could not save this workbook state, and local recovery is unavailable until the file is saved.',
     },
     lastSource,
     diagnostics,
@@ -90,7 +94,10 @@ function createDegradedStatus(
   };
 }
 
-function buildMetadata(model: PersistedNavigationModel, canonicalStore: PersistenceMetadata['canonicalStore']): PersistenceMetadata {
+function buildMetadata(
+  model: PersistedNavigationModel,
+  canonicalStore: PersistenceMetadata['canonicalStore'],
+): PersistenceMetadata {
   return {
     schemaVersion: 2,
     canonicalStore,
@@ -163,9 +170,7 @@ export class NavigationPersistence {
     return 'settings-fallback';
   }
 
-  private async hydrateFromLocalCache(
-    context: WorkbookPersistenceContext,
-  ) {
+  private async hydrateFromLocalCache(context: WorkbookPersistenceContext) {
     if (!context.stableWorkbookKey) {
       return null;
     }
@@ -241,7 +246,11 @@ export class NavigationPersistence {
     if (!model) {
       return {
         model: null,
-        status: createHealthyStatus(context, 'none', this.decorateDiagnostics(context, diagnostics)),
+        status: createHealthyStatus(
+          context,
+          'none',
+          this.decorateDiagnostics(context, diagnostics),
+        ),
       };
     }
 
@@ -252,7 +261,11 @@ export class NavigationPersistence {
       mergeDiagnostics(diagnostics, reconciled.diagnostics),
     );
 
-    if (reconciled.changed || lastSource === 'legacy-settings' || lastSource === 'scoped-local-cache') {
+    if (
+      reconciled.changed ||
+      lastSource === 'legacy-settings' ||
+      lastSource === 'scoped-local-cache'
+    ) {
       try {
         model = {
           ...model,
@@ -270,7 +283,10 @@ export class NavigationPersistence {
     };
   }
 
-  async save(context: WorkbookPersistenceContext, model: PersistedNavigationModel): Promise<PersistenceStatus> {
+  async save(
+    context: WorkbookPersistenceContext,
+    model: PersistedNavigationModel,
+  ): Promise<PersistenceStatus> {
     this.localCacheRepository.cleanupLegacyGlobalCache();
 
     const diagnostics = this.decorateDiagnostics(context, []);
@@ -278,7 +294,11 @@ export class NavigationPersistence {
     const workbookKey = context.stableWorkbookKey ?? 'session-only';
 
     if (this.lastSavedFingerprint === fingerprint && this.lastSavedWorkbookKey === workbookKey) {
-      return createHealthyStatus(context, context.supportsCustomXml ? 'custom-xml' : 'settings-fallback', diagnostics);
+      return createHealthyStatus(
+        context,
+        context.supportsCustomXml ? 'custom-xml' : 'settings-fallback',
+        diagnostics,
+      );
     }
 
     const modelToWrite: PersistedNavigationModel = {

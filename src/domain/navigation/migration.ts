@@ -34,13 +34,20 @@ export function migrateLegacyPersistedNavigationModel(
       ...group,
       worksheetOrder: mapLegacyWorksheetIds(group.worksheetOrder, stableWorksheetIdByNativeId),
     })),
-    sheetSectionOrder: mapLegacyWorksheetIds(legacyModel.sheetSectionOrder, stableWorksheetIdByNativeId),
+    sheetSectionOrder: mapLegacyWorksheetIds(
+      legacyModel.sheetSectionOrder,
+      stableWorksheetIdByNativeId,
+    ),
     pinnedWorksheetOrder: mapLegacyWorksheetIds(
-      legacyModel.pinnedWorksheetOrder?.length ? legacyModel.pinnedWorksheetOrder : legacyModel.pinnedWorksheetIds,
+      legacyModel.pinnedWorksheetOrder?.length
+        ? legacyModel.pinnedWorksheetOrder
+        : legacyModel.pinnedWorksheetIds,
       stableWorksheetIdByNativeId,
     ),
     hiddenSectionCollapsed: legacyModel.hiddenSectionCollapsed,
-    priorStructuralStateByStableWorksheetId: Object.entries(legacyModel.priorStructuralStateByWorksheetId).reduce<
+    priorStructuralStateByStableWorksheetId: Object.entries(
+      legacyModel.priorStructuralStateByWorksheetId,
+    ).reduce<
       Record<string, PersistedNavigationModel['priorStructuralStateByStableWorksheetId'][string]>
     >((accumulator, [worksheetId, structuralState]) => {
       const stableWorksheetId = stableWorksheetIdByNativeId.get(worksheetId);

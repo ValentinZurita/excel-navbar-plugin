@@ -85,10 +85,12 @@ describe('GroupCard', () => {
     });
 
     expect(onOpenGroupMenu).toHaveBeenCalledTimes(1);
-    expect(onOpenGroupMenu).toHaveBeenCalledWith(expect.objectContaining({
-      interaction: 'keyboard',
-      target: expect.any(HTMLElement),
-    }));
+    expect(onOpenGroupMenu).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interaction: 'keyboard',
+        target: expect.any(HTMLElement),
+      }),
+    );
   });
 
   it('activates the group header only for group-header targets in the same container', () => {
@@ -183,10 +185,12 @@ describe('GroupCard', () => {
 
   it('triggers empty feedback animation on empty group click and clears it', () => {
     vi.useFakeTimers();
-    const rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback: FrameRequestCallback) => {
-      callback(0);
-      return 1;
-    });
+    const rafSpy = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((callback: FrameRequestCallback) => {
+        callback(0);
+        return 1;
+      });
     const onToggleCollapsed = vi.fn();
     const group = createGroup({ worksheets: [] });
     const { container } = render(
@@ -285,7 +289,10 @@ describe('GroupCard', () => {
       </DndContext>,
     );
 
-    expect(screen.getByRole('button', { name: 'Finance' })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByRole('button', { name: 'Finance' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
 
     rerender(
       <DndContext>
@@ -300,7 +307,10 @@ describe('GroupCard', () => {
       </DndContext>,
     );
 
-    expect(screen.getByRole('button', { name: 'Finance' })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByRole('button', { name: 'Finance' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
   });
 
   it('propagates keyboard navigation handlers to worksheets in expanded groups', () => {
@@ -310,7 +320,10 @@ describe('GroupCard', () => {
     render(
       <DndContext>
         <GroupCard
-          group={createGroup({ isCollapsed: false, worksheets: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' })] })}
+          group={createGroup({
+            isCollapsed: false,
+            worksheets: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' })],
+          })}
           activeWorksheetId={null}
           visualFocusedItemId={'worksheet:sheet-1'}
           onItemKeyDown={onItemKeyDown}

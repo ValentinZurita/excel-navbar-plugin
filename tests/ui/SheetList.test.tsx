@@ -32,7 +32,17 @@ describe('SheetList', () => {
     render(
       <DndContext>
         <SheetList
-          worksheets={[{ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible', workbookOrder: 1, isPinned: false, groupId: 'group-1', lastKnownStructuralState: null }]}
+          worksheets={[
+            {
+              worksheetId: 'sheet-1',
+              name: 'Revenue',
+              visibility: 'Visible',
+              workbookOrder: 1,
+              isPinned: false,
+              groupId: 'group-1',
+              lastKnownStructuralState: null,
+            },
+          ]}
           activeWorksheetId={null}
           onActivate={vi.fn()}
           onOpenContextMenu={vi.fn()}
@@ -74,7 +84,17 @@ describe('SheetList', () => {
     const { container } = render(
       <DndContext>
         <SheetList
-          worksheets={[{ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible', workbookOrder: 1, isPinned: false, groupId: null, lastKnownStructuralState: null }]}
+          worksheets={[
+            {
+              worksheetId: 'sheet-1',
+              name: 'Revenue',
+              visibility: 'Visible',
+              workbookOrder: 1,
+              isPinned: false,
+              groupId: null,
+              lastKnownStructuralState: null,
+            },
+          ]}
           activeWorksheetId={null}
           onActivate={vi.fn()}
           onOpenContextMenu={vi.fn()}
@@ -95,7 +115,17 @@ describe('SheetList', () => {
     render(
       <DndContext>
         <SheetList
-          worksheets={[{ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible', workbookOrder: 1, isPinned: false, groupId: 'group-1', lastKnownStructuralState: null }]}
+          worksheets={[
+            {
+              worksheetId: 'sheet-1',
+              name: 'Revenue',
+              visibility: 'Visible',
+              workbookOrder: 1,
+              isPinned: false,
+              groupId: 'group-1',
+              lastKnownStructuralState: null,
+            },
+          ]}
           activeWorksheetId={null}
           onActivate={vi.fn()}
           onOpenContextMenu={vi.fn()}
@@ -110,8 +140,14 @@ describe('SheetList', () => {
       </DndContext>,
     );
 
-    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveAttribute('data-leading-state', 'indicator');
-    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveAttribute('data-pin-visible', 'false');
+    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveAttribute(
+      'data-leading-state',
+      'indicator',
+    );
+    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveAttribute(
+      'data-pin-visible',
+      'false',
+    );
   });
 
   it('does not activate the end divider when projected target is the same-group header', () => {
@@ -144,7 +180,11 @@ describe('SheetList', () => {
 
     const endDropZone = screen.getByTestId('group:group-1-drop-end');
     expect(endDropZone.querySelector('.worksheet-insertion-line-active')).not.toBeInTheDocument();
-    expect(container.querySelector('[data-testid="group:group-1-drop-gap-0"] .worksheet-insertion-line-active')).not.toBeInTheDocument();
+    expect(
+      container.querySelector(
+        '[data-testid="group:group-1-drop-gap-0"] .worksheet-insertion-line-active',
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it('activates gap insertion line for gap drop targets', () => {
@@ -182,8 +222,24 @@ describe('SheetList', () => {
   it('does not track row hover state - pin only shows on leading area hover', async () => {
     const user = userEvent.setup();
     const worksheets: WorksheetEntity[] = [
-      { worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible', workbookOrder: 1, isPinned: false, groupId: null, lastKnownStructuralState: null },
-      { worksheetId: 'sheet-2', name: 'Budget', visibility: 'Visible', workbookOrder: 2, isPinned: false, groupId: null, lastKnownStructuralState: null },
+      {
+        worksheetId: 'sheet-1',
+        name: 'Revenue',
+        visibility: 'Visible',
+        workbookOrder: 1,
+        isPinned: false,
+        groupId: null,
+        lastKnownStructuralState: null,
+      },
+      {
+        worksheetId: 'sheet-2',
+        name: 'Budget',
+        visibility: 'Visible',
+        workbookOrder: 2,
+        isPinned: false,
+        groupId: null,
+        lastKnownStructuralState: null,
+      },
     ];
 
     render(
@@ -193,7 +249,7 @@ describe('SheetList', () => {
         onActivate={vi.fn()}
         onOpenContextMenu={vi.fn()}
         onTogglePin={vi.fn()}
-      />
+      />,
     );
 
     const revenueRow = screen.getByRole('button', { name: 'Revenue' });

@@ -7,7 +7,9 @@ import {
 } from '../../src/application/navigation/useKeyboardNavigation';
 import type { NavigableItem } from '../../src/domain/navigation/types';
 
-function createBaseArgs(overrides: Partial<UseKeyboardNavigationArgs> = {}): UseKeyboardNavigationArgs {
+function createBaseArgs(
+  overrides: Partial<UseKeyboardNavigationArgs> = {},
+): UseKeyboardNavigationArgs {
   const items: NavigableItem[] = [
     { id: 'worksheet:visible-1', kind: 'worksheet', worksheetId: 'visible-1', name: 'Visible' },
     { id: 'worksheet:hidden-1', kind: 'hidden-worksheet', worksheetId: 'hidden-1', name: 'Hidden' },
@@ -90,7 +92,12 @@ describe('useKeyboardNavigation — Hidden section context menu', () => {
       {
         initialProps: createBaseArgs({
           items: [
-            { id: 'worksheet:visible-1', kind: 'worksheet', worksheetId: 'visible-1', name: 'Visible' },
+            {
+              id: 'worksheet:visible-1',
+              kind: 'worksheet',
+              worksheetId: 'visible-1',
+              name: 'Visible',
+            },
           ],
         }),
       },
@@ -100,7 +107,12 @@ describe('useKeyboardNavigation — Hidden section context menu', () => {
       rerender(
         createBaseArgs({
           items: [
-            { id: 'worksheet:visible-1', kind: 'worksheet', worksheetId: 'visible-1', name: 'Visible' },
+            {
+              id: 'worksheet:visible-1',
+              kind: 'worksheet',
+              worksheetId: 'visible-1',
+              name: 'Visible',
+            },
           ],
           isContextMenuOpen: true,
           contextMenuTargetItemId: 'worksheet:hidden-1',
@@ -128,7 +140,12 @@ describe('useKeyboardNavigation — Hidden section context menu', () => {
       rerender(
         createBaseArgs({
           items: [
-            { id: 'worksheet:visible-1', kind: 'worksheet', worksheetId: 'visible-1', name: 'Visible' },
+            {
+              id: 'worksheet:visible-1',
+              kind: 'worksheet',
+              worksheetId: 'visible-1',
+              name: 'Visible',
+            },
           ],
           isContextMenuOpen: true,
           contextMenuTargetItemId: 'worksheet:hidden-1',
@@ -147,8 +164,18 @@ describe('useKeyboardNavigation — Hidden section context menu', () => {
       {
         initialProps: createBaseArgs({
           items: [
-            { id: 'worksheet:visible-1', kind: 'worksheet', worksheetId: 'visible-1', name: 'Visible' },
-            { id: 'worksheet:hidden-1', kind: 'hidden-worksheet', worksheetId: 'hidden-1', name: 'Hidden' },
+            {
+              id: 'worksheet:visible-1',
+              kind: 'worksheet',
+              worksheetId: 'visible-1',
+              name: 'Visible',
+            },
+            {
+              id: 'worksheet:hidden-1',
+              kind: 'hidden-worksheet',
+              worksheetId: 'hidden-1',
+              name: 'Hidden',
+            },
           ],
           onRequestSheetContextMenuFromKeyboard,
         }),

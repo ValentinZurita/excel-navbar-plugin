@@ -38,9 +38,11 @@ function getDocumentUrl(): string | null {
 }
 
 function getWorkbookCapabilities(): WorkbookCapabilities {
-  const supports = typeof Office !== 'undefined' && typeof Office.context?.requirements?.isSetSupported === 'function'
-    ? Office.context.requirements.isSetSupported.bind(Office.context.requirements)
-    : null;
+  const supports =
+    typeof Office !== 'undefined' &&
+    typeof Office.context?.requirements?.isSetSupported === 'function'
+      ? Office.context.requirements.isSetSupported.bind(Office.context.requirements)
+      : null;
 
   return {
     supportsCustomXml: Boolean(supports?.('ExcelApi', '1.5')),
@@ -50,7 +52,10 @@ function getWorkbookCapabilities(): WorkbookCapabilities {
 }
 
 async function getFilePropertiesUrl(): Promise<string | null> {
-  if (!hasOfficeDocument() || typeof Office.context.document.getFilePropertiesAsync !== 'function') {
+  if (
+    !hasOfficeDocument() ||
+    typeof Office.context.document.getFilePropertiesAsync !== 'function'
+  ) {
     return null;
   }
 
@@ -87,7 +92,9 @@ async function loadWorksheets(
   return {
     worksheets: worksheetCollection.items,
     identityMode,
-    stableWorksheetIdByNativeId: new Map(records.map((record) => [record.nativeWorksheetId, record.stableWorksheetId])),
+    stableWorksheetIdByNativeId: new Map(
+      records.map((record) => [record.nativeWorksheetId, record.stableWorksheetId]),
+    ),
   };
 }
 
@@ -121,14 +128,16 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
             workbookOrder: worksheet.position,
           };
         }),
-        activeWorksheetId: stableWorksheetIdByNativeId.get(activeWorksheet.id) ?? activeWorksheet.id,
+        activeWorksheetId:
+          stableWorksheetIdByNativeId.get(activeWorksheet.id) ?? activeWorksheet.id,
         identityMode,
       };
     });
   }
 
   async getPersistenceContext(): Promise<WorkbookPersistenceContext> {
-    const documentSettingsAvailable = typeof Office !== 'undefined' && Boolean(Office.context?.document?.settings);
+    const documentSettingsAvailable =
+      typeof Office !== 'undefined' && Boolean(Office.context?.document?.settings);
     const capabilities = getWorkbookCapabilities();
     const documentUrl = getDocumentUrl();
     if (documentUrl) {
@@ -169,12 +178,24 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
     return Excel.run(async (context) => {
       const worksheets = context.workbook.worksheets;
       const handlers = [
-        worksheets.onAdded.add(async () => { listener(); }),
-        worksheets.onDeleted.add(async () => { listener(); }),
-        worksheets.onActivated.add(async () => { listener(); }),
-        worksheets.onMoved.add(async () => { listener(); }),
-        worksheets.onNameChanged.add(async () => { listener(); }),
-        worksheets.onVisibilityChanged.add(async () => { listener(); }),
+        worksheets.onAdded.add(async () => {
+          listener();
+        }),
+        worksheets.onDeleted.add(async () => {
+          listener();
+        }),
+        worksheets.onActivated.add(async () => {
+          listener();
+        }),
+        worksheets.onMoved.add(async () => {
+          listener();
+        }),
+        worksheets.onNameChanged.add(async () => {
+          listener();
+        }),
+        worksheets.onVisibilityChanged.add(async () => {
+          listener();
+        }),
       ];
       await context.sync();
 
@@ -221,7 +242,8 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
       worksheetCollection.load(loader);
       await context.sync();
 
-      let targetWorksheet = worksheetCollection.items.find((candidate) => candidate.id === stableWorksheetId) ?? null;
+      let targetWorksheet =
+        worksheetCollection.items.find((candidate) => candidate.id === stableWorksheetId) ?? null;
 
       if (!targetWorksheet && supportsWorksheetCustomProperties) {
         const nativeWorksheetId = await worksheetIdentityRepository.resolveNativeWorksheetId(
@@ -232,7 +254,9 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
         );
 
         if (nativeWorksheetId) {
-          targetWorksheet = worksheetCollection.items.find((candidate) => candidate.id === nativeWorksheetId) ?? null;
+          targetWorksheet =
+            worksheetCollection.items.find((candidate) => candidate.id === nativeWorksheetId) ??
+            null;
         }
       }
 
@@ -252,32 +276,44 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
   }
 
   async renameWorksheet(worksheetId: string, name: string): Promise<void> {
-    await this.withResolvedWorksheet(worksheetId, 'items/id,items/name', async (worksheet, context) => {
-      worksheet.name = name;
-      await context.sync();
-    });
+    await this.withResolvedWorksheet(
+      worksheetId,
+      'items/id,items/name',
+      async (worksheet, context) => {
+        worksheet.name = name;
+        await context.sync();
+      },
+    );
   }
 
   async unhideWorksheet(worksheetId: string): Promise<void> {
-    await this.withResolvedWorksheet(worksheetId, 'items/id,items/visibility', async (worksheet, context) => {
-      if (worksheet.visibility === 'VeryHidden') {
-        return;
-      }
+    await this.withResolvedWorksheet(
+      worksheetId,
+      'items/id,items/visibility',
+      async (worksheet, context) => {
+        if (worksheet.visibility === 'VeryHidden') {
+          return;
+        }
 
-      worksheet.visibility = 'Visible';
-      await context.sync();
-    });
+        worksheet.visibility = 'Visible';
+        await context.sync();
+      },
+    );
   }
 
   async hideWorksheet(worksheetId: string): Promise<void> {
-    await this.withResolvedWorksheet(worksheetId, 'items/id,items/visibility', async (worksheet, context) => {
-      if (worksheet.visibility === 'VeryHidden') {
-        return;
-      }
+    await this.withResolvedWorksheet(
+      worksheetId,
+      'items/id,items/visibility',
+      async (worksheet, context) => {
+        if (worksheet.visibility === 'VeryHidden') {
+          return;
+        }
 
-      worksheet.visibility = 'Hidden';
-      await context.sync();
-    });
+        worksheet.visibility = 'Hidden';
+        await context.sync();
+      },
+    );
   }
 
   async deleteWorksheet(worksheetId: string): Promise<void> {
@@ -293,7 +329,8 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
       worksheets.load('items/id,items/visibility');
       await context.sync();
 
-      let targetWorksheet = worksheets.items.find((candidate) => candidate.id === worksheetId) ?? null;
+      let targetWorksheet =
+        worksheets.items.find((candidate) => candidate.id === worksheetId) ?? null;
 
       if (!targetWorksheet && supportsWorksheetCustomProperties) {
         const nativeWorksheetId = await worksheetIdentityRepository.resolveNativeWorksheetId(
@@ -304,18 +341,18 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
         );
 
         if (nativeWorksheetId) {
-          targetWorksheet = worksheets.items.find((candidate) => candidate.id === nativeWorksheetId) ?? null;
+          targetWorksheet =
+            worksheets.items.find((candidate) => candidate.id === nativeWorksheetId) ?? null;
         }
       }
 
       if (!targetWorksheet) {
-        throw new WorksheetDeleteError(
-          'Worksheet not found',
-          'WORKSHEET_NOT_FOUND',
-        );
+        throw new WorksheetDeleteError('Worksheet not found', 'WORKSHEET_NOT_FOUND');
       }
 
-      const visibleSheets = worksheets.items.filter((worksheet) => worksheet.visibility === 'Visible');
+      const visibleSheets = worksheets.items.filter(
+        (worksheet) => worksheet.visibility === 'Visible',
+      );
 
       if (visibleSheets.length <= 1 && targetWorksheet.visibility === 'Visible') {
         throw new WorksheetDeleteError(

@@ -1,8 +1,5 @@
 import { useDroppable } from '@dnd-kit/core';
-import type {
-  WorksheetContainerId,
-  WorksheetDropKind,
-} from '../../taskpane/dnd/worksheetDndModel';
+import type { WorksheetContainerId, WorksheetDropKind } from '../../taskpane/dnd/worksheetDndModel';
 import './WorksheetDropZone.css';
 
 interface WorksheetDropZoneProps {

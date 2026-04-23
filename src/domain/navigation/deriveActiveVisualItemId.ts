@@ -24,17 +24,16 @@ export function deriveActiveVisualItemId(
     return activeWorksheetItemId;
   }
 
-  const collapsedOwningGroup = navigatorView.groups.find((group) => (
-    group.isCollapsed
-    && group.worksheets.some((worksheet) => worksheet.worksheetId === activeWorksheetId)
-  ));
+  const collapsedOwningGroup = navigatorView.groups.find(
+    (group) =>
+      group.isCollapsed &&
+      group.worksheets.some((worksheet) => worksheet.worksheetId === activeWorksheetId),
+  );
 
   if (!collapsedOwningGroup) {
     return null;
   }
 
   const groupHeaderItemId = `group-header:${collapsedOwningGroup.groupId}`;
-  return navigableItems.some((item) => item.id === groupHeaderItemId)
-    ? groupHeaderItemId
-    : null;
+  return navigableItems.some((item) => item.id === groupHeaderItemId) ? groupHeaderItemId : null;
 }

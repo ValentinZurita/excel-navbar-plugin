@@ -3,6 +3,7 @@
 ## Contexto del Proyecto
 
 Plugin de Excel "Sheet Navigator" – un navegador de hojas de cálculo con arquitectura React clean. El proyecto usa:
+
 - TypeScript
 - CSS con tokens themáticos (`--excel-body-fg`, `--excel-control-bg`, etc.)
 - Office.js para integración con Excel
@@ -11,6 +12,7 @@ Plugin de Excel "Sheet Navigator" – un navegador de hojas de cálculo con arqu
 ## Situación Actual
 
 Cuando el usuario hace click en "Rename" en el context menu de una hoja o grupo, se abre un dialog modal (`TextPromptDialog`) que interrumpe el flujo del usuario. Este dialog está implementado en:
+
 - `src/ui/components/TextPromptDialog/index.tsx` (componente)
 - `src/ui/components/TextPromptDialog/TextPromptDialog.css` (estilos)
 - `src/ui/taskpane/hooks/useTextPromptState.ts` (estado y lógica)
@@ -22,22 +24,25 @@ El objetivo es reemplazar este dialog por un input inline de rename, similar a c
 
 ### Archivos Relevantes y su Rol
 
-| Archivo | Propósito |
-|---------|-----------|
-| `src/ui/components/SheetRow/index.tsx` | Renderiza cada fila de worksheet. Contiene el título en `<span className="sheet-title">` línea 139 |
-| `src/ui/components/GroupCard/index.tsx` | Renderiza el header del grupo con `<span className="group-title">` línea 91 |
-| `src/ui/taskpane/TaskpaneAppContainer.tsx` | Recibe `controller.renameWorksheet` (línea 41) y `controller.renameGroup` (línea 40), los pasa a través de props |
-| `src/ui/taskpane/hooks/useTextPromptState.ts` | Maneja estado de rename (`textPrompt`) con tipos `rename-sheet` y `rename-group` |
-| `src/application/navigation/useNavigationController.ts` | Expone métodos `renameWorksheet(worksheetId, name)` y `renameGroup(groupId, name)` |
+| Archivo                                                 | Propósito                                                                                                        |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `src/ui/components/SheetRow/index.tsx`                  | Renderiza cada fila de worksheet. Contiene el título en `<span className="sheet-title">` línea 139               |
+| `src/ui/components/GroupCard/index.tsx`                 | Renderiza el header del grupo con `<span className="group-title">` línea 91                                      |
+| `src/ui/taskpane/TaskpaneAppContainer.tsx`              | Recibe `controller.renameWorksheet` (línea 41) y `controller.renameGroup` (línea 40), los pasa a través de props |
+| `src/ui/taskpane/hooks/useTextPromptState.ts`           | Maneja estado de rename (`textPrompt`) con tipos `rename-sheet` y `rename-group`                                 |
+| `src/application/navigation/useNavigationController.ts` | Expone métodos `renameWorksheet(worksheetId, name)` y `renameGroup(groupId, name)`                               |
 
 ### Flujo Actual del Rename
+
 1. Context menu → click "Rename"
 2. `openRenameWorksheetPrompt(worksheetId, name)` → cierra menus → setea `textPrompt`
 3. `TextPromptDialog` se renderiza condicionalmente
 4. Usuario completa y submit → `submitTextPrompt(trimmedValue)` → llama al controller
 
 ### Componente de Referencia (InlineGroupCreator)
+
 El componente `InlineGroupCreator` ya implementa el patrón inline que necesitamos:
+
 - Ubicación: `src/ui/components/InlineGroupCreator/`
 - Usa `useRef` para el input y focus management
 - Maneja `Enter` para submit, `Escape` para cancelar
@@ -47,9 +52,11 @@ El componente `InlineGroupCreator` ya implementa el patrón inline que necesitam
 ## Plan de Implementación
 
 ### 1. Crear componente reutilizable: `InlineRenameInput`
+
 **Ubicación sugerida:** `src/ui/components/InlineRenameInput/index.tsx`
 
 Props:
+
 ```typescript
 interface InlineRenameInputProps {
   value: string;
@@ -60,6 +67,7 @@ interface InlineRenameInputProps {
 ```
 
 Comportamiento:
+
 - Input inline con el texto actual seleccionado
 - `Enter` → submit si no está vacío
 - `Escape` → cancelar
@@ -68,16 +76,19 @@ Comportamiento:
 - Soporte para async submit (para renombrar en Excel)
 
 ### 2. Modificar `SheetRow`
+
 - Agregar prop opcional: `isRenaming?: boolean`
 - Agregar prop opcional: `onStartRename?: () => void`
 - Cuando `isRenaming={true}`, renderizar `InlineRenameInput` en vez del `<span className="sheet-title">`
 - El título de la hoja viene de `worksheet.name`
 
 ### 3. Modificar `GroupCard`
+
 - Mismo patrón que SheetRow para el header del grupo
 - Cuando renombrando, mostrar input en vez de `<span className="group-title">`
 
 ### 4. Modificar `TaskpaneAppContainer`
+
 - Agregar estado local para tracking rename activo:
   ```typescript
   const [renamingWorksheetId, setRenamingWorksheetId] = useState<string | null>(null);
@@ -90,6 +101,7 @@ Comportamiento:
 - Pasar props a `SheetList` y `GroupCard`
 
 ### 5. Actualizar estilos
+
 - Agregar CSS para el input inline de rename
 - Debe seguir los mismos tokens que `InlineGroupCreator`:
   - Background: theme-aware (blanco/negro según modo)
@@ -111,11 +123,9 @@ Comportamiento:
 ## Tokens CSS a Utilizar (referencia)
 
 ```css
---excel-body-bg: #f3f2f1 (light) / [dynamic en dark]
---excel-body-fg: #201f1e (light) / white (dark)
---excel-control-bg: #ffffff (light) / [dynamic en dark]
---excel-border: #e1dfdd (light) / rgba(255,255,255,0.12) (dark)
---excel-muted: #605e5c (light) / rgba(255,255,255,0.7) (dark)
+--excel-body-bg: #f3f2f1 (light) / [dynamic en dark] --excel-body-fg: #201f1e (light) / white (dark)
+  --excel-control-bg: #ffffff (light) / [dynamic en dark] --excel-border: #e1dfdd (light) /
+  rgba(255, 255, 255, 0.12) (dark) --excel-muted: #605e5c (light) / rgba(255, 255, 255, 0.7) (dark);
 ```
 
 ## Notas de Arquitectura

@@ -63,7 +63,9 @@ export function reconcilePersistedNavigationModel(
 } {
   const diagnostics = new Set<PersistenceDiagnosticCode>();
   const liveWorksheets = [...snapshot.worksheets];
-  const liveWorksheetIds = new Set(liveWorksheets.map((worksheet) => worksheet.stableWorksheetId ?? worksheet.worksheetId));
+  const liveWorksheetIds = new Set(
+    liveWorksheets.map((worksheet) => worksheet.stableWorksheetId ?? worksheet.worksheetId),
+  );
   const liveWorksheetOrder = liveWorksheets
     .sort(byWorkbookOrder)
     .map((worksheet) => worksheet.stableWorksheetId ?? worksheet.worksheetId);
@@ -105,40 +107,47 @@ export function reconcilePersistedNavigationModel(
     groupsById[nextGroup.groupId] = nextGroup;
   }
 
-  const pinnedWorksheetOrder = dedupeWorksheetIds(model.pinnedWorksheetOrder).filter((worksheetId) => {
-    if (!liveWorksheetIds.has(worksheetId)) {
-      diagnostics.add('dropped_unknown_pinned_ref');
-      return false;
-    }
+  const pinnedWorksheetOrder = dedupeWorksheetIds(model.pinnedWorksheetOrder).filter(
+    (worksheetId) => {
+      if (!liveWorksheetIds.has(worksheetId)) {
+        diagnostics.add('dropped_unknown_pinned_ref');
+        return false;
+      }
 
-    if (claimedWorksheetIds.has(worksheetId)) {
-      diagnostics.add('repaired_duplicate_group_membership');
-      return false;
-    }
+      if (claimedWorksheetIds.has(worksheetId)) {
+        diagnostics.add('repaired_duplicate_group_membership');
+        return false;
+      }
 
-    return true;
-  });
+      return true;
+    },
+  );
 
-  const priorStructuralStateByStableWorksheetId = Object.entries(model.priorStructuralStateByStableWorksheetId).reduce<
-    Record<string, StructuralState | null>
-  >((accumulator, [worksheetId, structuralState]) => {
-    if (!liveWorksheetIds.has(worksheetId)) {
+  const priorStructuralStateByStableWorksheetId = Object.entries(
+    model.priorStructuralStateByStableWorksheetId,
+  ).reduce<Record<string, StructuralState | null>>(
+    (accumulator, [worksheetId, structuralState]) => {
+      if (!liveWorksheetIds.has(worksheetId)) {
+        return accumulator;
+      }
+
+      const normalizedState = normalizeStructuralState(structuralState, groupsById);
+      if (normalizedState !== structuralState) {
+        diagnostics.add('repaired_stale_group_refs');
+      }
+
+      accumulator[worksheetId] = normalizedState;
       return accumulator;
-    }
-
-    const normalizedState = normalizeStructuralState(structuralState, groupsById);
-    if (normalizedState !== structuralState) {
-      diagnostics.add('repaired_stale_group_refs');
-    }
-
-    accumulator[worksheetId] = normalizedState;
-    return accumulator;
-  }, {});
+    },
+    {},
+  );
 
   const keptSheetSectionOrder = dedupeWorksheetIds(model.sheetSectionOrder).filter((worksheetId) =>
     liveWorksheetIds.has(worksheetId),
   );
-  const missingWorksheetIds = liveWorksheetOrder.filter((worksheetId) => !keptSheetSectionOrder.includes(worksheetId));
+  const missingWorksheetIds = liveWorksheetOrder.filter(
+    (worksheetId) => !keptSheetSectionOrder.includes(worksheetId),
+  );
   const sheetSectionOrder = [...keptSheetSectionOrder, ...missingWorksheetIds];
 
   const reconciledModel: PersistedNavigationModel = {
@@ -149,10 +158,14 @@ export function reconcilePersistedNavigationModel(
     priorStructuralStateByStableWorksheetId,
   };
 
-  const changed = !arraysEqual(model.sheetSectionOrder, reconciledModel.sheetSectionOrder)
-    || !arraysEqual(model.pinnedWorksheetOrder, reconciledModel.pinnedWorksheetOrder)
-    || !structuralStatesEqual(model.priorStructuralStateByStableWorksheetId, reconciledModel.priorStructuralStateByStableWorksheetId)
-    || JSON.stringify(model.groups) !== JSON.stringify(reconciledModel.groups);
+  const changed =
+    !arraysEqual(model.sheetSectionOrder, reconciledModel.sheetSectionOrder) ||
+    !arraysEqual(model.pinnedWorksheetOrder, reconciledModel.pinnedWorksheetOrder) ||
+    !structuralStatesEqual(
+      model.priorStructuralStateByStableWorksheetId,
+      reconciledModel.priorStructuralStateByStableWorksheetId,
+    ) ||
+    JSON.stringify(model.groups) !== JSON.stringify(reconciledModel.groups);
 
   return {
     model: reconciledModel,
@@ -187,7 +200,9 @@ export function normalizeNavigationState(state: NavigationState): NavigationStat
   const worksheetIds = new Set(Object.keys(normalizedState.worksheetsById));
   const claimedWorksheetIds = new Set<string>();
 
-  normalizedState.groupOrder = normalizedState.groupOrder.filter((groupId) => Boolean(normalizedState.groupsById[groupId]));
+  normalizedState.groupOrder = normalizedState.groupOrder.filter((groupId) =>
+    Boolean(normalizedState.groupsById[groupId]),
+  );
 
   for (const groupId of normalizedState.groupOrder) {
     const group = normalizedState.groupsById[groupId];
@@ -205,9 +220,9 @@ export function normalizeNavigationState(state: NavigationState): NavigationStat
     });
   }
 
-  normalizedState.pinnedWorksheetOrder = dedupeWorksheetIds(normalizedState.pinnedWorksheetOrder).filter((worksheetId) =>
-    worksheetIds.has(worksheetId) && !claimedWorksheetIds.has(worksheetId),
-  );
+  normalizedState.pinnedWorksheetOrder = dedupeWorksheetIds(
+    normalizedState.pinnedWorksheetOrder,
+  ).filter((worksheetId) => worksheetIds.has(worksheetId) && !claimedWorksheetIds.has(worksheetId));
 
   for (const worksheet of Object.values(normalizedState.worksheetsById)) {
     worksheet.groupId = null;

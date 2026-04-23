@@ -69,7 +69,9 @@ function createStatus(overrides: Partial<PersistenceStatus> = {}): PersistenceSt
   };
 }
 
-function createContext(overrides: Partial<WorkbookPersistenceContext> = {}): WorkbookPersistenceContext {
+function createContext(
+  overrides: Partial<WorkbookPersistenceContext> = {},
+): WorkbookPersistenceContext {
   return {
     documentSettingsAvailable: true,
     stableWorkbookKey: 'https://contoso.test/workbooks/finance.xlsx',
@@ -148,24 +150,30 @@ describe('useNavigationController', () => {
 
   it('tracks session-only persistence without surfacing an info banner', async () => {
     adapterMock.getWorkbookSnapshot.mockResolvedValue(createSnapshot());
-    adapterMock.getPersistenceContext.mockResolvedValue(createContext({ stableWorkbookKey: null, mode: 'session-only', source: 'none' }));
+    adapterMock.getPersistenceContext.mockResolvedValue(
+      createContext({ stableWorkbookKey: null, mode: 'session-only', source: 'none' }),
+    );
     persistenceMock.load.mockResolvedValue({
       model: null,
       status: createStatus({
         mode: 'session-only',
         banner: {
           tone: 'info',
-          message: 'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
+          message:
+            'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
         },
       }),
     });
-    persistenceMock.save.mockResolvedValue(createStatus({
-      mode: 'session-only',
-      banner: {
-        tone: 'info',
-        message: 'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
-      },
-    }));
+    persistenceMock.save.mockResolvedValue(
+      createStatus({
+        mode: 'session-only',
+        banner: {
+          tone: 'info',
+          message:
+            'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
+        },
+      }),
+    );
 
     const { result } = renderHook(() => useNavigationController(), { wrapper });
 
@@ -182,19 +190,24 @@ describe('useNavigationController', () => {
       model: createModel(),
       status: createStatus(),
     });
-    persistenceMock.save.mockResolvedValue(createStatus({
-      mode: 'degraded',
-      banner: {
-        tone: 'warning',
-        message: 'We could not save to this workbook, but your navigation state was cached locally for this workbook on this device.',
-      },
-      lastSource: 'scoped-local-cache',
-    }));
+    persistenceMock.save.mockResolvedValue(
+      createStatus({
+        mode: 'degraded',
+        banner: {
+          tone: 'warning',
+          message:
+            'We could not save to this workbook, but your navigation state was cached locally for this workbook on this device.',
+        },
+        lastSource: 'scoped-local-cache',
+      }),
+    );
 
     const { result } = renderHook(() => useNavigationController(), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.banner?.message).toBe('We could not save to this workbook, but your navigation state was cached locally for this workbook on this device.');
+      expect(result.current.banner?.message).toBe(
+        'We could not save to this workbook, but your navigation state was cached locally for this workbook on this device.',
+      );
     });
   });
 
@@ -203,30 +216,37 @@ describe('useNavigationController', () => {
     adapterMock.getWorkbookSnapshot.mockResolvedValue(createSnapshot());
     adapterMock.getPersistenceContext
       .mockResolvedValue(createContext())
-      .mockResolvedValueOnce(createContext({ stableWorkbookKey: null, mode: 'session-only', source: 'none' }));
+      .mockResolvedValueOnce(
+        createContext({ stableWorkbookKey: null, mode: 'session-only', source: 'none' }),
+      );
     persistenceMock.load.mockResolvedValue({
       model: createModel(),
       status: createStatus({
         mode: 'session-only',
         banner: {
           tone: 'info',
-          message: 'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
+          message:
+            'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
         },
       }),
     });
-    persistenceMock.save.mockResolvedValue(createStatus({
-      mode: 'custom-xml',
-      banner: null,
-      lastSource: 'custom-xml',
-    }));
-    persistenceMock.save
-      .mockResolvedValueOnce(createStatus({
+    persistenceMock.save.mockResolvedValue(
+      createStatus({
+        mode: 'custom-xml',
+        banner: null,
+        lastSource: 'custom-xml',
+      }),
+    );
+    persistenceMock.save.mockResolvedValueOnce(
+      createStatus({
         mode: 'session-only',
         banner: {
           tone: 'info',
-          message: 'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
+          message:
+            'This workbook does not have a stable file identity yet. Groups will persist only for this session.',
         },
-      }));
+      }),
+    );
 
     const { result } = renderHook(() => useNavigationController(), { wrapper });
 
@@ -244,12 +264,13 @@ describe('useNavigationController', () => {
     });
 
     expect(
-      persistenceMock.save.mock.calls.some(([context, model]) =>
-        JSON.stringify(context) === JSON.stringify(createContext())
-        && typeof model === 'object'
-        && model !== null
-        && 'schemaVersion' in model
-        && model.schemaVersion === 2,
+      persistenceMock.save.mock.calls.some(
+        ([context, model]) =>
+          JSON.stringify(context) === JSON.stringify(createContext()) &&
+          typeof model === 'object' &&
+          model !== null &&
+          'schemaVersion' in model &&
+          model.schemaVersion === 2,
       ),
     ).toBe(true);
     expect(result.current.isSessionOnlyPersistence).toBe(false);
@@ -257,15 +278,29 @@ describe('useNavigationController', () => {
   });
 
   it('creates and activates worksheet by rehydrating workbook snapshot', async () => {
-    adapterMock.getWorkbookSnapshot
-      .mockResolvedValueOnce(createSnapshot())
-      .mockResolvedValueOnce(createSnapshot({
+    adapterMock.getWorkbookSnapshot.mockResolvedValueOnce(createSnapshot()).mockResolvedValueOnce(
+      createSnapshot({
         worksheets: [
-          { worksheetId: 'sheet-1', stableWorksheetId: 'sheet-1', nativeWorksheetId: 'native-sheet-1', name: 'Overview', visibility: 'Visible', workbookOrder: 0 },
-          { worksheetId: 'sheet-2', stableWorksheetId: 'sheet-2', nativeWorksheetId: 'native-sheet-2', name: 'Sheet2', visibility: 'Visible', workbookOrder: 1 },
+          {
+            worksheetId: 'sheet-1',
+            stableWorksheetId: 'sheet-1',
+            nativeWorksheetId: 'native-sheet-1',
+            name: 'Overview',
+            visibility: 'Visible',
+            workbookOrder: 0,
+          },
+          {
+            worksheetId: 'sheet-2',
+            stableWorksheetId: 'sheet-2',
+            nativeWorksheetId: 'native-sheet-2',
+            name: 'Sheet2',
+            visibility: 'Visible',
+            workbookOrder: 1,
+          },
         ],
         activeWorksheetId: 'sheet-2',
-      }));
+      }),
+    );
     adapterMock.getPersistenceContext.mockResolvedValue(createContext());
     adapterMock.createWorksheet.mockResolvedValue(undefined);
     persistenceMock.load.mockResolvedValue({
@@ -325,8 +360,22 @@ describe('useNavigationController', () => {
   it('does not persist again when only the active worksheet changes', async () => {
     const initialSnapshot = createSnapshot({
       worksheets: [
-        { worksheetId: 'sheet-1', stableWorksheetId: 'sheet-1', nativeWorksheetId: 'native-sheet-1', name: 'Overview', visibility: 'Visible', workbookOrder: 0 },
-        { worksheetId: 'sheet-2', stableWorksheetId: 'sheet-2', nativeWorksheetId: 'native-sheet-2', name: 'Revenue', visibility: 'Visible', workbookOrder: 1 },
+        {
+          worksheetId: 'sheet-1',
+          stableWorksheetId: 'sheet-1',
+          nativeWorksheetId: 'native-sheet-1',
+          name: 'Overview',
+          visibility: 'Visible',
+          workbookOrder: 0,
+        },
+        {
+          worksheetId: 'sheet-2',
+          stableWorksheetId: 'sheet-2',
+          nativeWorksheetId: 'native-sheet-2',
+          name: 'Revenue',
+          visibility: 'Visible',
+          workbookOrder: 1,
+        },
       ],
       activeWorksheetId: 'sheet-1',
     });
@@ -370,8 +419,22 @@ describe('useNavigationController', () => {
   it('does not change the active worksheet locally when activation fails', async () => {
     const initialSnapshot = createSnapshot({
       worksheets: [
-        { worksheetId: 'sheet-1', stableWorksheetId: 'sheet-1', nativeWorksheetId: 'native-sheet-1', name: 'Overview', visibility: 'Visible', workbookOrder: 0 },
-        { worksheetId: 'sheet-2', stableWorksheetId: 'sheet-2', nativeWorksheetId: 'native-sheet-2', name: 'Revenue', visibility: 'Visible', workbookOrder: 1 },
+        {
+          worksheetId: 'sheet-1',
+          stableWorksheetId: 'sheet-1',
+          nativeWorksheetId: 'native-sheet-1',
+          name: 'Overview',
+          visibility: 'Visible',
+          workbookOrder: 0,
+        },
+        {
+          worksheetId: 'sheet-2',
+          stableWorksheetId: 'sheet-2',
+          nativeWorksheetId: 'native-sheet-2',
+          name: 'Revenue',
+          visibility: 'Visible',
+          workbookOrder: 1,
+        },
       ],
       activeWorksheetId: 'sheet-1',
     });
@@ -482,20 +545,52 @@ describe('useNavigationController', () => {
 
   it('deletes grouped worksheets with one workbook rehydrate after loop', async () => {
     adapterMock.getWorkbookSnapshot
-      .mockResolvedValueOnce(createSnapshot({
-        worksheets: [
-          { worksheetId: 'sheet-1', stableWorksheetId: 'sheet-1', nativeWorksheetId: 'native-sheet-1', name: 'Overview', visibility: 'Visible', workbookOrder: 0 },
-          { worksheetId: 'sheet-2', stableWorksheetId: 'sheet-2', nativeWorksheetId: 'native-sheet-2', name: 'Revenue', visibility: 'Visible', workbookOrder: 1 },
-          { worksheetId: 'sheet-3', stableWorksheetId: 'sheet-3', nativeWorksheetId: 'native-sheet-3', name: 'Backlog', visibility: 'Visible', workbookOrder: 2 },
-        ],
-        activeWorksheetId: 'sheet-1',
-      }))
-      .mockResolvedValueOnce(createSnapshot({
-        worksheets: [
-          { worksheetId: 'sheet-3', stableWorksheetId: 'sheet-3', nativeWorksheetId: 'native-sheet-3', name: 'Backlog', visibility: 'Visible', workbookOrder: 0 },
-        ],
-        activeWorksheetId: 'sheet-3',
-      }));
+      .mockResolvedValueOnce(
+        createSnapshot({
+          worksheets: [
+            {
+              worksheetId: 'sheet-1',
+              stableWorksheetId: 'sheet-1',
+              nativeWorksheetId: 'native-sheet-1',
+              name: 'Overview',
+              visibility: 'Visible',
+              workbookOrder: 0,
+            },
+            {
+              worksheetId: 'sheet-2',
+              stableWorksheetId: 'sheet-2',
+              nativeWorksheetId: 'native-sheet-2',
+              name: 'Revenue',
+              visibility: 'Visible',
+              workbookOrder: 1,
+            },
+            {
+              worksheetId: 'sheet-3',
+              stableWorksheetId: 'sheet-3',
+              nativeWorksheetId: 'native-sheet-3',
+              name: 'Backlog',
+              visibility: 'Visible',
+              workbookOrder: 2,
+            },
+          ],
+          activeWorksheetId: 'sheet-1',
+        }),
+      )
+      .mockResolvedValueOnce(
+        createSnapshot({
+          worksheets: [
+            {
+              worksheetId: 'sheet-3',
+              stableWorksheetId: 'sheet-3',
+              nativeWorksheetId: 'native-sheet-3',
+              name: 'Backlog',
+              visibility: 'Visible',
+              workbookOrder: 0,
+            },
+          ],
+          activeWorksheetId: 'sheet-3',
+        }),
+      );
     adapterMock.getPersistenceContext.mockResolvedValue(createContext());
     adapterMock.deleteWorksheet.mockResolvedValue(undefined);
     persistenceMock.load.mockResolvedValue({

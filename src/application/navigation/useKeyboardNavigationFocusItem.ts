@@ -25,31 +25,34 @@ export function useKeyboardNavigationFocusItem({
   setNavigationInputMode,
   setKeyboardFocusedItem,
 }: UseKeyboardNavigationFocusItemArgs) {
-  return useCallback((itemId: string | null) => {
-    pendingDomFocusRestoreTokenRef.current += 1;
-    if (itemId === null) {
-      focusedItemIdRef.current = null;
-      searchFocusedItemIdRef.current = null;
-      setFocusedItemId(null);
-      setSearchFocusedItemId(null);
-      setNavigationInputMode(null);
-      return;
-    }
+  return useCallback(
+    (itemId: string | null) => {
+      pendingDomFocusRestoreTokenRef.current += 1;
+      if (itemId === null) {
+        focusedItemIdRef.current = null;
+        searchFocusedItemIdRef.current = null;
+        setFocusedItemId(null);
+        setSearchFocusedItemId(null);
+        setNavigationInputMode(null);
+        return;
+      }
 
-    // Validate ID exists in current items
-    if (!hasItem(itemId, items)) {
-      return;
-    }
+      // Validate ID exists in current items
+      if (!hasItem(itemId, items)) {
+        return;
+      }
 
-    setKeyboardFocusedItem(itemId);
-  }, [
-    focusedItemIdRef,
-    items,
-    pendingDomFocusRestoreTokenRef,
-    searchFocusedItemIdRef,
-    setFocusedItemId,
-    setKeyboardFocusedItem,
-    setNavigationInputMode,
-    setSearchFocusedItemId,
-  ]);
+      setKeyboardFocusedItem(itemId);
+    },
+    [
+      focusedItemIdRef,
+      items,
+      pendingDomFocusRestoreTokenRef,
+      searchFocusedItemIdRef,
+      setFocusedItemId,
+      setKeyboardFocusedItem,
+      setNavigationInputMode,
+      setSearchFocusedItemId,
+    ],
+  );
 }

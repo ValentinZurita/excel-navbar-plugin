@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  type Dispatch,
-  type MutableRefObject,
-  type SetStateAction,
-} from 'react';
+import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { NavigableItem } from '../../domain/navigation/types';
 import {
   getFirstItem,
@@ -66,8 +61,9 @@ export function useKeyboardNavigationItemsReconcile({
     };
 
     const currentFocusedId = isSearchActive ? searchFocusedItemId : focusedItemId;
-    const wasSearchList = prevItemsRef.current.length > 0
-      && prevItemsRef.current.every((item) => item.kind === 'search-result');
+    const wasSearchList =
+      prevItemsRef.current.length > 0 &&
+      prevItemsRef.current.every((item) => item.kind === 'search-result');
     const isSearchList = items.length > 0 && items.every((item) => item.kind === 'search-result');
     const searchJustClosed = wasSearchList && !isSearchList;
 

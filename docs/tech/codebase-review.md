@@ -73,6 +73,7 @@ Current UI components are still small and readable.
 4. Any future visual refactor should update `docs/design/style-system.md` if it changes the styling strategy.
 
 ## Verdict
+
 The codebase is still aligned with the agreed architecture direction.
 
 It is **not finished visually**, but it is **not chaotic structurally** either.

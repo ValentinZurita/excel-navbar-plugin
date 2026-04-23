@@ -1,21 +1,12 @@
-import {
-  customXmlPartNamespace,
-  customXmlPartRootTag,
-} from '../../domain/navigation/constants';
+import { customXmlPartNamespace, customXmlPartRootTag } from '../../domain/navigation/constants';
 import type { PersistedNavigationModel } from '../../domain/navigation/types';
 
 function escapeXml(value: string) {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
+  return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
 function unescapeXml(value: string) {
-  return value
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&amp;', '&');
+  return value.replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&');
 }
 
 function serializeModel(model: PersistedNavigationModel) {
@@ -24,7 +15,9 @@ function serializeModel(model: PersistedNavigationModel) {
 }
 
 function deserializeModel(xml: string): PersistedNavigationModel | null {
-  const pattern = new RegExp(`<${customXmlPartRootTag}[^>]*>([\\s\\S]*)<\\/${customXmlPartRootTag}>`);
+  const pattern = new RegExp(
+    `<${customXmlPartRootTag}[^>]*>([\\s\\S]*)<\\/${customXmlPartRootTag}>`,
+  );
   const match = xml.match(pattern);
   if (!match?.[1]) {
     return null;

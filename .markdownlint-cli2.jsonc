@@ -1,13 +1,9 @@
 {
-  "globs": [
-    "src/**/*.md",
-    "docs/dev/**/*.md",
-    "docs/tech/**/*.md"
-  ],
+  "globs": ["src/**/*.md", "docs/dev/**/*.md", "docs/tech/**/*.md"],
   "config": {
     "default": false,
     "MD029": true,
     "MD032": true,
-    "MD041": true
-  }
+    "MD041": true,
+  },
 }

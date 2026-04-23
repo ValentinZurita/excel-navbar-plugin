@@ -26,14 +26,19 @@ function installInMemoryLocalStorage() {
       store.set(key, String(value));
     },
   };
-  Object.defineProperty(globalThis, 'localStorage', { value: api, configurable: true, writable: true });
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: api,
+    configurable: true,
+    writable: true,
+  });
 }
 
 const ls = globalThis.localStorage;
-const localStorageBroken = !ls
-  || typeof ls.clear !== 'function'
-  || typeof ls.setItem !== 'function'
-  || typeof ls.getItem !== 'function';
+const localStorageBroken =
+  !ls ||
+  typeof ls.clear !== 'function' ||
+  typeof ls.setItem !== 'function' ||
+  typeof ls.getItem !== 'function';
 
 if (localStorageBroken) {
   installInMemoryLocalStorage();

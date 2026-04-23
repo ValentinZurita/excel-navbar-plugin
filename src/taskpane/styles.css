@@ -5,7 +5,12 @@
    ========================================================================== */
 :root {
   color-scheme: light;
-  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   --excel-body-bg: #f3f2f1;
   --excel-body-fg: #201f1e;
   --excel-control-bg: #ffffff;
@@ -41,7 +46,11 @@
   --excel-nav-drag-target-bg: color-mix(in srgb, var(--excel-body-fg) 10%, transparent);
   /* Active worksheet anchor while another item owns strong highlight (keyboard/pointer). */
   --excel-nav-anchor-dim-bg: color-mix(in srgb, var(--excel-body-fg) 1.1%, transparent);
-  --excel-nav-anchor-dim-fg: color-mix(in srgb, var(--excel-nav-active-fg) 38%, var(--excel-muted) 62%);
+  --excel-nav-anchor-dim-fg: color-mix(
+    in srgb,
+    var(--excel-nav-active-fg) 38%,
+    var(--excel-muted) 62%
+  );
   /* Strong highlight overlay fade; keep <= HIGHLIGHT_EXIT_MS in useHighlightLifecycle.ts */
   --excel-nav-highlight-fade-ms: 900ms;
   /* Slightly softer ease than default row transitions so in/out reads a bit clearer (opacity only). */
@@ -61,7 +70,11 @@
 /* Dark host: keep anchor dimming legible when body fg/muted are light tints on deep surfaces. */
 :root[data-office-theme-mode='dark'] {
   --excel-nav-anchor-dim-bg: color-mix(in srgb, var(--excel-body-fg) 0.85%, transparent);
-  --excel-nav-anchor-dim-fg: color-mix(in srgb, var(--excel-nav-active-fg) 50%, var(--excel-muted) 50%);
+  --excel-nav-anchor-dim-fg: color-mix(
+    in srgb,
+    var(--excel-nav-active-fg) 50%,
+    var(--excel-muted) 50%
+  );
 }
 
 /* Nav highlight exit: keyframes so WebViews still fade when ownership changes in one frame. */

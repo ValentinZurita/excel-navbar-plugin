@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  type Dispatch,
-  type MutableRefObject,
-  type SetStateAction,
-} from 'react';
+import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { NavigableItem } from '../../domain/navigation/types';
 import { hasItem } from '../../domain/navigation/navigableItems';
 
@@ -62,15 +57,11 @@ export function useKeyboardNavigationContextMenuFocusSync({
       setNavigationInputMode(null);
     };
 
-    const openMode: NavigationInputMode = sheetContextMenuOpenedVia === 'keyboard'
-      ? 'keyboard'
-      : 'pointer';
+    const openMode: NavigationInputMode =
+      sheetContextMenuOpenedVia === 'keyboard' ? 'keyboard' : 'pointer';
 
     if (isSearchActive) {
-      if (
-        isContextMenuOpen
-        && contextMenuTargetItemId?.startsWith('worksheet:')
-      ) {
+      if (isContextMenuOpen && contextMenuTargetItemId?.startsWith('worksheet:')) {
         const worksheetId = contextMenuTargetItemId.slice('worksheet:'.length);
         const searchId = `search:${worksheetId}`;
         if (hasItem(searchId, items)) {
@@ -82,9 +73,9 @@ export function useKeyboardNavigationContextMenuFocusSync({
           lastContextMenuTargetItemIdRef.current = searchId;
         }
       } else if (
-        previousContextMenuOpenRef.current
-        && contextMenuOwnedFocusRef.current
-        && !isContextMenuOpen
+        previousContextMenuOpenRef.current &&
+        contextMenuOwnedFocusRef.current &&
+        !isContextMenuOpen
       ) {
         restoreAnchorFocusAfterMenuClose();
       }
@@ -94,10 +85,7 @@ export function useKeyboardNavigationContextMenuFocusSync({
     }
 
     if (isContextMenuOpen) {
-      if (
-        contextMenuTargetItemId
-        && hasItem(contextMenuTargetItemId, items)
-      ) {
+      if (contextMenuTargetItemId && hasItem(contextMenuTargetItemId, items)) {
         clearIdleTimeout();
         suppressNextDomFocusRef.current = true;
         setFocusedItemId(contextMenuTargetItemId);

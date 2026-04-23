@@ -165,7 +165,14 @@ describe('TaskpaneMenus', () => {
   it('renders group actions from the active menu kind', () => {
     render(
       <TaskpaneMenus
-        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
+        activeMenu={{
+          kind: 'group',
+          x: 10,
+          y: 20,
+          groupId: 'group-1',
+          groupName: 'Finance',
+          colorToken: 'blue',
+        }}
         onCloseMenus={vi.fn()}
         onTogglePin={vi.fn()}
         onToggleVisibility={vi.fn()}
@@ -200,7 +207,14 @@ describe('TaskpaneMenus', () => {
   it('does not show New group action in group menu', () => {
     render(
       <TaskpaneMenus
-        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
+        activeMenu={{
+          kind: 'group',
+          x: 10,
+          y: 20,
+          groupId: 'group-1',
+          groupName: 'Finance',
+          colorToken: 'blue',
+        }}
         onCloseMenus={vi.fn()}
         onTogglePin={vi.fn()}
         onToggleVisibility={vi.fn()}
@@ -232,7 +246,12 @@ describe('TaskpaneMenus', () => {
 
   it('shows remove-from-group only for grouped worksheets', () => {
     const { rerender } = renderSheetMenu({
-      activeMenu: { kind: 'sheet', x: 10, y: 20, worksheet: createWorksheet({ groupId: 'group-1' }) },
+      activeMenu: {
+        kind: 'sheet',
+        x: 10,
+        y: 20,
+        worksheet: createWorksheet({ groupId: 'group-1' }),
+      },
     });
 
     expect(screen.getByRole('button', { name: 'Remove from group' })).toBeInTheDocument();
@@ -302,7 +321,14 @@ describe('TaskpaneMenus', () => {
 
     render(
       <TaskpaneMenus
-        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
+        activeMenu={{
+          kind: 'group',
+          x: 10,
+          y: 20,
+          groupId: 'group-1',
+          groupName: 'Finance',
+          colorToken: 'blue',
+        }}
         onCloseMenus={onCloseMenus}
         onTogglePin={vi.fn()}
         onToggleVisibility={vi.fn()}
@@ -338,7 +364,14 @@ describe('TaskpaneMenus', () => {
   it('shows inline ungroup confirmation in group menu when requested', () => {
     render(
       <TaskpaneMenus
-        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
+        activeMenu={{
+          kind: 'group',
+          x: 10,
+          y: 20,
+          groupId: 'group-1',
+          groupName: 'Finance',
+          colorToken: 'blue',
+        }}
         onCloseMenus={vi.fn()}
         onTogglePin={vi.fn()}
         onToggleVisibility={vi.fn()}
@@ -373,7 +406,14 @@ describe('TaskpaneMenus', () => {
   it('shows delete-group-and-sheets confirmation when requested', () => {
     render(
       <TaskpaneMenus
-        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
+        activeMenu={{
+          kind: 'group',
+          x: 10,
+          y: 20,
+          groupId: 'group-1',
+          groupName: 'Finance',
+          colorToken: 'blue',
+        }}
         onCloseMenus={vi.fn()}
         onTogglePin={vi.fn()}
         onToggleVisibility={vi.fn()}
@@ -421,7 +461,14 @@ describe('TaskpaneMenus', () => {
 
     render(
       <TaskpaneMenus
-        activeMenu={{ kind: 'group', x: 10, y: 20, groupId: 'group-1', groupName: 'Finance', colorToken: 'blue' }}
+        activeMenu={{
+          kind: 'group',
+          x: 10,
+          y: 20,
+          groupId: 'group-1',
+          groupName: 'Finance',
+          colorToken: 'blue',
+        }}
         onCloseMenus={vi.fn()}
         onTogglePin={vi.fn()}
         onToggleVisibility={vi.fn()}

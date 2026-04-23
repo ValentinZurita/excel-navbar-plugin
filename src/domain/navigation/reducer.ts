@@ -69,7 +69,8 @@ function toWorksheetEntity(
 function applyPinnedState(state: NavigationState, pinnedWorksheetOrder: string[]) {
   const pinnedWorksheetIds = dedupeWorksheetIds(pinnedWorksheetOrder);
   Object.values(state.worksheetsById).forEach((worksheet) => {
-    worksheet.isPinned = pinnedWorksheetIds.includes(worksheet.worksheetId) && worksheet.groupId === null;
+    worksheet.isPinned =
+      pinnedWorksheetIds.includes(worksheet.worksheetId) && worksheet.groupId === null;
     if (worksheet.isPinned) {
       worksheet.lastKnownStructuralState = { kind: 'pinned' };
     }
@@ -80,7 +81,10 @@ function applyPinnedState(state: NavigationState, pinnedWorksheetOrder: string[]
 
 function applyPersistence(state: NavigationState, model: PersistedNavigationModel | null) {
   if (!model) {
-    state.sheetSectionOrder = reconcileSheetSectionOrder(state.sheetSectionOrder, state.worksheetsById);
+    state.sheetSectionOrder = reconcileSheetSectionOrder(
+      state.sheetSectionOrder,
+      state.worksheetsById,
+    );
     return normalizeNavigationState(state);
   }
 
@@ -89,12 +93,16 @@ function applyPersistence(state: NavigationState, model: PersistedNavigationMode
     return accumulator;
   }, {});
   state.groupOrder = model.groups.map((group) => group.groupId);
-  state.sheetSectionOrder = reconcileSheetSectionOrder(model.sheetSectionOrder ?? [], state.worksheetsById);
+  state.sheetSectionOrder = reconcileSheetSectionOrder(
+    model.sheetSectionOrder ?? [],
+    state.worksheetsById,
+  );
   state.hiddenSectionCollapsed = model.hiddenSectionCollapsed;
   state.identityMode = model.identityMode;
 
   Object.values(state.worksheetsById).forEach((worksheet) => {
-    worksheet.lastKnownStructuralState = model.priorStructuralStateByStableWorksheetId[worksheet.worksheetId] ?? null;
+    worksheet.lastKnownStructuralState =
+      model.priorStructuralStateByStableWorksheetId[worksheet.worksheetId] ?? null;
   });
 
   for (const group of model.groups) {
@@ -139,7 +147,9 @@ function removeWorksheetFromAnyGroup(state: NavigationState, worksheetId: string
 
   const group = state.groupsById[worksheet.groupId];
   if (group) {
-    group.worksheetOrder = group.worksheetOrder.filter((candidateId) => candidateId !== worksheetId);
+    group.worksheetOrder = group.worksheetOrder.filter(
+      (candidateId) => candidateId !== worksheetId,
+    );
   }
 
   worksheet.groupId = null;
@@ -161,17 +171,23 @@ function removeWorksheetFromAnyGroup(state: NavigationState, worksheetId: string
   state.groupOrder = state.groupOrder.filter((groupId) => !emptyGroupIdSet.has(groupId));
 }
 
-export function navigationReducer(state: NavigationState, action: NavigationAction): NavigationState {
+export function navigationReducer(
+  state: NavigationState,
+  action: NavigationAction,
+): NavigationState {
   switch (action.type) {
     case 'hydrateFromWorkbook': {
-      const nextWorksheetsById = action.snapshot.worksheets.reduce<Record<string, WorksheetEntity>>((accumulator, worksheet) => {
-        const nextWorksheet = toWorksheetEntity(
-          worksheet,
-          state.worksheetsById[worksheet.stableWorksheetId ?? worksheet.worksheetId],
-        );
-        accumulator[nextWorksheet.worksheetId] = nextWorksheet;
-        return accumulator;
-      }, {});
+      const nextWorksheetsById = action.snapshot.worksheets.reduce<Record<string, WorksheetEntity>>(
+        (accumulator, worksheet) => {
+          const nextWorksheet = toWorksheetEntity(
+            worksheet,
+            state.worksheetsById[worksheet.stableWorksheetId ?? worksheet.worksheetId],
+          );
+          accumulator[nextWorksheet.worksheetId] = nextWorksheet;
+          return accumulator;
+        },
+        {},
+      );
 
       return normalizeNavigationState({
         ...state,
@@ -238,9 +254,10 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
         name: action.name.trim(),
         colorToken: action.colorToken ?? nextGroupColor(state.groupOrder.length),
         isCollapsed: true,
-        worksheetOrder: initialWorksheet && initialWorksheet.visibility === 'Visible'
-          ? [initialWorksheet.worksheetId]
-          : [],
+        worksheetOrder:
+          initialWorksheet && initialWorksheet.visibility === 'Visible'
+            ? [initialWorksheet.worksheetId]
+            : [],
         createdAt: Date.now(),
       };
 
@@ -258,7 +275,10 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
         ...nextState,
         groupsById: { ...nextState.groupsById, [groupId]: group },
         groupOrder: [groupId, ...nextState.groupOrder],
-        sheetSectionOrder: reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById),
+        sheetSectionOrder: reconcileSheetSectionOrder(
+          nextState.sheetSectionOrder,
+          nextState.worksheetsById,
+        ),
       };
     }
     case 'renameGroup': {
@@ -288,7 +308,10 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       return {
         ...nextState,
         groupOrder: nextState.groupOrder.filter((groupId) => groupId !== action.groupId),
-        sheetSectionOrder: reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById),
+        sheetSectionOrder: reconcileSheetSectionOrder(
+          nextState.sheetSectionOrder,
+          nextState.worksheetsById,
+        ),
       };
     }
     case 'restoreGroup': {
@@ -320,7 +343,10 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
 
       return {
         ...nextState,
-        sheetSectionOrder: reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById),
+        sheetSectionOrder: reconcileSheetSectionOrder(
+          nextState.sheetSectionOrder,
+          nextState.worksheetsById,
+        ),
       };
     }
     case 'setGroupColor': {
@@ -368,14 +394,15 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
 
       const nextState = cloneState(state);
       removeWorksheetFromAnyGroup(nextState, action.worksheetId);
-      nextState.sheetSectionOrder = action.targetIndex === undefined
-        ? reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById)
-        : applyMoveAmongUngroupedVisibleSheets(
-            nextState.sheetSectionOrder,
-            nextState.worksheetsById,
-            action.worksheetId,
-            action.targetIndex,
-          );
+      nextState.sheetSectionOrder =
+        action.targetIndex === undefined
+          ? reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById)
+          : applyMoveAmongUngroupedVisibleSheets(
+              nextState.sheetSectionOrder,
+              nextState.worksheetsById,
+              action.worksheetId,
+              action.targetIndex,
+            );
       return nextState;
     }
     case 'reorderGroupWorksheet': {
@@ -391,14 +418,23 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
           ...state.groupsById,
           [action.groupId]: {
             ...group,
-            worksheetOrder: moveWorksheetId(group.worksheetOrder, action.worksheetId, action.targetIndex),
+            worksheetOrder: moveWorksheetId(
+              group.worksheetOrder,
+              action.worksheetId,
+              action.targetIndex,
+            ),
           },
         },
       };
     }
     case 'reorderSheetSectionWorksheet': {
       const worksheet = state.worksheetsById[action.worksheetId];
-      if (!worksheet || worksheet.groupId || worksheet.isPinned || worksheet.visibility !== 'Visible') {
+      if (
+        !worksheet ||
+        worksheet.groupId ||
+        worksheet.isPinned ||
+        worksheet.visibility !== 'Visible'
+      ) {
         return state;
       }
 
@@ -443,7 +479,10 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
 
       return {
         ...nextState,
-        sheetSectionOrder: reconcileSheetSectionOrder(nextState.sheetSectionOrder, nextState.worksheetsById),
+        sheetSectionOrder: reconcileSheetSectionOrder(
+          nextState.sheetSectionOrder,
+          nextState.worksheetsById,
+        ),
         pinnedWorksheetOrder: nextState.pinnedWorksheetOrder,
         worksheetsById: {
           ...nextState.worksheetsById,
@@ -463,7 +502,10 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
       }
       return {
         ...state,
-        sheetSectionOrder: reconcileSheetSectionOrder(state.sheetSectionOrder, state.worksheetsById),
+        sheetSectionOrder: reconcileSheetSectionOrder(
+          state.sheetSectionOrder,
+          state.worksheetsById,
+        ),
         pinnedWorksheetOrder: state.pinnedWorksheetOrder.filter((id) => id !== action.worksheetId),
         worksheetsById: {
           ...state.worksheetsById,
@@ -557,9 +599,7 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
 
       // 4. Clean up from all groups (in case any reference remains)
       Object.values(nextState.groupsById).forEach((group) => {
-        group.worksheetOrder = group.worksheetOrder.filter(
-          (id) => id !== action.worksheetId,
-        );
+        group.worksheetOrder = group.worksheetOrder.filter((id) => id !== action.worksheetId);
       });
 
       const emptyGroupIds = nextState.groupOrder.filter((groupId) => {
@@ -571,7 +611,9 @@ export function navigationReducer(state: NavigationState, action: NavigationActi
         emptyGroupIds.forEach((groupId) => {
           delete nextState.groupsById[groupId];
         });
-        nextState.groupOrder = nextState.groupOrder.filter((groupId) => !emptyGroupIdSet.has(groupId));
+        nextState.groupOrder = nextState.groupOrder.filter(
+          (groupId) => !emptyGroupIdSet.has(groupId),
+        );
       }
 
       // 5. Finally remove from the dictionary

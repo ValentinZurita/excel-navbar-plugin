@@ -109,7 +109,7 @@ describe('Pinned Section Drag and Drop Integration', () => {
         />
       </DndContext>,
     );
-    
+
     // Empty state should still render with drop zone when drag is active
     expect(container.querySelector('.sheet-list')).toBeInTheDocument();
   });
@@ -154,12 +154,12 @@ describe('Pinned Section Drag and Drop Integration', () => {
 describe('Pinned DnD Restrictions', () => {
   it('prevents drag from pinned to sheets via policy', () => {
     const worksheet = createWorksheet({ worksheetId: 'sheet-1' });
-    
+
     // This test verifies the policy behavior at the model level
     // The UI should not show valid drop targets outside pinned
     // when dragging a pinned worksheet
     expect(worksheet.isPinned).toBe(true);
-    
+
     // In actual implementation, this is enforced by:
     // 1. pinnedSectionPolicy.canDrop returns false for pinned -> non-pinned
     // 2. buildDragCommit returns null for invalid cross-section drops

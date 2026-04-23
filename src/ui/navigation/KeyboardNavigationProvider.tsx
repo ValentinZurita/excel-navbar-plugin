@@ -1,5 +1,8 @@
 import { createContext, useContext, type ReactNode, type RefObject } from 'react';
-import { useKeyboardNavigation, type UseKeyboardNavigationArgs } from '../../application/navigation/useKeyboardNavigation';
+import {
+  useKeyboardNavigation,
+  type UseKeyboardNavigationArgs,
+} from '../../application/navigation/useKeyboardNavigation';
 
 interface KeyboardNavContextValue {
   /** Currently focused item ID, or null if no focus */
@@ -52,7 +55,9 @@ interface KeyboardNavigationProviderProps extends UseKeyboardNavigationArgs {
  * 3. Handle keydown events via the provided handlers
  * 4. Apply data-focused attribute based on focusedItemId
  */
-export function KeyboardNavigationProvider(props: KeyboardNavigationProviderProps): React.ReactElement {
+export function KeyboardNavigationProvider(
+  props: KeyboardNavigationProviderProps,
+): React.ReactElement {
   const { children, ...hookArgs } = props;
 
   const { activeVisualItemId, ...navigationArgs } = hookArgs;
@@ -74,11 +79,7 @@ export function KeyboardNavigationProvider(props: KeyboardNavigationProviderProp
     searchInputRef: hookArgs.searchInputRef,
   };
 
-  return (
-    <KeyboardNavContext.Provider value={contextValue}>
-      {children}
-    </KeyboardNavContext.Provider>
-  );
+  return <KeyboardNavContext.Provider value={contextValue}>{children}</KeyboardNavContext.Provider>;
 }
 
 /**

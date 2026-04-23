@@ -40,7 +40,8 @@
 }
 */
 
-.group-list-drag-active .group-header:hover:not(.group-header-drop-active):not(.group-header-active) {
+.group-list-drag-active
+  .group-header:hover:not(.group-header-drop-active):not(.group-header-active) {
   background: transparent;
 }
 
@@ -71,11 +72,13 @@
 }
 
 .group-header[data-visual-focused='true'] .group-header-nav-highlight {
-  animation: excel-nav-highlight-enter var(--excel-nav-highlight-fade-ms) var(--excel-nav-highlight-fade-ease) forwards;
+  animation: excel-nav-highlight-enter var(--excel-nav-highlight-fade-ms)
+    var(--excel-nav-highlight-fade-ease) forwards;
 }
 
 .group-header[data-visual-exiting='true'] .group-header-nav-highlight {
-  animation: excel-nav-highlight-exit var(--excel-nav-highlight-fade-ms) var(--excel-nav-highlight-fade-ease) forwards;
+  animation: excel-nav-highlight-exit var(--excel-nav-highlight-fade-ms)
+    var(--excel-nav-highlight-fade-ease) forwards;
 }
 
 .group-header-active .group-title {
@@ -165,7 +168,9 @@
   display: block;
   color: var(--excel-muted);
   opacity: 0.45;
-  transition: color 140ms ease, opacity 140ms ease;
+  transition:
+    color 140ms ease,
+    opacity 140ms ease;
 }
 
 /* Background color variants using CSS tokens */
@@ -285,4 +290,3 @@
     opacity: 1;
   }
 }
-

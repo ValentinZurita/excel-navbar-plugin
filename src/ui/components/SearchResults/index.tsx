@@ -58,7 +58,7 @@ export function SearchResults({
     ) {
       return; // Ignore synthetic events caused by elements sliding under a stationary cursor
     }
-    
+
     lastMousePositionRef.current = { x: event.clientX, y: event.clientY };
     onPointerFocus?.(itemId);
   };
@@ -68,11 +68,16 @@ export function SearchResults({
     }
 
     if (result.isGrouped) {
-      const colorClass = result.groupColor && result.groupColor !== 'none'
-        ? `group-leading-${result.groupColor}`
-        : '';
-        
-      return <GroupFolderIcon className={`search-result-icon search-result-icon-group ${colorClass}`.trim()} />;
+      const colorClass =
+        result.groupColor && result.groupColor !== 'none'
+          ? `group-leading-${result.groupColor}`
+          : '';
+
+      return (
+        <GroupFolderIcon
+          className={`search-result-icon search-result-icon-group ${colorClass}`.trim()}
+        />
+      );
     }
 
     if (result.isPinned) {
@@ -89,7 +94,8 @@ export function SearchResults({
           const itemId = `search:${result.worksheetId}`;
           const isStrongHighlight = focusedItemId === itemId || visualFocusedItemId === itemId;
           const isRovingTarget = focusedItemId === itemId;
-          const isActiveWorksheet = activeWorksheetId !== null && activeWorksheetId === result.worksheetId;
+          const isActiveWorksheet =
+            activeWorksheetId !== null && activeWorksheetId === result.worksheetId;
 
           return (
             <SearchResultItemComponent
@@ -175,11 +181,7 @@ function SearchResultItemComponent({
 
         if (event.detail > 1) {
           const elapsed = now - lastPrimaryClickAtRef.current;
-          if (
-            onStartRenameWorksheet
-            && elapsed > 0
-            && elapsed <= FAST_DOUBLE_CLICK_RENAME_MS
-          ) {
+          if (onStartRenameWorksheet && elapsed > 0 && elapsed <= FAST_DOUBLE_CLICK_RENAME_MS) {
             event.preventDefault();
             event.stopPropagation();
             onStartRenameWorksheet(result.worksheetId);
@@ -196,7 +198,10 @@ function SearchResultItemComponent({
       onMouseMove={(event) => onPointerFocus?.(itemId, event)}
       onMouseEnter={(event) => onPointerFocus?.(itemId, event)}
     >
-      <span className={`search-result-leading ${result.groupColor && result.groupColor !== 'none' ? `group-color-${result.groupColor}` : ''}`.trim()} aria-hidden="true">
+      <span
+        className={`search-result-leading ${result.groupColor && result.groupColor !== 'none' ? `group-color-${result.groupColor}` : ''}`.trim()}
+        aria-hidden="true"
+      >
         {renderIcon(result)}
       </span>
       <span className="search-result-copy">

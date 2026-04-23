@@ -1,12 +1,5 @@
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
-import {
-  focusElementWithManagedRingSuppression,
-} from './domFocusUtils';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { focusElementWithManagedRingSuppression } from './domFocusUtils';
 import { useKeyboardNavigationAnchor } from './useKeyboardNavigationAnchor';
 import { useKeyboardNavigationCleanup } from './useKeyboardNavigationCleanup';
 import { useKeyboardNavigationClearFocus } from './useKeyboardNavigationClearFocus';
@@ -123,7 +116,9 @@ interface UseKeyboardNavigationReturn {
  * The navigation follows Excel tab-like behavior: linear list, no wrapping,
  * with special handling for group expand/collapse.
  */
-export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeyboardNavigationReturn {
+export function useKeyboardNavigation(
+  args: UseKeyboardNavigationArgs,
+): UseKeyboardNavigationReturn {
   const {
     items,
     activeWorksheetId,
@@ -262,28 +257,30 @@ export function useKeyboardNavigation(args: UseKeyboardNavigationArgs): UseKeybo
     setNavigationInputMode,
   });
 
-  const { clearIdleTimeout, scheduleIdleClear, markKeyboardActivity } = useKeyboardNavigationIdleLifecycle({
-    idleClearTimeoutRef,
-    clearFocus,
-    idleTimeoutMs: TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS,
-  });
+  const { clearIdleTimeout, scheduleIdleClear, markKeyboardActivity } =
+    useKeyboardNavigationIdleLifecycle({
+      idleClearTimeoutRef,
+      clearFocus,
+      idleTimeoutMs: TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS,
+    });
 
-  const { scheduleDomFocusForNavigableId, restoreFocusAfterMenuDismiss } = useKeyboardNavigationDomFocusRestore({
-    items,
-    searchInputRef,
-    elementRegistryRef,
-    pendingDomFocusRestoreTokenRef,
-    contextMenuOwnedFocusRef,
-    lastContextMenuTargetItemIdRef,
-    suppressNextDomFocusRef,
-    isSuppressedRef,
-    focusedItemIdRef,
-    searchFocusedItemIdRef,
-    clearIdleTimeout,
-    setNavigationInputMode,
-    setFocusedItemId,
-    setSearchFocusedItemId,
-  });
+  const { scheduleDomFocusForNavigableId, restoreFocusAfterMenuDismiss } =
+    useKeyboardNavigationDomFocusRestore({
+      items,
+      searchInputRef,
+      elementRegistryRef,
+      pendingDomFocusRestoreTokenRef,
+      contextMenuOwnedFocusRef,
+      lastContextMenuTargetItemIdRef,
+      suppressNextDomFocusRef,
+      isSuppressedRef,
+      focusedItemIdRef,
+      searchFocusedItemIdRef,
+      clearIdleTimeout,
+      setNavigationInputMode,
+      setFocusedItemId,
+      setSearchFocusedItemId,
+    });
 
   useKeyboardNavigationCleanup({
     clearIdleTimeout,

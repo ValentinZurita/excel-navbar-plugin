@@ -23,7 +23,13 @@ interface InlineGroupCreatorProps {
 
 // Inline group creation UI shown inside the sheet navigator.
 // Handles focus, keyboard submit, and color selection while typing a new group name.
-export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus = true, defaultColor = 'none' }: InlineGroupCreatorProps) {
+export function InlineGroupCreator({
+  onCreate,
+  onCancel,
+  onCloseMenu,
+  autoFocus = true,
+  defaultColor = 'none',
+}: InlineGroupCreatorProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState('');
   const [selectedColor, setSelectedColor] = useState<GroupColorToken>(defaultColor);
@@ -62,7 +68,10 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
     setSelectedColor(color);
   }
 
-  function handleColorKeyDown(event: ReactKeyboardEvent<HTMLButtonElement>, color: GroupColorToken) {
+  function handleColorKeyDown(
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    color: GroupColorToken,
+  ) {
     // Ignore Enter while the user is composing IME input.
     if (event.nativeEvent.isComposing) {
       return;
@@ -92,11 +101,7 @@ export function InlineGroupCreator({ onCreate, onCancel, onCloseMenu, autoFocus 
       />
 
       {/* Color palette chips - selectable */}
-      <div
-        className="inline-group-creator-colors"
-        role="group"
-        aria-label="Color options"
-      >
+      <div className="inline-group-creator-colors" role="group" aria-label="Color options">
         {selectableGroupColorTokens.map((color) => (
           <button
             key={color}

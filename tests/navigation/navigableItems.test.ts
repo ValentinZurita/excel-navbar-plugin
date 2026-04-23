@@ -7,7 +7,11 @@ import {
   getPrevItem,
   hasItem,
 } from '../../src/domain/navigation/navigableItems';
-import type { NavigatorGroupView, SearchResultItem, WorksheetEntity } from '../../src/domain/navigation/types';
+import type {
+  NavigatorGroupView,
+  SearchResultItem,
+  WorksheetEntity,
+} from '../../src/domain/navigation/types';
 
 function createWorksheet(id: string, name: string): WorksheetEntity {
   return {
@@ -75,8 +79,16 @@ describe('buildNavigableItems', () => {
     });
 
     expect(items).toHaveLength(2);
-    expect(items[0]).toMatchObject({ id: 'search:sheet-1', kind: 'search-result', name: 'Q1 Revenue' });
-    expect(items[1]).toMatchObject({ id: 'search:sheet-2', kind: 'search-result', name: 'Q2 Revenue' });
+    expect(items[0]).toMatchObject({
+      id: 'search:sheet-1',
+      kind: 'search-result',
+      name: 'Q1 Revenue',
+    });
+    expect(items[1]).toMatchObject({
+      id: 'search:sheet-2',
+      kind: 'search-result',
+      name: 'Q2 Revenue',
+    });
   });
 
   it('returns empty array when search has no results', () => {
@@ -96,18 +108,23 @@ describe('buildNavigableItems', () => {
     const items = buildNavigableItems({
       query: '',
       searchResults: [],
-      pinned: [
-        createWorksheet('sheet-1', 'Pinned A'),
-        createWorksheet('sheet-2', 'Pinned B'),
-      ],
+      pinned: [createWorksheet('sheet-1', 'Pinned A'), createWorksheet('sheet-2', 'Pinned B')],
       groups: [],
       ungrouped: [],
       hidden: [],
     });
 
     expect(items).toHaveLength(2);
-    expect(items[0]).toMatchObject({ id: 'worksheet:sheet-1', kind: 'worksheet', name: 'Pinned A' });
-    expect(items[1]).toMatchObject({ id: 'worksheet:sheet-2', kind: 'worksheet', name: 'Pinned B' });
+    expect(items[0]).toMatchObject({
+      id: 'worksheet:sheet-1',
+      kind: 'worksheet',
+      name: 'Pinned A',
+    });
+    expect(items[1]).toMatchObject({
+      id: 'worksheet:sheet-2',
+      kind: 'worksheet',
+      name: 'Pinned B',
+    });
   });
 
   it('includes group header and worksheets in expanded group', () => {
@@ -116,19 +133,35 @@ describe('buildNavigableItems', () => {
       searchResults: [],
       pinned: [],
       groups: [
-        createGroupView('group-1', 'Finance', [
-          createWorksheet('sheet-1', 'Budget'),
-          createWorksheet('sheet-2', 'Forecast'),
-        ], false),
+        createGroupView(
+          'group-1',
+          'Finance',
+          [createWorksheet('sheet-1', 'Budget'), createWorksheet('sheet-2', 'Forecast')],
+          false,
+        ),
       ],
       ungrouped: [],
       hidden: [],
     });
 
     expect(items).toHaveLength(3);
-    expect(items[0]).toMatchObject({ id: 'group-header:group-1', kind: 'group-header', name: 'Finance' });
-    expect(items[1]).toMatchObject({ id: 'worksheet:sheet-1', kind: 'worksheet', name: 'Budget', groupId: 'group-1' });
-    expect(items[2]).toMatchObject({ id: 'worksheet:sheet-2', kind: 'worksheet', name: 'Forecast', groupId: 'group-1' });
+    expect(items[0]).toMatchObject({
+      id: 'group-header:group-1',
+      kind: 'group-header',
+      name: 'Finance',
+    });
+    expect(items[1]).toMatchObject({
+      id: 'worksheet:sheet-1',
+      kind: 'worksheet',
+      name: 'Budget',
+      groupId: 'group-1',
+    });
+    expect(items[2]).toMatchObject({
+      id: 'worksheet:sheet-2',
+      kind: 'worksheet',
+      name: 'Forecast',
+      groupId: 'group-1',
+    });
   });
 
   it('includes only group header for collapsed group', () => {
@@ -136,9 +169,7 @@ describe('buildNavigableItems', () => {
       query: '',
       searchResults: [],
       pinned: [],
-      groups: [
-        createGroupView('group-1', 'Finance', [createWorksheet('sheet-1', 'Budget')], true),
-      ],
+      groups: [createGroupView('group-1', 'Finance', [createWorksheet('sheet-1', 'Budget')], true)],
       ungrouped: [],
       hidden: [],
     });
@@ -304,9 +335,7 @@ describe('getLastItem', () => {
 });
 
 describe('hasItem', () => {
-  const items = [
-    { id: 'worksheet:1', kind: 'worksheet' as const, name: 'First' },
-  ];
+  const items = [{ id: 'worksheet:1', kind: 'worksheet' as const, name: 'First' }];
 
   it('returns true for existing item', () => {
     expect(hasItem('worksheet:1', items)).toBe(true);

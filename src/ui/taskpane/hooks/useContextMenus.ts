@@ -1,5 +1,9 @@
 import { useCallback, useState } from 'react';
-import type { ContextMenuState, OpenGroupMenuArgs, OpenSheetMenuArgs } from '../types/contextMenuTypes';
+import type {
+  ContextMenuState,
+  OpenGroupMenuArgs,
+  OpenSheetMenuArgs,
+} from '../types/contextMenuTypes';
 
 export function useContextMenus() {
   // Only one context menu can be visible at a time.
@@ -9,59 +13,75 @@ export function useContextMenus() {
     setActiveMenu(null);
   }, []);
 
-  const openSheetMenu = useCallback(({ target, x, y, worksheet, interaction = 'pointer' }: OpenSheetMenuArgs) => {
-    const openedVia = interaction;
-    const anchorNavigableId = target.getAttribute('data-navigable-id') ?? `worksheet:${worksheet.worksheetId}`;
-    setActiveMenu((currentMenu) => {
-      // Pointer: right-clicking the same worksheet row toggles menu off.
-      if (
-        interaction === 'pointer'
-        && currentMenu?.kind === 'sheet'
-        && currentMenu.worksheet.worksheetId === worksheet.worksheetId
-        && currentMenu.openedVia === 'pointer'
-        && currentMenu.anchorNavigableId === anchorNavigableId
-      ) {
-        return null;
-      }
+  const openSheetMenu = useCallback(
+    ({ target, x, y, worksheet, interaction = 'pointer' }: OpenSheetMenuArgs) => {
+      const openedVia = interaction;
+      const anchorNavigableId =
+        target.getAttribute('data-navigable-id') ?? `worksheet:${worksheet.worksheetId}`;
+      setActiveMenu((currentMenu) => {
+        // Pointer: right-clicking the same worksheet row toggles menu off.
+        if (
+          interaction === 'pointer' &&
+          currentMenu?.kind === 'sheet' &&
+          currentMenu.worksheet.worksheetId === worksheet.worksheetId &&
+          currentMenu.openedVia === 'pointer' &&
+          currentMenu.anchorNavigableId === anchorNavigableId
+        ) {
+          return null;
+        }
 
-      return {
-        kind: 'sheet',
-        x,
-        y,
-        worksheet,
-        openedVia,
-        anchorNavigableId,
-      };
-    });
-  }, []);
+        return {
+          kind: 'sheet',
+          x,
+          y,
+          worksheet,
+          openedVia,
+          anchorNavigableId,
+        };
+      });
+    },
+    [],
+  );
 
-  const openGroupMenu = useCallback(({ target, x, y, groupId, groupName, colorToken, interaction = 'pointer' }: OpenGroupMenuArgs) => {
-    const openedVia = interaction;
-    const anchorNavigableId = target.getAttribute('data-navigable-id') ?? `group-header:${groupId}`;
-    setActiveMenu((currentMenu) => {
-      // Pointer: right-clicking the same group toggles the menu off.
-      if (
-        interaction === 'pointer'
-        && currentMenu?.kind === 'group'
-        && currentMenu.groupId === groupId
-        && currentMenu.openedVia === 'pointer'
-        && currentMenu.anchorNavigableId === anchorNavigableId
-      ) {
-        return null;
-      }
+  const openGroupMenu = useCallback(
+    ({
+      target,
+      x,
+      y,
+      groupId,
+      groupName,
+      colorToken,
+      interaction = 'pointer',
+    }: OpenGroupMenuArgs) => {
+      const openedVia = interaction;
+      const anchorNavigableId =
+        target.getAttribute('data-navigable-id') ?? `group-header:${groupId}`;
+      setActiveMenu((currentMenu) => {
+        // Pointer: right-clicking the same group toggles the menu off.
+        if (
+          interaction === 'pointer' &&
+          currentMenu?.kind === 'group' &&
+          currentMenu.groupId === groupId &&
+          currentMenu.openedVia === 'pointer' &&
+          currentMenu.anchorNavigableId === anchorNavigableId
+        ) {
+          return null;
+        }
 
-      return {
-        kind: 'group',
-        x,
-        y,
-        groupId,
-        groupName,
-        colorToken,
-        openedVia,
-        anchorNavigableId,
-      };
-    });
-  }, []);
+        return {
+          kind: 'group',
+          x,
+          y,
+          groupId,
+          groupName,
+          colorToken,
+          openedVia,
+          anchorNavigableId,
+        };
+      });
+    },
+    [],
+  );
 
   const sheetMenu = activeMenu?.kind === 'sheet' ? activeMenu : null;
   const groupMenu = activeMenu?.kind === 'group' ? activeMenu : null;

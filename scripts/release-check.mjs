@@ -5,7 +5,9 @@ function fail(message) {
 
 function normalizeBaseUrl(value) {
   if (!value) {
-    fail('Missing ADDIN_BASE_URL. Example: ADDIN_BASE_URL=https://addins.example.com npm run package:release');
+    fail(
+      'Missing ADDIN_BASE_URL. Example: ADDIN_BASE_URL=https://addins.example.com npm run package:release',
+    );
   }
 
   let parsedUrl;

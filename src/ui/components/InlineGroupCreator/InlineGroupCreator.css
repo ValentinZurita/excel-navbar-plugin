@@ -24,11 +24,11 @@
 }
 
 /* Explicit theme overrides for the input background to keep it consistent with Office mode. */
-:root[data-office-theme-mode="light"] .inline-group-creator-input {
+:root[data-office-theme-mode='light'] .inline-group-creator-input {
   background: #ffffff;
 }
 
-:root[data-office-theme-mode="dark"] .inline-group-creator-input {
+:root[data-office-theme-mode='dark'] .inline-group-creator-input {
   background: #1a1a1a;
 }
 
@@ -38,11 +38,11 @@
 }
 
 /* Keep focused input backgrounds stable across Office light/dark theme modes. */
-:root[data-office-theme-mode="light"] .inline-group-creator-input:focus {
+:root[data-office-theme-mode='light'] .inline-group-creator-input:focus {
   background: #ffffff;
 }
 
-:root[data-office-theme-mode="dark"] .inline-group-creator-input:focus {
+:root[data-office-theme-mode='dark'] .inline-group-creator-input:focus {
   background: #1a1a1a;
 }
 
@@ -61,7 +61,10 @@
   border-radius: 50%;
   flex-shrink: 0;
   cursor: pointer;
-  transition: transform 120ms ease, opacity 120ms ease, box-shadow 120ms ease;
+  transition:
+    transform 120ms ease,
+    opacity 120ms ease,
+    box-shadow 120ms ease;
   opacity: 0.85;
   border: none;
   padding: 0;
@@ -84,7 +87,9 @@
 .inline-group-creator-color-selected {
   opacity: 1;
   transform: scale(1.15);
-  box-shadow: 0 0 0 2px var(--excel-body-bg), 0 0 0 4px var(--excel-accent);
+  box-shadow:
+    0 0 0 2px var(--excel-body-bg),
+    0 0 0 4px var(--excel-accent);
 }
 
 /* "No color" chip - outlined circle with a diagonal slash, matching Excel's no-fill pattern. */

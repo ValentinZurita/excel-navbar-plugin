@@ -102,7 +102,7 @@ export function getWorksheetIdsForContainer(
   }
 
   const groupId = parseGroupIdFromContainerId(containerId);
-  return groupId ? layout.groups[groupId] ?? [] : [];
+  return groupId ? (layout.groups[groupId] ?? []) : [];
 }
 
 function setWorksheetIdsForContainer(
@@ -146,15 +146,20 @@ export function moveWorksheetInLayout(
   );
 
   let nextLayout = setWorksheetIdsForContainer(layout, source.containerId, sourceWorksheetIds);
-  const destinationWorksheetIds = getWorksheetIdsForContainer(nextLayout, destination.containerId).filter(
-    (candidateId) => candidateId !== worksheetId,
-  );
+  const destinationWorksheetIds = getWorksheetIdsForContainer(
+    nextLayout,
+    destination.containerId,
+  ).filter((candidateId) => candidateId !== worksheetId);
 
   const clampedIndex = clampInsertionIndex(destination.index, destinationWorksheetIds.length);
   const nextDestinationWorksheetIds = [...destinationWorksheetIds];
   nextDestinationWorksheetIds.splice(clampedIndex, 0, worksheetId);
 
-  nextLayout = setWorksheetIdsForContainer(nextLayout, destination.containerId, nextDestinationWorksheetIds);
+  nextLayout = setWorksheetIdsForContainer(
+    nextLayout,
+    destination.containerId,
+    nextDestinationWorksheetIds,
+  );
   return nextLayout;
 }
 
@@ -224,7 +229,10 @@ export function buildDragCommit(
     return null;
   }
 
-  if (isSheetContainer(initialLocation.containerId) && isSheetContainer(finalLocation.containerId)) {
+  if (
+    isSheetContainer(initialLocation.containerId) &&
+    isSheetContainer(finalLocation.containerId)
+  ) {
     return {
       kind: 'reorder-sheet-section',
       worksheetId,
@@ -232,7 +240,10 @@ export function buildDragCommit(
     };
   }
 
-  if (!isSheetContainer(initialLocation.containerId) && finalLocation.containerId === initialLocation.containerId) {
+  if (
+    !isSheetContainer(initialLocation.containerId) &&
+    finalLocation.containerId === initialLocation.containerId
+  ) {
     const groupId = parseGroupIdFromContainerId(finalLocation.containerId);
     if (!groupId) {
       return null;

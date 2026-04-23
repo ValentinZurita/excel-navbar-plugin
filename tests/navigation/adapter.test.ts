@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OfficeWorkbookAdapter } from '../../src/infrastructure/office/OfficeWorkbookAdapter';
 import { createMockWorkbookSnapshot } from '../../src/infrastructure/office/mockWorkbookSnapshot';
-import { WorksheetCreateError, WorksheetDeleteError } from '../../src/infrastructure/office/WorkbookAdapter';
+import {
+  WorksheetCreateError,
+  WorksheetDeleteError,
+} from '../../src/infrastructure/office/WorkbookAdapter';
 
 describe('OfficeWorkbookAdapter.hideWorksheet', () => {
   afterEach(() => {

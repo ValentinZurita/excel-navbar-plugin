@@ -1,9 +1,11 @@
 # AGENTS.md
 
 ## Mission
+
 Build and maintain an Excel worksheet navigator that feels calm, native-adjacent, and reliable inside Excel.
 
 ## Mandatory rules
+
 - Ask the human when a meaningful product or technical doubt remains.
 - Do not claim a feature works unless it was verified.
 - Keep language simple when speaking to the human reviewer.
@@ -15,6 +17,7 @@ Build and maintain an Excel worksheet navigator that feels calm, native-adjacent
 - Treat UX quality and Excel alignment as core functionality, not later polish.
 
 ## Design non-negotiables
+
 - Respect `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/docs/design/visual-baseline.md` as the approved visual baseline.
 - Extend the current design direction; do not reset it, dilute it, or introduce conflicting visual language.
 - Keep worksheet names as the primary visual target. Controls and metadata must stay secondary.
@@ -24,12 +27,14 @@ Build and maintain an Excel worksheet navigator that feels calm, native-adjacent
 - If a visual change increases noise or feels less Excel-aligned, stop and rethink it before implementation.
 
 ## Commit policy
+
 - Prefer small conventional commits.
 - One concern per commit.
 - Explain what changed and why in plain language.
 - Never batch unrelated work into one commit.
 
 ## AI-first working style
+
 - Navigate by folders and clear boundaries.
 - Leave purposeful comments when intent is not obvious.
 - If behavior differs from docs, update the docs.

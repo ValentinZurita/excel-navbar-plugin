@@ -1,13 +1,7 @@
 export type WorksheetVisibility = 'Visible' | 'Hidden' | 'VeryHidden';
 export type NavigationIdentityMode = 'plugin-sheet-id' | 'native-id';
 
-export type GroupColorToken =
-  | 'none'
-  | 'blue'
-  | 'green'
-  | 'yellow'
-  | 'purple'
-  | 'red';
+export type GroupColorToken = 'none' | 'blue' | 'green' | 'yellow' | 'purple' | 'red';
 
 export interface WorksheetEntity {
   worksheetId: string;
@@ -42,7 +36,17 @@ export interface WorkbookCapabilities {
 }
 
 export interface WorkbookSnapshot {
-  worksheets: Array<Pick<WorksheetEntity, 'worksheetId' | 'stableWorksheetId' | 'nativeWorksheetId' | 'name' | 'visibility' | 'workbookOrder'>>;
+  worksheets: Array<
+    Pick<
+      WorksheetEntity,
+      | 'worksheetId'
+      | 'stableWorksheetId'
+      | 'nativeWorksheetId'
+      | 'name'
+      | 'visibility'
+      | 'workbookOrder'
+    >
+  >;
   activeWorksheetId: string | null;
   identityMode?: NavigationIdentityMode;
 }
@@ -101,7 +105,12 @@ export interface BannerState {
 export interface PersistenceStatus {
   mode: 'custom-xml' | 'settings-fallback' | 'session-only' | 'degraded';
   banner: BannerState | null;
-  lastSource: 'custom-xml' | 'settings-fallback' | 'legacy-settings' | 'scoped-local-cache' | 'none';
+  lastSource:
+    | 'custom-xml'
+    | 'settings-fallback'
+    | 'legacy-settings'
+    | 'scoped-local-cache'
+    | 'none';
   diagnostics: PersistenceDiagnosticCode[];
   lastError?: string;
 }

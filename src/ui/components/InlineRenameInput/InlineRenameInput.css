@@ -24,12 +24,12 @@
 }
 
 /* Show the text in light mode */
-:root[data-office-theme-mode="light"] .inline-rename-input {
+:root[data-office-theme-mode='light'] .inline-rename-input {
   -webkit-text-fill-color: var(--excel-body-fg);
 }
 
 /* Show the text in dark mode */
-:root[data-office-theme-mode="dark"] .inline-rename-input {
+:root[data-office-theme-mode='dark'] .inline-rename-input {
   -webkit-text-fill-color: rgba(255, 255, 255, 0.92);
 }
 

@@ -298,7 +298,9 @@ describe('TaskpaneAppContainer', () => {
     expect(
       screen.getByText("Delete group 'Finance' and all 2 sheet(s) in it? This cannot be undone."),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Confirm delete all sheets in group Finance' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Confirm delete all sheets in group Finance' }),
+    );
 
     expect(controller.deleteGroupAndWorksheets).toHaveBeenCalledWith('group-1');
   });
@@ -307,7 +309,8 @@ describe('TaskpaneAppContainer', () => {
     const controller = createControllerMock();
     const sessionBanner: BannerState = {
       tone: 'warning',
-      message: 'We could not save to this workbook, but your navigation state was cached locally for this workbook on this device.',
+      message:
+        'We could not save to this workbook, but your navigation state was cached locally for this workbook on this device.',
     };
     controller.banner = sessionBanner;
     useNavigationControllerMock.mockReturnValue(controller);
@@ -322,7 +325,8 @@ describe('TaskpaneAppContainer', () => {
     const controller = createControllerMock();
     controller.banner = {
       tone: 'warning',
-      message: 'We could not save this workbook state, and local recovery is unavailable until the file is saved.',
+      message:
+        'We could not save this workbook state, and local recovery is unavailable until the file is saved.',
     };
     useNavigationControllerMock.mockReturnValue(controller);
 
@@ -366,20 +370,24 @@ describe('TaskpaneAppContainer', () => {
       },
     };
     controller.state.groupOrder = ['group-1'];
-    controller.navigatorView.groups = [{
-      groupId: 'group-1',
-      name: 'Finance',
-      colorToken: 'green',
-      isCollapsed: false,
-      worksheets: [],
-    }];
+    controller.navigatorView.groups = [
+      {
+        groupId: 'group-1',
+        name: 'Finance',
+        colorToken: 'green',
+        isCollapsed: false,
+        worksheets: [],
+      },
+    ];
     useNavigationControllerMock.mockReturnValue(controller);
 
     render(<TaskpaneAppContainer />);
 
-    expect(screen.getByRole('button', {
-      name: 'This workbook has not been saved yet. Group changes persist only for this session.',
-    })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', {
+        name: 'This workbook has not been saved yet. Group changes persist only for this session.',
+      }),
+    ).toBeInTheDocument();
   });
 
   it('creates worksheet from floating add button', async () => {
@@ -448,8 +456,16 @@ describe('TaskpaneAppContainer', () => {
   it('restores keyboard navigation after closing a keyboard-opened sheet menu from Hidden', async () => {
     const user = userEvent.setup();
     const controller = createControllerMock();
-    const visible = createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible' });
-    const hidden = createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden' });
+    const visible = createWorksheet({
+      worksheetId: 'sheet-1',
+      name: 'Revenue',
+      visibility: 'Visible',
+    });
+    const hidden = createWorksheet({
+      worksheetId: 'hidden-1',
+      name: 'Archive',
+      visibility: 'Hidden',
+    });
     controller.state.worksheetsById = {
       [visible.worksheetId]: visible,
       [hidden.worksheetId]: hidden,
@@ -486,8 +502,16 @@ describe('TaskpaneAppContainer', () => {
   it('keeps arrow navigation alive when closing Hidden menu and navigating again immediately', async () => {
     const user = userEvent.setup();
     const controller = createControllerMock();
-    const visible = createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible' });
-    const hidden = createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden' });
+    const visible = createWorksheet({
+      worksheetId: 'sheet-1',
+      name: 'Revenue',
+      visibility: 'Visible',
+    });
+    const hidden = createWorksheet({
+      worksheetId: 'hidden-1',
+      name: 'Archive',
+      visibility: 'Hidden',
+    });
     controller.state.worksheetsById = {
       [visible.worksheetId]: visible,
       [hidden.worksheetId]: hidden,
@@ -520,8 +544,16 @@ describe('TaskpaneAppContainer', () => {
 
   it('restores arrow handling even when next key lands before passive effects after menu close', async () => {
     const controller = createControllerMock();
-    const visible = createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', visibility: 'Visible' });
-    const hidden = createWorksheet({ worksheetId: 'hidden-1', name: 'Archive', visibility: 'Hidden' });
+    const visible = createWorksheet({
+      worksheetId: 'sheet-1',
+      name: 'Revenue',
+      visibility: 'Visible',
+    });
+    const hidden = createWorksheet({
+      worksheetId: 'hidden-1',
+      name: 'Archive',
+      visibility: 'Hidden',
+    });
     controller.state.worksheetsById = {
       [visible.worksheetId]: visible,
       [hidden.worksheetId]: hidden,

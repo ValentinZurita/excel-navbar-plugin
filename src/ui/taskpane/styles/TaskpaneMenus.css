@@ -201,7 +201,9 @@
 .context-menu-color-picker-item-selected {
   opacity: 1;
   transform: scale(1.15);
-  box-shadow: 0 0 0 2px var(--excel-body-bg), 0 0 0 4px var(--excel-accent);
+  box-shadow:
+    0 0 0 2px var(--excel-body-bg),
+    0 0 0 4px var(--excel-accent);
 }
 
 .context-menu-color-picker-item-selected.context-menu-color-picker-item-none {

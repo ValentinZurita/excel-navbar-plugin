@@ -5,10 +5,7 @@ import { fileURLToPath } from 'node:url';
 const scriptDir = fileURLToPath(new URL('.', import.meta.url));
 const projectRoot = join(scriptDir, '..');
 
-const sourceRoots = [
-  join(projectRoot, 'src'),
-  join(projectRoot, 'tests'),
-];
+const sourceRoots = [join(projectRoot, 'src'), join(projectRoot, 'tests')];
 
 const targetExtensions = new Set(['.ts', '.tsx']);
 

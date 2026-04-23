@@ -21,14 +21,15 @@ export function useKeyboardNavigationVisualFocus({
   isSearchActive,
 }: UseKeyboardNavigationVisualFocusArgs) {
   return useMemo(
-    () => computeVisualFocusedItemId({
-      logicalFocusedItemId: isSearchActive ? searchFocusedItemId : focusedItemId,
-      activeVisualItemId,
-      isContextMenuOpen,
-      contextMenuTargetItemId,
-      isHighlightSuppressed,
-      isSearchActive,
-    }),
+    () =>
+      computeVisualFocusedItemId({
+        logicalFocusedItemId: isSearchActive ? searchFocusedItemId : focusedItemId,
+        activeVisualItemId,
+        isContextMenuOpen,
+        contextMenuTargetItemId,
+        isHighlightSuppressed,
+        isSearchActive,
+      }),
     [
       activeVisualItemId,
       contextMenuTargetItemId,

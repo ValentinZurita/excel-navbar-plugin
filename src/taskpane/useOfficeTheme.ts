@@ -7,7 +7,8 @@ function setThemeVariables() {
 
   const root = document.documentElement;
   const officeTheme = typeof Office !== 'undefined' ? Office.context?.officeTheme : undefined;
-  const controlBackgroundColor = officeTheme?.controlBackgroundColor ?? officeTheme?.bodyBackgroundColor;
+  const controlBackgroundColor =
+    officeTheme?.controlBackgroundColor ?? officeTheme?.bodyBackgroundColor;
   const isDarkTheme = Boolean(officeTheme?.isDarkTheme);
 
   root.style.setProperty('--excel-body-bg', officeTheme?.bodyBackgroundColor ?? '#f3f2f1');

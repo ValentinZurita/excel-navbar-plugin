@@ -93,70 +93,85 @@ export function TaskpaneAppContainer() {
   ]);
 
   // Mutually exclusive: starting one cancels the other
-  const handleStartCreatingGroup = useCallback((worksheetId?: string) => {
-    if (isConfirmingDelete) {
-      cancelDeleteConfirmation();
-    }
-    startCreatingGroup(worksheetId);
-  }, [cancelDeleteConfirmation, isConfirmingDelete, startCreatingGroup]);
+  const handleStartCreatingGroup = useCallback(
+    (worksheetId?: string) => {
+      if (isConfirmingDelete) {
+        cancelDeleteConfirmation();
+      }
+      startCreatingGroup(worksheetId);
+    },
+    [cancelDeleteConfirmation, isConfirmingDelete, startCreatingGroup],
+  );
 
-  const handleStartDeleteConfirmation = useCallback((worksheet: WorksheetEntity) => {
-    if (isCreating) {
-      cancelCreatingGroup();
-    }
-    startDeleteConfirmation(worksheet);
-  }, [cancelCreatingGroup, isCreating, startDeleteConfirmation]);
+  const handleStartDeleteConfirmation = useCallback(
+    (worksheet: WorksheetEntity) => {
+      if (isCreating) {
+        cancelCreatingGroup();
+      }
+      startDeleteConfirmation(worksheet);
+    },
+    [cancelCreatingGroup, isCreating, startDeleteConfirmation],
+  );
 
-  const handleAssignWorksheetToGroup = useCallback((worksheetId: string, groupId: string, targetIndex?: number) => {
-    const worksheet = controller.state.worksheetsById[worksheetId];
-    const undoToastPayload = buildGroupRemovalUndoToast({
-      groupId: worksheet?.groupId,
-      worksheetId,
-      groupsById: controller.state.groupsById,
-      groupOrder: controller.state.groupOrder,
-    });
-    if (undoToastPayload) {
-      scheduleUndoToast(undoToastPayload);
-    }
+  const handleAssignWorksheetToGroup = useCallback(
+    (worksheetId: string, groupId: string, targetIndex?: number) => {
+      const worksheet = controller.state.worksheetsById[worksheetId];
+      const undoToastPayload = buildGroupRemovalUndoToast({
+        groupId: worksheet?.groupId,
+        worksheetId,
+        groupsById: controller.state.groupsById,
+        groupOrder: controller.state.groupOrder,
+      });
+      if (undoToastPayload) {
+        scheduleUndoToast(undoToastPayload);
+      }
 
-    controller.assignWorksheetToGroup(worksheetId, groupId, targetIndex);
-  }, [
-    controller.assignWorksheetToGroup,
-    controller.state.groupOrder,
-    controller.state.groupsById,
-    controller.state.worksheetsById,
-    scheduleUndoToast,
-  ]);
+      controller.assignWorksheetToGroup(worksheetId, groupId, targetIndex);
+    },
+    [
+      controller.assignWorksheetToGroup,
+      controller.state.groupOrder,
+      controller.state.groupsById,
+      controller.state.worksheetsById,
+      scheduleUndoToast,
+    ],
+  );
 
-  const handleRemoveFromGroup = useCallback((worksheetId: string, targetIndex?: number) => {
-    const worksheet = controller.state.worksheetsById[worksheetId];
-    if (!worksheet?.groupId) {
+  const handleRemoveFromGroup = useCallback(
+    (worksheetId: string, targetIndex?: number) => {
+      const worksheet = controller.state.worksheetsById[worksheetId];
+      if (!worksheet?.groupId) {
+        controller.removeWorksheetFromGroup(worksheetId, targetIndex);
+        return;
+      }
+
+      const undoToastPayload = buildGroupRemovalUndoToast({
+        groupId: worksheet.groupId,
+        worksheetId,
+        groupsById: controller.state.groupsById,
+        groupOrder: controller.state.groupOrder,
+      });
+      if (undoToastPayload) {
+        scheduleUndoToast(undoToastPayload);
+      }
+
       controller.removeWorksheetFromGroup(worksheetId, targetIndex);
-      return;
-    }
+    },
+    [
+      controller.removeWorksheetFromGroup,
+      controller.state.groupOrder,
+      controller.state.groupsById,
+      controller.state.worksheetsById,
+      scheduleUndoToast,
+    ],
+  );
 
-    const undoToastPayload = buildGroupRemovalUndoToast({
-      groupId: worksheet.groupId,
-      worksheetId,
-      groupsById: controller.state.groupsById,
-      groupOrder: controller.state.groupOrder,
-    });
-    if (undoToastPayload) {
-      scheduleUndoToast(undoToastPayload);
-    }
-
-    controller.removeWorksheetFromGroup(worksheetId, targetIndex);
-  }, [
-    controller.removeWorksheetFromGroup,
-    controller.state.groupOrder,
-    controller.state.groupsById,
-    controller.state.worksheetsById,
-    scheduleUndoToast,
-  ]);
-
-  const dragPolicyState = useMemo(() => ({
-    worksheetsById: controller.state.worksheetsById,
-  }), [controller.state.worksheetsById]);
+  const dragPolicyState = useMemo(
+    () => ({
+      worksheetsById: controller.state.worksheetsById,
+    }),
+    [controller.state.worksheetsById],
+  );
 
   const dragAndDrop = useWorksheetDnD({
     assignWorksheetToGroup: handleAssignWorksheetToGroup,
@@ -168,84 +183,99 @@ export function TaskpaneAppContainer() {
     policyState: dragPolicyState,
   });
   const activeDragWorksheet = dragAndDrop.activeWorksheetId
-    ? controller.state.worksheetsById[dragAndDrop.activeWorksheetId] ?? null
+    ? (controller.state.worksheetsById[dragAndDrop.activeWorksheetId] ?? null)
     : null;
 
-  const activateWorksheetFromSearch = useCallback(async (worksheetId: string) => {
-    await controller.activateWorksheet(worksheetId);
-    controller.setQuery('');
-  }, [controller.activateWorksheet, controller.setQuery]);
+  const activateWorksheetFromSearch = useCallback(
+    async (worksheetId: string) => {
+      await controller.activateWorksheet(worksheetId);
+      controller.setQuery('');
+    },
+    [controller.activateWorksheet, controller.setQuery],
+  );
 
-  const handleTogglePin = useCallback((worksheet: WorksheetEntity) => {
-    const undoToastPayload = buildGroupRemovalUndoToast({
-      groupId: worksheet.groupId,
-      worksheetId: worksheet.worksheetId,
-      groupsById: controller.state.groupsById,
-      groupOrder: controller.state.groupOrder,
-    });
-    if (undoToastPayload) {
-      scheduleUndoToast(undoToastPayload);
-    }
+  const handleTogglePin = useCallback(
+    (worksheet: WorksheetEntity) => {
+      const undoToastPayload = buildGroupRemovalUndoToast({
+        groupId: worksheet.groupId,
+        worksheetId: worksheet.worksheetId,
+        groupsById: controller.state.groupsById,
+        groupOrder: controller.state.groupOrder,
+      });
+      if (undoToastPayload) {
+        scheduleUndoToast(undoToastPayload);
+      }
 
-    if (worksheet.isPinned) {
-      controller.unpinWorksheet(worksheet.worksheetId);
-      return;
-    }
+      if (worksheet.isPinned) {
+        controller.unpinWorksheet(worksheet.worksheetId);
+        return;
+      }
 
-    controller.pinWorksheet(worksheet.worksheetId);
-  }, [
-    controller.pinWorksheet,
-    controller.state.groupOrder,
-    controller.state.groupsById,
-    controller.unpinWorksheet,
-    scheduleUndoToast,
-  ]);
+      controller.pinWorksheet(worksheet.worksheetId);
+    },
+    [
+      controller.pinWorksheet,
+      controller.state.groupOrder,
+      controller.state.groupsById,
+      controller.unpinWorksheet,
+      scheduleUndoToast,
+    ],
+  );
 
-  const handlePinWorksheet = useCallback((worksheetId: string) => {
-    const worksheet = controller.state.worksheetsById[worksheetId];
-    if (!worksheet) {
-      return;
-    }
+  const handlePinWorksheet = useCallback(
+    (worksheetId: string) => {
+      const worksheet = controller.state.worksheetsById[worksheetId];
+      if (!worksheet) {
+        return;
+      }
 
-    const undoToastPayload = buildGroupRemovalUndoToast({
-      groupId: worksheet.groupId,
-      worksheetId,
-      groupsById: controller.state.groupsById,
-      groupOrder: controller.state.groupOrder,
-    });
-    if (undoToastPayload) {
-      scheduleUndoToast(undoToastPayload);
-    }
+      const undoToastPayload = buildGroupRemovalUndoToast({
+        groupId: worksheet.groupId,
+        worksheetId,
+        groupsById: controller.state.groupsById,
+        groupOrder: controller.state.groupOrder,
+      });
+      if (undoToastPayload) {
+        scheduleUndoToast(undoToastPayload);
+      }
 
-    controller.pinWorksheet(worksheetId);
-  }, [
-    controller.pinWorksheet,
-    controller.state.groupOrder,
-    controller.state.groupsById,
-    controller.state.worksheetsById,
-    scheduleUndoToast,
-  ]);
+      controller.pinWorksheet(worksheetId);
+    },
+    [
+      controller.pinWorksheet,
+      controller.state.groupOrder,
+      controller.state.groupsById,
+      controller.state.worksheetsById,
+      scheduleUndoToast,
+    ],
+  );
 
-  const handleToggleVisibility = useCallback((worksheet: WorksheetEntity) => {
-    if (worksheet.visibility === 'Visible') {
-      void controller.hideWorksheet(worksheet.worksheetId);
-      return;
-    }
+  const handleToggleVisibility = useCallback(
+    (worksheet: WorksheetEntity) => {
+      if (worksheet.visibility === 'Visible') {
+        void controller.hideWorksheet(worksheet.worksheetId);
+        return;
+      }
 
-    void controller.unhideWorksheet(worksheet.worksheetId);
-  }, [controller.hideWorksheet, controller.unhideWorksheet]);
+      void controller.unhideWorksheet(worksheet.worksheetId);
+    },
+    [controller.hideWorksheet, controller.unhideWorksheet],
+  );
 
   const handleDeleteGroup = useCallback((groupId: string, groupName: string) => {
     setDeleteGroupSheetsError(null);
     setDeleteGroupRequest({ groupId, groupName, mode: 'ungroup' });
   }, []);
 
-  const handleDeleteGroupAndSheets = useCallback((groupId: string, groupName: string) => {
-    const group = controller.state.groupsById[groupId];
-    const sheetCount = group?.worksheetOrder.length ?? 0;
-    setDeleteGroupSheetsError(null);
-    setDeleteGroupRequest({ groupId, groupName, mode: 'deleteSheets', sheetCount });
-  }, [controller.state.groupsById]);
+  const handleDeleteGroupAndSheets = useCallback(
+    (groupId: string, groupName: string) => {
+      const group = controller.state.groupsById[groupId];
+      const sheetCount = group?.worksheetOrder.length ?? 0;
+      setDeleteGroupSheetsError(null);
+      setDeleteGroupRequest({ groupId, groupName, mode: 'deleteSheets', sheetCount });
+    },
+    [controller.state.groupsById],
+  );
 
   const confirmDeleteGroup = useCallback(async () => {
     if (!deleteGroupRequest) {
@@ -266,9 +296,10 @@ export function TaskpaneAppContainer() {
       setDeleteGroupRequest(null);
       closeMenus();
     } catch (error) {
-      const message = error instanceof WorksheetDeleteError
-        ? error.message
-        : 'Failed to delete sheets. Please try again.';
+      const message =
+        error instanceof WorksheetDeleteError
+          ? error.message
+          : 'Failed to delete sheets. Please try again.';
       setDeleteGroupSheetsError(message);
     } finally {
       setIsDeletingGroupSheets(false);
@@ -281,42 +312,57 @@ export function TaskpaneAppContainer() {
   }, []);
 
   // Inline rename handlers for worksheets.
-  const handleRenameWorksheetStart = useCallback((worksheetId: string) => {
-    closeMenus();
-    setRenamingGroupId(null);
-    setRenamingWorksheetId(worksheetId);
-  }, [closeMenus]);
+  const handleRenameWorksheetStart = useCallback(
+    (worksheetId: string) => {
+      closeMenus();
+      setRenamingGroupId(null);
+      setRenamingWorksheetId(worksheetId);
+    },
+    [closeMenus],
+  );
 
-  const handleRenameWorksheetStartFromSearch = useCallback((worksheetId: string) => {
-    controller.setQuery('');
-    closeMenus();
-    setRenamingGroupId(null);
-    setRenamingWorksheetId(worksheetId);
-  }, [closeMenus, controller.setQuery]);
+  const handleRenameWorksheetStartFromSearch = useCallback(
+    (worksheetId: string) => {
+      controller.setQuery('');
+      closeMenus();
+      setRenamingGroupId(null);
+      setRenamingWorksheetId(worksheetId);
+    },
+    [closeMenus, controller.setQuery],
+  );
 
-  const handleRenameWorksheetSubmit = useCallback(async (worksheetId: string, newName: string) => {
-    try {
-      await controller.renameWorksheet(worksheetId, newName);
-    } finally {
-      setRenamingWorksheetId(null);
-    }
-  }, [controller.renameWorksheet]);
+  const handleRenameWorksheetSubmit = useCallback(
+    async (worksheetId: string, newName: string) => {
+      try {
+        await controller.renameWorksheet(worksheetId, newName);
+      } finally {
+        setRenamingWorksheetId(null);
+      }
+    },
+    [controller.renameWorksheet],
+  );
 
   const handleRenameWorksheetCancel = useCallback(() => {
     setRenamingWorksheetId(null);
   }, []);
 
   // Inline rename handlers for groups.
-  const handleRenameGroupStart = useCallback((groupId: string, _groupName: string) => {
-    closeMenus();
-    setRenamingWorksheetId(null);
-    setRenamingGroupId(groupId);
-  }, [closeMenus]);
+  const handleRenameGroupStart = useCallback(
+    (groupId: string, _groupName: string) => {
+      closeMenus();
+      setRenamingWorksheetId(null);
+      setRenamingGroupId(groupId);
+    },
+    [closeMenus],
+  );
 
-  const handleRenameGroupSubmit = useCallback((groupId: string, newName: string) => {
-    controller.renameGroup(groupId, newName);
-    setRenamingGroupId(null);
-  }, [controller.renameGroup]);
+  const handleRenameGroupSubmit = useCallback(
+    (groupId: string, newName: string) => {
+      controller.renameGroup(groupId, newName);
+      setRenamingGroupId(null);
+    },
+    [controller.renameGroup],
+  );
 
   const handleRenameGroupCancel = useCallback(() => {
     setRenamingGroupId(null);
@@ -327,59 +373,65 @@ export function TaskpaneAppContainer() {
     handleRenameGroupCancel();
   }, [handleRenameGroupCancel, handleRenameWorksheetCancel]);
 
-  const dragConfig = useMemo(() => ({
-    activeDragWorksheet,
-    sensors: dragAndDrop.sensors,
-    projectedDropTarget: dragAndDrop.projectedDropTarget,
-    flashedGroupId: dragAndDrop.flashedGroupId,
-    isDragActive: Boolean(dragAndDrop.activeWorksheetId),
-    shouldSuppressActivation: dragAndDrop.shouldSuppressActivation,
-    onDragStart: dragAndDrop.onDragStart,
-    onDragOver: dragAndDrop.onDragOver,
-    onDragEnd: dragAndDrop.onDragEnd,
-    onDragCancel: dragAndDrop.onDragCancel,
-  }), [
-    activeDragWorksheet,
-    dragAndDrop.activeWorksheetId,
-    dragAndDrop.flashedGroupId,
-    dragAndDrop.onDragCancel,
-    dragAndDrop.onDragEnd,
-    dragAndDrop.onDragOver,
-    dragAndDrop.onDragStart,
-    dragAndDrop.projectedDropTarget,
-    dragAndDrop.sensors,
-    dragAndDrop.shouldSuppressActivation,
-  ]);
+  const dragConfig = useMemo(
+    () => ({
+      activeDragWorksheet,
+      sensors: dragAndDrop.sensors,
+      projectedDropTarget: dragAndDrop.projectedDropTarget,
+      flashedGroupId: dragAndDrop.flashedGroupId,
+      isDragActive: Boolean(dragAndDrop.activeWorksheetId),
+      shouldSuppressActivation: dragAndDrop.shouldSuppressActivation,
+      onDragStart: dragAndDrop.onDragStart,
+      onDragOver: dragAndDrop.onDragOver,
+      onDragEnd: dragAndDrop.onDragEnd,
+      onDragCancel: dragAndDrop.onDragCancel,
+    }),
+    [
+      activeDragWorksheet,
+      dragAndDrop.activeWorksheetId,
+      dragAndDrop.flashedGroupId,
+      dragAndDrop.onDragCancel,
+      dragAndDrop.onDragEnd,
+      dragAndDrop.onDragOver,
+      dragAndDrop.onDragStart,
+      dragAndDrop.projectedDropTarget,
+      dragAndDrop.sensors,
+      dragAndDrop.shouldSuppressActivation,
+    ],
+  );
 
   // Centralized keyboard shortcuts — suppressed during modal interactions.
   const isShortcutsSuppressed = Boolean(
     deleteGroupRequest || renamingWorksheetId || renamingGroupId || activeMenu,
   );
 
-  const shortcutActions: ShortcutAction[] = useMemo(() => [
-    {
-      id: ShortcutActionId.FOCUS_SEARCH,
-      description: 'Focus the search field',
-      handler: async () => {
-        try {
-          await Office.addin.showAsTaskpane();
-        } catch {
-          // Ignore if unsupported on current platform
-        }
-        // Give the taskpane a moment to open and render before focusing
-        setTimeout(() => {
-          searchInputRef.current?.focus();
-        }, 100);
+  const shortcutActions: ShortcutAction[] = useMemo(
+    () => [
+      {
+        id: ShortcutActionId.FOCUS_SEARCH,
+        description: 'Focus the search field',
+        handler: async () => {
+          try {
+            await Office.addin.showAsTaskpane();
+          } catch {
+            // Ignore if unsupported on current platform
+          }
+          // Give the taskpane a moment to open and render before focusing
+          setTimeout(() => {
+            searchInputRef.current?.focus();
+          }, 100);
+        },
       },
-    },
-    {
-      id: ShortcutActionId.CREATE_WORKSHEET,
-      description: 'Create a new worksheet',
-      handler: () => {
-        void controller.createWorksheet();
+      {
+        id: ShortcutActionId.CREATE_WORKSHEET,
+        description: 'Create a new worksheet',
+        handler: () => {
+          void controller.createWorksheet();
+        },
       },
-    },
-  ], [controller.createWorksheet]);
+    ],
+    [controller.createWorksheet],
+  );
 
   const keyboardSheetMenuOpenFrameRef = useRef<number | null>(null);
   const keyboardNavigationApiRef = useRef<{
@@ -409,7 +461,13 @@ export function TaskpaneAppContainer() {
   }, [controller, dismissUndoToast, undoToast]);
 
   const handleRequestSheetContextMenuFromKeyboard = useCallback(
-    ({ worksheetId, anchorElement }: { worksheetId: string; anchorElement: HTMLElement | null }) => {
+    ({
+      worksheetId,
+      anchorElement,
+    }: {
+      worksheetId: string;
+      anchorElement: HTMLElement | null;
+    }) => {
       const worksheet = controller.state.worksheetsById[worksheetId];
       if (!worksheet) {
         return;
@@ -425,7 +483,9 @@ export function TaskpaneAppContainer() {
           return anchorElement;
         }
 
-        return document.querySelector<HTMLElement>(`[data-navigable-id="worksheet:${worksheetId}"]`);
+        return document.querySelector<HTMLElement>(
+          `[data-navigable-id="worksheet:${worksheetId}"]`,
+        );
       };
 
       keyboardSheetMenuOpenFrameRef.current = window.requestAnimationFrame(() => {
@@ -454,14 +514,16 @@ export function TaskpaneAppContainer() {
     <TaskpaneShell
       banner={controller.banner}
       onDismissBanner={controller.dismissBanner}
-      toast={undoToast ? (
-        <UndoToast
-          message={undoToast.message}
-          actionLabel="Undo"
-          onUndo={handleUndoRestoreGroup}
-          onDismiss={dismissUndoToast}
-        />
-      ) : null}
+      toast={
+        undoToast ? (
+          <UndoToast
+            message={undoToast.message}
+            actionLabel="Undo"
+            onUndo={handleUndoRestoreGroup}
+            onDismiss={dismissUndoToast}
+          />
+        ) : null
+      }
     >
       {/* Main taskpane navigation sections (search, pinned, groups, hidden). */}
       <TaskpaneSections
@@ -503,10 +565,7 @@ export function TaskpaneAppContainer() {
       />
 
       {!dragAndDrop.activeWorksheetId ? (
-        <AddWorksheetFab
-          onClick={controller.createWorksheet}
-          disabled={controller.isBusy}
-        />
+        <AddWorksheetFab onClick={controller.createWorksheet} disabled={controller.isBusy} />
       ) : null}
 
       {/* Right-click context menus for worksheet and group actions. */}
@@ -541,7 +600,6 @@ export function TaskpaneAppContainer() {
           keyboardNavigationApiRef.current?.restoreFocusAfterMenuDismiss(itemId);
         }}
       />
-
     </TaskpaneShell>
   );
 }

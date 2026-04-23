@@ -18,9 +18,7 @@ export class WorkbookSyncCoordinator {
 
   private unsubscribe: (() => Promise<void> | void) | null = null;
 
-  constructor(
-    private readonly options: WorkbookSyncCoordinatorOptions,
-  ) {
+  constructor(private readonly options: WorkbookSyncCoordinatorOptions) {
     this.intervalMs = options.intervalMs ?? 5000;
     this.debounceMs = options.debounceMs ?? 100;
   }

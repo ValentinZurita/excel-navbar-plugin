@@ -1,6 +1,9 @@
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
-import type { WorksheetContainerId, WorksheetProjectedDropTarget } from '../../taskpane/dnd/worksheetDndModel';
+import type {
+  WorksheetContainerId,
+  WorksheetProjectedDropTarget,
+} from '../../taskpane/dnd/worksheetDndModel';
 import type { WorksheetDragVisualConfig } from '../../taskpane/types/worksheetDragVisualConfig';
 import { SheetRow } from '../SheetRow';
 import { SortableWorksheetRow } from '../SortableWorksheetRow';
@@ -17,7 +20,12 @@ interface SheetListProps {
   renamingWorksheetId?: string | null;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onTogglePin?: (worksheetId: string) => void;
-  onOpenContextMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: WorksheetEntity }) => void;
+  onOpenContextMenu: (args: {
+    target: HTMLElement;
+    x: number;
+    y: number;
+    worksheet: WorksheetEntity;
+  }) => void;
   dragConfig?: SheetListDragConfig;
   onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameCancel?: () => void;
@@ -65,8 +73,8 @@ function isGapDropActive(
 ) {
   return Boolean(
     isProjectedTargetInContainer(projectedDropTarget, containerId) &&
-      projectedDropTarget?.kind === 'gap' &&
-      projectedDropTarget.index === gapIndex,
+    projectedDropTarget?.kind === 'gap' &&
+    projectedDropTarget.index === gapIndex,
   );
 }
 
@@ -77,21 +85,29 @@ function isEndDropLineActive(
 ) {
   return Boolean(
     isProjectedTargetInContainer(projectedDropTarget, containerId) &&
-      projectedDropTarget?.kind === 'container-end' &&
-      projectedDropTarget.index === worksheetCount,
+    projectedDropTarget?.kind === 'container-end' &&
+    projectedDropTarget.index === worksheetCount,
   );
 }
 
 export function SheetList(props: SheetListProps) {
   const dragConfig = props.dragConfig;
   const shouldRenderStaticList = !dragConfig;
-  const { focusedItemId, visualFocusedItemId, visualExitingItemId, onItemKeyDown, registerElement } = props;
+  const {
+    focusedItemId,
+    visualFocusedItemId,
+    visualExitingItemId,
+    onItemKeyDown,
+    registerElement,
+  } = props;
 
   if (shouldHideEmptyList(props.worksheets, dragConfig)) {
     return null;
   }
 
-  const sheetListClassName = dragConfig?.isDragActive ? 'sheet-list sheet-list-drag-active' : 'sheet-list';
+  const sheetListClassName = dragConfig?.isDragActive
+    ? 'sheet-list sheet-list-drag-active'
+    : 'sheet-list';
 
   if (shouldRenderStaticList) {
     return (
@@ -101,7 +117,9 @@ export function SheetList(props: SheetListProps) {
           const isFocused = focusedItemId === navigableId;
           const isVisualFocused = visualFocusedItemId === navigableId;
           const isVisualExiting = visualExitingItemId === navigableId;
-          const isActiveDimmed = Boolean(visualFocusedItemId && visualFocusedItemId !== navigableId);
+          const isActiveDimmed = Boolean(
+            visualFocusedItemId && visualFocusedItemId !== navigableId,
+          );
 
           return (
             <SheetRow
@@ -138,15 +156,24 @@ export function SheetList(props: SheetListProps) {
   );
 
   return (
-    <SortableContext items={props.worksheets.map((worksheet) => worksheet.worksheetId)} strategy={verticalListSortingStrategy}>
+    <SortableContext
+      items={props.worksheets.map((worksheet) => worksheet.worksheetId)}
+      strategy={verticalListSortingStrategy}
+    >
       <div className={sheetListClassName}>
         {props.worksheets.map((worksheet, index) => {
           const navigableId = `worksheet:${worksheet.worksheetId}`;
           const isFocused = focusedItemId === navigableId;
           const isVisualFocused = visualFocusedItemId === navigableId;
           const isVisualExiting = visualExitingItemId === navigableId;
-          const isActiveDimmed = Boolean(visualFocusedItemId && visualFocusedItemId !== navigableId);
-          const gapActive = isGapDropActive(dragConfig.projectedDropTarget, dragConfig.containerId, index);
+          const isActiveDimmed = Boolean(
+            visualFocusedItemId && visualFocusedItemId !== navigableId,
+          );
+          const gapActive = isGapDropActive(
+            dragConfig.projectedDropTarget,
+            dragConfig.containerId,
+            index,
+          );
 
           return (
             <div key={worksheet.worksheetId} className="sortable-worksheet-slot">

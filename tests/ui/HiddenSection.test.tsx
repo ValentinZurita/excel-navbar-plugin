@@ -192,6 +192,9 @@ describe('HiddenSection', () => {
       />,
     );
 
-    expect(container.querySelector('.hidden-row')).toHaveAttribute('data-navigable-id', 'worksheet:hidden-1');
+    expect(container.querySelector('.hidden-row')).toHaveAttribute(
+      'data-navigable-id',
+      'worksheet:hidden-1',
+    );
   });
 });

@@ -7,11 +7,13 @@ import {
 } from '../../src/application/navigation/useKeyboardNavigation';
 import type { NavigableItem } from '../../src/domain/navigation/types';
 
-function createArgs(items: NavigableItem[], overrides: Partial<UseKeyboardNavigationArgs> = {}): UseKeyboardNavigationArgs {
+function createArgs(
+  items: NavigableItem[],
+  overrides: Partial<UseKeyboardNavigationArgs> = {},
+): UseKeyboardNavigationArgs {
   return {
     items,
-    activeWorksheetId:
-      items[0]?.kind === 'worksheet' ? (items[0].worksheetId ?? null) : null,
+    activeWorksheetId: items[0]?.kind === 'worksheet' ? (items[0].worksheetId ?? null) : null,
     onClearSearch: vi.fn(),
     onActivate: vi.fn(),
     onExpandGroup: vi.fn(),

@@ -77,10 +77,13 @@ export function InlineDeleteConfirmation({
   };
 
   return (
-    <div className="inline-delete-confirmation" onKeyDown={handleKeyDown} role="alertdialog" aria-live="polite">
-      <p className="inline-delete-message">
-        {message ?? `Delete '${worksheetName ?? ''}'?`}
-      </p>
+    <div
+      className="inline-delete-confirmation"
+      onKeyDown={handleKeyDown}
+      role="alertdialog"
+      aria-live="polite"
+    >
+      <p className="inline-delete-message">{message ?? `Delete '${worksheetName ?? ''}'?`}</p>
 
       {error && <p className="inline-delete-error">{error}</p>}
 

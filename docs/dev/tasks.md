@@ -1,6 +1,7 @@
 # Implementation Tasks
 
 ## Working style
+
 AI-first execution with human supervision. Tasks should stay small, explicit, and verified.
 
 ## Definition of Done

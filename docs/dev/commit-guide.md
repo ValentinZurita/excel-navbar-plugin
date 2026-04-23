@@ -1,6 +1,7 @@
 # Commit Guide
 
 ## Purpose
+
 This project is AI-first in execution, so commits must be predictable, readable, and review-friendly.
 
 The goal is not to create many commits for vanity.

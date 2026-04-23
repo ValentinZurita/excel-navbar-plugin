@@ -2,9 +2,10 @@ import { worksheetStableIdPropertyKey } from '../../domain/navigation/constants'
 import type { NavigationIdentityMode } from '../../domain/navigation/types';
 
 function generateStableWorksheetId() {
-  const randomId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+  const randomId =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
 
   return `sheetnav-${randomId}`;
 }
@@ -19,7 +20,11 @@ export class WorksheetIdentityRepository {
     context: Excel.RequestContext,
     worksheets: Excel.Worksheet[],
     supportsWorksheetCustomProperties: boolean,
-  ): Promise<{ records: WorksheetIdentityRecord[]; identityMode: NavigationIdentityMode; mutated: boolean }> {
+  ): Promise<{
+    records: WorksheetIdentityRecord[];
+    identityMode: NavigationIdentityMode;
+    mutated: boolean;
+  }> {
     if (!supportsWorksheetCustomProperties) {
       return {
         records: worksheets.map((worksheet) => ({
@@ -41,9 +46,10 @@ export class WorksheetIdentityRepository {
 
     let mutated = false;
     const records = propertyRecords.map(({ worksheet, customProperty }) => {
-      const existingValue = !customProperty.isNullObject && typeof customProperty.value === 'string'
-        ? customProperty.value.trim()
-        : '';
+      const existingValue =
+        !customProperty.isNullObject && typeof customProperty.value === 'string'
+          ? customProperty.value.trim()
+          : '';
 
       if (existingValue.length > 0) {
         return {
@@ -79,7 +85,11 @@ export class WorksheetIdentityRepository {
     stableWorksheetId: string,
     supportsWorksheetCustomProperties: boolean,
   ): Promise<string | null> {
-    const { records } = await this.resolveForWorksheets(context, worksheets, supportsWorksheetCustomProperties);
+    const { records } = await this.resolveForWorksheets(
+      context,
+      worksheets,
+      supportsWorksheetCustomProperties,
+    );
     const match = records.find((record) => record.stableWorksheetId === stableWorksheetId);
     return match?.nativeWorksheetId ?? null;
   }

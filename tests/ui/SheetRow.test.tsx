@@ -37,7 +37,10 @@ describe('SheetRow', () => {
     );
 
     expect(container.querySelector('.sheet-row-icon')).toBeInTheDocument();
-    expect(container.querySelector('.sheet-row')).toHaveAttribute('data-leading-state', 'indicator');
+    expect(container.querySelector('.sheet-row')).toHaveAttribute(
+      'data-leading-state',
+      'indicator',
+    );
     // Pin button exists in DOM but is not visible
     expect(container.querySelector('.sheet-pin-button')).toBeInTheDocument();
     expect(isPinButtonVisible(container)).toBe(false);
@@ -56,7 +59,10 @@ describe('SheetRow', () => {
     );
 
     expect(container.querySelector('.sheet-row-icon')).toBeInTheDocument();
-    expect(container.querySelector('.sheet-row')).toHaveAttribute('data-leading-state', 'indicator');
+    expect(container.querySelector('.sheet-row')).toHaveAttribute(
+      'data-leading-state',
+      'indicator',
+    );
     expect(isPinButtonVisible(container)).toBe(false);
   });
 
@@ -74,7 +80,10 @@ describe('SheetRow', () => {
 
     expect(container.querySelector('.sheet-row-icon')).not.toBeInTheDocument();
     expect(container.querySelector('.sheet-row-static-indicator')).toBeInTheDocument();
-    expect(container.querySelector('.sheet-row')).toHaveAttribute('data-leading-state', 'pinned-indicator');
+    expect(container.querySelector('.sheet-row')).toHaveAttribute(
+      'data-leading-state',
+      'pinned-indicator',
+    );
     // Pin button exists but shows as "Pin" (not unpin) when not hovered
     const button = container.querySelector('.sheet-pin-button');
     expect(button).toBeInTheDocument();
@@ -96,7 +105,10 @@ describe('SheetRow', () => {
 
     // Initially pin button not visible
     expect(isPinButtonVisible(container)).toBe(false);
-    expect(container.querySelector('.sheet-row')).toHaveAttribute('data-leading-state', 'indicator');
+    expect(container.querySelector('.sheet-row')).toHaveAttribute(
+      'data-leading-state',
+      'indicator',
+    );
 
     // Hover the leading area
     const leadingArea = container.querySelector('.sheet-row-leading');
@@ -107,7 +119,7 @@ describe('SheetRow', () => {
     expect(row).toHaveAttribute('data-leading-state', 'pin-action');
     expect(row).toHaveAttribute('data-pin-visible', 'true');
     expect(isPinButtonVisible(container)).toBe(true);
-    
+
     const button = container.querySelector('.sheet-pin-button');
     expect(button).toHaveAttribute('aria-label', 'Pin Revenue');
   });
@@ -600,9 +612,11 @@ describe('SheetRow', () => {
     });
 
     expect(onOpenContextMenu).toHaveBeenCalledTimes(1);
-    expect(onOpenContextMenu).toHaveBeenCalledWith(expect.objectContaining({
-      interaction: 'keyboard',
-      worksheet: baseWorksheet,
-    }));
+    expect(onOpenContextMenu).toHaveBeenCalledWith(
+      expect.objectContaining({
+        interaction: 'keyboard',
+        worksheet: baseWorksheet,
+      }),
+    );
   });
 });

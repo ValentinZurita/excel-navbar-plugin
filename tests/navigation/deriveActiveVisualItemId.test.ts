@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { deriveActiveVisualItemId } from '../../src/domain/navigation/deriveActiveVisualItemId';
-import type { NavigableItem, NavigatorView, WorksheetEntity } from '../../src/domain/navigation/types';
+import type {
+  NavigableItem,
+  NavigatorView,
+  WorksheetEntity,
+} from '../../src/domain/navigation/types';
 
-function worksheet(partial: Partial<WorksheetEntity> & Pick<WorksheetEntity, 'worksheetId' | 'name'>): WorksheetEntity {
+function worksheet(
+  partial: Partial<WorksheetEntity> & Pick<WorksheetEntity, 'worksheetId' | 'name'>,
+): WorksheetEntity {
   return {
     visibility: 'Visible',
     workbookOrder: 0,
@@ -33,14 +39,21 @@ describe('deriveActiveVisualItemId', () => {
 
   it('returns worksheet id when the active hidden sheet is already in expanded linear navigation', () => {
     const navigable: NavigableItem[] = [
-      { id: 'worksheet:hidden-1', kind: 'hidden-worksheet', worksheetId: 'hidden-1', name: 'Hidden' },
-    ];
-    const view = emptyNavigator({
-      hidden: [worksheet({
+      {
+        id: 'worksheet:hidden-1',
+        kind: 'hidden-worksheet',
         worksheetId: 'hidden-1',
         name: 'Hidden',
-        visibility: 'Hidden',
-      })],
+      },
+    ];
+    const view = emptyNavigator({
+      hidden: [
+        worksheet({
+          worksheetId: 'hidden-1',
+          name: 'Hidden',
+          visibility: 'Hidden',
+        }),
+      ],
     });
     expect(deriveActiveVisualItemId('hidden-1', view, navigable)).toBe('worksheet:hidden-1');
   });
@@ -50,31 +63,43 @@ describe('deriveActiveVisualItemId', () => {
       { id: 'worksheet:visible-1', kind: 'worksheet', worksheetId: 'visible-1', name: 'Visible' },
     ];
     const view = emptyNavigator({
-      hidden: [worksheet({
-        worksheetId: 'hidden-only',
-        name: 'Secret',
-        visibility: 'Hidden',
-      })],
+      hidden: [
+        worksheet({
+          worksheetId: 'hidden-only',
+          name: 'Secret',
+          visibility: 'Hidden',
+        }),
+      ],
     });
     expect(deriveActiveVisualItemId('hidden-only', view, navigable)).toBe('worksheet:hidden-only');
   });
 
   it('returns group header id when active sheet is inside a collapsed group and header is navigable', () => {
     const navigable: NavigableItem[] = [
-      { id: 'group-header:g1', kind: 'group-header', groupId: 'g1', name: 'G', isGroupCollapsed: true },
-    ];
-    const view = emptyNavigator({
-      groups: [{
+      {
+        id: 'group-header:g1',
+        kind: 'group-header',
         groupId: 'g1',
         name: 'G',
-        colorToken: 'green',
-        isCollapsed: true,
-        worksheets: [worksheet({
-          worksheetId: 'inside',
-          name: 'Inside',
+        isGroupCollapsed: true,
+      },
+    ];
+    const view = emptyNavigator({
+      groups: [
+        {
           groupId: 'g1',
-        })],
-      }],
+          name: 'G',
+          colorToken: 'green',
+          isCollapsed: true,
+          worksheets: [
+            worksheet({
+              worksheetId: 'inside',
+              name: 'Inside',
+              groupId: 'g1',
+            }),
+          ],
+        },
+      ],
     });
     expect(deriveActiveVisualItemId('inside', view, navigable)).toBe('group-header:g1');
   });

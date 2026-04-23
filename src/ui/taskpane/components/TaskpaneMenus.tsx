@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import type { GroupColorToken, WorksheetEntity } from '../../../domain/navigation/types';
 import { selectableGroupColorTokens } from '../../../domain/navigation/constants';
 import { focusElementWithManagedRingSuppression } from '../../../application/navigation/domFocusUtils';
@@ -80,12 +87,10 @@ function MenuItem({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
-      className="context-menu-item"
-      onClick={onClick}
-    >
-      <span className="context-menu-icon" aria-hidden="true">{icon}</span>
+    <button type="button" className="context-menu-item" onClick={onClick}>
+      <span className="context-menu-icon" aria-hidden="true">
+        {icon}
+      </span>
       <span className="context-menu-label">{label}</span>
     </button>
   );
@@ -93,7 +98,8 @@ function MenuItem({
 
 function getMenuStyle(menu: SheetMenuState | GroupMenuState) {
   // Clamp menu position so it never renders outside the taskpane viewport.
-  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : Number.MAX_SAFE_INTEGER;
+  const viewportHeight =
+    typeof window !== 'undefined' ? window.innerHeight : Number.MAX_SAFE_INTEGER;
   const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : Number.MAX_SAFE_INTEGER;
 
   return {
@@ -104,12 +110,7 @@ function getMenuStyle(menu: SheetMenuState | GroupMenuState) {
 
 function renderMenuActions(actions: MenuAction[]) {
   return actions.map((action) => (
-    <MenuItem
-      key={action.key}
-      icon={action.icon}
-      label={action.label}
-      onClick={action.onSelect}
-    />
+    <MenuItem key={action.key} icon={action.icon} label={action.label} onClick={action.onSelect} />
   ));
 }
 
@@ -158,7 +159,11 @@ function resolveSheetMenuListItemFocus(panel: HTMLElement): HTMLButtonElement | 
   if (!(ae instanceof HTMLElement) || !panel.contains(ae)) {
     return null;
   }
-  if (ae.classList.contains('context-menu-item') && ae instanceof HTMLButtonElement && !ae.disabled) {
+  if (
+    ae.classList.contains('context-menu-item') &&
+    ae instanceof HTMLButtonElement &&
+    !ae.disabled
+  ) {
     return ae;
   }
   const host = ae.closest('.context-menu-item');
@@ -302,8 +307,12 @@ function useSheetContextMenuListKeyboard(args: {
         event.preventDefault();
         event.stopPropagation();
         const nextIndex = event.shiftKey
-          ? (currentIndex <= 0 ? items.length - 1 : currentIndex - 1)
-          : (currentIndex < 0 || currentIndex >= items.length - 1 ? 0 : currentIndex + 1);
+          ? currentIndex <= 0
+            ? items.length - 1
+            : currentIndex - 1
+          : currentIndex < 0 || currentIndex >= items.length - 1
+            ? 0
+            : currentIndex + 1;
         items[nextIndex]?.focus({ preventScroll: true });
         return;
       }
@@ -319,9 +328,7 @@ function useSheetContextMenuListKeyboard(args: {
       if (event.key === 'ArrowUp') {
         event.preventDefault();
         event.stopPropagation();
-        const nextIndex = currentIndex < 0
-          ? items.length - 1
-          : Math.max(0, currentIndex - 1);
+        const nextIndex = currentIndex < 0 ? items.length - 1 : Math.max(0, currentIndex - 1);
         items[nextIndex]?.focus({ preventScroll: true });
         return;
       }
@@ -350,14 +357,27 @@ function useSheetContextMenuListKeyboard(args: {
     return () => {
       document.removeEventListener('keydown', handleKeyDown, true);
     };
-  }, [anchorNavigableId, isEnabled, keyboardOpened, menuPanelRef, onCloseMenus, onRestoreKeyboardMenuFocus]);
+  }, [
+    anchorNavigableId,
+    isEnabled,
+    keyboardOpened,
+    menuPanelRef,
+    onCloseMenus,
+    onRestoreKeyboardMenuFocus,
+  ]);
 }
 
 function buildSheetMenuActions(
   sheetMenu: SheetMenuState,
   handlers: Pick<
     TaskpaneMenusProps,
-    'onCloseMenus' | 'onTogglePin' | 'onToggleVisibility' | 'onRenameWorksheet' | 'onRemoveFromGroup' | 'onStartCreatingGroup' | 'onStartDeleteConfirmation'
+    | 'onCloseMenus'
+    | 'onTogglePin'
+    | 'onToggleVisibility'
+    | 'onRenameWorksheet'
+    | 'onRemoveFromGroup'
+    | 'onStartCreatingGroup'
+    | 'onStartDeleteConfirmation'
   >,
 ): MenuAction[] {
   const actions: MenuAction[] = [
@@ -378,14 +398,16 @@ function buildSheetMenuActions(
     },
     {
       key: 'toggle-visibility',
-      icon: sheetMenu.worksheet.visibility === 'Visible' ? (
-        <EyeOffIcon className="context-menu-icon-svg" />
-      ) : (
-        <EyeIcon className="context-menu-icon-svg" />
-      ),
-      label: sheetMenu.worksheet.visibility === 'Visible'
-        ? SHEET_CONTEXT_MENU_LABELS.hideSheet
-        : SHEET_CONTEXT_MENU_LABELS.unhideSheet,
+      icon:
+        sheetMenu.worksheet.visibility === 'Visible' ? (
+          <EyeOffIcon className="context-menu-icon-svg" />
+        ) : (
+          <EyeIcon className="context-menu-icon-svg" />
+        ),
+      label:
+        sheetMenu.worksheet.visibility === 'Visible'
+          ? SHEET_CONTEXT_MENU_LABELS.hideSheet
+          : SHEET_CONTEXT_MENU_LABELS.unhideSheet,
       onSelect: () => {
         handlers.onToggleVisibility(sheetMenu.worksheet);
         handlers.onCloseMenus();
@@ -446,7 +468,11 @@ function buildGroupMenuActions(
   groupMenu: GroupMenuState,
   handlers: Pick<
     TaskpaneMenusProps,
-    'onStartCreatingGroup' | 'onRenameGroup' | 'onDeleteGroup' | 'onDeleteGroupAndSheets' | 'onSetGroupColor'
+    | 'onStartCreatingGroup'
+    | 'onRenameGroup'
+    | 'onDeleteGroup'
+    | 'onDeleteGroupAndSheets'
+    | 'onSetGroupColor'
   >,
   onOpenColorPicker: (open: boolean) => void,
 ): MenuAction[] {
@@ -615,13 +641,17 @@ function GroupContextMenu({
 }) {
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
-  const actions = buildGroupMenuActions(groupMenu, {
-    onStartCreatingGroup,
-    onRenameGroup,
-    onDeleteGroup,
-    onDeleteGroupAndSheets,
-    onSetGroupColor,
-  }, setIsColorPickerOpen);
+  const actions = buildGroupMenuActions(
+    groupMenu,
+    {
+      onStartCreatingGroup,
+      onRenameGroup,
+      onDeleteGroup,
+      onDeleteGroupAndSheets,
+      onSetGroupColor,
+    },
+    setIsColorPickerOpen,
+  );
 
   const isConfirmingGroupDelete = Boolean(
     deleteGroupRequest && deleteGroupRequest.groupId === groupMenu.groupId,
@@ -647,7 +677,9 @@ function GroupContextMenu({
               ? `Delete group '${deleteGroupRequest.groupName}' and all ${deleteGroupRequest.sheetCount ?? 0} sheet(s) in it? This cannot be undone.`
               : `Ungroup '${deleteGroupRequest.groupName}'? Sheets become independent.`
           }
-          confirmLabel={deleteGroupRequest.mode === 'deleteSheets' ? 'Delete all sheets' : 'Ungroup'}
+          confirmLabel={
+            deleteGroupRequest.mode === 'deleteSheets' ? 'Delete all sheets' : 'Ungroup'
+          }
           cancelLabel="Cancel"
           confirmAriaLabel={
             deleteGroupRequest.mode === 'deleteSheets'
@@ -668,7 +700,7 @@ function GroupContextMenu({
       ) : isColorPickerOpen ? (
         <div className="context-menu-color-picker">
           <div className="context-menu-color-picker-grid">
-            {selectableGroupColorTokens.map((color) => (
+            {selectableGroupColorTokens.map((color) =>
               isColorNone(color) ? (
                 <button
                   key={color}
@@ -692,8 +724,8 @@ function GroupContextMenu({
                   aria-pressed={groupMenu.colorToken === color}
                   onClick={() => handleColorSelect(color)}
                 />
-              )
-            ))}
+              ),
+            )}
           </div>
         </div>
       ) : (

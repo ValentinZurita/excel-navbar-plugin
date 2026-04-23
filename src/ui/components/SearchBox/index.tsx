@@ -90,10 +90,10 @@ export function SearchBox({
 
   return (
     <div className="search-box" ref={searchBoxRef}>
-      <SearchBar 
-        ref={inputRef} 
-        value={value} 
-        onChange={onChange} 
+      <SearchBar
+        ref={inputRef}
+        value={value}
+        onChange={onChange}
         onKeyDown={(event) => {
           if (event.key === 'Tab' && results.length > 0) {
             event.preventDefault();
@@ -101,20 +101,23 @@ export function SearchBox({
             return;
           }
           if (
-            event.key === 'Tab'
-            && !event.shiftKey
-            && value.trim().length > 0
-            && results.length === 0
+            event.key === 'Tab' &&
+            !event.shiftKey &&
+            value.trim().length > 0 &&
+            results.length === 0
           ) {
             event.preventDefault();
             event.stopPropagation();
             return;
           }
           onSearchKeyDown?.(event as any);
-        }} 
+        }}
       />
       {value ? (
-        <div className="search-results-wrapper" data-navigation-input-mode={navigationInputMode ?? 'none'}>
+        <div
+          className="search-results-wrapper"
+          data-navigation-input-mode={navigationInputMode ?? 'none'}
+        >
           <SearchResults
             results={results}
             activeWorksheetId={activeWorksheetId}

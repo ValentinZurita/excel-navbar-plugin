@@ -15,7 +15,12 @@ interface SortableWorksheetRowProps {
   shouldSuppressActivation: (worksheetId: string) => boolean;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onTogglePin?: (worksheetId: string) => void;
-  onOpenContextMenu: (args: { target: HTMLElement; x: number; y: number; worksheet: WorksheetEntity }) => void;
+  onOpenContextMenu: (args: {
+    target: HTMLElement;
+    x: number;
+    y: number;
+    worksheet: WorksheetEntity;
+  }) => void;
   onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameCancel?: () => void;
   onStartRenameWorksheet?: (worksheetId: string) => void;
@@ -35,7 +40,11 @@ interface SortableWorksheetRowProps {
   registerElement?: (id: string, element: HTMLElement | null) => void;
 }
 
-function shouldBlockActivation(isDragging: boolean, shouldSuppressActivation: (worksheetId: string) => boolean, worksheetId: string) {
+function shouldBlockActivation(
+  isDragging: boolean,
+  shouldSuppressActivation: (worksheetId: string) => boolean,
+  worksheetId: string,
+) {
   return isDragging || shouldSuppressActivation(worksheetId);
 }
 
@@ -43,27 +52,29 @@ function areSortableWorksheetRowPropsEqual(
   left: SortableWorksheetRowProps,
   right: SortableWorksheetRowProps,
 ) {
-  return left.worksheet === right.worksheet
-    && left.containerId === right.containerId
-    && left.index === right.index
-    && left.isActive === right.isActive
-    && left.isContextMenuOpen === right.isContextMenuOpen
-    && left.isInteractionSuppressed === right.isInteractionSuppressed
-    && left.isRenaming === right.isRenaming
-    && left.shouldSuppressActivation === right.shouldSuppressActivation
-    && left.onActivate === right.onActivate
-    && left.onTogglePin === right.onTogglePin
-    && left.onOpenContextMenu === right.onOpenContextMenu
-    && left.onRenameSubmit === right.onRenameSubmit
-    && left.onRenameCancel === right.onRenameCancel
-    && left.onStartRenameWorksheet === right.onStartRenameWorksheet
-    && left.navigableId === right.navigableId
-    && left.isFocused === right.isFocused
-    && left.isVisualFocused === right.isVisualFocused
-    && left.isVisualExiting === right.isVisualExiting
-    && left.isActiveDimmed === right.isActiveDimmed
-    && left.onItemKeyDown === right.onItemKeyDown
-    && left.registerElement === right.registerElement;
+  return (
+    left.worksheet === right.worksheet &&
+    left.containerId === right.containerId &&
+    left.index === right.index &&
+    left.isActive === right.isActive &&
+    left.isContextMenuOpen === right.isContextMenuOpen &&
+    left.isInteractionSuppressed === right.isInteractionSuppressed &&
+    left.isRenaming === right.isRenaming &&
+    left.shouldSuppressActivation === right.shouldSuppressActivation &&
+    left.onActivate === right.onActivate &&
+    left.onTogglePin === right.onTogglePin &&
+    left.onOpenContextMenu === right.onOpenContextMenu &&
+    left.onRenameSubmit === right.onRenameSubmit &&
+    left.onRenameCancel === right.onRenameCancel &&
+    left.onStartRenameWorksheet === right.onStartRenameWorksheet &&
+    left.navigableId === right.navigableId &&
+    left.isFocused === right.isFocused &&
+    left.isVisualFocused === right.isVisualFocused &&
+    left.isVisualExiting === right.isVisualExiting &&
+    left.isActiveDimmed === right.isActiveDimmed &&
+    left.onItemKeyDown === right.onItemKeyDown &&
+    left.registerElement === right.registerElement
+  );
 }
 
 function SortableWorksheetRowComponent({
@@ -109,13 +120,16 @@ function SortableWorksheetRowComponent({
     void onActivate(worksheetId);
   };
 
-  const handleStartRename = useCallback((worksheetId: string) => {
-    if (shouldBlockActivation(isDragging, shouldSuppressActivation, worksheetId)) {
-      return;
-    }
+  const handleStartRename = useCallback(
+    (worksheetId: string) => {
+      if (shouldBlockActivation(isDragging, shouldSuppressActivation, worksheetId)) {
+        return;
+      }
 
-    onStartRenameWorksheet?.(worksheetId);
-  }, [isDragging, onStartRenameWorksheet, shouldSuppressActivation]);
+      onStartRenameWorksheet?.(worksheetId);
+    },
+    [isDragging, onStartRenameWorksheet, shouldSuppressActivation],
+  );
 
   return (
     <SheetRow

@@ -5,13 +5,7 @@ import { InlineGroupCreator } from '../../src/ui/components/InlineGroupCreator';
 
 describe('InlineGroupCreator', () => {
   it('renders input and color options', () => {
-    render(
-      <InlineGroupCreator
-        onCreate={vi.fn()}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
+    render(<InlineGroupCreator onCreate={vi.fn()} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
 
     expect(screen.getByLabelText('Name')).toBeInTheDocument();
     expect(screen.getByLabelText('Name')).not.toHaveAttribute('placeholder');
@@ -55,13 +49,7 @@ describe('InlineGroupCreator', () => {
     const user = userEvent.setup();
     const onCreate = vi.fn();
 
-    render(
-      <InlineGroupCreator
-        onCreate={onCreate}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
+    render(<InlineGroupCreator onCreate={onCreate} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
 
     await user.type(screen.getByLabelText('Name'), '  Finance  {Enter}');
 
@@ -72,13 +60,7 @@ describe('InlineGroupCreator', () => {
     const user = userEvent.setup();
     const onCreate = vi.fn();
 
-    render(
-      <InlineGroupCreator
-        onCreate={onCreate}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
+    render(<InlineGroupCreator onCreate={onCreate} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
 
     await user.type(screen.getByLabelText('Name'), '{Enter}');
 
@@ -89,13 +71,7 @@ describe('InlineGroupCreator', () => {
     const user = userEvent.setup();
     const onCreate = vi.fn();
 
-    render(
-      <InlineGroupCreator
-        onCreate={onCreate}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
+    render(<InlineGroupCreator onCreate={onCreate} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
 
     await user.type(screen.getByLabelText('Name'), '   {Enter}');
 
@@ -105,13 +81,7 @@ describe('InlineGroupCreator', () => {
   it('does not call onCreate on Enter while IME composition is active', () => {
     const onCreate = vi.fn();
 
-    render(
-      <InlineGroupCreator
-        onCreate={onCreate}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
+    render(<InlineGroupCreator onCreate={onCreate} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
 
     const input = screen.getByLabelText('Name');
     fireEvent.change(input, { target: { value: 'Finance' } });
@@ -125,13 +95,7 @@ describe('InlineGroupCreator', () => {
     const onCancel = vi.fn();
     const onCloseMenu = vi.fn();
 
-    render(
-      <InlineGroupCreator
-        onCreate={vi.fn()}
-        onCancel={onCancel}
-        onCloseMenu={onCloseMenu}
-      />,
-    );
+    render(<InlineGroupCreator onCreate={vi.fn()} onCancel={onCancel} onCloseMenu={onCloseMenu} />);
 
     await user.keyboard('{Escape}');
 
@@ -142,13 +106,7 @@ describe('InlineGroupCreator', () => {
   it('allows typing and modifying the name', async () => {
     const user = userEvent.setup();
 
-    render(
-      <InlineGroupCreator
-        onCreate={vi.fn()}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
+    render(<InlineGroupCreator onCreate={vi.fn()} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
 
     const input = screen.getByLabelText('Name');
 
@@ -164,13 +122,7 @@ describe('InlineGroupCreator', () => {
     const user = userEvent.setup();
     const onCreate = vi.fn();
 
-    render(
-      <InlineGroupCreator
-        onCreate={onCreate}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
+    render(<InlineGroupCreator onCreate={onCreate} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
 
     // Type a name
     await user.type(screen.getByLabelText('Name'), 'Finance');
@@ -189,13 +141,7 @@ describe('InlineGroupCreator', () => {
     const user = userEvent.setup();
     const onCreate = vi.fn();
 
-    render(
-      <InlineGroupCreator
-        onCreate={onCreate}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
+    render(<InlineGroupCreator onCreate={onCreate} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
 
     // Type a name
     await user.type(screen.getByLabelText('Name'), 'Operations');
@@ -216,13 +162,7 @@ describe('InlineGroupCreator', () => {
     const user = userEvent.setup();
     const onCreate = vi.fn();
 
-    render(
-      <InlineGroupCreator
-        onCreate={onCreate}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
+    render(<InlineGroupCreator onCreate={onCreate} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
 
     await waitFor(() => {
       expect(screen.getByLabelText('Name')).toHaveFocus();
@@ -244,13 +184,7 @@ describe('InlineGroupCreator', () => {
     const user = userEvent.setup();
     const onCreate = vi.fn();
 
-    render(
-      <InlineGroupCreator
-        onCreate={onCreate}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
+    render(<InlineGroupCreator onCreate={onCreate} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
 
     // Type only whitespace
     await user.type(screen.getByLabelText('Name'), '   ');
@@ -267,13 +201,7 @@ describe('InlineGroupCreator', () => {
   it('does not call onCreate on Enter from color chip while IME composition is active', () => {
     const onCreate = vi.fn();
 
-    render(
-      <InlineGroupCreator
-        onCreate={onCreate}
-        onCancel={vi.fn()}
-        onCloseMenu={vi.fn()}
-      />,
-    );
+    render(<InlineGroupCreator onCreate={onCreate} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
 
     const input = screen.getByLabelText('Name');
     fireEvent.change(input, { target: { value: 'Finance' } });

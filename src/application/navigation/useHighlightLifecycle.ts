@@ -35,10 +35,7 @@ export function computeVisualFocusedItemId({
 
   // Search mode: map sheet context-menu target to the search row id so highlight stays aligned.
   if (isSearchActive) {
-    if (
-      isContextMenuOpen
-      && contextMenuTargetItemId?.startsWith('worksheet:')
-    ) {
+    if (isContextMenuOpen && contextMenuTargetItemId?.startsWith('worksheet:')) {
       const worksheetId = contextMenuTargetItemId.slice('worksheet:'.length);
       return `search:${worksheetId}`;
     }

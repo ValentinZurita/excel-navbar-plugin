@@ -14,7 +14,7 @@ export interface ResolveLeadingStateParams {
 
 /**
  * Pure function to resolve the visual state of a sheet row's leading area.
- * 
+ *
  * Design contract:
  * - Hover on row does NOT show pin action
  * - Hover/focus on leading icon area DOES show pin/unpin action
@@ -33,16 +33,16 @@ export function resolveLeadingState({
 }: ResolveLeadingStateParams): LeadingState {
   // Cannot interact with pin when dragging, in overlay, or suppressed
   const canShowAction = canTogglePin && !isOverlay && !isDragged && !isInteractionSuppressed;
-  
+
   // Icon interaction (hover or focus) triggers action visibility
   const isIconInteracting = isLeadingHovered || isLeadingFocused;
-  
+
   // Context menu also shows action for discoverability
   const shouldShowAction = canShowAction && (isIconInteracting || isContextMenuOpen);
-  
+
   if (isPinned) {
     return shouldShowAction ? 'unpin-action' : 'pinned-indicator';
   }
-  
+
   return shouldShowAction ? 'pin-action' : 'indicator';
 }

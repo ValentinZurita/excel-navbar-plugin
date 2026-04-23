@@ -130,7 +130,9 @@ export function buildDragCommitWithPolicy(
   }
 
   // Check if drop is allowed by policy
-  if (!policy.canDrop(worksheet, initialLocation.containerId, finalLocation.containerId, policyState)) {
+  if (
+    !policy.canDrop(worksheet, initialLocation.containerId, finalLocation.containerId, policyState)
+  ) {
     return null;
   }
 
@@ -145,7 +147,10 @@ export function buildDragCommitWithPolicy(
   }
 
   // Reorder within sheets section
-  if (isSheetContainer(initialLocation.containerId) && isSheetContainer(finalLocation.containerId)) {
+  if (
+    isSheetContainer(initialLocation.containerId) &&
+    isSheetContainer(finalLocation.containerId)
+  ) {
     return {
       kind: 'reorder-sheet-section',
       worksheetId,

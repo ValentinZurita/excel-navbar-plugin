@@ -68,33 +68,36 @@ export function buildNavigatorStructure(state: NavigationState): NavigatorStruct
 
   const sheetSectionOrder = state.sheetSectionOrder.length
     ? state.sheetSectionOrder
-    : [...visibleWorksheets]
-        .sort(byWorkbookOrder)
-        .map((worksheet) => worksheet.worksheetId);
-  const sheetOrderIndex = new Map(sheetSectionOrder.map((worksheetId, index) => [worksheetId, index]));
+    : [...visibleWorksheets].sort(byWorkbookOrder).map((worksheet) => worksheet.worksheetId);
+  const sheetOrderIndex = new Map(
+    sheetSectionOrder.map((worksheetId, index) => [worksheetId, index]),
+  );
 
-  const pinnedWorksheetIds = new Set(pinnedVisibleWorksheets.map((worksheet) => worksheet.worksheetId));
+  const pinnedWorksheetIds = new Set(
+    pinnedVisibleWorksheets.map((worksheet) => worksheet.worksheetId),
+  );
   const pinnedOrderList = state.pinnedWorksheetOrder.filter((id) => pinnedWorksheetIds.has(id));
   const pinnedOrderIndex = new Map(pinnedOrderList.map((id, index) => [id, index]));
 
-  const pinned = pinnedVisibleWorksheets
-    .sort((left, right) => {
-      const leftOrder = pinnedOrderIndex.get(left.worksheetId) ?? Number.MAX_SAFE_INTEGER;
-      const rightOrder = pinnedOrderIndex.get(right.worksheetId) ?? Number.MAX_SAFE_INTEGER;
+  const pinned = pinnedVisibleWorksheets.sort((left, right) => {
+    const leftOrder = pinnedOrderIndex.get(left.worksheetId) ?? Number.MAX_SAFE_INTEGER;
+    const rightOrder = pinnedOrderIndex.get(right.worksheetId) ?? Number.MAX_SAFE_INTEGER;
 
-      if (leftOrder === rightOrder) {
-        return byWorkbookOrder(left, right);
-      }
+    if (leftOrder === rightOrder) {
+      return byWorkbookOrder(left, right);
+    }
 
-      return leftOrder - rightOrder;
-    });
+    return leftOrder - rightOrder;
+  });
 
   const groups: NavigatorGroupView[] = state.groupOrder
     .map((groupId) => state.groupsById[groupId])
     .filter(Boolean)
     .map((group) => {
       const groupWorksheets = groupedVisibleWorksheetsByGroupId.get(group.groupId) ?? [];
-      const worksheetLookup = new Map(groupWorksheets.map((worksheet) => [worksheet.worksheetId, worksheet]));
+      const worksheetLookup = new Map(
+        groupWorksheets.map((worksheet) => [worksheet.worksheetId, worksheet]),
+      );
       const orderedWorksheetIds = new Set<string>();
 
       const orderedWorksheets = group.worksheetOrder
@@ -122,17 +125,16 @@ export function buildNavigatorStructure(state: NavigationState): NavigatorStruct
       };
     });
 
-  const ungrouped = ungroupedVisibleWorksheets
-    .sort((left, right) => {
-      const leftOrder = sheetOrderIndex.get(left.worksheetId) ?? Number.MAX_SAFE_INTEGER;
-      const rightOrder = sheetOrderIndex.get(right.worksheetId) ?? Number.MAX_SAFE_INTEGER;
+  const ungrouped = ungroupedVisibleWorksheets.sort((left, right) => {
+    const leftOrder = sheetOrderIndex.get(left.worksheetId) ?? Number.MAX_SAFE_INTEGER;
+    const rightOrder = sheetOrderIndex.get(right.worksheetId) ?? Number.MAX_SAFE_INTEGER;
 
-      if (leftOrder === rightOrder) {
-        return byWorkbookOrder(left, right);
-      }
+    if (leftOrder === rightOrder) {
+      return byWorkbookOrder(left, right);
+    }
 
-      return leftOrder - rightOrder;
-    });
+    return leftOrder - rightOrder;
+  });
 
   hidden.sort(byWorkbookOrder);
 
@@ -157,8 +159,10 @@ export function buildSearchResults(state: NavigationState): SearchResultItem[] {
       visibility: worksheet.visibility,
       isPinned: worksheet.isPinned,
       isGrouped: worksheet.groupId !== null,
-      groupName: worksheet.groupId ? state.groupsById[worksheet.groupId]?.name ?? null : null,
-      groupColor: worksheet.groupId ? state.groupsById[worksheet.groupId]?.colorToken ?? null : null,
+      groupName: worksheet.groupId ? (state.groupsById[worksheet.groupId]?.name ?? null) : null,
+      groupColor: worksheet.groupId
+        ? (state.groupsById[worksheet.groupId]?.colorToken ?? null)
+        : null,
     }));
 
   return searchResults;

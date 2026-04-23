@@ -16,7 +16,12 @@ export function StatusBanner({ banner, onDismiss }: StatusBannerProps) {
     >
       <span className="status-banner-message">{banner.message}</span>
       {onDismiss ? (
-        <button type="button" className="status-banner-dismiss" onClick={onDismiss} aria-label="Dismiss notification">
+        <button
+          type="button"
+          className="status-banner-dismiss"
+          onClick={onDismiss}
+          aria-label="Dismiss notification"
+        >
           ×
         </button>
       ) : null}

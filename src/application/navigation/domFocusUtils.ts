@@ -9,10 +9,7 @@ export function isNestedInteractivePointerTarget(
   }
 
   const navigableId = currentTarget.getAttribute('data-navigable-id');
-  if (
-    navigableId?.startsWith('group-header:')
-    && target.closest('.group-toggle')
-  ) {
+  if (navigableId?.startsWith('group-header:') && target.closest('.group-toggle')) {
     return false;
   }
 
