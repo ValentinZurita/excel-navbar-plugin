@@ -6,6 +6,7 @@ Build and maintain an Excel worksheet navigator that feels calm, native-adjacent
 
 ## Mandatory rules
 
+- Never remove, untrack, or add to `.gitignore` the `.engram/` directory or its tracked files unless the human explicitly requests it. CI enforces this via `npm run check:engram-protected`.
 - Ask the human when a meaningful product or technical doubt remains.
 - Do not claim a feature works unless it was verified.
 - Keep language simple when speaking to the human reviewer.

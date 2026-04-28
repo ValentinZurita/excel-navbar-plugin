@@ -5,3 +5,14 @@ coverage/
 .env.*
 *.log
 .DS_Store
+
+# macOS / Finder duplicate filenames
+* 2.*
+* copy.*
+
+# Local tool cache (empty placeholder dirs)
+.atl/
+
+# Editor (uncomment if you do not want to share team settings)
+# .vscode/
+# .idea/
