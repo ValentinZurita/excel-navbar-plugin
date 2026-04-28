@@ -1,5 +1,10 @@
 {
-  "globs": ["src/**/*.md", "docs/dev/**/*.md", "docs/tech/**/*.md"],
+  "globs": [
+    "src/**/*.md",
+    "README.md",
+    "AGENTS.md",
+    "docs/**/*.md"
+  ],
   "config": {
     "default": false,
     "MD029": true,

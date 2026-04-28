@@ -27,7 +27,7 @@ Modern Excel worksheet navigation as a task pane add-in.
 - `npm run lint:eslint` — lint JavaScript/TypeScript with ESLint
 - `npm run test` — run unit/component tests
 - `npm run test:watch` — run tests in watch mode
-- `npm run quality` — run architecture/style/docs/format/eslint quality gates
+- `npm run quality` — run architecture/style/docs/format/eslint quality gates (includes `check:engram-protected`)
 - `npm run format` — format all files with Prettier
 - `npm run format:check` — verify Prettier formatting without writing
 - `npm run manifest:dev` — regenerate local `manifest.xml` with `https://localhost:3000`
@@ -50,4 +50,4 @@ This command:
 
 ## Important note
 
-This repository was scaffolded intentionally without running a build in this session, following the local project rule.
+Use `npm ci` (or `npm install`) before local commands. CI runs tests, `npm run quality`, and a production build on pushes and pull requests. For sideloading, prefer a real Excel validation pass over webpack preview alone—see `docs/dev/tasks.md` (Excel host validation section).

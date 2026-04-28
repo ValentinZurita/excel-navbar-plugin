@@ -30,7 +30,7 @@ Check whether the current implementation still respects the agreed architecture 
 
 - `TaskpaneAppContainer.tsx` is becoming the orchestration hotspot
 - Context menu logic currently lives there, which is acceptable for now, but should not grow uncontrolled
-- Prompt-based rename/group creation is functional but not final UX
+- Sheet and group rename plus group creation are product-owned (**InlineRenameInput**, **InlineGroupCreator**); remaining UX risk is mostly **real Excel host** validation (focus, menus, webview quirks), not missing `window.prompt` replacements
 
 ### What was cleaned up
 

@@ -95,14 +95,13 @@ This phase is considered complete because it already established:
 - better contextual action discipline
 - a clearer distinction between primary, grouped, pinned, and hidden navigation areas
 - a documented style philosophy that matches the implementation
-- product-owned UI for prompt and confirmation flows (ConfirmDialog, TextPromptDialog)
+- product-owned UI for prompt, confirmation, and rename flows (ConfirmDialog, InlineRenameInput)
 
 ## What remains outside this phase
 
 The following work is still valid, but belongs to later refinement phases:
 
-- replacing browser prompt flows with product-owned UI
-- refining microinteractions and motion
+- refining microinteractions and motion (core flows already avoid raw browser prompts: no `window.prompt` / `window.confirm` in `src/`)
 - polishing group visuals until they fully reach the desired quality bar
 - validating edge-case rendering across more Office hosts
 - expanding the design language without losing restraint

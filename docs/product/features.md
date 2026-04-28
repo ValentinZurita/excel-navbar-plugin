@@ -36,7 +36,7 @@ Hidden sheets do not participate in drag-and-drop ordering.
 
 ## Rename Worksheet
 
-Rename is a contextual utility action.
+Rename is a contextual utility action. The sheet title (or group header) switches to an inline editor (**InlineRenameInput**) instead of a browser prompt or separate modal text field.
 
 ## Add Worksheet
 

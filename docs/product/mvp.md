@@ -14,6 +14,7 @@ Deliver a first usable Excel add-in that makes worksheet discovery and organizat
 - Pinning
 - Hidden sheets section
 - Immediate navigation on selection
+- Contextual rename for sheets and groups via inline editor (not browser `prompt`)
 - Excel-aligned minimal UI
 
 ## What is NOT MVP

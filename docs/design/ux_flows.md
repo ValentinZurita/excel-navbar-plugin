@@ -13,6 +13,10 @@ Type into the always-visible field, choose a result, activate immediately.
 Create manually from contextual actions and insert at the top of the groups section.
 If the flow starts from a worksheet action, the new group begins with that worksheet inside it.
 
+## Rename sheet or group
+
+From the context menu, choose rename; the row or group header becomes an inline field (**InlineRenameInput**). Confirm with Enter, cancel with Escape or focus loss where the flow allows.
+
 ## Organize Worksheets
 
 Drag visible unpinned worksheets within the Sheets section, into groups, between groups, or back to Sheets.

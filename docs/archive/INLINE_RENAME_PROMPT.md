@@ -1,4 +1,11 @@
-# Prompt: Implementar Inline Rename para Worksheets y Groups
+# Inline rename prompt (archived)
+
+> **Historical (superseded).** Worksheet and group rename uses `InlineRenameInput`
+> (`src/ui/components/InlineRenameInput/`) from `SheetRow` and `GroupCard`. The modal
+> `TextPromptDialog` / `useTextPromptState` flow described below no longer exists. Kept for
+> design history only.
+
+## Prompt: Implementar Inline Rename para Worksheets y Groups
 
 ## Contexto del Proyecto
 

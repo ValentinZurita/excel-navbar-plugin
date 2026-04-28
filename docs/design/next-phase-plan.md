@@ -20,22 +20,20 @@ This means:
 
 ## Priority order
 
-### 1. Replace browser-owned prompts with product-owned UI
+### 1. Host validation and interaction hardening
 
-Current create/rename flows still rely on browser prompts.
+Create, rename, and destructive confirmations are already **product-owned** (inline components and **ConfirmDialog**; no `window.prompt` / `window.confirm` in `src/`).
 
-That is the biggest mismatch against the current quality bar because it breaks:
+The largest remaining gap is **behavior in real Excel task pane webviews**, not replacing browser APIs:
 
-- visual continuity
-- host alignment
-- trust in the product
-- control over microcopy and validation
+- focus and blur edge cases during inline rename and menus
+- contrast and input rendering across hosts
+- trust that Office.js paths match what webpack preview showed
 
 Expected direction:
 
-- small inline flows or lightweight dialogs
-- clear validation states
-- no heavy modal system unless truly needed
+- run the real-host checklist in `docs/dev/tasks.md` and fix issues with evidence
+- keep inline and lightweight-dialog patterns; avoid a heavy modal stack unless unavoidable
 
 ### 2. Refine contextual actions
 
@@ -86,10 +84,10 @@ Focus on:
 
 ## Suggested work packages
 
-### Package A — Interaction ownership
+### Package A — Host parity for owned interactions
 
-- replace `window.prompt(...)` flows
-- define reusable lightweight interaction pattern
+- validate **ConfirmDialog**, **InlineRenameInput**, and **InlineGroupCreator** in Excel (keyboard, focus, layering)
+- capture and fix any webview-specific breaks without reintroducing raw browser prompts
 - keep implementation visually consistent with baseline
 
 ### Package B — Context menu quality
@@ -126,7 +124,7 @@ Focus on:
 
 This phase is successful when:
 
-- product-owned interactions replace browser prompts
+- real-host validation shows only minor exceptions for product-owned dialogs and inline flows
 - search and contextual actions feel deliberate and cohesive
 - groups no longer feel like the weakest visual area
 - host validation finds only minor visual exceptions
@@ -134,6 +132,6 @@ This phase is successful when:
 
 ## Immediate next recommendation
 
-Start with interaction ownership first.
+Start with **Package A (host parity)** and **Package E (host validation)** first.
 
-Replacing browser prompts will produce the biggest visible quality jump for the least conceptual risk because it improves polish without changing the baseline direction.
+Excel webviews are where assumptions about focus, menus, and inline editors most often break, even when the implementation already avoids browser-owned prompts.

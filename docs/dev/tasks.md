@@ -47,7 +47,7 @@ This list exists so pending work does not get lost between sessions.
 - [x] Hide visible sheets
 - [x] Immediate navigation on sheet selection
 - [x] Rename worksheet
-- [x] Product-owned dialogs for create / rename / delete-group flows
+- [x] Product-owned confirmations and inline flows (ConfirmDialog, InlineGroupCreator, InlineRenameInput) for create / rename / delete-group-related actions
 - [x] Sidebar drag-and-drop for visible unpinned sheets
 - [x] Local persisted ordering for the Sheets section
 - [x] Drag-and-drop policies to prevent invalid placements

@@ -13,12 +13,12 @@ Implemented and documented so far:
 - Single navigation store
 - Modular task pane UI with folder-per-component structure
 - Core navigation rules for groups, pinning, hidden sheets, rename, and delete-group confirmation
-- Product-owned dialog flows for create, rename, and delete-group actions
+- Product-owned confirmations via **ConfirmDialog**; inline **InlineRenameInput** for worksheet and group rename; **InlineGroupCreator** for group creation from context menus (no `window.prompt` / `window.confirm` in task pane code)
 - Sidebar drag-and-drop for visible unpinned sheets across Sheets and Groups
 - Local persisted ordering for the Sheets section without changing Excel workbook tab order
 - Workbook sync coordinator with event-aware refresh plus polling fallback
 - Design baseline + next-phase docs aligned with the current product direction
-- Quality gates for TypeScript, component import boundaries, CSS, Markdown, import cycles, test coverage thresholds, dead code (knip), bundle size, Office.js API requirements, mock drift detection, lockfile sync, and accessibility (jest-axe)
+- Quality gates for TypeScript, component import boundaries, CSS, Markdown, import cycles, test coverage thresholds, dead code (knip), bundle size, Office.js API requirements, mock drift detection, lockfile sync, Engram trackability (`check:engram-protected`), and accessibility (jest-axe)
 - Pre-commit hooks with husky + lint-staged + commitlint for immediate feedback
 - ErrorBoundary to prevent blank task pane crashes
 - Test coverage for navigation behavior and core task pane interactions
@@ -29,7 +29,7 @@ Verified in this session:
 
 - `npm run lint` ✅
 - `npm run test:coverage` ✅ (79.88% stmts, 81.26% branch, 78.47% funcs, 79.88% lines)
-- `npm run check:import-cycles` ✅ (141 files, no cycles)
+- `npm run check:import-cycles` ✅ (no cycles)
 - `npm run check:knip` ✅ (no unused files/exports/deps)
 - `npm run check:bundle-size` ✅ (388.5 KiB / 400 KiB limit)
 - `npm run check:office-api-requirements` ✅
@@ -39,35 +39,11 @@ Verified in this session:
 - Pre-commit hooks (husky + lint-staged + commitlint) ✅
 - jest-axe accessibility baseline ✅
 
-## Critical Blocker (P0)
+## Drag-and-drop visual integrity (formerly P0)
 
-**Unresolved drag-and-drop visual integrity bug in task pane navigation.**
+The task pane worksheet drag-and-drop ghost highlight and insertion-indicator drift work is **treated as closed** in `docs/dev/tasks.md` (invariants, fix, regression tests, instrumentation removed). New regressions should be filed and fixed like any other bug, not as an open “unknown root cause” blocker.
 
-Observed in manual stress tests:
-
-- Ghost hover/highlight states can still appear on multiple groups and worksheet rows after aggressive drag movement.
-- Insertion line and perceived pointer target can drift apart under fast pointer movement, degrading placement trust.
-- UX consistency is currently unreliable under stress scenarios.
-
-Current state:
-
-- The issue has been reduced in some paths but is **not resolved**.
-- This is a release-blocking quality issue and must be fixed before continuing with other implementation tracks.
-
-Working findings so far:
-
-- Stale projected drop target handling was one contributor and has partial mitigation.
-- Pointer-first collision strategy reduced some false positives but does not fully eliminate stress-case artifacts.
-- The remaining defect likely involves interaction between collision targeting, visual state classes, and rapid over-null-over transitions.
-
-Required next phase:
-
-1. Add temporary instrumentation for drag lifecycle (`start/over/end/cancel`) with target IDs and kinds.
-2. Capture reproducible stress traces for over transitions and highlight class application.
-3. Define strict visual-state contract: only one active drop target + one insertion indicator at any time.
-4. Implement fix based on evidence, then validate with stress protocol and regression tests.
-
-Not yet verified in this session:
+## Not yet verified in this session
 
 - Real Excel sideloading
 - Real task pane behavior inside Excel host
@@ -110,23 +86,21 @@ Not yet verified in this session:
 
 ### Immediate next step
 
-**Resolve the task pane DnD ghost-highlight and insertion-line drift blocker before any other work.**
+**Sideload in Excel and run through the “Implemented but still needs real Excel validation” checklist in `docs/dev/tasks.md`.**
 
 Why this is next:
 
-- The bug directly breaks trust in core navigation interactions.
-- It produces visible multi-highlight artifacts and inconsistent insertion cues.
-- Continuing with new feature work before stabilizing this flow increases rework risk.
-- A robust root-cause investigation is required, not quick UI masking.
+- Core flows are implemented in code but **not verified** against a real Office host.
+- Manifest, webview rendering, Office.js rename/hide/unhide, persistence, and sync all need evidence from Excel—not only the webpack dev preview.
 
 ## After That
 
 Once sideloading is confirmed, the next implementation pass should focus on:
 
-1. non-visual interaction cleanup for contextual actions
-2. workbook event handling and sync resilience
-3. persistence validation in real workbook reopen flows, including workbook-scoped recovery and local Sheets ordering
-4. documentation alignment when behavior or verified reality changes
+1. Non-visual interaction cleanup for contextual actions (where product gaps remain)
+2. Workbook event handling and sync resilience
+3. Persistence validation in real workbook reopen flows, including workbook-scoped recovery and local Sheets ordering
+4. Documentation alignment when behavior or verified reality changes
 
 ## Open Risks
 

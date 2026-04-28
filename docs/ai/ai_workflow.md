@@ -8,6 +8,7 @@
 
 ## Repo navigation
 
+- Read `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/docs/dev/status.md` when resuming work so priorities match verified reality.
 - Prefer obvious folders and descriptive filenames.
 - Keep code comments purposeful.
 - Use English names in source files and symbols.
