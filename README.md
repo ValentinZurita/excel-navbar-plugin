@@ -1,53 +1,74 @@
 # Sheet Navigator
 
-Modern Excel worksheet navigation as a task pane add-in.
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
 
-## Product focus
+A modern worksheet navigator for Excel. Organize, search, and move between sheets using a fast task pane built for keyboard-first workflows.
 
-- Fast worksheet discovery
-- Manual groups
-- Pinned sheets
-- Hidden sheet awareness
-- Excel-aligned visual quality from day one
+**[Install →](https://valentinzurita.github.io/excel-navbar-plugin/)**
 
-## Architecture rules
+---
 
-- React + TypeScript
-- Small components
-- Presentational UI stays light
-- Office.js lives outside UI
-- One navigation store for workbook state
-- Meaningful persistence only
+## Why
 
-## Scripts
+Excel's built-in sheet tab bar becomes painful with more than a dozen worksheets. Sheet Navigator replaces it with a task pane that supports grouping, search, drag-and-drop reordering, and full keyboard control.
 
-- `npm run dev` — start local webpack dev server
-- `npm run build` — create production bundle in `dist/`
-- `npm run lint` — type-check the project
-- `npm run lint:eslint` — lint JavaScript/TypeScript with ESLint
-- `npm run test` — run unit/component tests
-- `npm run test:watch` — run tests in watch mode
-- `npm run quality` — run architecture/style/docs/format/eslint quality gates (includes `check:engram-protected`)
-- `npm run format` — format all files with Prettier
-- `npm run format:check` — verify Prettier formatting without writing
-- `npm run manifest:dev` — regenerate local `manifest.xml` with `https://localhost:3000`
-- `npm run manifest:validate` — validate manifest against Office schema
-- `npm run package:release` — release packaging flow (`ADDIN_BASE_URL` required)
+## Features
 
-## Release packaging
+- **Groups** — Organize sheets into collapsible groups to reduce visual clutter.
+- **Search** — Jump to any worksheet instantly with live filtering.
+- **Drag & Drop** — Reorder sheets and move them between groups visually.
+- **Keyboard-first** — Navigate, rename, hide, and switch sheets without touching the mouse.
+- **Excel-native feel** — Visual quality aligned with the Office host, not a generic web app.
 
-Use a non-localhost HTTPS domain:
+## Screenshots
+
+*(Add screenshots or a short GIF here showing the task pane in action.)*
+
+## Installation
+
+1. Download the [`manifest.xml`](https://valentinzurita.github.io/excel-navbar-plugin/manifest.xml) file.
+2. In Excel, go to **Insert → Add-ins → Upload My Add-in**.
+3. Select the downloaded `manifest.xml` and confirm.
+4. The **Sheet Navigator** button appears in the **Home** tab.
+
+For detailed instructions, visit the [project site](https://valentinzurita.github.io/excel-navbar-plugin/).
+
+## Tech Stack
+
+- **React 18** + **TypeScript**
+- **Office.js** for Excel integration
+- **Webpack** for bundling
+- **Vitest** + **Testing Library** for unit and component tests
+- **GitHub Pages** for static hosting
+
+## Local Development
 
 ```bash
-ADDIN_BASE_URL=https://addins.example.com npm run package:release
+# Install dependencies
+npm ci
+
+# Start the dev server (serves over HTTPS for Excel sideloading)
+npm run dev
+
+# Run tests
+npm run test
+
+# Build for production
+npm run build
 ```
 
-This command:
+## Contributing
 
-1. validates release URL constraints
-2. builds production assets
-3. renders `dist/manifest.xml` from `manifest.template.xml`
+Contributions are welcome. Please open an issue or pull request if you find a bug or have an idea for improvement.
 
-## Important note
+## License
 
-Use `npm ci` (or `npm install`) before local commands. CI runs tests, `npm run quality`, and a production build on pushes and pull requests. For sideloading, prefer a real Excel validation pass over webpack preview alone—see `docs/dev/tasks.md` (Excel host validation section).
+This project is licensed under the [Creative Commons Attribution-NonCommercial 4.0 International License](LICENSE).
+
+You are free to use, modify, and share this project for non-commercial purposes. Commercial use is not permitted without explicit permission.
+
+## Links
+
+- **Project site**: https://valentinzurita.github.io/excel-navbar-plugin/
+- **Manifest**: https://valentinzurita.github.io/excel-navbar-plugin/manifest.xml
+- **Repository**: https://github.com/ValentinZurita/excel-navbar-plugin
