@@ -30,7 +30,6 @@ function normalizeBaseUrl(rawValue) {
     throw new Error(`Base URL must use https. Received "${parsedUrl.protocol}".`);
   }
 
-  parsedUrl.pathname = '';
   parsedUrl.search = '';
   parsedUrl.hash = '';
   return parsedUrl.toString().replace(/\/$/, '');
