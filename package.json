@@ -2,6 +2,7 @@
   "name": "excel-sheet-navigator",
   "version": "0.1.0",
   "private": true,
+  "license": "CC-BY-NC-4.0",
   "description": "Modern Excel worksheet navigator Office Add-in",
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": [
