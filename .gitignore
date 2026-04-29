@@ -16,3 +16,7 @@ coverage/
 # Editor (uncomment if you do not want to share team settings)
 # .vscode/
 # .idea/
+
+# Internal files not for public repo
+AGENTS.md
+manifest.xml
