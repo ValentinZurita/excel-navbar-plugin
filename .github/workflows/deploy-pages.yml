@@ -37,9 +37,11 @@ jobs:
         run: npm run build
 
       - name: Generate production manifest with correct base URL
-        env:
-          ADDIN_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
-        run: npm run manifest:prod
+        run: |
+          REPO_NAME=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+          ADDIN_BASE_URL="https://${{ github.repository_owner }}.github.io/${REPO_NAME}"
+          echo "Using base URL: $ADDIN_BASE_URL"
+          node scripts/render-manifest.mjs --base-url="$ADDIN_BASE_URL" --output=dist/manifest.xml
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
