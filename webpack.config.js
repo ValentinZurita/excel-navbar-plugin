@@ -45,6 +45,7 @@ module.exports = (env) => {
           { from: 'manifest.xml', to: 'manifest.xml' },
           { from: 'assets', to: 'assets' },
           { from: 'shortcuts.json', to: 'shortcuts.json' },
+          { from: 'src/landing/index.html', to: 'index.html' },
         ],
       }),
       env?.analyze
