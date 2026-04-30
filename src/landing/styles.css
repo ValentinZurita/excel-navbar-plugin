@@ -23,14 +23,14 @@
   --accent-glow: rgba(16, 124, 65, 0.12);
 
   --drag-bg: color-mix(in srgb, #111111 5%, transparent);
-  --drop-active-bg: rgba(16, 124, 65, 0.12);
+  --drop-active-bg: color-mix(in srgb, var(--text-primary) 10%, transparent);
 
   /* Group Colors - App specific */
-  --group-color-blue: #0078d4;
-  --group-color-green: #107c41;
-  --group-color-yellow: #dca100;
-  --group-color-purple: #8764b8;
-  --group-color-red: #c50f1f;
+  --group-color-green: #8eb892;
+  --group-color-blue: #8faecd;
+  --group-color-red: #cf8e8e;
+  --group-color-purple: #aea7cd;
+  --group-color-yellow: #e6c875;
 
   --key-bg: #ffffff;
   --key-border: rgba(0, 0, 0, 0.12);
@@ -70,13 +70,13 @@
   --accent-glow: rgba(45, 214, 114, 0.1);
 
   --drag-bg: color-mix(in srgb, #f0f0f0 5%, transparent);
-  --drop-active-bg: rgba(45, 214, 114, 0.12);
+  --drop-active-bg: color-mix(in srgb, var(--text-primary) 10%, transparent);
 
-  --group-color-blue: #60a5fa;
-  --group-color-green: #2dd672;
-  --group-color-yellow: #fcd34d;
-  --group-color-purple: #c084fc;
-  --group-color-red: #f87171;
+  --group-color-green: #8eb892;
+  --group-color-blue: #8faecd;
+  --group-color-red: #cf8e8e;
+  --group-color-purple: #aea7cd;
+  --group-color-yellow: #e6c875;
 
   --key-bg: #222228;
   --key-border: rgba(255, 255, 255, 0.08);
@@ -588,7 +588,7 @@ body {
 .taskpane-preview {
   margin-top: 20px;
   background: var(--bg-elevated);
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   border: 1px solid var(--border);
   padding: 8px;
   display: flex;
@@ -597,7 +597,7 @@ body {
 }
 
 .tp-group {
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
 }
 
@@ -614,9 +614,6 @@ body {
   transition: background 0.15s;
 }
 
-.tp-group-header:hover {
-  background: var(--bg-inset);
-}
 
 .tp-folder {
   position: relative;
@@ -644,8 +641,14 @@ body {
   position: relative;
   z-index: 1;
   color: var(--text-muted);
-  opacity: 0.8;
+  opacity: 0.45;
 }
+
+[data-theme="dark"] .tp-folder svg {
+  color: #b8bbc4;
+  opacity: 0.9;
+}
+
 
 /* Group token colors */
 .tp-folder-green::before { background: var(--group-color-green); }
@@ -657,6 +660,8 @@ body {
 .tp-group-name {
   flex: 1;
   min-width: 0;
+  font-size: 13px;
+  font-weight: 400;
 }
 
 .tp-sheets {
@@ -670,7 +675,9 @@ body {
   gap: 8px;
   padding: 8px 10px;
   border-radius: 4px;
-  font-size: 0.8125rem;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 400;
   color: var(--text-primary);
   cursor: default;
   transition: background 0.15s, color 0.15s;
@@ -686,13 +693,9 @@ body {
   opacity: 0.45;
 }
 
-.tp-sheet:hover {
-  background: var(--bg-inset);
-}
-
 /* Active State */
 .tp-sheet.tp-sheet-active {
-  background: var(--accent-subtle);
+  background: color-mix(in srgb, var(--text-primary) 2.5%, transparent);
   color: var(--accent);
 }
 
@@ -712,11 +715,23 @@ body {
   background: var(--drop-active-bg) !important;
 }
 
+.tp-insertion-line {
+  width: 100%;
+  height: 2px;
+  border-radius: 999px;
+  background: transparent;
+  margin: 2px 0;
+}
+
+.tp-insertion-line-active {
+  background: var(--accent);
+}
+
 /* --- Search Demo --- */
 .search-demo {
   margin-top: 20px;
   background: var(--bg-elevated);
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   border: 1px solid var(--border);
   overflow: hidden;
 }
@@ -747,16 +762,15 @@ body {
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border-radius: 6px;
-  font-size: 0.8125rem;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 400;
   color: var(--text-primary);
   transition: background 0.15s, color 0.15s;
   cursor: default;
 }
 
-.search-result-row:hover {
-  background: var(--bg-inset);
-}
 
 .search-result-row mark {
   background: none;
@@ -779,7 +793,7 @@ body {
 .drag-demo {
   margin-top: 20px;
   background: var(--bg-elevated);
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   border: 1px solid var(--border);
   padding: 8px;
   display: flex;
