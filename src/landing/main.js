@@ -6,25 +6,27 @@
 (function () {
   'use strict';
 
-  const THEME_KEY = 'sn-theme';
-
   function initThemeToggle() {
     const btn = document.getElementById('theme-toggle');
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const applySystemTheme = () => {
+      document.documentElement.setAttribute('data-theme', media.matches ? 'dark' : 'light');
+    };
+
+    // Initial OS theme sync
+    applySystemTheme();
+
+    // React to OS theme changes automatically
+    media.addEventListener('change', applySystemTheme);
+
     if (!btn) return;
 
-    // Restore saved preference or detect system
-    const saved = localStorage.getItem(THEME_KEY);
-    if (saved) {
-      document.documentElement.setAttribute('data-theme', saved);
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.setAttribute('data-theme', 'dark');
-    }
-
+    // Manual toggle (session-only). Next OS theme change will re-sync.
     btn.addEventListener('click', () => {
       const current = document.documentElement.getAttribute('data-theme');
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem(THEME_KEY, next);
     });
   }
 
