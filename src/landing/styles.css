@@ -167,23 +167,30 @@ body {
   align-items: center;
   justify-content: center;
   margin-bottom: 36px;
+  isolation: isolate;
 }
 
 /* Ambient glow behind the icon */
 .hero-logo::before {
   content: '';
   position: absolute;
-  inset: -15px;
-  background: var(--accent);
-  filter: blur(28px);
-  opacity: 0.25;
-  border-radius: 50%;
-  transition: opacity 0.4s ease;
+  width: 160px;
+  height: 160px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: radial-gradient(circle, var(--accent-glow) 0%, transparent 66%);
+  filter: blur(10px);
+  opacity: 0.42;
+  border-radius: 999px;
+  transition: opacity 0.35s ease, transform 0.35s var(--ease-out);
   z-index: 0;
+  pointer-events: none;
 }
 
 .hero-logo:hover::before {
-  opacity: 0.4;
+  opacity: 0.95;
+  transform: translate(-50%, -50%) scale(1.06);
 }
 
 .logo-icon {
@@ -204,7 +211,7 @@ body {
     0 4px 12px -4px rgba(16, 124, 65, 0.3),
     inset 0 1px 1px rgba(255, 255, 255, 0.3),
     inset 0 -2px 4px rgba(0, 0, 0, 0.2);
-  transition: transform 0.4s var(--ease-spring), box-shadow 0.4s ease;
+  transition: transform 0.36s var(--ease-spring), box-shadow 0.36s ease;
 }
 
 /* Subtle glass/shine overlay on top of the icon */
@@ -227,21 +234,22 @@ body {
 }
 
 .hero-logo:hover .logo-icon {
-  transform: scale(1.08) translateY(-4px);
+  transform: translateY(-3px) scale(1.07) rotate(5deg);
   box-shadow: 
-    0 24px 40px -8px rgba(16, 124, 65, 0.5),
-    0 8px 16px -4px rgba(16, 124, 65, 0.4),
+    0 24px 40px -8px rgba(16, 124, 65, 0.55),
+    0 0 22px rgba(16, 124, 65, 0.28),
     inset 0 1px 1px rgba(255, 255, 255, 0.4),
     inset 0 -2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* --- Dark Theme Logo Overrides --- */
 [data-theme="dark"] .hero-logo::before {
-  opacity: 0.15; /* Subtler glow on dark backgrounds */
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 34%, transparent) 0%, transparent 70%);
+  opacity: 0.34;
 }
 
 [data-theme="dark"] .hero-logo:hover::before {
-  opacity: 0.25;
+  opacity: 0.95;
 }
 
 [data-theme="dark"] .logo-icon {
@@ -263,7 +271,7 @@ body {
 [data-theme="dark"] .hero-logo:hover .logo-icon {
   box-shadow: 
     0 24px 40px -8px rgba(0, 0, 0, 0.8),
-    0 8px 16px -4px rgba(0, 0, 0, 0.5),
+    0 0 26px color-mix(in srgb, var(--accent) 32%, transparent),
     0 0 0 1px rgba(255, 255, 255, 0.1),
     inset 0 1px 1px rgba(255, 255, 255, 0.2),
     inset 0 -2px 4px rgba(0, 0, 0, 0.4);
@@ -436,11 +444,96 @@ body {
 
 
 /* --- Keyboard Shortcuts Visual --- */
+.shortcuts-platform-switch {
+  margin-top: 18px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.shortcuts-platform-btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 128px;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+
+.shortcuts-platform-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.shortcuts-platform-btn:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+.shortcuts-platform-btn.is-active {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent-subtle);
+}
+
+.shortcuts-platform-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  background: var(--key-bg);
+  border: 1px solid var(--key-border);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  box-shadow: var(--key-shadow);
+  line-height: 1;
+}
+
+.shortcuts-platform-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.shortcuts-platform-copy {
+  display: block;
+}
+
+.shortcuts-platform-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.shortcuts-panels {
+  margin-top: 14px;
+}
+
+.shortcuts-panel[hidden] {
+  display: none !important;
+}
+
 .shortcuts-visual {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 24px;
+  margin-top: 0;
 }
 
 .shortcut-item {
@@ -477,6 +570,12 @@ body {
   color: var(--text-primary);
   box-shadow: var(--key-shadow);
   transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.key-wide {
+  min-width: 56px;
+  font-size: 0.6875rem;
+  padding: 0 10px;
 }
 
 .shortcut-item:hover .key {
@@ -692,7 +791,6 @@ body {
 .install-card {
   position: relative;
   overflow: hidden;
-  isolation: isolate;
 }
 
 .install-card::before {
@@ -700,90 +798,108 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(
-      680px 260px at -12% -30%,
-      var(--accent-glow),
-      transparent 68%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--accent) 2%, transparent) 0%,
-      transparent 62%
-    );
-  z-index: -2;
-}
-
-.install-card::after {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: calc(var(--radius-lg) - 1px);
-  pointer-events: none;
-  border: 1px solid color-mix(in srgb, var(--border-hover) 45%, transparent);
-  opacity: 0.35;
-  z-index: -1;
+  background: radial-gradient(
+    560px 210px at -12% -36%,
+    var(--accent-glow),
+    transparent 70%
+  );
+  opacity: 0.42;
 }
 
 .install-intro {
-  margin-top: 6px;
+  margin-top: 8px;
   color: var(--text-secondary);
   font-size: 0.9375rem;
-  max-width: 560px;
-}
-
-.install-meta {
-  margin-top: 14px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.install-meta-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
-  border-radius: 9999px;
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
 }
 
 .install-platform-switch {
   position: relative;
   z-index: 1;
-  margin-top: 18px;
+  margin-top: 22px;
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 6px;
-  padding: 5px;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--border-hover) 70%, transparent);
-  background: color-mix(in srgb, var(--bg-elevated) 90%, var(--bg-surface));
-  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 65%, transparent);
+  gap: 10px;
+  padding: 0;
+  border-radius: 0;
+  border: 0;
+  background: transparent;
+}
+
+.install-platform-switch[role='tablist'] {
+  align-items: stretch;
+}
+
+.install-platform-btn-label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  line-height: 1.2;
+  color: inherit;
+}
+
+.install-platform-btn-meta {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.6875rem;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.install-platform-btn.is-active .install-platform-btn-meta {
+  color: var(--text-secondary);
 }
 
 .install-platform-btn {
   appearance: none;
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
   color: var(--text-secondary);
   font-family: inherit;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  line-height: 1;
-  padding: 10px 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 10px 14px 9px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.24s ease, color 0.24s ease, border-color 0.24s ease, transform 0.24s ease;
+  min-width: 126px;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+
+.install-platform-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 6px;
+  background: var(--key-bg);
+  border: 1px solid var(--key-border);
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  box-shadow: var(--key-shadow);
+  line-height: 1;
+}
+
+.install-platform-icon {
+  width: 15px;
+  height: 15px;
+  display: block;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.install-platform-copy {
+  display: block;
 }
 
 .install-platform-btn:hover {
+  border-color: var(--accent);
   color: var(--text-primary);
-  transform: translateY(-1px);
 }
 
 .install-platform-btn:focus-visible {
@@ -794,17 +910,13 @@ body {
 
 .install-platform-btn.is-active {
   color: var(--text-primary);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--bg-surface) 92%, #ffffff 8%) 0%,
-    var(--bg-surface) 100%
-  );
-  border-color: color-mix(in srgb, var(--border-hover) 85%, transparent);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06), 0 1px 0 rgba(255, 255, 255, 0.45) inset;
+  background: var(--bg-elevated);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent-subtle);
 }
 
 .install-panels {
-  margin-top: 14px;
+  margin-top: 18px;
   position: relative;
   z-index: 1;
 }
@@ -814,84 +926,57 @@ body {
 }
 
 .install-panel {
-  background: color-mix(in srgb, var(--bg-elevated) 70%, var(--bg-surface));
-  border: 1px solid color-mix(in srgb, var(--border-hover) 55%, transparent);
+  background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 14px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
-}
-
-.install-panel-title {
-  font-size: 0.75rem;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 10px;
+  padding: 16px 18px;
 }
 
 .install-steps {
   list-style: none;
-  display: grid;
-  gap: 9px;
+  display: block;
   margin-top: 0;
 }
 
 .install-step {
   display: flex;
   align-items: flex-start;
-  padding: 12px 14px;
-  background: color-mix(in srgb, var(--bg-surface) 86%, var(--bg-elevated));
-  border: 1px solid color-mix(in srgb, var(--border-hover) 45%, transparent);
-  border-radius: var(--radius-sm);
-  transition: border-color 0.24s, transform 0.24s var(--ease-out), box-shadow 0.24s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.install-step::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 10px;
-  bottom: 10px;
-  width: 2px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 60%, transparent);
-  opacity: 0.35;
+  padding: 12px 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  transition: color 0.18s ease;
 }
 
 .install-step:hover {
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--border-hover));
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  color: var(--text-primary);
 }
 
-.install-steps-compact .install-step {
-  padding: 11px 13px;
+.install-step:last-child {
+  border-bottom: 0;
 }
 
 .step-number {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: color-mix(in srgb, var(--accent-subtle) 80%, var(--bg-surface));
-  color: color-mix(in srgb, var(--accent) 82%, #0b5e30);
-  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
   font-weight: 700;
   font-size: 0.6875rem;
   margin-right: 12px;
   flex-shrink: 0;
   margin-top: 1px;
-  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .step-content {
   color: var(--text-secondary);
   font-size: 0.875rem;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 .step-content strong {
@@ -909,49 +994,14 @@ body {
   text-decoration: underline;
 }
 
-.install-method-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.install-method {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--bg-surface) 96%, transparent) 0%,
-      color-mix(in srgb, var(--bg-elevated) 85%, transparent) 100%
-    );
-  border: 1px solid color-mix(in srgb, var(--border-hover) 55%, transparent);
-  border-radius: var(--radius-md);
-  padding: 12px;
-  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 60%, transparent);
-}
-
-.install-note {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px dashed color-mix(in srgb, var(--border-hover) 60%, transparent);
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-}
-
-[data-theme="dark"] .install-platform-switch {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-[data-theme="dark"] .install-panel {
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
-}
-
-[data-theme="dark"] .install-platform-btn.is-active {
-  box-shadow:
-    0 8px 18px rgba(0, 0, 0, 0.28),
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-}
-
-[data-theme="dark"] .install-method {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+.install-step-note {
+  display: block;
+  margin-top: 7px;
+  padding-left: 10px;
+  border-left: 1px solid color-mix(in srgb, var(--border-hover) 78%, transparent);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 code {
@@ -973,39 +1023,20 @@ code {
   font-size: 0.8125rem;
 }
 
-.footer-links {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-bottom: 24px;
-}
-
-.footer-links a {
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: color 0.2s;
-}
-
-.footer-links a:hover {
-  color: var(--text-primary);
-}
-
 .discreet-sponsor {
-  display: inline-block;
-  color: var(--text-muted);
-  text-decoration: none;
-  font-size: 0.8125rem;
-  padding: 6px 12px;
-  border-radius: 6px;
-  transition: background 0.2s, color 0.2s;
+  padding: 12px 22px;
+  font-size: 0.875rem;
   margin-bottom: 16px;
 }
 
-.discreet-sponsor:hover {
-  background: var(--bg-inset);
-  color: var(--text-primary);
+.discreet-sponsor svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.site-footer .discreet-sponsor {
+  width: auto;
 }
 
 
@@ -1027,30 +1058,30 @@ code {
 
   .bento-cell { padding: 24px 20px; }
 
-  .install-method-grid {
-    grid-template-columns: 1fr;
-  }
-
   .install-platform-switch {
-    display: grid;
+    display: flex;
     width: 100%;
-    grid-template-columns: 1fr;
-  }
-
-  .install-panel {
-    padding: 12px;
-  }
-
-  .install-step {
-    padding: 11px 12px;
+    flex-direction: column;
   }
 
   .hero-actions { flex-direction: column; }
   .btn { width: 100%; justify-content: center; }
 
+  .shortcuts-platform-switch {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .shortcuts-platform-btn {
+    min-width: 0;
+    width: 100%;
+  }
+
   .shortcuts-visual { gap: 8px; }
   .shortcut-item { font-size: 0.75rem; padding: 6px 10px 6px 8px; }
   .key { min-width: 24px; height: 24px; font-size: 0.6875rem; }
+  .key-wide { min-width: 52px; }
 }
 
 @media (max-width: 480px) {

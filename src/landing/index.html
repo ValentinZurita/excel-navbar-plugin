@@ -82,35 +82,128 @@
           <h3>Keyboard-First Design</h3>
           <p>Navigate, rename, hide, and switch sheets entirely from your keyboard.</p>
 
-          <div class="shortcuts-visual">
-            <div class="shortcut-item">
-              <span class="key">⌘</span><span class="key">⌥</span><span class="key">P</span>
-              Toggle panel
-            </div>
-            <div class="shortcut-item">
-              <span class="key">⌘</span><span class="key">⌥</span><span class="key">O</span>
-              Focus search
-            </div>
-            <div class="shortcut-item">
-              <span class="key">⌘</span><span class="key">⌥</span><span class="key">N</span>
-              New worksheet
-            </div>
-            <div class="shortcut-item">
-              <span class="key">↑</span><span class="key">↓</span>
-              Navigate
-            </div>
-            <div class="shortcut-item">
-              <span class="key">→</span>
-              Open Context Menu
-            </div>
-            <div class="shortcut-item">
-              <span class="key">→</span><span class="key">←</span>
-              Expand / Collapse
-            </div>
-            <div class="shortcut-item">
-              <span class="key">⏎</span>
-              Activate sheet
-            </div>
+          <div class="shortcuts-platform-switch" role="tablist" aria-label="Shortcut platform selector">
+            <button
+              class="shortcuts-platform-btn is-active"
+              id="shortcuts-tab-mac"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              aria-controls="shortcuts-panel-mac"
+              data-shortcuts-target="mac"
+            >
+              <span class="shortcuts-platform-key" aria-hidden="true">⌘</span>
+              <span class="shortcuts-platform-copy">
+                <span class="shortcuts-platform-label">macOS</span>
+              </span>
+            </button>
+            <button
+              class="shortcuts-platform-btn"
+              id="shortcuts-tab-windows"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="shortcuts-panel-windows"
+              data-shortcuts-target="windows"
+            >
+              <span class="shortcuts-platform-key" aria-hidden="true">
+                <svg class="shortcuts-platform-icon shortcuts-platform-icon-windows" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z" />
+                </svg>
+              </span>
+              <span class="shortcuts-platform-copy">
+                <span class="shortcuts-platform-label">Windows</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="shortcuts-panels">
+            <section
+              class="shortcuts-panel is-active"
+              id="shortcuts-panel-mac"
+              role="tabpanel"
+              aria-labelledby="shortcuts-tab-mac"
+              data-shortcuts-target="mac"
+            >
+              <div class="shortcuts-visual">
+                <div class="shortcut-item">
+                  <span class="key">⌘</span><span class="key">⌥</span><span class="key">P</span>
+                  Toggle panel
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">⌘</span><span class="key">⌥</span><span class="key">O</span>
+                  Focus search
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">⌘</span><span class="key">⌥</span><span class="key">N</span>
+                  New worksheet
+                </div>
+                <div class="shortcut-item">
+                  <span class="key key-wide">Space</span>
+                  Pick up / drop sheet (drag)
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">↑</span><span class="key">↓</span>
+                  Navigate
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">→</span>
+                  Open context menu
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">→</span><span class="key">←</span>
+                  Expand / collapse
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">⏎</span>
+                  Activate sheet
+                </div>
+              </div>
+            </section>
+
+            <section
+              class="shortcuts-panel"
+              id="shortcuts-panel-windows"
+              role="tabpanel"
+              aria-labelledby="shortcuts-tab-windows"
+              data-shortcuts-target="windows"
+              hidden
+            >
+              <div class="shortcuts-visual">
+                <div class="shortcut-item">
+                  <span class="key">Ctrl</span><span class="key">Alt</span><span class="key">P</span>
+                  Toggle panel
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">Ctrl</span><span class="key">Alt</span><span class="key">O</span>
+                  Focus search
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">Ctrl</span><span class="key">Alt</span><span class="key">N</span>
+                  New worksheet
+                </div>
+                <div class="shortcut-item">
+                  <span class="key key-wide">Space</span>
+                  Pick up / drop sheet (drag)
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">↑</span><span class="key">↓</span>
+                  Navigate
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">→</span>
+                  Open context menu
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">→</span><span class="key">←</span>
+                  Expand / collapse
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">⏎</span>
+                  Activate sheet
+                </div>
+              </div>
+            </section>
           </div>
         </div>
 
@@ -265,15 +358,10 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
           </div>
-          <h3>Install by platform</h3>
+          <h3>One add-in. Every Excel.</h3>
           <p class="install-intro">
-            Choose where you want to run Sheet Navigator and follow the steps.
+            Same workflow across Web, Windows, and Mac. Pick your platform and install in minutes.
           </p>
-          <div class="install-meta" aria-label="Installation highlights">
-            <span class="install-meta-pill">Web · Windows · Mac</span>
-            <span class="install-meta-pill">~2 min setup</span>
-            <span class="install-meta-pill">No installer required</span>
-          </div>
 
           <div class="install-platform-switch" role="tablist" aria-label="Installation platform selector">
             <button
@@ -285,7 +373,16 @@
               aria-controls="install-panel-web"
               data-install-target="web"
             >
-              Excel on the web
+              <span class="install-platform-key" aria-hidden="true">
+                <svg class="install-platform-icon install-platform-icon-web" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2" />
+                  <path stroke="currentColor" stroke-width="1.2" d="M2.5 8h11M8 2.5c1.7 1.3 2.6 3.1 2.6 5.5S9.7 12.2 8 13.5M8 2.5C6.3 3.8 5.4 5.6 5.4 8s.9 4.2 2.6 5.5" />
+                </svg>
+              </span>
+              <span class="install-platform-copy">
+                <span class="install-platform-btn-label">Web</span>
+                <span class="install-platform-btn-meta">office.com</span>
+              </span>
             </button>
             <button
               class="install-platform-btn"
@@ -296,7 +393,15 @@
               aria-controls="install-panel-windows"
               data-install-target="windows"
             >
-              Windows Desktop
+              <span class="install-platform-key" aria-hidden="true">
+                <svg class="install-platform-icon install-platform-icon-windows" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z" />
+                </svg>
+              </span>
+              <span class="install-platform-copy">
+                <span class="install-platform-btn-label">Windows</span>
+                <span class="install-platform-btn-meta">Desktop</span>
+              </span>
             </button>
             <button
               class="install-platform-btn"
@@ -307,7 +412,11 @@
               aria-controls="install-panel-mac"
               data-install-target="mac"
             >
-              Mac Desktop
+              <span class="install-platform-key" aria-hidden="true">⌘</span>
+              <span class="install-platform-copy">
+                <span class="install-platform-btn-label">Mac</span>
+                <span class="install-platform-btn-meta">Desktop</span>
+              </span>
             </button>
           </div>
 
@@ -319,7 +428,6 @@
               aria-labelledby="install-tab-web"
               data-install-target="web"
             >
-              <p class="install-panel-title">Recommended</p>
               <ol class="install-steps">
                 <li class="install-step">
                   <div class="step-number">1</div>
@@ -356,7 +464,6 @@
               data-install-target="windows"
               hidden
             >
-              <p class="install-panel-title">Windows flow</p>
               <ol class="install-steps">
                 <li class="install-step">
                   <div class="step-number">1</div>
@@ -393,71 +500,52 @@
               data-install-target="mac"
               hidden
             >
-              <div class="install-method-grid">
-                <article class="install-method">
-                  <p class="install-panel-title">Method A · Upload in Excel</p>
-                  <ol class="install-steps install-steps-compact">
-                    <li class="install-step">
-                      <div class="step-number">1</div>
-                      <div class="step-content">Download <a href="manifest.xml" download>manifest.xml</a>.</div>
-                    </li>
-                    <li class="install-step">
-                      <div class="step-number">2</div>
-                      <div class="step-content">Open Excel and create a blank workbook.</div>
-                    </li>
-                    <li class="install-step">
-                      <div class="step-number">3</div>
-                      <div class="step-content">Go to <strong>Home → Add-ins → My Add-ins</strong>.</div>
-                    </li>
-                    <li class="install-step">
-                      <div class="step-number">4</div>
-                      <div class="step-content">Select <strong>Manage My Add-ins → Upload My Add-in</strong>.</div>
-                    </li>
-                  </ol>
-                </article>
-
-                <article class="install-method">
-                  <p class="install-panel-title">Method B · WEF folder (manual)</p>
-                  <ol class="install-steps install-steps-compact">
-                    <li class="install-step">
-                      <div class="step-number">1</div>
-                      <div class="step-content">Close Excel.</div>
-                    </li>
-                    <li class="install-step">
-                      <div class="step-number">2</div>
-                      <div class="step-content">In Finder, press <code>⌘</code> + <code>Shift</code> + <code>G</code>.</div>
-                    </li>
-                    <li class="install-step">
-                      <div class="step-number">3</div>
-                      <div class="step-content">Paste <code>/Users/&lt;username&gt;/Library/Containers/com.microsoft.Excel/Data/Documents/wef</code>.</div>
-                    </li>
-                    <li class="install-step">
-                      <div class="step-number">4</div>
-                      <div class="step-content">Copy <code>manifest.xml</code> into that folder and reopen Excel.</div>
-                    </li>
-                  </ol>
-                </article>
-              </div>
+              <ol class="install-steps">
+                <li class="install-step">
+                  <div class="step-number">1</div>
+                  <div class="step-content">
+                    Download <a href="manifest.xml" download>manifest.xml</a>.
+                  </div>
+                </li>
+                <li class="install-step">
+                  <div class="step-number">2</div>
+                  <div class="step-content">
+                    Open Excel and create a blank workbook.
+                  </div>
+                </li>
+                <li class="install-step">
+                  <div class="step-number">3</div>
+                  <div class="step-content">
+                    Go to <strong>Home → Add-ins → My Add-ins</strong>.
+                  </div>
+                </li>
+                <li class="install-step">
+                  <div class="step-number">4</div>
+                  <div class="step-content">
+                    Select <strong>Manage My Add-ins → Upload My Add-in</strong>, then upload <code>manifest.xml</code>.
+                    <span class="install-step-note">
+                      If that option does not appear, close Excel and copy <code>manifest.xml</code> to
+                      <code>/Users/&lt;username&gt;/Library/Containers/com.microsoft.Excel/Data/Documents/wef</code>,
+                      then reopen Excel.
+                    </span>
+                  </div>
+                </li>
+              </ol>
             </section>
           </div>
 
-          <p class="install-note">
-            The <strong>Sheet Navigator</strong> button appears in the Home tab after installation.
-          </p>
         </div>
       </div>
 
 
       <!-- ========== FOOTER ========== -->
       <footer class="site-footer">
-        <div class="footer-links">
-          <a href="https://github.com/ValentinZurita/excel-navbar-plugin" target="_blank" rel="noopener">GitHub</a>
-          <a href="manifest.xml" download>Download</a>
-        </div>
-        
         <!-- Discreet Support CTA -->
-        <a class="discreet-sponsor" href="#" target="_blank" rel="noopener">
-          ☕ Support the project
+        <a class="discreet-sponsor btn btn-secondary" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+          </svg>
+          Support the project
         </a>
 
         <p class="footer-credit">Built with ❤️ by Valentin</p>

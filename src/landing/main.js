@@ -70,8 +70,51 @@
     activate(activeButton.dataset.installTarget);
   }
 
+  function initShortcutsSelector() {
+    const buttons = Array.from(document.querySelectorAll('.shortcuts-platform-btn'));
+    const panels = Array.from(document.querySelectorAll('.shortcuts-panel'));
+    if (!buttons.length || !panels.length) return;
+
+    const activate = (target) => {
+      if (!target) return;
+
+      buttons.forEach((button) => {
+        const isActive = button.dataset.shortcutsTarget === target;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-selected', String(isActive));
+        button.setAttribute('tabindex', isActive ? '0' : '-1');
+      });
+
+      panels.forEach((panel) => {
+        const isActive = panel.dataset.shortcutsTarget === target;
+        panel.classList.toggle('is-active', isActive);
+        panel.hidden = !isActive;
+      });
+    };
+
+    buttons.forEach((button, index) => {
+      button.addEventListener('click', () => {
+        activate(button.dataset.shortcutsTarget);
+      });
+
+      button.addEventListener('keydown', (event) => {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+        event.preventDefault();
+        const offset = event.key === 'ArrowRight' ? 1 : -1;
+        const nextIndex = (index + offset + buttons.length) % buttons.length;
+        const nextButton = buttons[nextIndex];
+        nextButton.focus();
+        activate(nextButton.dataset.shortcutsTarget);
+      });
+    });
+
+    const activeButton = buttons.find((button) => button.classList.contains('is-active')) || buttons[0];
+    activate(activeButton.dataset.shortcutsTarget);
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     initThemeToggle();
     initInstallSelector();
+    initShortcutsSelector();
   });
 })();
