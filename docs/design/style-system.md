@@ -8,11 +8,11 @@ The goal is simple:
 
 - keep the UI visually integrated with Excel
 - avoid random styling decisions
-- give AI and humans one place to understand how styles are organized
+- give developers one place to understand how styles are organized
 
 This product should feel like a natural worksheet navigator, not a mini web app inside Excel.
 
-For the approved phase baseline and long-term visual direction, also read `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/docs/design/visual-baseline.md`.
+For the approved phase baseline and long-term visual direction, also read `docs/design/visual-baseline.md`.
 
 ## Source of Truth
 
@@ -20,8 +20,8 @@ For the approved phase baseline and long-term visual direction, also read `/User
 
 Primary theme tokens live in:
 
-- `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/src/taskpane/styles.css`
-- `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/src/taskpane/useOfficeTheme.ts`
+- `src/taskpane/styles.css`
+- `src/taskpane/useOfficeTheme.ts`
 
 `useOfficeTheme.ts` reads the Office host theme and writes runtime CSS variables.
 
@@ -47,7 +47,7 @@ Why:
 
 - Excel add-in UI is compact and strongly host-dependent
 - theme behavior matters more than fancy component-level styling abstractions
-- a single global file makes visual cleanup faster for AI and humans
+- a single global file makes visual cleanup faster for everyone
 - the current product is still exploring layout and interaction direction
 
 ### Component rule

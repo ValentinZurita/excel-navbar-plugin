@@ -110,11 +110,11 @@ The following work is still valid, but belongs to later refinement phases:
 
 This baseline must stay aligned with:
 
-- `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/docs/design/style-system.md`
-- `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/docs/design/ui.md`
-- `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/docs/design/ux_flows.md`
-- `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/src/taskpane/styles.css`
-- `/Users/valentin/Library/Mobile Documents/com~apple~CloudDocs/Documents/Plugin/src/taskpane/useOfficeTheme.ts`
+- `docs/design/style-system.md`
+- `docs/design/ui.md`
+- `docs/design/ux_flows.md`
+- `src/taskpane/styles.css`
+- `src/taskpane/useOfficeTheme.ts`
 
 ## Decision
 
