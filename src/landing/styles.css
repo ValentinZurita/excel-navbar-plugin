@@ -692,6 +692,7 @@ body {
 .install-card {
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .install-card::before {
@@ -699,30 +700,70 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(
-    700px 260px at -10% -30%,
-    var(--accent-glow),
-    transparent 70%
-  );
+  background:
+    radial-gradient(
+      680px 260px at -12% -30%,
+      var(--accent-glow),
+      transparent 68%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--accent) 2%, transparent) 0%,
+      transparent 62%
+    );
+  z-index: -2;
+}
+
+.install-card::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: calc(var(--radius-lg) - 1px);
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--border-hover) 45%, transparent);
+  opacity: 0.35;
+  z-index: -1;
 }
 
 .install-intro {
-  margin-top: 8px;
+  margin-top: 6px;
   color: var(--text-secondary);
   font-size: 0.9375rem;
+  max-width: 560px;
+}
+
+.install-meta {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.install-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .install-platform-switch {
   position: relative;
   z-index: 1;
-  margin-top: 22px;
+  margin-top: 18px;
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 6px;
+  gap: 6px;
+  padding: 5px;
   border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--bg-elevated);
+  border: 1px solid color-mix(in srgb, var(--border-hover) 70%, transparent);
+  background: color-mix(in srgb, var(--bg-elevated) 90%, var(--bg-surface));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 65%, transparent);
 }
 
 .install-platform-btn {
@@ -734,14 +775,15 @@ body {
   font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1;
-  padding: 10px 14px;
+  padding: 10px 13px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition: background 0.24s ease, color 0.24s ease, border-color 0.24s ease, transform 0.24s ease;
 }
 
 .install-platform-btn:hover {
   color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
 .install-platform-btn:focus-visible {
@@ -752,19 +794,31 @@ body {
 
 .install-platform-btn.is-active {
   color: var(--text-primary);
-  background: var(--bg-surface);
-  border-color: var(--border);
-  box-shadow: var(--shadow-sm);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-surface) 92%, #ffffff 8%) 0%,
+    var(--bg-surface) 100%
+  );
+  border-color: color-mix(in srgb, var(--border-hover) 85%, transparent);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06), 0 1px 0 rgba(255, 255, 255, 0.45) inset;
 }
 
 .install-panels {
-  margin-top: 18px;
+  margin-top: 14px;
   position: relative;
   z-index: 1;
 }
 
 .install-panel[hidden] {
   display: none !important;
+}
+
+.install-panel {
+  background: color-mix(in srgb, var(--bg-elevated) 70%, var(--bg-surface));
+  border: 1px solid color-mix(in srgb, var(--border-hover) 55%, transparent);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
 }
 
 .install-panel-title {
@@ -779,42 +833,59 @@ body {
 .install-steps {
   list-style: none;
   display: grid;
-  gap: 10px;
+  gap: 9px;
   margin-top: 0;
 }
 
 .install-step {
   display: flex;
-  align-items: center;
-  padding: 14px 16px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
+  align-items: flex-start;
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--bg-surface) 86%, var(--bg-elevated));
+  border: 1px solid color-mix(in srgb, var(--border-hover) 45%, transparent);
   border-radius: var(--radius-sm);
-  transition: border-color 0.2s, transform 0.2s var(--ease-out);
+  transition: border-color 0.24s, transform 0.24s var(--ease-out), box-shadow 0.24s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.install-step::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 60%, transparent);
+  opacity: 0.35;
 }
 
 .install-step:hover {
-  border-color: var(--border-hover);
-  transform: translateX(4px);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border-hover));
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .install-steps-compact .install-step {
-  padding: 12px 14px;
+  padding: 11px 13px;
 }
 
 .step-number {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  background: var(--accent-subtle);
-  color: var(--accent);
+  width: 28px;
+  height: 28px;
+  background: color-mix(in srgb, var(--accent-subtle) 80%, var(--bg-surface));
+  color: color-mix(in srgb, var(--accent) 82%, #0b5e30);
   border-radius: 50%;
   font-weight: 700;
-  font-size: 0.75rem;
-  margin-right: 14px;
+  font-size: 0.6875rem;
+  margin-right: 12px;
   flex-shrink: 0;
+  margin-top: 1px;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .step-content {
@@ -841,20 +912,46 @@ body {
 .install-method-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
 }
 
 .install-method {
-  background: color-mix(in srgb, var(--bg-elevated) 85%, transparent);
-  border: 1px solid var(--border);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--bg-surface) 96%, transparent) 0%,
+      color-mix(in srgb, var(--bg-elevated) 85%, transparent) 100%
+    );
+  border: 1px solid color-mix(in srgb, var(--border-hover) 55%, transparent);
   border-radius: var(--radius-md);
-  padding: 14px;
+  padding: 12px;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 60%, transparent);
 }
 
 .install-note {
-  margin-top: 14px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed color-mix(in srgb, var(--border-hover) 60%, transparent);
   color: var(--text-secondary);
   font-size: 0.875rem;
+}
+
+[data-theme="dark"] .install-platform-switch {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] .install-panel {
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+}
+
+[data-theme="dark"] .install-platform-btn.is-active {
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+}
+
+[data-theme="dark"] .install-method {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 code {
@@ -938,6 +1035,14 @@ code {
     display: grid;
     width: 100%;
     grid-template-columns: 1fr;
+  }
+
+  .install-panel {
+    padding: 12px;
+  }
+
+  .install-step {
+    padding: 11px 12px;
   }
 
   .hero-actions { flex-direction: column; }
