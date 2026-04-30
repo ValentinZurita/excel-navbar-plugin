@@ -1,74 +1,103 @@
-# Sheet Navigator
+# Sheet Navigator for Excel
 
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+[![Excel Add-in](https://img.shields.io/badge/Platform-Excel%20Add--in-107C41)](https://learn.microsoft.com/office/dev/add-ins/)
 
-A modern worksheet navigator for Excel. Organize, search, and move between sheets using a fast task pane built for keyboard-first workflows.
+A keyboard-first Excel add-in that replaces tab chaos with a fast, structured worksheet navigator.
 
-**[Install →](https://valentinzurita.github.io/excel-navbar-plugin/)**
+- **Landing page**: [valentinzurita.github.io/excel-navbar-plugin](https://valentinzurita.github.io/excel-navbar-plugin/)
+- **Manifest (sideload)**: [manifest.xml](https://valentinzurita.github.io/excel-navbar-plugin/manifest.xml)
+- **Repository**: [github.com/ValentinZurita/excel-navbar-plugin](https://github.com/ValentinZurita/excel-navbar-plugin)
 
 ---
 
-## Why
+## Why this exists
 
-Excel's built-in sheet tab bar becomes painful with more than a dozen worksheets. Sheet Navigator replaces it with a task pane that supports grouping, search, drag-and-drop reordering, and full keyboard control.
+Native Excel tabs break down fast in workbooks with many sheets. Sheet Navigator gives you a task pane focused on **speed, structure, and control**:
 
-## Features
+- Group sheets logically
+- Find sheets instantly with search
+- Reorder and move sheets with drag & drop
+- Execute core actions without leaving the keyboard
 
-- **Groups** — Organize sheets into collapsible groups to reduce visual clutter.
-- **Search** — Jump to any worksheet instantly with live filtering.
-- **Drag & Drop** — Reorder sheets and move them between groups visually.
-- **Keyboard-first** — Navigate, rename, hide, and switch sheets without touching the mouse.
-- **Excel-native feel** — Visual quality aligned with the Office host, not a generic web app.
+## Core capabilities
 
-## Screenshots
+| Capability | What you get |
+| --- | --- |
+| Grouping | Collapsible, color-coded groups for large workbooks |
+| Search | Real-time filtering to jump to a target sheet quickly |
+| Drag & drop | Move sheets across groups with visual feedback |
+| Keyboard-first | Global shortcuts + directional navigation |
+| Excel-native UX | UI aligned with Office host patterns |
 
-*(Add screenshots or a short GIF here showing the task pane in action.)*
+## Keyboard shortcuts (high impact)
 
-## Installation
+### macOS
 
-1. Download the [`manifest.xml`](https://valentinzurita.github.io/excel-navbar-plugin/manifest.xml) file.
-2. In Excel, go to **Insert → Add-ins → Upload My Add-in**.
-3. Select the downloaded `manifest.xml` and confirm.
-4. The **Sheet Navigator** button appears in the **Home** tab.
+- `⌘ + ⌥ + P` → Toggle panel
+- `⌘ + ⌥ + O` → Focus search
+- `⌘ + ⌥ + N` → New worksheet
+- `Space` → Pick up / drop sheet
+- `↑ / ↓` → Navigate list
+- `→ / ←` → Expand / collapse groups
+- `Enter` → Activate sheet
 
-For detailed instructions, visit the [project site](https://valentinzurita.github.io/excel-navbar-plugin/).
+### Windows
 
-## Tech Stack
+- `Ctrl + Alt + P` → Toggle panel
+- `Ctrl + Alt + O` → Focus search
+- `Ctrl + Alt + N` → New worksheet
+- `Space` → Pick up / drop sheet
+- `↑ / ↓` → Navigate list
+- `→ / ←` → Expand / collapse groups
+- `Enter` → Activate sheet
 
-- **React 18** + **TypeScript**
-- **Office.js** for Excel integration
-- **Webpack** for bundling
-- **Vitest** + **Testing Library** for unit and component tests
-- **GitHub Pages** for static hosting
+## Installation (sideload)
 
-## Local Development
+1. Download [`manifest.xml`](https://valentinzurita.github.io/excel-navbar-plugin/manifest.xml).
+2. Open Excel.
+3. Go to **Insert → Add-ins → Upload My Add-in**.
+4. Select the downloaded manifest file.
+5. Open **Home** tab and launch **Sheet Navigator**.
+
+## Local development
 
 ```bash
-# Install dependencies
 npm ci
-
-# Start the dev server (serves over HTTPS for Excel sideloading)
 npm run dev
-
-# Run tests
-npm run test
-
-# Build for production
-npm run build
 ```
 
-## Contributing
+### Validation and quality checks
 
-Contributions are welcome. Please open an issue or pull request if you find a bug or have an idea for improvement.
+```bash
+npm run test
+npm run quality
+npm run check:import-cycles
+npm run check:knip
+```
+
+### Production package
+
+```bash
+npm run package:release
+```
+
+This generates the production bundle and `dist/manifest.xml`.
+
+## Tech stack
+
+- React 18 + TypeScript
+- Office.js
+- Webpack 5
+- Vitest + Testing Library
+- ESLint + Stylelint + Prettier
+
+## Project status
+
+Actively evolving. Contributions, bug reports, and UX feedback are welcome.
 
 ## License
 
-This project is licensed under the [Creative Commons Attribution-NonCommercial 4.0 International License](LICENSE).
+Licensed under [Creative Commons Attribution-NonCommercial 4.0](LICENSE).
 
-You are free to use, modify, and share this project for non-commercial purposes. Commercial use is not permitted without explicit permission.
-
-## Links
-
-- **Project site**: https://valentinzurita.github.io/excel-navbar-plugin/
-- **Manifest**: https://valentinzurita.github.io/excel-navbar-plugin/manifest.xml
-- **Repository**: https://github.com/ValentinZurita/excel-navbar-plugin
+You may use, modify, and share for non-commercial purposes. Commercial use requires explicit permission.
