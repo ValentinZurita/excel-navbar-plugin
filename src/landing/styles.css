@@ -688,12 +688,99 @@ body {
   gap: 2px;
 }
 
-/* --- Install Steps --- */
+/* --- Install --- */
+.install-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.install-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    700px 260px at -10% -30%,
+    var(--accent-glow),
+    transparent 70%
+  );
+}
+
+.install-intro {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+}
+
+.install-platform-switch {
+  position: relative;
+  z-index: 1;
+  margin-top: 22px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.install-platform-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.install-platform-btn:hover {
+  color: var(--text-primary);
+}
+
+.install-platform-btn:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+.install-platform-btn.is-active {
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.install-panels {
+  margin-top: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.install-panel[hidden] {
+  display: none !important;
+}
+
+.install-panel-title {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
 .install-steps {
   list-style: none;
   display: grid;
   gap: 10px;
-  margin-top: 20px;
+  margin-top: 0;
 }
 
 .install-step {
@@ -709,6 +796,10 @@ body {
 .install-step:hover {
   border-color: var(--border-hover);
   transform: translateX(4px);
+}
+
+.install-steps-compact .install-step {
+  padding: 12px 14px;
 }
 
 .step-number {
@@ -745,6 +836,25 @@ body {
 
 .step-content a:hover {
   text-decoration: underline;
+}
+
+.install-method-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.install-method {
+  background: color-mix(in srgb, var(--bg-elevated) 85%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+
+.install-note {
+  margin-top: 14px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
 }
 
 code {
@@ -819,6 +929,16 @@ code {
   }
 
   .bento-cell { padding: 24px 20px; }
+
+  .install-method-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .install-platform-switch {
+    display: grid;
+    width: 100%;
+    grid-template-columns: 1fr;
+  }
 
   .hero-actions { flex-direction: column; }
   .btn { width: 100%; justify-content: center; }
