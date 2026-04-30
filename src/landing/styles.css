@@ -21,6 +21,9 @@
   --accent-hover: #0b5e30;
   --accent-subtle: rgba(16, 124, 65, 0.08);
   --accent-glow: rgba(16, 124, 65, 0.12);
+  --selection-text: #0b5e30;
+  --selection-bg: var(--accent-subtle);
+  --selection-shadow: none;
 
   --drag-bg: color-mix(in srgb, #111111 5%, transparent);
   --drop-active-bg: color-mix(in srgb, var(--text-primary) 10%, transparent);
@@ -68,6 +71,9 @@
   --accent-hover: #22b85e;
   --accent-subtle: rgba(45, 214, 114, 0.08);
   --accent-glow: rgba(45, 214, 114, 0.1);
+  --selection-text: #39ff94;
+  --selection-bg: transparent;
+  --selection-shadow: color-mix(in srgb, #39ff94 50%, transparent);
 
   --drag-bg: color-mix(in srgb, #f0f0f0 5%, transparent);
   --drop-active-bg: color-mix(in srgb, var(--text-primary) 10%, transparent);
@@ -109,6 +115,17 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-text);
+  text-shadow: var(--selection-shadow);
+}
+
+::-moz-selection {
+  background: var(--selection-bg);
+  color: var(--selection-text);
+  text-shadow: var(--selection-shadow);
+}
 
 /* --- Layout --- */
 .container {
