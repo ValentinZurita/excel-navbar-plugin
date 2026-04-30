@@ -20,3 +20,4 @@ coverage/
 # Internal files not for public repo
 AGENTS.md
 manifest.xml
+.engram/
