@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/_/husky.sh"
+
+echo "🎨 Running Prettier format before commit..."
+npm run format
+echo "✅ Formatting complete"
