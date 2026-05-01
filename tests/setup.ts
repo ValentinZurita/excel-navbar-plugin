@@ -46,3 +46,29 @@ const localStorageBroken =
 if (localStorageBroken) {
   installInMemoryLocalStorage();
 }
+
+/**
+ * jsdom does not implement window.matchMedia, but useOfficeTheme subscribes
+ * to prefers-color-scheme changes. Provide a minimal stub so tests do not throw.
+ *
+ * Tests can override the preferred scheme via __testPrefersDarkMode on window.
+ */
+if (typeof window !== 'undefined' && !window.matchMedia) {
+  Object.defineProperty(window, 'matchMedia', {
+    value: (query: string) => {
+      const prefersDark = (window as any).__testPrefersDarkMode ?? false;
+      const mql = {
+        matches: query === '(prefers-color-scheme: dark)' ? prefersDark : false,
+        media: query,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+      };
+      return mql;
+    },
+    writable: true,
+    configurable: true,
+  });
+}

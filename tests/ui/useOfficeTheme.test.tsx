@@ -44,6 +44,7 @@ describe('useOfficeTheme', () => {
   afterEach(() => {
     vi.useRealTimers();
     delete (globalThis as any).Office;
+    (window as any).__testPrefersDarkMode = false;
     document.documentElement.removeAttribute('data-office-theme');
     document.documentElement.removeAttribute('data-office-theme-mode');
     document.documentElement.style.removeProperty('--excel-body-bg');
@@ -72,6 +73,7 @@ describe('useOfficeTheme', () => {
     officeTheme.bodyForegroundColor = '#f8f8f8';
     officeTheme.controlBackgroundColor = '#2c2c2c';
     officeTheme.controlForegroundColor = '#f8f8f8';
+    (window as any).__testPrefersDarkMode = true;
 
     act(() => {
       vi.advanceTimersByTime(1300);
