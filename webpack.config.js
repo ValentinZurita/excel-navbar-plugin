@@ -3,7 +3,19 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
+function getHttpsServerOptions() {
+  try {
+    const { getHttpsServerOptions } = require('office-addin-dev-certs');
+    return getHttpsServerOptions();
+  } catch {
+    // Fallback: webpack will generate a self-signed certificate
+    return 'https';
+  }
+}
+
 module.exports = (env) => {
+  const httpsOptions = getHttpsServerOptions();
+  
   return {
     entry: {
       taskpane: path.resolve(__dirname, 'src/taskpane/index.tsx'),
@@ -42,7 +54,7 @@ module.exports = (env) => {
       }),
       new CopyWebpackPlugin({
         patterns: [
-          { from: 'manifest.xml', to: 'manifest.xml' },
+          { from: 'excel-navbar-plugin.xml', to: 'excel-navbar-plugin.xml' },
           { from: 'assets', to: 'assets' },
           { from: 'shortcuts.json', to: 'shortcuts.json' },
           { from: 'src/landing/index.html', to: 'index.html' },
@@ -60,7 +72,7 @@ module.exports = (env) => {
     ].filter(Boolean),
     devServer: {
       port: 3000,
-      server: 'https',
+      server: httpsOptions,
       hot: false,
       liveReload: false,
       client: {
