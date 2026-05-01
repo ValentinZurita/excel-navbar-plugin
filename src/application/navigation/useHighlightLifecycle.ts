@@ -2,7 +2,7 @@
  * Visual anchor for worksheet navigation (which row/header "owns" the strong highlight).
  * Exit timer must be >= `--excel-nav-highlight-fade-ms` in styles.css so `data-visual-exiting` clears after the CSS animation.
  */
-export const HIGHLIGHT_EXIT_MS = 980;
+export const HIGHLIGHT_EXIT_MS = 280;
 
 export function isSearchItemId(itemId: string | null) {
   return itemId?.startsWith('search:') ?? false;

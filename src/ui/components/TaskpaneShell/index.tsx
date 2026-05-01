@@ -10,8 +10,13 @@ interface TaskpaneShellProps {
 }
 
 export function TaskpaneShell({ children, banner, onDismissBanner, toast }: TaskpaneShellProps) {
+  const isDevHost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname.endsWith('.localhost'));
+
   return (
     <main className="taskpane-shell">
+      {isDevHost ? <div className="taskpane-dev-badge">DEV MODE · localhost</div> : null}
       {banner ? <StatusBanner banner={banner} onDismiss={onDismissBanner} /> : null}
       {toast ? <div className="taskpane-toast-slot">{toast}</div> : null}
       {children}
