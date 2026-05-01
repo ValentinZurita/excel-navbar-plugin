@@ -68,7 +68,8 @@
       });
     });
 
-    const activeButton = buttons.find((button) => button.classList.contains('is-active')) || buttons[0];
+    const activeButton =
+      buttons.find((button) => button.classList.contains('is-active')) || buttons[0];
     activate(activeButton.dataset.installTarget);
   }
 
@@ -110,7 +111,8 @@
       });
     });
 
-    const activeButton = buttons.find((button) => button.classList.contains('is-active')) || buttons[0];
+    const activeButton =
+      buttons.find((button) => button.classList.contains('is-active')) || buttons[0];
     activate(activeButton.dataset.shortcutsTarget);
   }
 

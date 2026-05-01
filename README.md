@@ -22,13 +22,13 @@ Native Excel tabs break down fast in workbooks with many sheets. Sheet Navigator
 
 ## Core capabilities
 
-| Capability | What you get |
-| --- | --- |
-| Grouping | Collapsible, color-coded groups for large workbooks |
-| Search | Real-time filtering to jump to a target sheet quickly |
-| Drag & drop | Move sheets across groups with visual feedback |
-| Keyboard-first | Global shortcuts + directional navigation |
-| Excel-native UX | UI aligned with Office host patterns |
+| Capability      | What you get                                          |
+| --------------- | ----------------------------------------------------- |
+| Grouping        | Collapsible, color-coded groups for large workbooks   |
+| Search          | Real-time filtering to jump to a target sheet quickly |
+| Drag & drop     | Move sheets across groups with visual feedback        |
+| Keyboard-first  | Global shortcuts + directional navigation             |
+| Excel-native UX | UI aligned with Office host patterns                  |
 
 ## Keyboard shortcuts (high impact)
 

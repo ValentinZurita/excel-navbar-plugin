@@ -11,7 +11,7 @@ const configPath = join(projectRoot, 'addin-config.json');
 // Detect OS and set correct WEF folder
 function getWefFolder() {
   const platform = process.platform;
-  const home = process.env.HOME || process.env.USERPROFILE || '';  
+  const home = process.env.HOME || process.env.USERPROFILE || '';
   if (platform === 'darwin') {
     // macOS
     return `${home}/Library/Containers/com.microsoft.Excel/Data/Documents/wef`;
@@ -66,10 +66,13 @@ console.log(`📍 Base URL: ${baseUrl}\n`);
 
 // Generate manifest
 try {
-  execSync(`node scripts/render-manifest.mjs --base-url=${baseUrl} --output=excel-navbar-plugin.xml`, {
-    cwd: projectRoot,
-    stdio: 'inherit'
-  });
+  execSync(
+    `node scripts/render-manifest.mjs --base-url=${baseUrl} --output=excel-navbar-plugin.xml`,
+    {
+      cwd: projectRoot,
+      stdio: 'inherit',
+    },
+  );
 } catch {
   console.error('❌ Failed to generate manifest');
   process.exit(1);
