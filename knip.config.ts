@@ -9,6 +9,8 @@ const config: KnipConfig = {
     '*.config.mjs',
     '*.config.js',
     'src/global.d.ts',
+    // Referenced by landing page but not imported as a module
+    'src/landing/main.js',
   ],
   ignoreDependencies: [
     // Used by vitest (vite.config.ts imports from vitest/config which uses vite)
@@ -21,6 +23,11 @@ const config: KnipConfig = {
     '@types/office-js',
     '@types/react',
     '@types/react-dom',
+    // Used by husky/commitlint hooks (not direct imports)
+    '@commitlint/cli',
+    'lint-staged',
+    // Loaded dynamically in webpack.config.js via require()
+    'office-addin-dev-certs',
   ],
   ignoreExportsUsedInFile: true,
 };
