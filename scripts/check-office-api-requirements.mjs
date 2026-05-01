@@ -15,7 +15,7 @@ const projectRoot = join(scriptDir, '..');
  * APIs or conditional paths that depend on host capabilities.
  */
 
-const MANIFEST_PATH = join(projectRoot, 'excel-navbar-plugin.xml');
+const MANIFEST_PATH = join(projectRoot, 'manifest.template.xml');
 const SOURCE_ROOT = join(projectRoot, 'src');
 
 function fail(message) {

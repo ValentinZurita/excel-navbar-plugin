@@ -23,3 +23,6 @@ manifest.xml
 .engram/
 excel-navbar-plugin.xml
 # Generated manifest (dynamic)
+
+# Documentation (tracked separately or rebuilt later)
+docs/
