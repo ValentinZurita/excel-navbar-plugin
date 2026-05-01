@@ -9,13 +9,13 @@ const projectRoot = join(scriptDir, '..');
  * Office.js API validation against manifest requirements.
  *
  * Scans src/ for usages of Office.* and Excel.* APIs and cross-checks
- * them against the requirement sets declared in manifest.xml.
+ * them against the requirement sets declared in excel-navbar-plugin.xml.
  *
  * This is a best-effort static check. It cannot catch runtime-only
  * APIs or conditional paths that depend on host capabilities.
  */
 
-const MANIFEST_PATH = join(projectRoot, 'manifest.xml');
+const MANIFEST_PATH = join(projectRoot, 'excel-navbar-plugin.xml');
 const SOURCE_ROOT = join(projectRoot, 'src');
 
 function fail(message) {
@@ -97,7 +97,7 @@ try {
 
 const manifestSets = parseManifestRequirements(manifestContent);
 if (manifestSets.length === 0) {
-  fail('No requirement sets found in manifest.xml');
+  fail('No requirement sets found in excel-navbar-plugin.xml');
 }
 
 console.log('Manifest requirement sets:');
@@ -134,7 +134,7 @@ for (const api of allApis) {
   const manifestSet = manifestSets.find((s) => s.name === requirement.set);
   if (!manifestSet) {
     warnings.push(
-      `API ${api} requires ${requirement.set} ${requirement.min}, but this set is NOT declared in manifest.xml`,
+      `API ${api} requires ${requirement.set} ${requirement.min}, but this set is NOT declared in excel-navbar-plugin.xml`,
     );
   }
 }

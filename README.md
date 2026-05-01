@@ -6,7 +6,7 @@
 A keyboard-first Excel add-in that replaces tab chaos with a fast, structured worksheet navigator.
 
 - **Landing page**: [valentinzurita.github.io/excel-navbar-plugin](https://valentinzurita.github.io/excel-navbar-plugin/)
-- **Manifest (sideload)**: [manifest.xml](https://valentinzurita.github.io/excel-navbar-plugin/manifest.xml)
+- **Manifest (sideload)**: [excel-navbar-plugin.xml](https://valentinzurita.github.io/excel-navbar-plugin/excel-navbar-plugin.xml)
 - **Repository**: [github.com/ValentinZurita/excel-navbar-plugin](https://github.com/ValentinZurita/excel-navbar-plugin)
 
 ---
@@ -54,7 +54,7 @@ Native Excel tabs break down fast in workbooks with many sheets. Sheet Navigator
 
 ## Installation (sideload)
 
-1. Download [`manifest.xml`](https://valentinzurita.github.io/excel-navbar-plugin/manifest.xml).
+1. Download [`excel-navbar-plugin.xml`](https://valentinzurita.github.io/excel-navbar-plugin/excel-navbar-plugin.xml).
 2. Open Excel.
 3. Go to **Insert → Add-ins → Upload My Add-in**.
 4. Select the downloaded manifest file.
@@ -82,7 +82,7 @@ npm run check:knip
 npm run package:release
 ```
 
-This generates the production bundle and `dist/manifest.xml`.
+This generates the production bundle and `dist/excel-navbar-plugin.xml`.
 
 ## Tech stack
 

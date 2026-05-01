@@ -36,7 +36,7 @@ function normalizeBaseUrl(rawValue) {
 }
 
 function resolveOutputPath(rawOutputPath) {
-  const target = rawOutputPath ?? 'manifest.xml';
+  const target = rawOutputPath ?? 'excel-navbar-plugin.xml';
   return isAbsolute(target) ? target : join(projectRoot, target);
 }
 

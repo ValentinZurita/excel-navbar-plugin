@@ -71,8 +71,8 @@ jobs:
 
       - name: Verify manifest exists and is non-empty
         run: |
-          if [ ! -s dist/manifest.xml ]; then
-            echo "dist/manifest.xml is missing or empty"
+          if [ ! -s dist/excel-navbar-plugin.xml ]; then
+            echo "dist/excel-navbar-plugin.xml is missing or empty"
             exit 1
           fi
 
