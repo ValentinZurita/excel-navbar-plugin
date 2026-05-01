@@ -1,21 +1,30 @@
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 function getHttpsServerOptions() {
+  const certsDir = path.join(os.homedir(), '.office-addin-dev-certs');
   try {
-    const { getHttpsServerOptions } = require('office-addin-dev-certs');
-    return getHttpsServerOptions();
+    return {
+      type: 'https',
+      options: {
+        key: fs.readFileSync(path.join(certsDir, 'localhost.key')),
+        cert: fs.readFileSync(path.join(certsDir, 'localhost.crt')),
+        ca: fs.readFileSync(path.join(certsDir, 'ca.crt')),
+      },
+    };
   } catch {
     // Fallback: webpack will generate a self-signed certificate
-    return 'https';
+    return { type: 'https' };
   }
 }
 
 module.exports = (env) => {
-  const httpsOptions = getHttpsServerOptions();
-  
+  const serverOptions = getHttpsServerOptions();
+
   return {
     entry: {
       taskpane: path.resolve(__dirname, 'src/taskpane/index.tsx'),
@@ -72,7 +81,7 @@ module.exports = (env) => {
     ].filter(Boolean),
     devServer: {
       port: 3000,
-      server: httpsOptions,
+      server: serverOptions,
       hot: false,
       liveReload: false,
       client: {
