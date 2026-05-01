@@ -1,0 +1,10 @@
+{
+  "dev": {
+    "baseUrl": "https://localhost:3000",
+    "description": "Local development server"
+  },
+  "prod": {
+    "baseUrl": "https://valentinzurita.github.io/excel-navbar-plugin",
+    "description": "Production environment - GitHub Pages"
+  }
+}
