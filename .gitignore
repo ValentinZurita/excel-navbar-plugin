@@ -20,7 +20,6 @@ coverage/
 # Internal files not for public repo
 AGENTS.md
 manifest.xml
-.engram/
 excel-navbar-plugin.xml
 # Generated manifest (dynamic)
 
