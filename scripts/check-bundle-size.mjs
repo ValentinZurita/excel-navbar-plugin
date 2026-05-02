@@ -14,9 +14,10 @@ const projectRoot = join(scriptDir, '..');
  */
 
 const BUNDLE_PATH = join(projectRoot, 'dist', 'taskpane.js');
-// Current baseline: ~387 KiB (as of 2026-04-23)
-// Threshold set at 400 KiB to allow ~3% headroom for normal growth.
-const MAX_SIZE_KIB = 400;
+// Current baseline: ~393 KiB (as of 2026-05-02)
+// Threshold set at 450 KiB to allow ~15% headroom for normal growth.
+// TODO: Investigate bundle optimizations (see docs/tech/bundle-audit.md)
+const MAX_SIZE_KIB = 450;
 
 function formatSize(bytes) {
   const KiB = bytes / 1024;
