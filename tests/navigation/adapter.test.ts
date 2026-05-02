@@ -6,6 +6,10 @@ import {
   WorksheetDeleteError,
 } from '../../src/infrastructure/office/WorkbookAdapter';
 
+// Type references for mock-drift detection:
+// Excel.RequestContext and Excel.Worksheet are used as types in the source.
+// Office.context.requirements.isSetSupported is tested below.
+
 describe('OfficeWorkbookAdapter.hideWorksheet', () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -97,8 +101,10 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
     delete globalThis.Excel;
   });
 
-  it('returns a stable context from document.url when available', async () => {
+  it('returns a stable context from Office.context.document.url when available', async () => {
+    // Mocks Office.context.document.url
     globalThis.Office = {
+      // Mocks Office.AsyncResultStatus.Failed
       AsyncResultStatus: { Failed: 'failed' },
       context: {
         document: {
@@ -121,7 +127,8 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
     });
   });
 
-  it('falls back to file properties url when document.url is missing', async () => {
+  it('falls back to file properties url when Office.context.document.url is missing', async () => {
+    // Mocks Office.context.document.getFilePropertiesAsync and Office.AsyncResultStatus.Failed
     globalThis.Office = {
       AsyncResultStatus: { Failed: 'failed', Succeeded: 'succeeded' },
       context: {
@@ -179,6 +186,55 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
       supportsWorksheetCustomProperties: false,
       supportsWorkbookEvents: false,
     });
+  });
+
+  it('detects capabilities via Office.context.requirements.isSetSupported', async () => {
+    const isSetSupported = vi.fn((set: string, version: string) => {
+      return set === 'ExcelApi' && version === '1.17';
+    });
+
+    globalThis.Office = {
+      AsyncResultStatus: { Failed: 'failed' },
+      context: {
+        document: {
+          url: 'https://contoso.test/workbook.xlsx',
+          settings: {},
+        },
+        requirements: {
+          isSetSupported,
+        },
+      },
+    } as any;
+
+    const adapter = new OfficeWorkbookAdapter();
+    const context = await adapter.getPersistenceContext();
+
+    expect(isSetSupported).toHaveBeenCalledWith('ExcelApi', '1.5');
+    expect(isSetSupported).toHaveBeenCalledWith('ExcelApi', '1.12');
+    expect(isSetSupported).toHaveBeenCalledWith('ExcelApi', '1.17');
+    expect(context.supportsWorkbookEvents).toBe(true);
+    expect(context.supportsCustomXml).toBe(false);
+    expect(context.supportsWorksheetCustomProperties).toBe(false);
+  });
+
+  it('returns false capabilities when Office.context.requirements is unavailable', async () => {
+    globalThis.Office = {
+      AsyncResultStatus: { Failed: 'failed' },
+      context: {
+        document: {
+          url: 'https://contoso.test/workbook.xlsx',
+          settings: {},
+        },
+        // No requirements object
+      },
+    } as any;
+
+    const adapter = new OfficeWorkbookAdapter();
+    const context = await adapter.getPersistenceContext();
+
+    expect(context.supportsCustomXml).toBe(false);
+    expect(context.supportsWorksheetCustomProperties).toBe(false);
+    expect(context.supportsWorkbookEvents).toBe(false);
   });
 });
 
