@@ -221,7 +221,15 @@ button {
    ========================================================================== */
 /* Structural wrapper resets.
    Sections, cards and the search field are visually flat containers. */
-.section-card,
+.section-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  margin-bottom: 12px;
+}
+
 .group-card {
   background: transparent;
   border: none;
