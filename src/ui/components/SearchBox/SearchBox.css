@@ -9,12 +9,13 @@
    Positioned under the input field and stretched to the same width. */
 .search-results-wrapper {
   position: absolute;
-  top: calc(100% - 5px);
+  top: 100%;
   left: 0;
   right: 0;
-  z-index: 10;
+  z-index: 11;
   width: 100%;
   max-width: 100%;
+  margin-top: 1px;
 }
 
 /* Visual wrapper for the dropdown panel.
