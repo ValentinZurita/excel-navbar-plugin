@@ -112,6 +112,18 @@
   background: var(--excel-pressed);
 }
 
+/* When keyboard focus is inside the menu, suppress hover highlight on items
+   that no longer own focus. Prevents double-highlight when the user hovers
+   one item with the mouse and then navigates away with arrow keys. */
+.context-menu:focus-within .context-menu-item:hover:not(:focus) {
+  background: transparent;
+  color: color-mix(in srgb, var(--excel-body-fg) 80%, transparent);
+}
+
+.context-menu:focus-within .context-menu-item:hover:not(:focus) .context-menu-icon {
+  color: var(--excel-muted);
+}
+
 /* Color preview in menu item - small circle showing current group color */
 .context-menu-color-preview {
   width: 14px;
