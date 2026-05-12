@@ -49,28 +49,28 @@ Native Excel tabs break down fast in workbooks with many sheets. Sheet Navigator
 
 ## Features
 
-| Feature | What you get |
-|---------|-------------|
-| **Collapsible Groups** | Color-coded folders to organize large workbooks logically |
-| **Fuzzy Search** | Real-time filtering to jump to any sheet instantly |
-| **Drag & Drop** | Move sheets between groups with visual feedback |
-| **Keyboard-First** | Global shortcuts + directional navigation — never reach for the mouse |
-| **Excel-Native UX** | Task pane UI that feels like part of Office |
+| Feature                | What you get                                                          |
+| ---------------------- | --------------------------------------------------------------------- |
+| **Collapsible Groups** | Color-coded folders to organize large workbooks logically             |
+| **Fuzzy Search**       | Real-time filtering to jump to any sheet instantly                    |
+| **Drag & Drop**        | Move sheets between groups with visual feedback                       |
+| **Keyboard-First**     | Global shortcuts + directional navigation — never reach for the mouse |
+| **Excel-Native UX**    | Task pane UI that feels like part of Office                           |
 
 ---
 
 ## Keyboard shortcuts
 
-| Action | macOS | Windows |
-|--------|-------|---------|
-| Toggle panel | `⌘` `⌥` `P` | `Ctrl` `Alt` `P` |
-| Focus search | `⌘` `⌥` `O` | `Ctrl` `Alt` `O` |
-| New worksheet | `⌘` `⌥` `N` | `Ctrl` `Alt` `N` |
-| Pick up / drop sheet | `Space` | `Space` |
-| Navigate list | `↑` `↓` | `↑` `↓` |
-| Open context menu | `→` | `→` |
-| Expand / collapse group | `→` `←` | `→` `←` |
-| Activate sheet | `⏎` | `⏎` |
+| Action                  | macOS       | Windows          |
+| ----------------------- | ----------- | ---------------- |
+| Toggle panel            | `⌘` `⌥` `P` | `Ctrl` `Alt` `P` |
+| Focus search            | `⌘` `⌥` `O` | `Ctrl` `Alt` `O` |
+| New worksheet           | `⌘` `⌥` `N` | `Ctrl` `Alt` `N` |
+| Pick up / drop sheet    | `Space`     | `Space`          |
+| Navigate list           | `↑` `↓`     | `↑` `↓`          |
+| Open context menu       | `→`         | `→`              |
+| Expand / collapse group | `→` `←`     | `→` `←`          |
+| Activate sheet          | `⏎`         | `⏎`              |
 
 ---
 
@@ -105,21 +105,23 @@ All platforms use the same manifest file:
 4. Choose `excel-navbar-plugin.xml` and upload.
 
 > **Note for Mac users**: If the upload option does not appear, close Excel and copy `excel-navbar-plugin.xml` to:
+>
 > ```
 > /Users/<username>/Library/Containers/com.microsoft.Excel/Data/Documents/wef
 > ```
+>
 > Then reopen Excel. The add-in will appear in the **Developer** section.
 
 ---
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| "Upload My Add-in" option is missing (Mac) | Copy the manifest to the `wef` folder manually. See [Excel for Mac](#excel-for-mac) above. |
-| Add-in loads but shows a blank panel | Check your internet connection. The task pane is a web app served from GitHub Pages. |
-| Keyboard shortcuts don't work | Ensure the task pane is focused. Some shortcuts may conflict with system shortcuts on macOS. |
-| Manifest validation fails | Download the manifest again from the [landing page](https://valentinzurita.github.io/excel-navbar-plugin/). Do not copy-paste the raw XML. |
+| Problem                                    | Solution                                                                                                                                   |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| "Upload My Add-in" option is missing (Mac) | Copy the manifest to the `wef` folder manually. See [Excel for Mac](#excel-for-mac) above.                                                 |
+| Add-in loads but shows a blank panel       | Check your internet connection. The task pane is a web app served from GitHub Pages.                                                       |
+| Keyboard shortcuts don't work              | Ensure the task pane is focused. Some shortcuts may conflict with system shortcuts on macOS.                                               |
+| Manifest validation fails                  | Download the manifest again from the [landing page](https://valentinzurita.github.io/excel-navbar-plugin/). Do not copy-paste the raw XML. |
 
 ---
 
