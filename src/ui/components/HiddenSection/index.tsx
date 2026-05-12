@@ -130,6 +130,16 @@ function HiddenSheetRow({
           return;
         }
 
+        // Suppress Space on hidden rows so it does not leak to the global
+        // DnD KeyboardSensor and initiate a drag on a non-sortable section.
+        // Hidden sheets are not draggable; their only action is unhide,
+        // which is already reachable via Enter or pointer on the overlay button.
+        if (event.key === ' ') {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+
         const managedNavigationKey =
           event.key === 'ArrowDown' ||
           event.key === 'ArrowUp' ||
