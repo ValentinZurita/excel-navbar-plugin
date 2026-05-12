@@ -134,9 +134,14 @@ function HiddenSheetRow({
         // DnD KeyboardSensor and initiate a drag on a non-sortable section.
         // Hidden sheets are not draggable; their only action is unhide,
         // which is already reachable via Enter or pointer on the overlay button.
+        // stopImmediatePropagation on the native event is required because
+        // React's synthetic stopPropagation does not prevent native listeners
+        // on document (e.g. dnd-kit's sensor after drag has started) from
+        // receiving the event.
         if (event.key === ' ') {
           event.preventDefault();
           event.stopPropagation();
+          event.nativeEvent.stopImmediatePropagation();
           return;
         }
 

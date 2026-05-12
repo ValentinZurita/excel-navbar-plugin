@@ -303,4 +303,62 @@ export function useKeyboardNavigationGlobalListeners({
     searchFocusedItemIdRef,
     searchInputRef,
   ]);
+
+  /**
+   * Capture-phase safety net: suppress Space when logical focus is on a hidden
+   * worksheet row, regardless of where DOM focus actually is. This prevents the
+   * global dnd-kit KeyboardSensor from initiating a drag when DOM focus has
+   * drifted to a sortable element (a known one-frame lag during cross-section
+   * keyboard handoff).
+   *
+   * Nested interactive children of the hidden row (e.g. the unhide button) are
+   * allowed to handle Space normally.
+   */
+  useEffect(() => {
+    const handleSpaceOnHidden = (event: KeyboardEvent) => {
+      if (event.key !== ' ') {
+        return;
+      }
+
+      const active = document.activeElement;
+      if (
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLTextAreaElement ||
+        active instanceof HTMLSelectElement ||
+        (active instanceof HTMLElement && active.isContentEditable)
+      ) {
+        return;
+      }
+
+      const logicalId = isSearchActiveRef.current
+        ? searchFocusedItemIdRef.current
+        : focusedItemIdRef.current;
+      if (!logicalId) {
+        return;
+      }
+
+      const logicalItem = items.find((item) => item.id === logicalId);
+      if (logicalItem?.kind !== 'hidden-worksheet') {
+        return;
+      }
+
+      const root = elementRegistryRef.current.get(logicalId);
+      if (root && active && root.contains(active) && active !== root) {
+        const isInteractiveChild = active.closest(
+          'button, a, input, textarea, select, [contenteditable="true"]',
+        );
+        if (isInteractiveChild && root.contains(isInteractiveChild)) {
+          return;
+        }
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    document.addEventListener('keydown', handleSpaceOnHidden, true);
+    return () => {
+      document.removeEventListener('keydown', handleSpaceOnHidden, true);
+    };
+  }, [elementRegistryRef, focusedItemIdRef, isSearchActiveRef, items, searchFocusedItemIdRef]);
 }
