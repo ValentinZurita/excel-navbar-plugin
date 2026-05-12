@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { WorksheetEntity } from '../../src/domain/navigation/types';
@@ -196,5 +196,54 @@ describe('HiddenSection', () => {
       'data-navigable-id',
       'worksheet:hidden-1',
     );
+  });
+
+  it('suppresses Space key on hidden rows to prevent global DnD keyboard sensor activation', () => {
+    const onItemKeyDown = vi.fn();
+    const parentReactHandler = vi.fn();
+
+    render(
+      <div onKeyDown={parentReactHandler}>
+        <HiddenSection
+          isCollapsed={false}
+          worksheets={[hiddenWorksheet()]}
+          onToggle={vi.fn()}
+          onUnhide={vi.fn()}
+          onOpenContextMenu={vi.fn()}
+          onItemKeyDown={onItemKeyDown}
+        />
+      </div>,
+    );
+
+    const row = screen.getByRole('button', { name: 'Archive' });
+    fireEvent.keyDown(row, { key: ' ' });
+
+    expect(onItemKeyDown).not.toHaveBeenCalled();
+    expect(parentReactHandler).not.toHaveBeenCalled();
+  });
+
+  it('still allows Enter and arrow keys for keyboard navigation on hidden rows', () => {
+    const onItemKeyDown = vi.fn();
+    const { container } = render(
+      <HiddenSection
+        isCollapsed={false}
+        worksheets={[hiddenWorksheet()]}
+        onToggle={vi.fn()}
+        onUnhide={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+        onItemKeyDown={onItemKeyDown}
+      />,
+    );
+
+    const row = container.querySelector('.hidden-row')!;
+
+    fireEvent.keyDown(row, { key: 'Enter' });
+    expect(onItemKeyDown).toHaveBeenCalledTimes(1);
+
+    fireEvent.keyDown(row, { key: 'ArrowDown' });
+    expect(onItemKeyDown).toHaveBeenCalledTimes(2);
+
+    fireEvent.keyDown(row, { key: 'ArrowUp' });
+    expect(onItemKeyDown).toHaveBeenCalledTimes(3);
   });
 });
