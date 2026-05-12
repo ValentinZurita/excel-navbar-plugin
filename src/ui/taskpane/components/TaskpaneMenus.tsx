@@ -87,7 +87,14 @@ function MenuItem({
   onClick: () => void;
 }) {
   return (
-    <button type="button" className="context-menu-item" onClick={onClick}>
+    <button
+      type="button"
+      className="context-menu-item"
+      onClick={onClick}
+      onMouseEnter={(event) => {
+        event.currentTarget.focus({ preventScroll: true });
+      }}
+    >
       <span className="context-menu-icon" aria-hidden="true">
         {icon}
       </span>
