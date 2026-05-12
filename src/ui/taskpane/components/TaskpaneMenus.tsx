@@ -200,9 +200,10 @@ function focusNavigableHostById(navigableId: string | null | undefined) {
 }
 
 /**
- * Keyboard control when the sheet menu was opened via ArrowRight (not pointer).
- * Blurs the navigator row first so Excel-green :focus-visible rings do not linger;
- * registers capture only in this mode so pointer-opened menus behave as before.
+ * Keyboard control for the sheet context menu.
+ * Blurs the navigator row first so Excel-green :focus-visible rings do not linger.
+ * Registers a document keydown listener while the menu is open so both keyboard-
+ * opened and pointer-opened menus can be navigated with arrow keys.
  */
 function useSheetContextMenuListKeyboard(args: {
   menuPanelRef: RefObject<HTMLDivElement>;
@@ -229,31 +230,24 @@ function useSheetContextMenuListKeyboard(args: {
     }
 
     let cancelled = false;
-    let innerFrame = 0;
-    const outerFrame = window.requestAnimationFrame(() => {
+    const frame = window.requestAnimationFrame(() => {
       if (cancelled) {
         return;
       }
       blurNavigableHostIfFocused();
-      innerFrame = window.requestAnimationFrame(() => {
-        if (cancelled) {
-          return;
-        }
-        const panel = menuPanelRef.current;
-        const items = panel ? collectSheetMenuListItems(panel) : [];
-        items[0]?.focus({ preventScroll: true });
-      });
+      const panel = menuPanelRef.current;
+      const items = panel ? collectSheetMenuListItems(panel) : [];
+      items[0]?.focus({ preventScroll: true });
     });
 
     return () => {
       cancelled = true;
-      window.cancelAnimationFrame(outerFrame);
-      window.cancelAnimationFrame(innerFrame);
+      window.cancelAnimationFrame(frame);
     };
   }, [isEnabled, keyboardOpened, menuInstanceKey, menuPanelRef]);
 
   useEffect(() => {
-    if (!isEnabled || !keyboardOpened) {
+    if (!isEnabled) {
       return undefined;
     }
 
@@ -268,14 +262,6 @@ function useSheetContextMenuListKeyboard(args: {
     const handleKeyDown = (event: KeyboardEvent) => {
       const panel = menuPanelRef.current;
       if (!panel) {
-        return;
-      }
-
-      const pathTarget = event.target instanceof Node ? event.target : null;
-      const focusInsidePanel =
-        document.activeElement instanceof Node && panel.contains(document.activeElement);
-      const targetInsidePanel = Boolean(pathTarget && panel.contains(pathTarget));
-      if (!focusInsidePanel && !targetInsidePanel) {
         return;
       }
 
@@ -364,14 +350,7 @@ function useSheetContextMenuListKeyboard(args: {
     return () => {
       document.removeEventListener('keydown', handleKeyDown, true);
     };
-  }, [
-    anchorNavigableId,
-    isEnabled,
-    keyboardOpened,
-    menuPanelRef,
-    onCloseMenus,
-    onRestoreKeyboardMenuFocus,
-  ]);
+  }, [anchorNavigableId, isEnabled, menuPanelRef, onCloseMenus, onRestoreKeyboardMenuFocus]);
 }
 
 function buildSheetMenuActions(
