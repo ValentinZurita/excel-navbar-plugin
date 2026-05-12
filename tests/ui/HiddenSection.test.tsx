@@ -216,10 +216,45 @@ describe('HiddenSection', () => {
     );
 
     const row = screen.getByRole('button', { name: 'Archive' });
+    const stopImmediatePropagationSpy = vi.spyOn(Event.prototype, 'stopImmediatePropagation');
+
     fireEvent.keyDown(row, { key: ' ' });
 
     expect(onItemKeyDown).not.toHaveBeenCalled();
     expect(parentReactHandler).not.toHaveBeenCalled();
+    expect(stopImmediatePropagationSpy).toHaveBeenCalled();
+
+    stopImmediatePropagationSpy.mockRestore();
+  });
+
+  it('does not suppress Space when it targets the nested unhide button', () => {
+    const onItemKeyDown = vi.fn();
+    const { container } = render(
+      <HiddenSection
+        isCollapsed={false}
+        worksheets={[hiddenWorksheet()]}
+        onToggle={vi.fn()}
+        onUnhide={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+        onItemKeyDown={onItemKeyDown}
+      />,
+    );
+
+    // Hover to reveal the unhide button
+    const leading = container.querySelector('.sheet-row-leading');
+    fireEvent.mouseEnter(leading!);
+
+    const unhideButton = container.querySelector('.sheet-pin-button');
+    expect(unhideButton).not.toBeNull();
+
+    // Fire Space on the unhide button; the event bubbles to the row,
+    // but hasNestedInteractiveTarget should return true for the button
+    // so the row handler returns early and does not suppress Space.
+    fireEvent.keyDown(unhideButton!, { key: ' ' });
+
+    // onItemKeyDown should not be called because Space is not a managed nav key
+    // and the nested interactive target check returns early.
+    expect(onItemKeyDown).not.toHaveBeenCalled();
   });
 
   it('still allows Enter and arrow keys for keyboard navigation on hidden rows', () => {
