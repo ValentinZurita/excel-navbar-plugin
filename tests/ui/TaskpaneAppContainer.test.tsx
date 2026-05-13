@@ -486,7 +486,8 @@ describe('TaskpaneAppContainer', () => {
 
     await user.keyboard('{ArrowRight}');
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Pin sheet' })).toHaveFocus();
+      // Hidden sheets do not show Pin — the first menu item is Unhide sheet
+      expect(screen.getByRole('button', { name: 'Unhide sheet' })).toHaveFocus();
     });
 
     await user.keyboard('{ArrowLeft}');
@@ -532,7 +533,8 @@ describe('TaskpaneAppContainer', () => {
 
     await user.keyboard('{ArrowRight}');
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Pin sheet' })).toHaveFocus();
+      // Hidden sheets do not show Pin — the first menu item is Unhide sheet
+      expect(screen.getByRole('button', { name: 'Unhide sheet' })).toHaveFocus();
     });
 
     await user.keyboard('{ArrowLeft}{ArrowUp}');
@@ -577,13 +579,14 @@ describe('TaskpaneAppContainer', () => {
 
     fireEvent.keyDown(archiveRow, { key: 'ArrowRight' });
 
-    const pinSheetButton = await screen.findByRole('button', { name: 'Pin sheet' });
+    // Hidden sheets do not show Pin — the first menu item is Unhide sheet
+    const unhideSheetButton = await screen.findByRole('button', { name: 'Unhide sheet' });
     await waitFor(() => {
-      expect(pinSheetButton).toHaveFocus();
+      expect(unhideSheetButton).toHaveFocus();
     });
 
     act(() => {
-      fireEvent.keyDown(pinSheetButton, { key: 'ArrowLeft' });
+      fireEvent.keyDown(unhideSheetButton, { key: 'ArrowLeft' });
       fireEvent.keyDown(document, { key: 'ArrowUp' });
     });
 
