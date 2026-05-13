@@ -366,8 +366,13 @@ function buildSheetMenuActions(
     | 'onStartDeleteConfirmation'
   >,
 ): MenuAction[] {
-  const actions: MenuAction[] = [
-    {
+  const isVisible = sheetMenu.worksheet.visibility === 'Visible';
+  const actions: MenuAction[] = [];
+
+  // Pin/unpin only makes sense for visible sheets: pinning a hidden sheet
+  // creates a contradictory state (pinned but invisible).
+  if (isVisible) {
+    actions.push({
       key: 'toggle-pin',
       icon: sheetMenu.worksheet.isPinned ? (
         <PinOffMenuIcon className="context-menu-icon-svg" />
@@ -381,33 +386,33 @@ function buildSheetMenuActions(
         handlers.onTogglePin(sheetMenu.worksheet);
         handlers.onCloseMenus();
       },
+    });
+  }
+
+  actions.push({
+    key: 'toggle-visibility',
+    icon: isVisible ? (
+      <EyeOffIcon className="context-menu-icon-svg" />
+    ) : (
+      <EyeIcon className="context-menu-icon-svg" />
+    ),
+    label: isVisible
+      ? SHEET_CONTEXT_MENU_LABELS.hideSheet
+      : SHEET_CONTEXT_MENU_LABELS.unhideSheet,
+    onSelect: () => {
+      handlers.onToggleVisibility(sheetMenu.worksheet);
+      handlers.onCloseMenus();
     },
-    {
-      key: 'toggle-visibility',
-      icon:
-        sheetMenu.worksheet.visibility === 'Visible' ? (
-          <EyeOffIcon className="context-menu-icon-svg" />
-        ) : (
-          <EyeIcon className="context-menu-icon-svg" />
-        ),
-      label:
-        sheetMenu.worksheet.visibility === 'Visible'
-          ? SHEET_CONTEXT_MENU_LABELS.hideSheet
-          : SHEET_CONTEXT_MENU_LABELS.unhideSheet,
-      onSelect: () => {
-        handlers.onToggleVisibility(sheetMenu.worksheet);
-        handlers.onCloseMenus();
-      },
+  });
+
+  actions.push({
+    key: 'rename',
+    icon: <RenameMenuIcon className="context-menu-icon-svg" />,
+    label: 'Rename',
+    onSelect: () => {
+      handlers.onRenameWorksheet(sheetMenu.worksheet);
     },
-    {
-      key: 'rename',
-      icon: <RenameMenuIcon className="context-menu-icon-svg" />,
-      label: 'Rename',
-      onSelect: () => {
-        handlers.onRenameWorksheet(sheetMenu.worksheet);
-      },
-    },
-  ];
+  });
 
   if (sheetMenu.worksheet.groupId) {
     actions.push({
@@ -421,14 +426,18 @@ function buildSheetMenuActions(
     });
   }
 
-  actions.push({
-    key: 'new-group',
-    icon: <AddGroupMenuIcon className="context-menu-icon-svg" />,
-    label: 'New group',
-    onSelect: () => {
-      handlers.onStartCreatingGroup(sheetMenu.worksheet.worksheetId);
-    },
-  });
+  // Creating a new group from a hidden sheet is conceptually odd:
+  // groups organize visual navigation, and hidden sheets don't contribute to it.
+  if (isVisible) {
+    actions.push({
+      key: 'new-group',
+      icon: <AddGroupMenuIcon className="context-menu-icon-svg" />,
+      label: 'New group',
+      onSelect: () => {
+        handlers.onStartCreatingGroup(sheetMenu.worksheet.worksheetId);
+      },
+    });
+  }
 
   // Destructive action at the end
   actions.push({
