@@ -600,6 +600,81 @@ describe('TaskpaneMenus', () => {
     expect(onCloseMenus).toHaveBeenCalled();
   });
 
+  describe('Hidden sheet menu', () => {
+    function renderHiddenSheetMenu(
+      overrides: Partial<React.ComponentProps<typeof TaskpaneMenus>> = {},
+    ) {
+      return renderSheetMenu({
+        activeMenu: {
+          kind: 'sheet',
+          x: 10,
+          y: 20,
+          worksheet: createWorksheet({ visibility: 'Hidden' }),
+        },
+        ...overrides,
+      });
+    }
+
+    it('does not show Pin sheet action for hidden worksheets', () => {
+      renderHiddenSheetMenu();
+
+      expect(screen.queryByRole('button', { name: 'Pin sheet' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Unpin sheet' })).not.toBeInTheDocument();
+    });
+
+    it('does not show New group action for hidden worksheets', () => {
+      renderHiddenSheetMenu();
+
+      expect(screen.queryByRole('button', { name: 'New group' })).not.toBeInTheDocument();
+    });
+
+    it('shows Unhide sheet, Rename and Delete for hidden worksheets', () => {
+      renderHiddenSheetMenu();
+
+      expect(screen.getByRole('button', { name: 'Unhide sheet' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Rename' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Delete sheet' })).toBeInTheDocument();
+    });
+
+    it('shows remove-from-group for hidden grouped worksheets', () => {
+      renderHiddenSheetMenu({
+        activeMenu: {
+          kind: 'sheet',
+          x: 10,
+          y: 20,
+          worksheet: createWorksheet({ visibility: 'Hidden', groupId: 'group-1' }),
+        },
+      });
+
+      expect(screen.getByRole('button', { name: 'Remove from group' })).toBeInTheDocument();
+    });
+
+    it('focuses the first hidden-sheet menu action (Unhide sheet) when opened via keyboard', async () => {
+      renderHiddenSheetMenu({
+        activeMenu: {
+          kind: 'sheet',
+          x: 10,
+          y: 20,
+          worksheet: createWorksheet({ visibility: 'Hidden' }),
+          openedVia: 'keyboard',
+        },
+      });
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: 'Unhide sheet' })).toHaveFocus();
+      });
+    });
+
+    it('keeps delete action at the end for hidden worksheets', () => {
+      renderHiddenSheetMenu();
+
+      const buttons = screen.getAllByRole('button');
+      const deleteButton = screen.getByRole('button', { name: 'Delete sheet' });
+
+      expect(buttons[buttons.length - 1]).toBe(deleteButton);
+    });
+  });
+
   describe('Delete sheet action', () => {
     it('renders delete sheet button in sheet menu', () => {
       renderSheetMenu();
