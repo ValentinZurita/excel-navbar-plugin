@@ -396,9 +396,7 @@ function buildSheetMenuActions(
     ) : (
       <EyeIcon className="context-menu-icon-svg" />
     ),
-    label: isVisible
-      ? SHEET_CONTEXT_MENU_LABELS.hideSheet
-      : SHEET_CONTEXT_MENU_LABELS.unhideSheet,
+    label: isVisible ? SHEET_CONTEXT_MENU_LABELS.hideSheet : SHEET_CONTEXT_MENU_LABELS.unhideSheet,
     onSelect: () => {
       handlers.onToggleVisibility(sheetMenu.worksheet);
       handlers.onCloseMenus();

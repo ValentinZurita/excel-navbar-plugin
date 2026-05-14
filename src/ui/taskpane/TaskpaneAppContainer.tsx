@@ -407,41 +407,47 @@ export function TaskpaneAppContainer() {
     setRenameInvalidWorksheetId(null);
   }, []);
 
-  const handleRenameWorksheetValueChange = useCallback((worksheetId: string, value: string) => {
-    if (worksheetId !== renamingWorksheetId) {
-      return;
-    }
-
-    setRenameDraftName(value);
-
-    const trimmed = value.trim();
-    const hasDuplicate = Object.values(controller.state.worksheetsById).some((candidate) => {
-      if (candidate.worksheetId === worksheetId) {
-        return false;
+  const handleRenameWorksheetValueChange = useCallback(
+    (worksheetId: string, value: string) => {
+      if (worksheetId !== renamingWorksheetId) {
+        return;
       }
-      return candidate.name.trim().toLowerCase() === trimmed.toLowerCase();
-    });
 
-    if (!trimmed || trimmed.length > worksheetNameMaxLength || hasDuplicate) {
+      setRenameDraftName(value);
+
+      const trimmed = value.trim();
+      const hasDuplicate = Object.values(controller.state.worksheetsById).some((candidate) => {
+        if (candidate.worksheetId === worksheetId) {
+          return false;
+        }
+        return candidate.name.trim().toLowerCase() === trimmed.toLowerCase();
+      });
+
+      if (!trimmed || trimmed.length > worksheetNameMaxLength || hasDuplicate) {
+        setRenameInvalidWorksheetId(worksheetId);
+        return;
+      }
+
+      setRenameInvalidWorksheetId(null);
+      setRenameBanner(null);
+    },
+    [controller.state.worksheetsById, renamingWorksheetId],
+  );
+
+  const handleRenameWorksheetMaxLengthReached = useCallback(
+    (worksheetId: string) => {
+      if (worksheetId !== renamingWorksheetId) {
+        return;
+      }
+
       setRenameInvalidWorksheetId(worksheetId);
-      return;
-    }
-
-    setRenameInvalidWorksheetId(null);
-    setRenameBanner(null);
-  }, [controller.state.worksheetsById, renamingWorksheetId]);
-
-  const handleRenameWorksheetMaxLengthReached = useCallback((worksheetId: string) => {
-    if (worksheetId !== renamingWorksheetId) {
-      return;
-    }
-
-    setRenameInvalidWorksheetId(worksheetId);
-    setRenameBanner({
-      tone: 'error',
-      message: `Worksheet names can be at most ${worksheetNameMaxLength} characters.`,
-    });
-  }, [renamingWorksheetId]);
+      setRenameBanner({
+        tone: 'error',
+        message: `Worksheet names can be at most ${worksheetNameMaxLength} characters.`,
+      });
+    },
+    [renamingWorksheetId],
+  );
 
   // Inline rename handlers for groups.
   const handleRenameGroupStart = useCallback(
