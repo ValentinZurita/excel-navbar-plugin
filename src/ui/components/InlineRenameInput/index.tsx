@@ -42,6 +42,10 @@ export function InlineRenameInput({
   }, [autoFocus]);
 
   function handleKeyDown(event: ReactKeyboardEvent<HTMLInputElement>) {
+    // Keep keystrokes inside inline rename so parent row shortcuts
+    // (Space/Enter activation) do not fire while editing.
+    event.stopPropagation();
+
     // Ignore Enter/Escape while the user is composing IME input.
     if (event.nativeEvent.isComposing) {
       return;

@@ -228,6 +228,12 @@ function SheetRowComponent({
       return;
     }
 
+    if (isRenaming) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     const now = performance.now();
 
     if (event.detail > 1) {
@@ -256,6 +262,12 @@ function SheetRowComponent({
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
     if (!isInteractive) {
+      return;
+    }
+
+    if (isRenaming) {
+      event.preventDefault();
+      event.stopPropagation();
       return;
     }
 
