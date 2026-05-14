@@ -612,7 +612,7 @@ describe('TaskpaneSections', () => {
     expect(document.activeElement).toBe(document.body);
   });
 
-  it('clears keyboard navigation focus after inactivity timeout', async () => {
+  it('clears keyboard navigation focus on pointer movement inside taskpane shell', async () => {
     vi.useFakeTimers();
 
     const navigatorView: NavigatorView = {
@@ -627,12 +627,14 @@ describe('TaskpaneSections', () => {
     };
 
     const { container } = render(
-      <TaskpaneSections
-        {...createBaseProps({
-          navigatorView,
-          activeWorksheetId: 'sheet-1',
-        })}
-      />,
+      <main className="taskpane-shell">
+        <TaskpaneSections
+          {...createBaseProps({
+            navigatorView,
+            activeWorksheetId: 'sheet-1',
+          })}
+        />
+      </main>,
     );
 
     const revenueRow = screen.getByRole('button', { name: 'Revenue' });
@@ -641,9 +643,7 @@ describe('TaskpaneSections', () => {
 
     expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
 
-    act(() => {
-      vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS);
-    });
+    fireEvent.pointerMove(revenueRow, { clientX: 2, clientY: 2, bubbles: true });
 
     expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
     expect(
@@ -661,7 +661,7 @@ describe('TaskpaneSections', () => {
     expect(document.activeElement).toBe(document.body);
   }, 10000);
 
-  it('postpones idle highlight return while the pointer moves inside the task pane shell', () => {
+  it('clears keyboard highlight on pointer movement inside the task pane shell', () => {
     vi.useFakeTimers();
 
     const navigatorView: NavigatorView = {
@@ -695,31 +695,24 @@ describe('TaskpaneSections', () => {
       .closest('[data-navigable-id="worksheet:sheet-2"]');
     expect(forecastArticle).toHaveAttribute('data-visual-focused', 'true');
 
-    act(() => {
-      vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS - 100);
-    });
-    expect(forecastArticle).toHaveAttribute('data-visual-focused', 'true');
-
     fireEvent.pointerMove(revenueRow, { clientX: 2, clientY: 2, bubbles: true });
 
-    act(() => {
-      vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS - 100);
-    });
-    expect(forecastArticle).toHaveAttribute('data-visual-focused', 'true');
-
-    act(() => {
-      vi.advanceTimersByTime(200);
-    });
-
+    // Keyboard focus should clear immediately on pointer move, returning to active worksheet
     expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
     expect(
       screen
         .getByRole('button', { name: 'Revenue' })
         .closest('[data-navigable-id="worksheet:sheet-1"]'),
     ).toHaveAttribute('data-visual-focused', 'true');
+
+    act(() => {
+      vi.advanceTimersByTime(HIGHLIGHT_EXIT_MS);
+    });
+
+    expect(container.querySelectorAll('[data-visual-exiting="true"]').length).toBe(0);
   });
 
-  it('restarts keyboard navigation from active worksheet after idle clear', () => {
+  it('restarts keyboard navigation from active worksheet after pointer clears focus', () => {
     vi.useFakeTimers();
 
     const navigatorView: NavigatorView = {
@@ -735,21 +728,23 @@ describe('TaskpaneSections', () => {
     };
 
     const { container } = render(
-      <TaskpaneSections
-        {...createBaseProps({
-          navigatorView,
-          activeWorksheetId: 'sheet-2',
-        })}
-      />,
+      <main className="taskpane-shell">
+        <TaskpaneSections
+          {...createBaseProps({
+            navigatorView,
+            activeWorksheetId: 'sheet-2',
+          })}
+        />
+      </main>,
     );
 
     const revenueRow = screen.getByRole('button', { name: 'Revenue' });
     revenueRow.focus();
     fireEvent.keyDown(revenueRow, { key: 'ArrowDown', code: 'ArrowDown' });
 
-    act(() => {
-      vi.advanceTimersByTime(TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS);
-    });
+    fireEvent.pointerMove(revenueRow, { clientX: 2, clientY: 2, bubbles: true });
+
+    // After pointer movement clears keyboard focus, active worksheet regains visual focus
     expect(container.querySelectorAll('[data-visual-focused="true"]').length).toBe(1);
     expect(
       screen

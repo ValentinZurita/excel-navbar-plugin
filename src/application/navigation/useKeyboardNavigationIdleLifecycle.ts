@@ -27,8 +27,8 @@ export function useKeyboardNavigationIdleLifecycle({
   }, [clearFocus, clearIdleTimeout, idleClearTimeoutRef, idleTimeoutMs]);
 
   const markKeyboardActivity = useCallback(() => {
-    scheduleIdleClear();
-  }, [scheduleIdleClear]);
+    clearIdleTimeout();
+  }, [clearIdleTimeout]);
 
   return { clearIdleTimeout, scheduleIdleClear, markKeyboardActivity };
 }

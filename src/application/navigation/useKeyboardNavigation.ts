@@ -160,13 +160,15 @@ export function useKeyboardNavigation(
   const focusedItemIdRef = useRef<string | null>(null);
   const searchFocusedItemIdRef = useRef<string | null>(null);
   const isSearchActiveRef = useRef(isSearchActive);
-  const idleExtendPointerLastAtRef = useRef(0);
+  const idleExtendPointerLastAtRef = useRef(Number.NEGATIVE_INFINITY);
   const pendingDomFocusRestoreTokenRef = useRef(0);
+  const navigationInputModeRef = useRef<NavigationInputMode>(null);
 
   // Check if navigation should be suppressed
   const isSuppressed = isDragActive || isDialogOpen || isRenaming || isContextMenuOpen;
   const isHighlightSuppressed = isDragActive || isDialogOpen || isRenaming;
   const isSuppressedRef = useRef(isSuppressed);
+  navigationInputModeRef.current = navigationInputMode;
 
   const visualFocusedItemId = useKeyboardNavigationVisualFocus({
     focusedItemId,
@@ -384,6 +386,8 @@ export function useKeyboardNavigation(
     clearIdleTimeout,
     scheduleIdleClear,
     markKeyboardActivity,
+    clearFocus,
+    navigationInputModeRef,
     setFocusedItemId,
     setNavigationInputMode,
     setKeyboardFocusedItem,

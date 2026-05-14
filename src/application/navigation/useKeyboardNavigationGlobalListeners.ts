@@ -42,6 +42,8 @@ interface UseKeyboardNavigationGlobalListenersArgs {
   clearIdleTimeout: () => void;
   scheduleIdleClear: () => void;
   markKeyboardActivity: () => void;
+  clearFocus: () => void;
+  navigationInputModeRef: MutableRefObject<'keyboard' | 'pointer' | null>;
   setFocusedItemId: Dispatch<SetStateAction<string | null>>;
   setNavigationInputMode: Dispatch<SetStateAction<'keyboard' | 'pointer' | null>>;
   setKeyboardFocusedItem: (itemId: string) => void;
@@ -70,6 +72,8 @@ export function useKeyboardNavigationGlobalListeners({
   clearIdleTimeout,
   scheduleIdleClear,
   markKeyboardActivity,
+  clearFocus,
+  navigationInputModeRef,
   setFocusedItemId,
   setNavigationInputMode,
   setKeyboardFocusedItem,
@@ -152,7 +156,11 @@ export function useKeyboardNavigationGlobalListeners({
         return;
       }
       idleExtendPointerLastAtRef.current = now;
-      scheduleIdleClear();
+      if (navigationInputModeRef.current === 'keyboard') {
+        clearFocus();
+      } else {
+        scheduleIdleClear();
+      }
     };
 
     document.addEventListener('pointermove', handlePointerMove, { capture: true, passive: true });
@@ -166,6 +174,8 @@ export function useKeyboardNavigationGlobalListeners({
     isSuppressedRef,
     scheduleIdleClear,
     searchFocusedItemIdRef,
+    clearFocus,
+    navigationInputModeRef,
   ]);
 
   useEffect(() => {
