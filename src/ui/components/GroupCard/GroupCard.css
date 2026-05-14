@@ -25,7 +25,7 @@
   border-radius: inherit;
   pointer-events: none;
   z-index: 0;
-  background: var(--excel-nav-active-bg);
+  background: var(--excel-nav-resting-bg);
   opacity: 0;
   transition: opacity var(--excel-nav-highlight-fade-ms) var(--excel-nav-highlight-fade-ease);
 }
@@ -56,10 +56,9 @@
 }
 
 /* Active state for collapsed groups containing the active worksheet.
-   Shows the group header as selected when the active sheet is hidden inside a closed group.
-   Uses light gray background + Excel green text (consistent with SheetRow). */
+   Strong wash + Excel green text — the primary anchor, consistent with SheetRow. */
 .group-header-active {
-  background: var(--excel-nav-resting-bg);
+  background: var(--excel-nav-active-bg);
   border-color: transparent;
   transition:
     background-color 260ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -85,13 +84,17 @@
   color: var(--excel-nav-active-fg);
 }
 
-/* Collapsed group header that represents the active sheet while focus lives elsewhere */
-.group-header.group-header-active[data-active='true'][data-active-dimmed='true'] {
-  background: var(--excel-nav-anchor-dim-bg);
-}
-
-.group-header.group-header-active[data-active='true'][data-active-dimmed='true'] .group-title {
-  color: var(--excel-nav-anchor-dim-fg);
+/* When the active group header also has keyboard focus, avoid double-stacking the
+   same semi-transparent wash — the header already owns the active background.
+   This keeps the active header visually stable during focus transitions.
+   Background-color transitions so the resting wash fades out gently if
+   the header becomes active while the highlight layer is still visible. */
+.group-header-active .group-header-nav-highlight,
+.group-header[data-active='true'] .group-header-nav-highlight {
+  background: transparent;
+  transition:
+    opacity var(--excel-nav-highlight-fade-ms) var(--excel-nav-highlight-fade-ease),
+    background-color var(--excel-nav-highlight-fade-ms) var(--excel-nav-highlight-fade-ease);
 }
 
 .group-toggle {

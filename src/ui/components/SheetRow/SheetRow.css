@@ -99,23 +99,24 @@
   transform: scale(0.95);
 }
 
-/* Keyboard/pointer selection wash — real DOM layer so WebView reliably animates opacity. */
+/* Keyboard/pointer selection wash — lighter than active so the active row stays dominant.
+   Uses a subtle gray instead of the strong accent wash. */
 .sheet-row-nav-highlight {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
   z-index: 0;
-  background: var(--excel-nav-active-bg);
+  background: var(--excel-nav-resting-bg);
   opacity: 0;
   transition: opacity var(--excel-nav-highlight-fade-ms) var(--excel-nav-highlight-fade-ease);
 }
 
-/* Active row state: subtle ghost background + Excel green text.
-   This prevents fighting with the heavy keyboard navigation focus state. */
+/* Active row state: strong wash + Excel green text.
+   This is the primary anchor — the actual Excel worksheet. */
 .sheet-row-active,
 .sheet-row[data-active='true'] {
-  background: var(--excel-nav-resting-bg);
+  background: var(--excel-nav-active-bg);
   border-color: transparent;
   box-shadow: none;
   transform: none;
@@ -131,16 +132,20 @@
   color: var(--excel-nav-active-fg);
 }
 
-/* Active worksheet anchor while another navigable row owns strong highlight */
-.sheet-row[data-active='true'][data-active-dimmed='true'] {
-  background: var(--excel-nav-anchor-dim-bg);
+/* When the active row also has keyboard focus, avoid double-stacking the
+   same semi-transparent wash — the row already owns the active background.
+   This keeps the active row visually stable during focus transitions.
+   Background-color transitions so the resting wash fades out gently if
+   the row becomes active while the highlight layer is still visible. */
+.sheet-row-active .sheet-row-nav-highlight,
+.sheet-row[data-active='true'] .sheet-row-nav-highlight {
+  background: transparent;
+  transition:
+    opacity var(--excel-nav-highlight-fade-ms) var(--excel-nav-highlight-fade-ease),
+    background-color var(--excel-nav-highlight-fade-ms) var(--excel-nav-highlight-fade-ease);
 }
 
-.sheet-row[data-active='true'][data-active-dimmed='true'] .sheet-title {
-  color: var(--excel-nav-anchor-dim-fg);
-}
-
-/* ELIMINADO: Hover no longer has visual background state
+/* Deleted: Hover no longer has visual background state
 .sheet-row[data-highlighted='true']:not([data-active='true']) {
   background: var(--excel-nav-hover-bg);
   border-color: transparent;
