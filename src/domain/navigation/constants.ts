@@ -8,6 +8,7 @@ export const legacyLocalCacheKey = 'sheetNavigator.navigation.cache';
 export const customXmlPartNamespace = 'https://sheetnavigator.app/navigation/v2';
 export const customXmlPartRootTag = 'sheetNavigatorNavigation';
 export const worksheetStableIdPropertyKey = 'sheetNavigator.stableSheetId';
+export const worksheetNameMaxLength = 31;
 
 export function buildScopedLocalCacheKey(stableWorkbookKey: string) {
   return `${legacyLocalCacheKey}::${encodeURIComponent(stableWorkbookKey)}`;

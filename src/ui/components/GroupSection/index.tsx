@@ -12,6 +12,7 @@ interface GroupSectionProps {
   dragConfig?: GroupDragConfig;
   renamingGroupId?: string | null;
   renamingWorksheetId?: string | null;
+  renameInvalidWorksheetId?: string | null;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onToggleCollapsed: (groupId: string) => void;
   onTogglePin?: (worksheetId: string) => void;
@@ -32,6 +33,8 @@ interface GroupSectionProps {
   onRenameSubmit?: (groupId: string, newName: string) => void;
   onRenameCancel?: () => void;
   onRenameWorksheetSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
+  onRenameWorksheetValueChange?: (worksheetId: string, value: string) => void;
+  onRenameWorksheetMaxLengthReached?: (worksheetId: string) => void;
   onStartRenameWorksheet?: (worksheetId: string) => void;
   /** Logical focus item ID for DOM focus management */
   focusedItemId?: string | null;
@@ -59,6 +62,7 @@ export function GroupSection({
   dragConfig,
   renamingGroupId,
   renamingWorksheetId,
+  renameInvalidWorksheetId,
   onActivate,
   onToggleCollapsed,
   onTogglePin,
@@ -67,6 +71,8 @@ export function GroupSection({
   onRenameSubmit,
   onRenameCancel,
   onRenameWorksheetSubmit,
+  onRenameWorksheetValueChange,
+  onRenameWorksheetMaxLengthReached,
   onStartRenameWorksheet,
   focusedItemId,
   visualFocusedItemId,
@@ -96,7 +102,10 @@ export function GroupSection({
             dragConfig={dragConfig}
             isRenaming={renamingGroupId === group.groupId}
             renamingWorksheetId={renamingWorksheetId}
+            renameInvalidWorksheetId={renameInvalidWorksheetId}
             onRenameWorksheetSubmit={onRenameWorksheetSubmit}
+            onRenameWorksheetValueChange={onRenameWorksheetValueChange}
+            onRenameWorksheetMaxLengthReached={onRenameWorksheetMaxLengthReached}
             onStartRenameWorksheet={onStartRenameWorksheet}
             navigableId={navigableId}
             isFocused={isFocused}

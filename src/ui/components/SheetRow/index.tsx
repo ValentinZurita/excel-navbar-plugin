@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, type CSSProperties, type HTMLAttributes, type Ref } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import { FAST_DOUBLE_CLICK_RENAME_MS } from '../../constants/interactionTiming';
+import { worksheetNameMaxLength } from '../../../domain/navigation/constants';
 import { useLeadingClusterInteraction } from '../../hooks/useLeadingClusterInteraction';
 import type { ContextMenuInteraction } from '../../taskpane/utils/contextMenuInteraction';
 import { inferContextMenuInteraction } from '../../taskpane/utils/contextMenuInteraction';
@@ -28,6 +29,7 @@ interface SheetRowProps {
   worksheet: WorksheetEntity;
   isActive: boolean;
   isRenaming?: boolean;
+  isRenameInvalid?: boolean;
   isContextMenuOpen?: boolean;
   isDragged?: boolean;
   isOverlay?: boolean;
@@ -46,6 +48,8 @@ interface SheetRowProps {
   }) => void;
   onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameCancel?: () => void;
+  onRenameValueChange?: (worksheetId: string, value: string) => void;
+  onRenameMaxLengthReached?: (worksheetId: string) => void;
   /** Two quick primary clicks (see FAST_DOUBLE_CLICK_RENAME_MS) start inline rename. */
   onStartRename?: (worksheetId: string) => void;
   /** Optional: ID for keyboard navigation. When provided, participates in arrow key navigation. */
@@ -69,6 +73,7 @@ function areSheetRowPropsEqual(left: SheetRowProps, right: SheetRowProps) {
     left.worksheet === right.worksheet &&
     left.isActive === right.isActive &&
     left.isRenaming === right.isRenaming &&
+    left.isRenameInvalid === right.isRenameInvalid &&
     left.isContextMenuOpen === right.isContextMenuOpen &&
     left.isDragged === right.isDragged &&
     left.isOverlay === right.isOverlay &&
@@ -81,6 +86,8 @@ function areSheetRowPropsEqual(left: SheetRowProps, right: SheetRowProps) {
     left.onOpenContextMenu === right.onOpenContextMenu &&
     left.onRenameSubmit === right.onRenameSubmit &&
     left.onRenameCancel === right.onRenameCancel &&
+    left.onRenameValueChange === right.onRenameValueChange &&
+    left.onRenameMaxLengthReached === right.onRenameMaxLengthReached &&
     left.onStartRename === right.onStartRename &&
     left.navigableId === right.navigableId &&
     left.isFocused === right.isFocused &&
@@ -96,6 +103,7 @@ function SheetRowComponent({
   worksheet,
   isActive,
   isRenaming,
+  isRenameInvalid,
   isContextMenuOpen,
   isDragged,
   isOverlay,
@@ -108,6 +116,8 @@ function SheetRowComponent({
   onOpenContextMenu,
   onRenameSubmit,
   onRenameCancel,
+  onRenameValueChange,
+  onRenameMaxLengthReached,
   onStartRename,
   navigableId,
   isFocused = false,
@@ -359,6 +369,10 @@ function SheetRowComponent({
                 initialValue={worksheet.name}
                 onSubmit={(newName) => onRenameSubmit(worksheet.worksheetId, newName)}
                 onCancel={onRenameCancel ?? (() => {})}
+                maxLength={worksheetNameMaxLength}
+                isInvalid={isRenameInvalid}
+                onValueChange={(value) => onRenameValueChange?.(worksheet.worksheetId, value)}
+                onMaxLengthReached={() => onRenameMaxLengthReached?.(worksheet.worksheetId)}
               />
             ) : (
               <span className="sheet-title">{worksheet.name}</span>

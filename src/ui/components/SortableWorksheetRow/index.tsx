@@ -12,6 +12,7 @@ interface SortableWorksheetRowProps {
   isContextMenuOpen?: boolean;
   isInteractionSuppressed?: boolean;
   isRenaming?: boolean;
+  isRenameInvalid?: boolean;
   shouldSuppressActivation: (worksheetId: string) => boolean;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onTogglePin?: (worksheetId: string) => void;
@@ -23,6 +24,8 @@ interface SortableWorksheetRowProps {
   }) => void;
   onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameCancel?: () => void;
+  onRenameValueChange?: (worksheetId: string, value: string) => void;
+  onRenameMaxLengthReached?: (worksheetId: string) => void;
   onStartRenameWorksheet?: (worksheetId: string) => void;
   /** Optional: ID for keyboard navigation */
   navigableId?: string;
@@ -60,12 +63,15 @@ function areSortableWorksheetRowPropsEqual(
     left.isContextMenuOpen === right.isContextMenuOpen &&
     left.isInteractionSuppressed === right.isInteractionSuppressed &&
     left.isRenaming === right.isRenaming &&
+    left.isRenameInvalid === right.isRenameInvalid &&
     left.shouldSuppressActivation === right.shouldSuppressActivation &&
     left.onActivate === right.onActivate &&
     left.onTogglePin === right.onTogglePin &&
     left.onOpenContextMenu === right.onOpenContextMenu &&
     left.onRenameSubmit === right.onRenameSubmit &&
     left.onRenameCancel === right.onRenameCancel &&
+    left.onRenameValueChange === right.onRenameValueChange &&
+    left.onRenameMaxLengthReached === right.onRenameMaxLengthReached &&
     left.onStartRenameWorksheet === right.onStartRenameWorksheet &&
     left.navigableId === right.navigableId &&
     left.isFocused === right.isFocused &&
@@ -85,12 +91,15 @@ function SortableWorksheetRowComponent({
   isContextMenuOpen,
   isInteractionSuppressed,
   isRenaming,
+  isRenameInvalid,
   shouldSuppressActivation,
   onActivate,
   onTogglePin,
   onOpenContextMenu,
   onRenameSubmit,
   onRenameCancel,
+  onRenameValueChange,
+  onRenameMaxLengthReached,
   onStartRenameWorksheet,
   navigableId,
   isFocused,
@@ -139,6 +148,7 @@ function SortableWorksheetRowComponent({
       isDragged={isDragging}
       isInteractionSuppressed={isInteractionSuppressed}
       isRenaming={isRenaming}
+      isRenameInvalid={isRenameInvalid}
       navigableId={navigableId}
       isFocused={isFocused}
       isVisualFocused={isVisualFocused}
@@ -154,6 +164,8 @@ function SortableWorksheetRowComponent({
       onOpenContextMenu={onOpenContextMenu}
       onRenameSubmit={onRenameSubmit}
       onRenameCancel={onRenameCancel}
+      onRenameValueChange={onRenameValueChange}
+      onRenameMaxLengthReached={onRenameMaxLengthReached}
       onStartRename={onStartRenameWorksheet ? handleStartRename : undefined}
       onItemKeyDown={onItemKeyDown}
       registerElement={registerElement}

@@ -11,6 +11,7 @@ import { TaskpaneShell } from '../components/TaskpaneShell';
 import { UndoToast } from '../components/UndoToast';
 import { AddWorksheetFab } from '../components/AddWorksheetFab';
 import type { WorksheetEntity } from '../../domain/navigation/types';
+import type { BannerState } from '../../domain/navigation/types';
 import { TaskpaneMenus } from './components/TaskpaneMenus';
 import { TaskpaneSections } from './components/TaskpaneSections';
 import type { DeleteGroupRequest } from './types/contextMenuTypes';
@@ -26,6 +27,7 @@ import { pinnedSectionPolicy } from './dnd/dndPolicies';
 import { useShortcutActions } from '../../application/shortcuts/useShortcutActions';
 import { ShortcutActionId } from '../../application/shortcuts/ShortcutRegistry';
 import type { ShortcutAction } from '../../application/shortcuts/types';
+import { worksheetNameMaxLength } from '../../domain/navigation/constants';
 
 export function TaskpaneAppContainer() {
   // The controller owns workbook operations and domain state transitions.
@@ -43,6 +45,9 @@ export function TaskpaneAppContainer() {
   // Inline rename state for worksheets and groups (replaces dialog-based rename).
   const [renamingWorksheetId, setRenamingWorksheetId] = useState<string | null>(null);
   const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null);
+  const [renameDraftName, setRenameDraftName] = useState<string | null>(null);
+  const [renameInvalidWorksheetId, setRenameInvalidWorksheetId] = useState<string | null>(null);
+  const [renameBanner, setRenameBanner] = useState<BannerState | null>(null);
 
   // Context menus are isolated in a dedicated hook so view code stays simple.
   const {
@@ -324,8 +329,11 @@ export function TaskpaneAppContainer() {
       closeMenus();
       setRenamingGroupId(null);
       setRenamingWorksheetId(worksheetId);
+      setRenameDraftName(controller.state.worksheetsById[worksheetId]?.name ?? null);
+      setRenameInvalidWorksheetId(null);
+      setRenameBanner(null);
     },
-    [closeMenus],
+    [closeMenus, controller.state.worksheetsById],
   );
 
   const handleRenameWorksheetStartFromSearch = useCallback(
@@ -334,24 +342,106 @@ export function TaskpaneAppContainer() {
       closeMenus();
       setRenamingGroupId(null);
       setRenamingWorksheetId(worksheetId);
+      setRenameDraftName(controller.state.worksheetsById[worksheetId]?.name ?? null);
+      setRenameInvalidWorksheetId(null);
+      setRenameBanner(null);
     },
-    [closeMenus, controller.setQuery],
+    [closeMenus, controller.setQuery, controller.state.worksheetsById],
   );
 
   const handleRenameWorksheetSubmit = useCallback(
     async (worksheetId: string, newName: string) => {
+      const trimmed = newName.trim();
+      const worksheet = controller.state.worksheetsById[worksheetId];
+      if (!worksheet) {
+        return;
+      }
+
+      const hasDuplicate = Object.values(controller.state.worksheetsById).some((candidate) => {
+        if (candidate.worksheetId === worksheetId) {
+          return false;
+        }
+        return candidate.name.trim().toLowerCase() === trimmed.toLowerCase();
+      });
+
+      if (trimmed.length > worksheetNameMaxLength) {
+        setRenameInvalidWorksheetId(worksheetId);
+        setRenameBanner({
+          tone: 'error',
+          message: `Worksheet names can be at most ${worksheetNameMaxLength} characters.`,
+        });
+        return;
+      }
+
+      if (hasDuplicate || trimmed.toLowerCase() === worksheet.name.trim().toLowerCase()) {
+        setRenameInvalidWorksheetId(worksheetId);
+        setRenameBanner({
+          tone: 'error',
+          message: 'A worksheet with this name already exists.',
+        });
+        return;
+      }
+
       try {
-        await controller.renameWorksheet(worksheetId, newName);
-      } finally {
+        await controller.renameWorksheet(worksheetId, trimmed);
         setRenamingWorksheetId(null);
+        setRenameDraftName(null);
+        setRenameInvalidWorksheetId(null);
+        setRenameBanner(null);
+      } catch (error) {
+        throw error;
       }
     },
-    [controller.renameWorksheet],
+    [controller.renameWorksheet, controller.state.worksheetsById],
   );
 
   const handleRenameWorksheetCancel = useCallback(() => {
     setRenamingWorksheetId(null);
+    setRenameDraftName(null);
+    setRenameInvalidWorksheetId(null);
+    setRenameBanner(null);
   }, []);
+
+  const handleRenameBannerDismiss = useCallback(() => {
+    setRenameBanner(null);
+    setRenameInvalidWorksheetId(null);
+  }, []);
+
+  const handleRenameWorksheetValueChange = useCallback((worksheetId: string, value: string) => {
+    if (worksheetId !== renamingWorksheetId) {
+      return;
+    }
+
+    setRenameDraftName(value);
+
+    const trimmed = value.trim();
+    const hasDuplicate = Object.values(controller.state.worksheetsById).some((candidate) => {
+      if (candidate.worksheetId === worksheetId) {
+        return false;
+      }
+      return candidate.name.trim().toLowerCase() === trimmed.toLowerCase();
+    });
+
+    if (!trimmed || trimmed.length > worksheetNameMaxLength || hasDuplicate) {
+      setRenameInvalidWorksheetId(worksheetId);
+      return;
+    }
+
+    setRenameInvalidWorksheetId(null);
+    setRenameBanner(null);
+  }, [controller.state.worksheetsById, renamingWorksheetId]);
+
+  const handleRenameWorksheetMaxLengthReached = useCallback((worksheetId: string) => {
+    if (worksheetId !== renamingWorksheetId) {
+      return;
+    }
+
+    setRenameInvalidWorksheetId(worksheetId);
+    setRenameBanner({
+      tone: 'error',
+      message: `Worksheet names can be at most ${worksheetNameMaxLength} characters.`,
+    });
+  }, [renamingWorksheetId]);
 
   // Inline rename handlers for groups.
   const handleRenameGroupStart = useCallback(
@@ -519,8 +609,8 @@ export function TaskpaneAppContainer() {
 
   return (
     <TaskpaneShell
-      banner={controller.banner}
-      onDismissBanner={controller.dismissBanner}
+      banner={renameBanner ?? controller.banner}
+      onDismissBanner={renameBanner ? handleRenameBannerDismiss : controller.dismissBanner}
       toast={
         undoToast ? (
           <UndoToast
@@ -542,6 +632,7 @@ export function TaskpaneAppContainer() {
         contextMenuOpenSheetId={contextMenuOpenSheetId}
         contextMenuOpenGroupId={contextMenuOpenGroupId}
         renamingWorksheetId={renamingWorksheetId}
+        renameInvalidWorksheetId={renameInvalidWorksheetId}
         renamingGroupId={renamingGroupId}
         isSessionOnlyPersistence={controller.isSessionOnlyPersistence}
         dragConfig={dragConfig}
@@ -559,6 +650,8 @@ export function TaskpaneAppContainer() {
         onRenameWorksheetSubmit={handleRenameWorksheetSubmit}
         onRenameGroupSubmit={handleRenameGroupSubmit}
         onRenameCancel={handleRenameCancel}
+        onRenameWorksheetValueChange={handleRenameWorksheetValueChange}
+        onRenameWorksheetMaxLengthReached={handleRenameWorksheetMaxLengthReached}
         onStartRenameWorksheet={handleRenameWorksheetStart}
         onStartRenameWorksheetFromSearch={handleRenameWorksheetStartFromSearch}
         isDialogOpen={Boolean(deleteGroupRequest)}

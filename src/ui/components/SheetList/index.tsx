@@ -18,6 +18,7 @@ interface SheetListProps {
   activeWorksheetId: string | null;
   contextMenuOpenId?: string;
   renamingWorksheetId?: string | null;
+  renameInvalidWorksheetId?: string | null;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onTogglePin?: (worksheetId: string) => void;
   onOpenContextMenu: (args: {
@@ -29,6 +30,8 @@ interface SheetListProps {
   dragConfig?: SheetListDragConfig;
   onRenameSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameCancel?: () => void;
+  onRenameValueChange?: (worksheetId: string, value: string) => void;
+  onRenameMaxLengthReached?: (worksheetId: string) => void;
   onStartRenameWorksheet?: (worksheetId: string) => void;
   /** Logical focus item ID for DOM focus management */
   focusedItemId?: string | null;
@@ -129,6 +132,7 @@ export function SheetList(props: SheetListProps) {
               isContextMenuOpen={worksheet.worksheetId === props.contextMenuOpenId}
               isInteractionSuppressed={false}
               isRenaming={props.renamingWorksheetId === worksheet.worksheetId}
+              isRenameInvalid={props.renameInvalidWorksheetId === worksheet.worksheetId}
               navigableId={navigableId}
               isFocused={isFocused}
               isVisualFocused={isVisualFocused}
@@ -139,6 +143,8 @@ export function SheetList(props: SheetListProps) {
               onOpenContextMenu={props.onOpenContextMenu}
               onRenameSubmit={props.onRenameSubmit}
               onRenameCancel={props.onRenameCancel}
+              onRenameValueChange={props.onRenameValueChange}
+              onRenameMaxLengthReached={props.onRenameMaxLengthReached}
               onStartRename={props.onStartRenameWorksheet}
               onItemKeyDown={onItemKeyDown}
               registerElement={registerElement}
@@ -196,6 +202,7 @@ export function SheetList(props: SheetListProps) {
                 isInteractionSuppressed={dragConfig.isDragActive}
                 shouldSuppressActivation={dragConfig.shouldSuppressActivation}
                 isRenaming={props.renamingWorksheetId === worksheet.worksheetId}
+                isRenameInvalid={props.renameInvalidWorksheetId === worksheet.worksheetId}
                 navigableId={navigableId}
                 isFocused={isFocused}
                 isVisualFocused={isVisualFocused}
@@ -206,6 +213,8 @@ export function SheetList(props: SheetListProps) {
                 onOpenContextMenu={props.onOpenContextMenu}
                 onRenameSubmit={props.onRenameSubmit}
                 onRenameCancel={props.onRenameCancel}
+                onRenameValueChange={props.onRenameValueChange}
+                onRenameMaxLengthReached={props.onRenameMaxLengthReached}
                 onStartRenameWorksheet={props.onStartRenameWorksheet}
                 onItemKeyDown={onItemKeyDown}
                 registerElement={registerElement}

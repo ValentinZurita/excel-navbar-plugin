@@ -19,6 +19,7 @@ interface GroupCardProps {
   groupMenuOpenId?: string;
   dragConfig?: GroupDragConfig;
   isRenaming?: boolean;
+  renameInvalidWorksheetId?: string | null;
   onActivate: (worksheetId: string) => void | Promise<void>;
   onToggleCollapsed: (groupId: string) => void;
   onOpenGroupMenu: (args: {
@@ -42,6 +43,8 @@ interface GroupCardProps {
   /** Inline worksheet rename inside this group's list */
   renamingWorksheetId?: string | null;
   onRenameWorksheetSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
+  onRenameWorksheetValueChange?: (worksheetId: string, value: string) => void;
+  onRenameWorksheetMaxLengthReached?: (worksheetId: string) => void;
   onStartRenameWorksheet?: (worksheetId: string) => void;
   /** Optional: ID for keyboard navigation on the group header */
   navigableId?: string;
@@ -148,6 +151,7 @@ function areGroupCardPropsEqual(left: GroupCardProps, right: GroupCardProps) {
     left.groupMenuOpenId === right.groupMenuOpenId &&
     areGroupDragConfigsEqual(left.dragConfig, right.dragConfig) &&
     left.isRenaming === right.isRenaming &&
+    left.renameInvalidWorksheetId === right.renameInvalidWorksheetId &&
     left.onActivate === right.onActivate &&
     left.onToggleCollapsed === right.onToggleCollapsed &&
     left.onOpenGroupMenu === right.onOpenGroupMenu &&
@@ -157,6 +161,8 @@ function areGroupCardPropsEqual(left: GroupCardProps, right: GroupCardProps) {
     left.onRenameCancel === right.onRenameCancel &&
     left.renamingWorksheetId === right.renamingWorksheetId &&
     left.onRenameWorksheetSubmit === right.onRenameWorksheetSubmit &&
+    left.onRenameWorksheetValueChange === right.onRenameWorksheetValueChange &&
+    left.onRenameWorksheetMaxLengthReached === right.onRenameWorksheetMaxLengthReached &&
     left.onStartRenameWorksheet === right.onStartRenameWorksheet &&
     left.navigableId === right.navigableId &&
     left.isFocused === right.isFocused &&
@@ -177,10 +183,13 @@ function GroupCardComponent({
   onOpenGroupMenu,
   onOpenSheetMenu,
   isRenaming,
+  renameInvalidWorksheetId,
   onRenameSubmit,
   onRenameCancel,
   renamingWorksheetId,
   onRenameWorksheetSubmit,
+  onRenameWorksheetValueChange,
+  onRenameWorksheetMaxLengthReached,
   onStartRenameWorksheet,
   navigableId,
   isFocused = false,
@@ -374,6 +383,7 @@ function GroupCardComponent({
           activeWorksheetId={rest.activeWorksheetId}
           contextMenuOpenId={rest.contextMenuOpenId}
           renamingWorksheetId={renamingWorksheetId}
+          renameInvalidWorksheetId={renameInvalidWorksheetId}
           dragConfig={sheetListDragConfig}
           visualFocusedItemId={rest.visualFocusedItemId}
           visualExitingItemId={rest.visualExitingItemId}
@@ -382,6 +392,8 @@ function GroupCardComponent({
           onOpenContextMenu={onOpenSheetMenu}
           onRenameSubmit={onRenameWorksheetSubmit}
           onRenameCancel={onRenameCancel}
+          onRenameValueChange={onRenameWorksheetValueChange}
+          onRenameMaxLengthReached={onRenameWorksheetMaxLengthReached}
           onStartRenameWorksheet={onStartRenameWorksheet}
           onItemKeyDown={rest.onItemKeyDown}
           registerElement={registerElement}

@@ -58,6 +58,7 @@ interface TaskpaneSectionsProps {
   contextMenuOpenSheetId?: string;
   contextMenuOpenGroupId?: string;
   renamingWorksheetId?: string | null;
+  renameInvalidWorksheetId?: string | null;
   renamingGroupId?: string | null;
   isSessionOnlyPersistence?: boolean;
   dragConfig: WorksheetDragConfig;
@@ -79,6 +80,8 @@ interface TaskpaneSectionsProps {
   onRenameWorksheetSubmit?: (worksheetId: string, newName: string) => void | Promise<void>;
   onRenameGroupSubmit?: (groupId: string, newName: string) => void;
   onRenameCancel?: () => void;
+  onRenameWorksheetValueChange?: (worksheetId: string, value: string) => void;
+  onRenameWorksheetMaxLengthReached?: (worksheetId: string) => void;
   onStartRenameWorksheet?: (worksheetId: string) => void;
   /** Prefer closing the search dropdown before inline rename (e.g. double-click in results). */
   onStartRenameWorksheetFromSearch?: (worksheetId: string) => void;
@@ -175,6 +178,7 @@ export function TaskpaneSections({
   contextMenuOpenSheetId,
   contextMenuOpenGroupId,
   renamingWorksheetId,
+  renameInvalidWorksheetId,
   renamingGroupId,
   isSessionOnlyPersistence = false,
   dragConfig,
@@ -192,6 +196,8 @@ export function TaskpaneSections({
   onRenameWorksheetSubmit,
   onRenameGroupSubmit,
   onRenameCancel,
+  onRenameWorksheetValueChange,
+  onRenameWorksheetMaxLengthReached,
   onStartRenameWorksheet,
   onStartRenameWorksheetFromSearch,
   isDialogOpen = false,
@@ -303,6 +309,7 @@ export function TaskpaneSections({
         contextMenuOpenSheetId={contextMenuOpenSheetId}
         contextMenuOpenGroupId={contextMenuOpenGroupId}
         renamingWorksheetId={renamingWorksheetId}
+        renameInvalidWorksheetId={renameInvalidWorksheetId}
         renamingGroupId={renamingGroupId}
         isSessionOnlyPersistence={isSessionOnlyPersistence}
         dragConfig={dragConfig}
@@ -331,6 +338,8 @@ export function TaskpaneSections({
         onRenameWorksheetSubmit={onRenameWorksheetSubmit}
         onRenameGroupSubmit={onRenameGroupSubmit}
         onRenameCancel={onRenameCancel}
+        onRenameWorksheetValueChange={onRenameWorksheetValueChange}
+        onRenameWorksheetMaxLengthReached={onRenameWorksheetMaxLengthReached}
         onStartRenameWorksheet={onStartRenameWorksheet}
         onStartRenameWorksheetFromSearch={onStartRenameWorksheetFromSearch}
         keyboardNavigationApiRef={keyboardNavigationApiRef}
@@ -369,8 +378,9 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     isHiddenSectionCollapsed,
     contextMenuOpenSheetId,
     contextMenuOpenGroupId,
-    renamingWorksheetId,
-    renamingGroupId,
+  renamingWorksheetId,
+  renameInvalidWorksheetId,
+  renamingGroupId,
     dragConfig,
     groupsSessionOnlyHint,
     shouldShowPinnedSection,
@@ -394,10 +404,12 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     onUnhideWorksheet,
     onOpenSheetMenu,
     onOpenGroupMenu,
-    onRenameWorksheetSubmit,
-    onRenameGroupSubmit,
-    onRenameCancel,
-    onStartRenameWorksheet,
+  onRenameWorksheetSubmit,
+  onRenameGroupSubmit,
+  onRenameCancel,
+  onRenameWorksheetValueChange,
+  onRenameWorksheetMaxLengthReached,
+  onStartRenameWorksheet,
     onStartRenameWorksheetFromSearch,
     keyboardNavigationApiRef,
   } = props;
@@ -519,6 +531,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
                 contextMenuOpenId={contextMenuOpenSheetId}
                 dragConfig={buildPinnedDragConfig(dragConfig, 'pinned')}
                 renamingWorksheetId={renamingWorksheetId}
+                renameInvalidWorksheetId={renameInvalidWorksheetId}
                 focusedItemId={focusedItemId}
                 visualFocusedItemId={visualFocusedItemId}
                 visualExitingItemId={visualExitingItemId}
@@ -527,6 +540,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
                 onOpenContextMenu={onOpenSheetMenu}
                 onRenameSubmit={onRenameWorksheetSubmit}
                 onRenameCancel={onRenameCancel}
+                onRenameValueChange={onRenameWorksheetValueChange}
+                onRenameMaxLengthReached={onRenameWorksheetMaxLengthReached}
                 onStartRenameWorksheet={onStartRenameWorksheet}
                 onItemKeyDown={handleItemKeyDown}
                 registerElement={registerElement}
@@ -549,6 +564,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
                 dragConfig={buildGroupDragConfig(dragConfig)}
                 renamingGroupId={renamingGroupId}
                 renamingWorksheetId={renamingWorksheetId}
+                renameInvalidWorksheetId={renameInvalidWorksheetId}
                 focusedItemId={focusedItemId}
                 visualFocusedItemId={visualFocusedItemId}
                 visualExitingItemId={visualExitingItemId}
@@ -560,6 +576,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
                 onRenameSubmit={onRenameGroupSubmit}
                 onRenameCancel={onRenameCancel}
                 onRenameWorksheetSubmit={onRenameWorksheetSubmit}
+                onRenameWorksheetValueChange={onRenameWorksheetValueChange}
+                onRenameWorksheetMaxLengthReached={onRenameWorksheetMaxLengthReached}
                 onStartRenameWorksheet={onStartRenameWorksheet}
                 onGroupHeaderKeyDown={handleGroupHeaderKeyDown}
                 onItemKeyDown={handleItemKeyDown}
@@ -577,6 +595,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
                   contextMenuOpenId={contextMenuOpenSheetId}
                   dragConfig={buildSheetListDragConfig(dragConfig, 'sheets')}
                   renamingWorksheetId={renamingWorksheetId}
+                  renameInvalidWorksheetId={renameInvalidWorksheetId}
                   focusedItemId={focusedItemId}
                   visualFocusedItemId={visualFocusedItemId}
                   visualExitingItemId={visualExitingItemId}
@@ -585,6 +604,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
                   onOpenContextMenu={onOpenSheetMenu}
                   onRenameSubmit={onRenameWorksheetSubmit}
                   onRenameCancel={onRenameCancel}
+                  onRenameValueChange={onRenameWorksheetValueChange}
+                  onRenameMaxLengthReached={onRenameWorksheetMaxLengthReached}
                   onStartRenameWorksheet={onStartRenameWorksheet}
                   onItemKeyDown={handleItemKeyDown}
                   registerElement={registerElement}

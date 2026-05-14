@@ -7,6 +7,10 @@ interface InlineRenameInputProps {
   onCancel: () => void;
   autoFocus?: boolean;
   ariaLabel?: string;
+  maxLength?: number;
+  isInvalid?: boolean;
+  onValueChange?: (value: string) => void;
+  onMaxLengthReached?: () => void;
 }
 
 export function InlineRenameInput({
@@ -15,9 +19,14 @@ export function InlineRenameInput({
   onCancel,
   autoFocus = true,
   ariaLabel = 'Name',
+  maxLength,
+  isInvalid = false,
+  onValueChange,
+  onMaxLengthReached,
 }: InlineRenameInputProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [value, setValue] = useState(initialValue);
+  const effectiveMaxLength = typeof maxLength === 'number' ? Math.max(0, maxLength) : undefined;
 
   useEffect(() => {
     if (autoFocus) {
@@ -62,11 +71,26 @@ export function InlineRenameInput({
   return (
     <input
       ref={inputRef}
-      className="inline-rename-input"
+      className={`inline-rename-input ${isInvalid ? 'inline-rename-input-invalid' : ''}`}
       type="text"
       aria-label={ariaLabel}
       value={value}
-      onChange={(event) => setValue(event.target.value)}
+      onChange={(event) => {
+        const nextValue = event.target.value;
+        if (effectiveMaxLength === undefined) {
+          setValue(nextValue);
+          onValueChange?.(nextValue);
+          return;
+        }
+
+        const clampedValue = nextValue.slice(0, effectiveMaxLength);
+        setValue(clampedValue);
+        onValueChange?.(clampedValue);
+
+        if (nextValue.length > effectiveMaxLength) {
+          onMaxLengthReached?.();
+        }
+      }}
       onKeyDown={handleKeyDown}
       onBlur={onCancel}
       onPointerDown={handlePointerDown}

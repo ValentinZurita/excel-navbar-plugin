@@ -42,3 +42,15 @@
   outline: none;
   box-shadow: none;
 }
+
+.inline-rename-input-invalid {
+  color: color-mix(in srgb, #d13438 65%, var(--excel-body-fg));
+}
+
+:root[data-office-theme-mode='light'] .inline-rename-input-invalid {
+  -webkit-text-fill-color: color-mix(in srgb, #d13438 65%, var(--excel-body-fg));
+}
+
+:root[data-office-theme-mode='dark'] .inline-rename-input-invalid {
+  -webkit-text-fill-color: color-mix(in srgb, #ff7a7a 70%, rgba(255, 255, 255, 0.92));
+}
