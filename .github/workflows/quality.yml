@@ -25,56 +25,61 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: npm
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Lockfile sync check
-        run: npm run check:lockfile-sync
+        run: pnpm run check:lockfile-sync
 
       - name: Audit production dependencies
-        run: npm audit --omit=dev --audit-level=moderate
+        run: pnpm audit --omit=dev --audit-level=moderate
 
       - name: TypeScript typecheck
-        run: npm run typecheck
+        run: pnpm typecheck
 
       - name: ESLint
-        run: npm run lint
+        run: pnpm lint
 
       - name: Secret scan
-        run: npm run check:secrets
+        run: pnpm run check:secrets
 
       - name: Tests with coverage
-        run: npm run test:coverage
+        run: pnpm run test:coverage
 
       - name: Check for import cycles
-        run: npm run check:import-cycles
+        run: pnpm run check:import-cycles
 
       - name: Architecture and content checks
-        run: npm run quality
+        run: pnpm run quality
 
       - name: Check for unused code and dependencies
-        run: npm run check:knip
+        run: pnpm run check:knip
 
       - name: Office.js API requirements validation
-        run: npm run check:office-api-requirements
+        run: pnpm run check:office-api-requirements
 
       - name: Mock drift detection
-        run: npm run check:mock-drift
+        run: pnpm run check:mock-drift
 
       - name: Build
-        run: npm run build
+        run: pnpm build
 
       - name: Bundle size gate
-        run: npm run check:bundle-size
+        run: pnpm run check:bundle-size
 
       - name: Generate production manifest
-        run: npm run manifest:prod
+        run: pnpm run manifest:prod
         env:
           ADDIN_BASE_URL: https://ci.example.com
 
@@ -86,10 +91,10 @@ jobs:
           fi
 
       - name: Validate manifest against Office schema
-        run: npm run manifest:validate
+        run: pnpm run manifest:validate
 
       - name: Build bundle analyzer report
-        run: npm run analyze:bundle
+        run: pnpm run analyze:bundle
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

@@ -2,8 +2,18 @@ import js from '@eslint/js';
 import globals from 'globals';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+import importPlugin from 'eslint-plugin-import';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
+
+const importOrder = [
+  'off',
+  {
+    groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+    'newlines-between': 'always',
+    alphabetize: { order: 'asc', caseInsensitive: true },
+  },
+];
 
 export default tseslint.config(
   {
@@ -30,6 +40,7 @@ export default tseslint.config(
     plugins: {
       react,
       'react-hooks': reactHooks,
+      import: importPlugin,
     },
     rules: {
       ...react.configs.recommended.rules,
@@ -42,6 +53,7 @@ export default tseslint.config(
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
+      'import/order': importOrder,
     },
     settings: {
       react: {

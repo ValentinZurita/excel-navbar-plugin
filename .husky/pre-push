@@ -1,6 +1,13 @@
-echo "🔍 Running pre-push checks..."
+#!/bin/sh
+# Pre-push hook: typecheck + tests (build check is opt-in via BUILD_CHECK=1)
+echo "Running pre-push checks..."
 
-npm run typecheck
-npm run test
+if [ "$BUILD_CHECK" = "1" ]; then
+  echo "BUILD_CHECK enabled - running full validation"
+  pnpm run typecheck && pnpm run test && pnpm run build
+else
+  echo "Running typecheck + tests (set BUILD_CHECK=1 to include build)"
+  pnpm run typecheck && pnpm run test
+fi
 
-echo "✅ Pre-push checks passed"
+echo "Pre-push checks passed"

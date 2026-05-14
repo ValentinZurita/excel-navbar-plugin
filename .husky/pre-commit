@@ -1,2 +1,4 @@
-npm run check:secrets
-npx lint-staged
+#!/bin/sh
+# Pre-commit hook: secrets check + lint-staged
+pnpm run check:secrets
+pnpm exec lint-staged

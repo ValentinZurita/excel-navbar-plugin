@@ -1,0 +1,5 @@
+packages:
+  # To add a package to the workspace:
+  # 1. Create the package folder under packages/
+  # 2. Add the path here (e.g., '- packages/*' or '- packages/utils')
+  - '.'
