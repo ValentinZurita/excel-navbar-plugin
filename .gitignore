@@ -18,7 +18,6 @@ coverage/
 # .idea/
 
 # Internal files not for public repo
-AGENTS.md
 manifest.xml
 excel-navbar-plugin.xml
 # Generated manifest (dynamic)
