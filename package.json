@@ -51,7 +51,8 @@
     "prepare": "husky"
   },
   "overrides": {
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "protobufjs": ">=8.0.2"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

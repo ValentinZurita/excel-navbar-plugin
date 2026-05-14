@@ -8,9 +8,9 @@ const projectRoot = join(scriptDir, '..');
 /**
  * Lockfile sync check.
  *
- * Verifies that package-lock.json is in sync with package.json.
- * npm ci does this implicitly, but an explicit gate makes the
- * failure reason obvious in CI logs.
+ * Verifies that pnpm-lock.yaml is in sync with package.json.
+ * pnpm install --frozen-lockfile does this implicitly, but an
+ * explicit gate makes the failure reason obvious in CI logs.
  */
 
 function fail(message) {
@@ -19,7 +19,7 @@ function fail(message) {
 }
 
 const pkgPath = join(projectRoot, 'package.json');
-const lockPath = join(projectRoot, 'package-lock.json');
+const lockPath = join(projectRoot, 'pnpm-lock.yaml');
 
 let pkg;
 let lock;
@@ -30,20 +30,22 @@ try {
 }
 
 try {
-  lock = JSON.parse(readFileSync(lockPath, 'utf8'));
+  lock = readFileSync(lockPath, 'utf8');
 } catch {
-  fail(`Could not read ${lockPath}. Run 'npm install' to generate it.`);
+  fail(`Could not read ${lockPath}. Run 'pnpm install' to generate it.`);
 }
 
 const pkgDeps = Object.keys(pkg.dependencies ?? {});
 const pkgDevDeps = Object.keys(pkg.devDependencies ?? {});
-const lockPackages = lock.packages ?? {};
 
 const missing = [];
 
 for (const dep of [...pkgDeps, ...pkgDevDeps]) {
-  const rootKey = `node_modules/${dep}`;
-  if (!lockPackages[rootKey]) {
+  // pnpm-lock.yaml lists each dependency under a key like:
+  //   <package>@<version>:
+  // We check that the package name appears as a resolved entry.
+  const pattern = new RegExp(`^  ${dep}@`, 'm');
+  if (!pattern.test(lock)) {
     missing.push(dep);
   }
 }
@@ -52,7 +54,7 @@ if (missing.length > 0) {
   fail(
     `Lockfile is out of sync with package.json. Missing entries:\n` +
       missing.map((d) => `  - ${d}`).join('\n') +
-      `\n\nRun 'npm install' to regenerate package-lock.json.`,
+      `\n\nRun 'pnpm install' to regenerate pnpm-lock.yaml.`,
   );
 }
 
