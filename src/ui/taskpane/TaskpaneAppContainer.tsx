@@ -45,7 +45,7 @@ export function TaskpaneAppContainer() {
   // Inline rename state for worksheets and groups (replaces dialog-based rename).
   const [renamingWorksheetId, setRenamingWorksheetId] = useState<string | null>(null);
   const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null);
-  const [renameDraftName, setRenameDraftName] = useState<string | null>(null);
+  const [, setRenameDraftName] = useState<string | null>(null);
   const [renameInvalidWorksheetId, setRenameInvalidWorksheetId] = useState<string | null>(null);
   const [renameBanner, setRenameBanner] = useState<BannerState | null>(null);
 
@@ -382,15 +382,11 @@ export function TaskpaneAppContainer() {
         return;
       }
 
-      try {
-        await controller.renameWorksheet(worksheetId, trimmed);
-        setRenamingWorksheetId(null);
-        setRenameDraftName(null);
-        setRenameInvalidWorksheetId(null);
-        setRenameBanner(null);
-      } catch (error) {
-        throw error;
-      }
+      await controller.renameWorksheet(worksheetId, trimmed);
+      setRenamingWorksheetId(null);
+      setRenameDraftName(null);
+      setRenameInvalidWorksheetId(null);
+      setRenameBanner(null);
     },
     [controller.renameWorksheet, controller.state.worksheetsById],
   );

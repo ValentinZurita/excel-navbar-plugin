@@ -6,28 +6,31 @@
   "description": "Modern Excel worksheet navigator Office Add-in",
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs}": [
-      "eslint",
-      "prettier --check"
+      "eslint --fix",
+      "prettier --write"
     ],
     "*.css": [
-      "stylelint"
+      "stylelint --fix"
     ],
     "*.md": [
-      "markdownlint-cli2"
+      "markdownlint-cli2 --fix"
     ]
   },
   "scripts": {
     "dev": "webpack serve --mode development",
     "build": "webpack --mode production",
-    "lint": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/ tests/ scripts/ --max-warnings=0",
+    "lint:fix": "eslint src/ tests/ scripts/ --fix",
     "check:engram-protected": "node scripts/check-engram-protected.mjs",
     "check:component-imports": "node scripts/check-component-imports.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs",
     "lint:css": "stylelint \"src/**/*.css\"",
     "lint:md": "markdownlint-cli2",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint:eslint": "eslint src/ tests/ scripts/",
-    "quality": "npm run check:component-imports && npm run lint:css && npm run lint:md && npm run format:check && npm run lint:eslint",
+    "validate": "npm run typecheck && npm run lint && npm run test",
+    "quality": "npm run check:component-imports && npm run lint:css && npm run lint:md && npm run format:check && npm run lint",
     "manifest:dev": "node scripts/render-manifest.mjs --base-url=https://localhost:3000 --output=excel-navbar-plugin.xml",
     "manifest:prod": "node scripts/render-manifest.mjs --output=dist/excel-navbar-plugin.xml",
     "manifest:validate": "office-addin-manifest validate dist/excel-navbar-plugin.xml",

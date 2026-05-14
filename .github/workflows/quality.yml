@@ -40,8 +40,14 @@ jobs:
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=moderate
 
-      - name: TypeScript lint
+      - name: TypeScript typecheck
+        run: npm run typecheck
+
+      - name: ESLint
         run: npm run lint
+
+      - name: Secret scan
+        run: npm run check:secrets
 
       - name: Tests with coverage
         run: npm run test:coverage

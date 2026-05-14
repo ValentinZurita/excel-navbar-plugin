@@ -1,0 +1,6 @@
+echo "🔍 Running pre-push checks..."
+
+npm run typecheck
+npm run test
+
+echo "✅ Pre-push checks passed"
