@@ -4,7 +4,7 @@ import type {
   WorksheetPreviewUnavailableReason,
 } from '../../infrastructure/office/WorkbookAdapter';
 
-export const WORKSHEET_PREVIEW_HOVER_DELAY_MS = 650;
+export const WORKSHEET_PREVIEW_HOVER_DELAY_MS = 800;
 export const WORKSHEET_PREVIEW_CACHE_TTL_MS = 30_000;
 export const WORKSHEET_PREVIEW_KEYBOARD_AUTO_DISMISS_MS = 4_500;
 
