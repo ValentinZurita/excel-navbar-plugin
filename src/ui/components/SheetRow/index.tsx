@@ -8,6 +8,7 @@ import { inferContextMenuInteraction } from '../../taskpane/utils/contextMenuInt
 import { EyeOffIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
 import { InlineRenameInput } from '../InlineRenameInput';
 import { resolveLeadingState, type LeadingState } from './resolveLeadingState';
+import type { WorksheetPreviewPointerPosition } from '../../../application/navigation/useWorksheetPreview';
 import './SheetRow.css';
 
 function hasNestedInteractiveTarget(target: EventTarget | null, currentTarget: HTMLElement) {
@@ -23,6 +24,23 @@ function hasNestedInteractiveTarget(target: EventTarget | null, currentTarget: H
     'input, textarea, select, button, a, [contenteditable="true"], [role="textbox"]',
   );
   return Boolean(interactiveTarget && currentTarget.contains(interactiveTarget));
+}
+
+function resolvePointerPosition(
+  event: React.PointerEvent<HTMLElement>,
+): WorksheetPreviewPointerPosition {
+  if (Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) {
+    return {
+      clientX: event.clientX,
+      clientY: event.clientY,
+    };
+  }
+
+  const rect = event.currentTarget.getBoundingClientRect();
+  return {
+    clientX: rect.left + rect.width / 2,
+    clientY: rect.top + rect.height / 2,
+  };
 }
 
 interface SheetRowProps {
@@ -66,6 +84,14 @@ interface SheetRowProps {
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
   /** Register DOM element for focus management (from navigation context) */
   registerElement?: (id: string, element: HTMLElement | null) => void;
+  /** Schedule a delayed worksheet preview anchored to this row. */
+  onPreviewRequest?: (args: {
+    worksheet: WorksheetEntity;
+    anchorElement: HTMLElement;
+    pointerPosition: WorksheetPreviewPointerPosition;
+  }) => void;
+  /** Cancel any pending or visible worksheet preview for this row. */
+  onPreviewCancel?: (worksheetId: string) => void;
 }
 
 function areSheetRowPropsEqual(left: SheetRowProps, right: SheetRowProps) {
@@ -95,7 +121,9 @@ function areSheetRowPropsEqual(left: SheetRowProps, right: SheetRowProps) {
     left.isVisualExiting === right.isVisualExiting &&
     left.isActiveDimmed === right.isActiveDimmed &&
     left.onItemKeyDown === right.onItemKeyDown &&
-    left.registerElement === right.registerElement
+    left.registerElement === right.registerElement &&
+    left.onPreviewRequest === right.onPreviewRequest &&
+    left.onPreviewCancel === right.onPreviewCancel
   );
 }
 
@@ -126,11 +154,16 @@ function SheetRowComponent({
   isActiveDimmed = false,
   onItemKeyDown,
   registerElement,
+  onPreviewRequest,
+  onPreviewCancel,
 }: SheetRowProps) {
   const lastPrimaryClickAtRef = useRef(0);
   const actionButtonRef = useRef<HTMLButtonElement | null>(null);
   const {
     onKeyDown: onContainerKeyDown,
+    onPointerEnter: onContainerPointerEnter,
+    onPointerLeave: onContainerPointerLeave,
+    onPointerMove: onContainerPointerMove,
     role: _containerRole,
     tabIndex: _containerTabIndex,
     ...restContainerProps
@@ -329,6 +362,51 @@ function SheetRowComponent({
     });
   }
 
+  function handleContainerPointerEnter(event: React.PointerEvent<HTMLElement>) {
+    onContainerPointerEnter?.(event);
+
+    if (
+      !isInteractive ||
+      isRenaming ||
+      isDragged ||
+      isInteractionSuppressed ||
+      worksheet.visibility !== 'Visible'
+    ) {
+      return;
+    }
+
+    onPreviewRequest?.({
+      worksheet,
+      anchorElement: event.currentTarget,
+      pointerPosition: resolvePointerPosition(event),
+    });
+  }
+
+  function handleContainerPointerLeave(event: React.PointerEvent<HTMLElement>) {
+    onContainerPointerLeave?.(event);
+    onPreviewCancel?.(worksheet.worksheetId);
+  }
+
+  function handleContainerPointerMove(event: React.PointerEvent<HTMLElement>) {
+    onContainerPointerMove?.(event);
+
+    if (
+      !isInteractive ||
+      isRenaming ||
+      isDragged ||
+      isInteractionSuppressed ||
+      worksheet.visibility !== 'Visible'
+    ) {
+      return;
+    }
+
+    onPreviewRequest?.({
+      worksheet,
+      anchorElement: event.currentTarget,
+      pointerPosition: resolvePointerPosition(event),
+    });
+  }
+
   return (
     <div
       ref={setContainerRef}
@@ -348,6 +426,9 @@ function SheetRowComponent({
       data-active-dimmed={isActiveDimmed ? 'true' : 'false'}
       style={containerStyle}
       aria-hidden={isInteractive ? undefined : true}
+      onPointerEnter={handleContainerPointerEnter}
+      onPointerLeave={handleContainerPointerLeave}
+      onPointerMove={handleContainerPointerMove}
       {...restContainerProps}
     >
       {!isOverlay ? <span className="sheet-row-nav-highlight" aria-hidden="true" /> : null}

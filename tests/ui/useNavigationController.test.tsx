@@ -14,6 +14,7 @@ const { adapterMock, persistenceMock } = vi.hoisted(() => ({
     getWorkbookSnapshot: vi.fn(),
     getPersistenceContext: vi.fn(),
     subscribeToWorkbookChanges: vi.fn(),
+    getWorksheetPreview: vi.fn(),
     createWorksheet: vi.fn(),
     activateWorksheet: vi.fn(),
     renameWorksheet: vi.fn(),
@@ -133,6 +134,7 @@ describe('useNavigationController', () => {
     adapterMock.getWorkbookSnapshot.mockReset();
     adapterMock.getPersistenceContext.mockReset();
     adapterMock.subscribeToWorkbookChanges.mockReset();
+    adapterMock.getWorksheetPreview.mockReset();
     persistenceMock.load.mockReset();
     persistenceMock.save.mockReset();
     adapterMock.activateWorksheet.mockReset();
@@ -142,6 +144,11 @@ describe('useNavigationController', () => {
     adapterMock.createWorksheet.mockReset();
     adapterMock.deleteWorksheet.mockReset();
     adapterMock.subscribeToWorkbookChanges.mockResolvedValue(async () => undefined);
+    adapterMock.getWorksheetPreview.mockResolvedValue({
+      status: 'unavailable',
+      reason: 'office-runtime-unavailable',
+      message: 'Unavailable outside Excel.',
+    });
   });
 
   afterEach(() => {

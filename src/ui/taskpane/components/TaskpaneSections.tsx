@@ -40,6 +40,12 @@ import type {
 } from '../types/worksheetDragVisualConfig';
 import type { OpenGroupMenuArgs, OpenSheetMenuArgs } from '../types/contextMenuTypes';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
+import type { WorksheetPreviewResult } from '../../../infrastructure/office/WorkbookAdapter';
+import {
+  useWorksheetPreview,
+  type WorksheetPreviewPointerPosition,
+} from '../../../application/navigation/useWorksheetPreview';
+import { WorksheetPreviewPopover } from '../../components/WorksheetPreviewPopover';
 
 interface WorksheetDragConfig extends GroupDragVisualConfig {
   activeDragWorksheet: WorksheetEntity | null;
@@ -71,6 +77,7 @@ interface TaskpaneSectionsProps {
   onToggleGroupCollapsed: (groupId: string) => void;
   onToggleHiddenSection: () => void;
   onUnhideWorksheet: (worksheetId: string) => void | Promise<void>;
+  getWorksheetPreview: (worksheetId: string) => Promise<WorksheetPreviewResult>;
   onOpenSheetMenu: (args: OpenSheetMenuArgs) => void;
   /** ArrowRight on worksheet / search-result row: open sheet context menu from keyboard. */
   onRequestSheetContextMenuFromKeyboard?: (payload: {
@@ -191,6 +198,7 @@ export function TaskpaneSections({
   onToggleGroupCollapsed,
   onToggleHiddenSection,
   onUnhideWorksheet,
+  getWorksheetPreview,
   onOpenSheetMenu,
   onRequestSheetContextMenuFromKeyboard,
   onOpenGroupMenu,
@@ -384,6 +392,7 @@ export function TaskpaneSections({
         onToggleGroupCollapsed={onToggleGroupCollapsed}
         onToggleHiddenSection={onToggleHiddenSection}
         onUnhideWorksheet={onUnhideWorksheet}
+        getWorksheetPreview={getWorksheetPreview}
         onOpenSheetMenu={onOpenSheetMenu}
         onOpenGroupMenu={onOpenGroupMenu}
         onRenameWorksheetSubmit={onRenameWorksheetSubmit}
@@ -453,6 +462,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     onToggleGroupCollapsed,
     onToggleHiddenSection,
     onUnhideWorksheet,
+    getWorksheetPreview,
     onOpenSheetMenu,
     onOpenGroupMenu,
     onRenameWorksheetSubmit,
@@ -479,6 +489,45 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     registerElement,
     restoreFocusAfterMenuDismiss,
   } = useKeyboardNavContext();
+
+  const isWorksheetPreviewSuppressed = Boolean(
+    dragConfig.isDragActive ||
+    renamingWorksheetId ||
+    renamingGroupId ||
+    contextMenuOpenSheetId ||
+    contextMenuOpenGroupId,
+  );
+  const {
+    previewState,
+    requestPreview: requestWorksheetPreview,
+    cancelPreview: cancelWorksheetPreview,
+  } = useWorksheetPreview({
+    getPreview: getWorksheetPreview,
+    isSuppressed: isWorksheetPreviewSuppressed,
+  });
+  const handleWorksheetPreviewRequest = useCallback(
+    ({
+      worksheet,
+      anchorElement,
+      pointerPosition,
+    }: {
+      worksheet: WorksheetEntity;
+      anchorElement: HTMLElement;
+      pointerPosition: WorksheetPreviewPointerPosition;
+    }) => {
+      if (worksheet.visibility !== 'Visible') {
+        return;
+      }
+
+      requestWorksheetPreview({
+        worksheetId: worksheet.worksheetId,
+        worksheetName: worksheet.name,
+        anchorElement,
+        pointerPosition,
+      });
+    },
+    [requestWorksheetPreview],
+  );
 
   useEffect(() => {
     if (!keyboardNavigationApiRef) {
@@ -609,6 +658,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
                 onStartRenameWorksheet={onStartRenameWorksheet}
                 onItemKeyDown={handleItemKeyDown}
                 registerElement={registerElement}
+                onPreviewRequest={handleWorksheetPreviewRequest}
+                onPreviewCancel={cancelWorksheetPreview}
               />
             </Section>
           ) : null}
@@ -654,6 +705,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
                 onGroupHeaderKeyDown={handleGroupHeaderKeyDown}
                 onItemKeyDown={handleItemKeyDown}
                 registerElement={registerElement}
+                onPreviewRequest={handleWorksheetPreviewRequest}
+                onPreviewCancel={cancelWorksheetPreview}
               />
             </Section>
           ) : null}
@@ -693,6 +746,8 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
                   onStartRenameWorksheet={onStartRenameWorksheet}
                   onItemKeyDown={handleItemKeyDown}
                   registerElement={registerElement}
+                  onPreviewRequest={handleWorksheetPreviewRequest}
+                  onPreviewCancel={cancelWorksheetPreview}
                 />
               </div>
             </Section>
@@ -722,6 +777,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
           />
         ) : null}
       </div>
+      <WorksheetPreviewPopover preview={previewState} />
     </div>
   );
 }

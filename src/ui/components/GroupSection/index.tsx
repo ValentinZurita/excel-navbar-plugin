@@ -1,6 +1,7 @@
 import type { GroupColorToken, NavigatorGroupView } from '../../../domain/navigation/types';
 import type { GroupDragVisualConfig } from '../../taskpane/types/worksheetDragVisualConfig';
 import { GroupCard } from '../GroupCard';
+import type { WorksheetPreviewPointerPosition } from '../../../application/navigation/useWorksheetPreview';
 
 type GroupDragConfig = GroupDragVisualConfig;
 
@@ -52,6 +53,14 @@ interface GroupSectionProps {
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
   /** Register DOM element for focus management */
   registerElement?: (id: string, element: HTMLElement | null) => void;
+  /** Schedule a delayed worksheet preview anchored to a visible row. */
+  onPreviewRequest?: (args: {
+    worksheet: NavigatorGroupView['worksheets'][number];
+    anchorElement: HTMLElement;
+    pointerPosition: WorksheetPreviewPointerPosition;
+  }) => void;
+  /** Cancel any pending or visible worksheet preview. */
+  onPreviewCancel?: (worksheetId: string) => void;
 }
 
 export function GroupSection({
@@ -80,6 +89,8 @@ export function GroupSection({
   onGroupHeaderKeyDown,
   onItemKeyDown,
   registerElement,
+  onPreviewRequest,
+  onPreviewCancel,
 }: GroupSectionProps) {
   const className = dragConfig?.isDragActive ? 'group-list group-list-drag-active' : 'group-list';
 
@@ -124,6 +135,8 @@ export function GroupSection({
             visualExitingItemId={visualExitingItemId}
             onItemKeyDown={onItemKeyDown}
             registerElement={registerElement}
+            onPreviewRequest={onPreviewRequest}
+            onPreviewCancel={onPreviewCancel}
           />
         );
       })}

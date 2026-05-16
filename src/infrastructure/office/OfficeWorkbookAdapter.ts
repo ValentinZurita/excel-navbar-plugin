@@ -5,12 +5,21 @@ import type {
   WorkbookSnapshot,
   WorksheetVisibility,
 } from '../../domain/navigation/types';
-import type { WorkbookAdapter } from './WorkbookAdapter';
+import type {
+  WorkbookAdapter,
+  WorksheetPreviewOptions,
+  WorksheetPreviewResult,
+  WorksheetPreviewUnavailableReason,
+} from './WorkbookAdapter';
 import { WorksheetCreateError, WorksheetDeleteError } from './WorkbookAdapter';
 import { createMockWorkbookSnapshot } from './mockWorkbookSnapshot';
 import { WorksheetIdentityRepository } from './WorksheetIdentityRepository';
 
 const worksheetIdentityRepository = new WorksheetIdentityRepository();
+const defaultPreviewMaxRows = 15;
+const defaultPreviewMaxColumns = 8;
+const excelWorksheetRowCount = 1_048_576;
+const excelWorksheetColumnCount = 16_384;
 
 export function hasOfficeRuntime() {
   return typeof Office !== 'undefined' && typeof Excel !== 'undefined';
@@ -48,6 +57,84 @@ function getWorkbookCapabilities(): WorkbookCapabilities {
     supportsCustomXml: Boolean(supports?.('ExcelApi', '1.5')),
     supportsWorksheetCustomProperties: Boolean(supports?.('ExcelApi', '1.12')),
     supportsWorkbookEvents: Boolean(supports?.('ExcelApi', '1.17')),
+  };
+}
+
+function isExcelApiSetSupported(version: string) {
+  const supports =
+    typeof Office !== 'undefined' &&
+    typeof Office.context?.requirements?.isSetSupported === 'function'
+      ? Office.context.requirements.isSetSupported.bind(Office.context.requirements)
+      : null;
+
+  return Boolean(supports?.('ExcelApi', version));
+}
+
+function createUnavailablePreview(
+  reason: WorksheetPreviewUnavailableReason,
+  message: string,
+): WorksheetPreviewResult {
+  return {
+    status: 'unavailable',
+    reason,
+    message,
+  };
+}
+
+function clampWorksheetStartIndex(
+  preferredStartIndex: number,
+  itemCount: number,
+  maxItemCount: number,
+) {
+  const highestSafeStartIndex = Math.max(0, maxItemCount - itemCount);
+  return Math.min(Math.max(0, preferredStartIndex), highestSafeStartIndex);
+}
+
+function calculateWorksheetPreviewRange(args: {
+  usedRange: {
+    isNullObject: boolean;
+    rowIndex?: number;
+    columnIndex?: number;
+    rowCount?: number;
+    columnCount?: number;
+  };
+  maxRows: number;
+  maxColumns: number;
+}) {
+  const rowCount = Math.min(args.maxRows, excelWorksheetRowCount);
+  const columnCount = Math.min(args.maxColumns, excelWorksheetColumnCount);
+
+  if (args.usedRange.isNullObject) {
+    return {
+      rowIndex: 0,
+      columnIndex: 0,
+      rowCount,
+      columnCount,
+    };
+  }
+
+  const usedRowIndex = Math.max(0, Math.floor(args.usedRange.rowIndex ?? 0));
+  const usedColumnIndex = Math.max(0, Math.floor(args.usedRange.columnIndex ?? 0));
+  const usedRowCount = Math.max(1, Math.floor(args.usedRange.rowCount ?? 1));
+  const usedColumnCount = Math.max(1, Math.floor(args.usedRange.columnCount ?? 1));
+  const shouldCenterRows = usedRowCount < rowCount;
+  const shouldCenterColumns = usedColumnCount < columnCount;
+  const preferredRowIndex = shouldCenterRows
+    ? usedRowIndex - Math.floor((rowCount - usedRowCount) / 2)
+    : usedRowIndex;
+  const preferredColumnIndex = shouldCenterColumns
+    ? usedColumnIndex - Math.floor((columnCount - usedColumnCount) / 2)
+    : usedColumnIndex;
+
+  return {
+    rowIndex: clampWorksheetStartIndex(preferredRowIndex, rowCount, excelWorksheetRowCount),
+    columnIndex: clampWorksheetStartIndex(
+      preferredColumnIndex,
+      columnCount,
+      excelWorksheetColumnCount,
+    ),
+    rowCount,
+    columnCount,
   };
 }
 
@@ -168,6 +255,69 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
       source: 'none',
       ...capabilities,
     };
+  }
+
+  async getWorksheetPreview(
+    worksheetId: string,
+    options: WorksheetPreviewOptions = {},
+  ): Promise<WorksheetPreviewResult> {
+    if (!hasOfficeRuntime()) {
+      return createUnavailablePreview('office-runtime-unavailable', 'Unavailable outside Excel.');
+    }
+
+    if (!isExcelApiSetSupported('1.7')) {
+      return createUnavailablePreview('api-unsupported', 'Unavailable in this Excel version.');
+    }
+
+    const maxRows = Math.max(1, Math.floor(options.maxRows ?? defaultPreviewMaxRows));
+    const maxColumns = Math.max(1, Math.floor(options.maxColumns ?? defaultPreviewMaxColumns));
+
+    try {
+      const result = await this.withResolvedWorksheet(
+        worksheetId,
+        'items/id,items/visibility',
+        async (worksheet, context) => {
+          if (worksheet.visibility !== 'Visible') {
+            return createUnavailablePreview('worksheet-hidden', 'Unavailable for hidden sheets.');
+          }
+
+          const usedRange = worksheet.getUsedRangeOrNullObject(true);
+          usedRange.load('rowIndex,columnIndex,rowCount,columnCount');
+          await context.sync();
+
+          const previewRangeWindow = calculateWorksheetPreviewRange({
+            usedRange,
+            maxRows,
+            maxColumns,
+          });
+          const previewRange = worksheet.getRangeByIndexes(
+            previewRangeWindow.rowIndex,
+            previewRangeWindow.columnIndex,
+            previewRangeWindow.rowCount,
+            previewRangeWindow.columnCount,
+          );
+          const previewImage = previewRange.getImage();
+          await context.sync();
+
+          if (!previewImage.value) {
+            return createUnavailablePreview('preview-failed', 'Could not be generated.');
+          }
+
+          return {
+            status: 'ready' as const,
+            imageSrc: `data:image/png;base64,${previewImage.value}`,
+            generatedAt: Date.now(),
+          };
+        },
+      );
+
+      return (
+        result ??
+        createUnavailablePreview('worksheet-not-found', 'This worksheet is no longer available.')
+      );
+    } catch {
+      return createUnavailablePreview('preview-failed', 'Could not be generated.');
+    }
   }
 
   async subscribeToWorkbookChanges(listener: () => void): Promise<() => Promise<void>> {

@@ -73,6 +73,11 @@ function createControllerMock() {
     unpinWorksheet: vi.fn(),
     createWorksheet: vi.fn().mockResolvedValue(undefined),
     activateWorksheet: vi.fn().mockResolvedValue(undefined),
+    getWorksheetPreview: vi.fn().mockResolvedValue({
+      status: 'unavailable',
+      reason: 'office-runtime-unavailable',
+      message: 'Unavailable outside Excel.',
+    }),
     renameWorksheet: vi.fn().mockResolvedValue(undefined),
     unhideWorksheet: vi.fn().mockResolvedValue(undefined),
     hideWorksheet: vi.fn().mockResolvedValue(undefined),

@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NavigatorView, WorksheetEntity } from '../../src/domain/navigation/types';
 import { TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS } from '../../src/application/navigation/useKeyboardNavigation';
 import { HIGHLIGHT_EXIT_MS } from '../../src/application/navigation/useHighlightLifecycle';
+import { WORKSHEET_PREVIEW_HOVER_DELAY_MS } from '../../src/application/navigation/useWorksheetPreview';
 import { TaskpaneSections } from '../../src/ui/taskpane/components/TaskpaneSections';
 
 vi.mock('@dnd-kit/core', async () => {
@@ -69,6 +70,11 @@ function createBaseProps(overrides: Partial<ComponentProps<typeof TaskpaneSectio
     onToggleGroupCollapsed: vi.fn(),
     onToggleHiddenSection: vi.fn(),
     onUnhideWorksheet: vi.fn().mockResolvedValue(undefined),
+    getWorksheetPreview: vi.fn().mockResolvedValue({
+      status: 'unavailable',
+      reason: 'office-runtime-unavailable',
+      message: 'Unavailable outside Excel.',
+    }),
     onOpenSheetMenu: vi.fn(),
     onRequestSheetContextMenuFromKeyboard: vi.fn(),
     onOpenGroupMenu: vi.fn(),
@@ -150,6 +156,128 @@ describe('TaskpaneSections', () => {
       'title',
       'This workbook has not been saved yet. Group changes persist only for this session.',
     );
+  });
+
+  it('requests worksheet preview after the visible row hover delay', () => {
+    vi.useFakeTimers();
+    const getWorksheetPreview = vi.fn(() => new Promise<never>(() => undefined));
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          getWorksheetPreview,
+        })}
+      />,
+    );
+
+    const row = screen.getByRole('button', { name: 'Revenue' }).closest('.sheet-row');
+    expect(row).not.toBeNull();
+
+    act(() => {
+      fireEvent.pointerEnter(row!);
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    expect(getWorksheetPreview).toHaveBeenCalledWith('sheet-1');
+  });
+
+  it('hides a visible worksheet preview while the pointer moves and reopens where it settles', async () => {
+    vi.useFakeTimers();
+    const getWorksheetPreview = vi.fn().mockResolvedValue({
+      status: 'ready',
+      imageSrc: 'data:image/png;base64,preview',
+      generatedAt: 1,
+    });
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          getWorksheetPreview,
+        })}
+      />,
+    );
+
+    const row = screen.getByRole('button', { name: 'Revenue' }).closest('.sheet-row');
+    expect(row).not.toBeNull();
+
+    fireEvent.pointerEnter(row!, { clientX: 40, clientY: 50 });
+    await act(async () => {
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+      await Promise.resolve();
+    });
+
+    expect(screen.getByTestId('worksheet-preview-popover')).toBeInTheDocument();
+
+    act(() => {
+      fireEvent.pointerMove(row!, { clientX: 120, clientY: 140 });
+    });
+
+    expect(screen.queryByTestId('worksheet-preview-popover')).not.toBeInTheDocument();
+
+    await act(async () => {
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+      await Promise.resolve();
+    });
+
+    expect(getWorksheetPreview).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('worksheet-preview-popover')).toBeInTheDocument();
+  });
+
+  it('does not request worksheet preview while drag, rename, or context menu states suppress hover', () => {
+    vi.useFakeTimers();
+    const getWorksheetPreview = vi.fn(() => new Promise<never>(() => undefined));
+
+    const { rerender } = render(
+      <TaskpaneSections
+        {...createBaseProps({
+          getWorksheetPreview,
+          dragConfig: {
+            ...createBaseProps().dragConfig,
+            isDragActive: true,
+          },
+        })}
+      />,
+    );
+
+    const row = screen.getByRole('button', { name: 'Revenue' }).closest('.sheet-row');
+    expect(row).not.toBeNull();
+
+    act(() => {
+      fireEvent.pointerEnter(row!);
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    rerender(
+      <TaskpaneSections
+        {...createBaseProps({
+          getWorksheetPreview,
+          renamingWorksheetId: 'sheet-1',
+        })}
+      />,
+    );
+
+    const renamingRow = screen.getByRole('button', { name: 'Revenue' }).closest('.sheet-row');
+    act(() => {
+      fireEvent.pointerEnter(renamingRow!);
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    rerender(
+      <TaskpaneSections
+        {...createBaseProps({
+          getWorksheetPreview,
+          contextMenuOpenSheetId: 'sheet-1',
+        })}
+      />,
+    );
+
+    const contextMenuRow = screen.getByRole('button', { name: 'Revenue' }).closest('.sheet-row');
+    act(() => {
+      fireEvent.pointerEnter(contextMenuRow!);
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    expect(getWorksheetPreview).not.toHaveBeenCalled();
   });
 
   it('navigates continuously through expanded group header and worksheets with ArrowDown/ArrowUp', async () => {

@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import type { WorksheetContainerId } from '../../taskpane/dnd/worksheetDndModel';
 import { SheetRow } from '../SheetRow';
+import type { WorksheetPreviewPointerPosition } from '../../../application/navigation/useWorksheetPreview';
 
 interface SortableWorksheetRowProps {
   worksheet: WorksheetEntity;
@@ -41,6 +42,14 @@ interface SortableWorksheetRowProps {
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
   /** Register DOM element for focus management */
   registerElement?: (id: string, element: HTMLElement | null) => void;
+  /** Schedule a delayed worksheet preview anchored to this row. */
+  onPreviewRequest?: (args: {
+    worksheet: WorksheetEntity;
+    anchorElement: HTMLElement;
+    pointerPosition: WorksheetPreviewPointerPosition;
+  }) => void;
+  /** Cancel any pending or visible worksheet preview for this row. */
+  onPreviewCancel?: (worksheetId: string) => void;
 }
 
 function shouldBlockActivation(
@@ -79,7 +88,9 @@ function areSortableWorksheetRowPropsEqual(
     left.isVisualExiting === right.isVisualExiting &&
     left.isActiveDimmed === right.isActiveDimmed &&
     left.onItemKeyDown === right.onItemKeyDown &&
-    left.registerElement === right.registerElement
+    left.registerElement === right.registerElement &&
+    left.onPreviewRequest === right.onPreviewRequest &&
+    left.onPreviewCancel === right.onPreviewCancel
   );
 }
 
@@ -108,6 +119,8 @@ function SortableWorksheetRowComponent({
   isActiveDimmed,
   onItemKeyDown,
   registerElement,
+  onPreviewRequest,
+  onPreviewCancel,
 }: SortableWorksheetRowProps) {
   const isRenameActive = Boolean(isRenaming);
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({
@@ -169,6 +182,8 @@ function SortableWorksheetRowComponent({
       onStartRename={onStartRenameWorksheet ? handleStartRename : undefined}
       onItemKeyDown={onItemKeyDown}
       registerElement={registerElement}
+      onPreviewRequest={onPreviewRequest}
+      onPreviewCancel={onPreviewCancel}
     />
   );
 }

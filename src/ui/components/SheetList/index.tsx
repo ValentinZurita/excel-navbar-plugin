@@ -8,6 +8,7 @@ import type { WorksheetDragVisualConfig } from '../../taskpane/types/worksheetDr
 import { SheetRow } from '../SheetRow';
 import { SortableWorksheetRow } from '../SortableWorksheetRow';
 import { WorksheetDropZone } from '../WorksheetDropZone';
+import type { WorksheetPreviewPointerPosition } from '../../../application/navigation/useWorksheetPreview';
 
 interface SheetListDragConfig extends WorksheetDragVisualConfig {
   containerId: WorksheetContainerId;
@@ -43,6 +44,14 @@ interface SheetListProps {
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
   /** Register DOM element for focus management */
   registerElement?: (id: string, element: HTMLElement | null) => void;
+  /** Schedule a delayed worksheet preview anchored to a visible row. */
+  onPreviewRequest?: (args: {
+    worksheet: WorksheetEntity;
+    anchorElement: HTMLElement;
+    pointerPosition: WorksheetPreviewPointerPosition;
+  }) => void;
+  /** Cancel any pending or visible worksheet preview. */
+  onPreviewCancel?: (worksheetId: string) => void;
 }
 
 function isGroupContainerId(containerId: WorksheetContainerId): boolean {
@@ -148,6 +157,8 @@ export function SheetList(props: SheetListProps) {
               onStartRename={props.onStartRenameWorksheet}
               onItemKeyDown={onItemKeyDown}
               registerElement={registerElement}
+              onPreviewRequest={props.onPreviewRequest}
+              onPreviewCancel={props.onPreviewCancel}
             />
           );
         })}
@@ -218,6 +229,8 @@ export function SheetList(props: SheetListProps) {
                 onStartRenameWorksheet={props.onStartRenameWorksheet}
                 onItemKeyDown={onItemKeyDown}
                 registerElement={registerElement}
+                onPreviewRequest={props.onPreviewRequest}
+                onPreviewCancel={props.onPreviewCancel}
               />
             </div>
           );

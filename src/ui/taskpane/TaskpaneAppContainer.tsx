@@ -646,6 +646,7 @@ export function TaskpaneAppContainer() {
         onToggleGroupCollapsed={controller.toggleGroupCollapsed}
         onToggleHiddenSection={controller.toggleHiddenSection}
         onUnhideWorksheet={controller.unhideWorksheet}
+        getWorksheetPreview={controller.getWorksheetPreview}
         onOpenSheetMenu={openSheetMenu}
         onRequestSheetContextMenuFromKeyboard={handleRequestSheetContextMenuFromKeyboard}
         onOpenGroupMenu={openGroupMenu}

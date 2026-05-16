@@ -36,7 +36,7 @@ describe('OfficeWorkbookAdapter.hideWorksheet', () => {
           },
           sync,
         };
-        await callback(context);
+        return callback(context);
       }),
     } as any;
 
@@ -64,7 +64,7 @@ describe('OfficeWorkbookAdapter.hideWorksheet', () => {
           },
           sync,
         };
-        await callback(context);
+        return callback(context);
       }),
     } as any;
 
@@ -235,6 +235,248 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
     expect(context.supportsCustomXml).toBe(false);
     expect(context.supportsWorksheetCustomProperties).toBe(false);
     expect(context.supportsWorkbookEvents).toBe(false);
+  });
+});
+
+describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    // @ts-expect-error test cleanup for globals
+    delete globalThis.Office;
+    // @ts-expect-error test cleanup for globals
+    delete globalThis.Excel;
+  });
+
+  it('returns api-unsupported when ExcelApi 1.7 is unavailable', async () => {
+    const isSetSupported = vi.fn(() => false);
+
+    globalThis.Office = {
+      context: {
+        requirements: {
+          isSetSupported,
+        },
+      },
+    } as any;
+    globalThis.Excel = {
+      run: vi.fn(),
+    } as any;
+
+    const adapter = new OfficeWorkbookAdapter();
+    await expect(adapter.getWorksheetPreview('sheet-1')).resolves.toEqual({
+      status: 'unavailable',
+      reason: 'api-unsupported',
+      message: 'Unavailable in this Excel version.',
+    });
+
+    expect(isSetSupported).toHaveBeenCalledWith('ExcelApi', '1.7');
+    expect(globalThis.Excel.run).not.toHaveBeenCalled();
+  });
+
+  it('returns a data image for a bounded used range', async () => {
+    const imageResult = { value: 'base64-png' };
+    const usedRange = {
+      isNullObject: false,
+      rowIndex: 2,
+      columnIndex: 3,
+      rowCount: 20,
+      columnCount: 9,
+      load: vi.fn(),
+    };
+    const previewRange = {
+      getImage: vi.fn(() => imageResult),
+    };
+    const worksheet = {
+      id: 'sheet-1',
+      visibility: 'Visible' as const,
+      getUsedRangeOrNullObject: vi.fn(() => usedRange),
+      getRangeByIndexes: vi.fn(() => previewRange),
+    };
+    const sync = vi.fn(async () => undefined);
+
+    globalThis.Office = {
+      context: {
+        requirements: {
+          isSetSupported: vi.fn((set: string, version: string) => {
+            return set === 'ExcelApi' && version === '1.7';
+          }),
+        },
+      },
+    } as any;
+    globalThis.Excel = {
+      run: vi.fn(async (callback: (context: any) => Promise<void>) => {
+        const context = {
+          workbook: {
+            worksheets: {
+              items: [worksheet],
+              load: vi.fn(),
+            },
+          },
+          sync,
+        };
+        return callback(context);
+      }),
+    } as any;
+
+    vi.spyOn(Date, 'now').mockReturnValue(123);
+
+    const adapter = new OfficeWorkbookAdapter();
+    await expect(adapter.getWorksheetPreview('sheet-1')).resolves.toEqual({
+      status: 'ready',
+      imageSrc: 'data:image/png;base64,base64-png',
+      generatedAt: 123,
+    });
+
+    expect(usedRange.load).toHaveBeenCalledWith('rowIndex,columnIndex,rowCount,columnCount');
+    expect(worksheet.getRangeByIndexes).toHaveBeenCalledWith(2, 3, 15, 8);
+    expect(previewRange.getImage).toHaveBeenCalledOnce();
+    expect(sync).toHaveBeenCalledTimes(3);
+  });
+
+  it('returns worksheet-not-found when the worksheet cannot be resolved', async () => {
+    const sync = vi.fn(async () => undefined);
+
+    globalThis.Office = {
+      context: {
+        requirements: {
+          isSetSupported: vi.fn((set: string, version: string) => {
+            return set === 'ExcelApi' && version === '1.7';
+          }),
+        },
+      },
+    } as any;
+    globalThis.Excel = {
+      run: vi.fn(async (callback: (context: any) => Promise<void>) => {
+        const context = {
+          workbook: {
+            worksheets: {
+              items: [{ id: 'other-sheet', visibility: 'Visible' as const }],
+              load: vi.fn(),
+            },
+          },
+          sync,
+        };
+        return callback(context);
+      }),
+    } as any;
+
+    const adapter = new OfficeWorkbookAdapter();
+    await expect(adapter.getWorksheetPreview('sheet-1')).resolves.toEqual({
+      status: 'unavailable',
+      reason: 'worksheet-not-found',
+      message: 'This worksheet is no longer available.',
+    });
+  });
+
+  it('returns an empty worksheet preview when the sheet has no used cells', async () => {
+    const imageResult = { value: 'empty-base64-png' };
+    const previewRange = {
+      getImage: vi.fn(() => imageResult),
+    };
+    const usedRange = {
+      isNullObject: true,
+      load: vi.fn(),
+    };
+    const worksheet = {
+      id: 'sheet-1',
+      visibility: 'Visible' as const,
+      getUsedRangeOrNullObject: vi.fn(() => usedRange),
+      getRangeByIndexes: vi.fn(() => previewRange),
+    };
+    const sync = vi.fn(async () => undefined);
+
+    globalThis.Office = {
+      context: {
+        requirements: {
+          isSetSupported: vi.fn((set: string, version: string) => {
+            return set === 'ExcelApi' && version === '1.7';
+          }),
+        },
+      },
+    } as any;
+    globalThis.Excel = {
+      run: vi.fn(async (callback: (context: any) => Promise<void>) => {
+        const context = {
+          workbook: {
+            worksheets: {
+              items: [worksheet],
+              load: vi.fn(),
+            },
+          },
+          sync,
+        };
+        return callback(context);
+      }),
+    } as any;
+
+    vi.spyOn(Date, 'now').mockReturnValue(456);
+
+    const adapter = new OfficeWorkbookAdapter();
+    await expect(adapter.getWorksheetPreview('sheet-1')).resolves.toEqual({
+      status: 'ready',
+      imageSrc: 'data:image/png;base64,empty-base64-png',
+      generatedAt: 456,
+    });
+
+    expect(worksheet.getRangeByIndexes).toHaveBeenCalledWith(0, 0, 15, 8);
+    expect(previewRange.getImage).toHaveBeenCalledOnce();
+  });
+
+  it('captures context around a small used range instead of enlarging one cell', async () => {
+    const imageResult = { value: 'single-cell-context-base64-png' };
+    const usedRange = {
+      isNullObject: false,
+      rowIndex: 20,
+      columnIndex: 10,
+      rowCount: 1,
+      columnCount: 1,
+      load: vi.fn(),
+    };
+    const previewRange = {
+      getImage: vi.fn(() => imageResult),
+    };
+    const worksheet = {
+      id: 'sheet-1',
+      visibility: 'Visible' as const,
+      getUsedRangeOrNullObject: vi.fn(() => usedRange),
+      getRangeByIndexes: vi.fn(() => previewRange),
+    };
+    const sync = vi.fn(async () => undefined);
+
+    globalThis.Office = {
+      context: {
+        requirements: {
+          isSetSupported: vi.fn((set: string, version: string) => {
+            return set === 'ExcelApi' && version === '1.7';
+          }),
+        },
+      },
+    } as any;
+    globalThis.Excel = {
+      run: vi.fn(async (callback: (context: any) => Promise<void>) => {
+        const context = {
+          workbook: {
+            worksheets: {
+              items: [worksheet],
+              load: vi.fn(),
+            },
+          },
+          sync,
+        };
+        return callback(context);
+      }),
+    } as any;
+
+    vi.spyOn(Date, 'now').mockReturnValue(789);
+
+    const adapter = new OfficeWorkbookAdapter();
+    await expect(adapter.getWorksheetPreview('sheet-1')).resolves.toEqual({
+      status: 'ready',
+      imageSrc: 'data:image/png;base64,single-cell-context-base64-png',
+      generatedAt: 789,
+    });
+
+    expect(worksheet.getRangeByIndexes).toHaveBeenCalledWith(13, 7, 15, 8);
+    expect(previewRange.getImage).toHaveBeenCalledOnce();
   });
 });
 

@@ -8,6 +8,7 @@ import { inferContextMenuInteraction } from '../../taskpane/utils/contextMenuInt
 import { GroupFolderIcon } from '../../icons';
 import { SheetList } from '../SheetList';
 import { InlineRenameInput } from '../InlineRenameInput';
+import type { WorksheetPreviewPointerPosition } from '../../../application/navigation/useWorksheetPreview';
 import './GroupCard.css';
 
 type GroupDragConfig = GroupDragVisualConfig;
@@ -70,6 +71,14 @@ interface GroupCardProps {
   visualExitingItemId?: string | null;
   /** Handler for keyboard navigation on child worksheets */
   onItemKeyDown?: (event: React.KeyboardEvent<HTMLElement>, itemId: string) => void;
+  /** Schedule a delayed worksheet preview anchored to a visible row. */
+  onPreviewRequest?: (args: {
+    worksheet: NavigatorGroupView['worksheets'][number];
+    anchorElement: HTMLElement;
+    pointerPosition: WorksheetPreviewPointerPosition;
+  }) => void;
+  /** Cancel any pending or visible worksheet preview. */
+  onPreviewCancel?: (worksheetId: string) => void;
 }
 
 function isGroupHeaderDropActive(
@@ -173,7 +182,9 @@ function areGroupCardPropsEqual(left: GroupCardProps, right: GroupCardProps) {
     left.registerElement === right.registerElement &&
     left.visualFocusedItemId === right.visualFocusedItemId &&
     left.visualExitingItemId === right.visualExitingItemId &&
-    left.onItemKeyDown === right.onItemKeyDown
+    left.onItemKeyDown === right.onItemKeyDown &&
+    left.onPreviewRequest === right.onPreviewRequest &&
+    left.onPreviewCancel === right.onPreviewCancel
   );
 }
 
@@ -397,6 +408,8 @@ function GroupCardComponent({
           onStartRenameWorksheet={onStartRenameWorksheet}
           onItemKeyDown={rest.onItemKeyDown}
           registerElement={registerElement}
+          onPreviewRequest={rest.onPreviewRequest}
+          onPreviewCancel={rest.onPreviewCancel}
         />
       ) : null}
     </section>

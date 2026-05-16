@@ -334,6 +334,9 @@ export function useNavigationController() {
         await adapter.activateWorksheet(worksheetId);
         dispatch({ type: 'setActiveWorksheetLocally', worksheetId });
       },
+      getWorksheetPreview(worksheetId: string) {
+        return adapter.getWorksheetPreview(worksheetId);
+      },
       async renameWorksheet(worksheetId: string, name: string) {
         await adapter.renameWorksheet(worksheetId, name);
         dispatch({ type: 'renameWorksheetLocally', worksheetId, name });

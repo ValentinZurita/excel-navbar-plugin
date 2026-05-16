@@ -1,9 +1,38 @@
 import type { WorkbookPersistenceContext, WorkbookSnapshot } from '../../domain/navigation/types';
 
+export interface WorksheetPreviewOptions {
+  maxRows?: number;
+  maxColumns?: number;
+}
+
+export type WorksheetPreviewUnavailableReason =
+  | 'office-runtime-unavailable'
+  | 'api-unsupported'
+  | 'worksheet-not-found'
+  | 'worksheet-hidden'
+  | 'empty-range'
+  | 'preview-failed';
+
+export type WorksheetPreviewResult =
+  | {
+      status: 'ready';
+      imageSrc: string;
+      generatedAt: number;
+    }
+  | {
+      status: 'unavailable';
+      reason: WorksheetPreviewUnavailableReason;
+      message: string;
+    };
+
 export interface WorkbookAdapter {
   getWorkbookSnapshot(): Promise<WorkbookSnapshot>;
   getPersistenceContext(): Promise<WorkbookPersistenceContext>;
   subscribeToWorkbookChanges?(listener: () => void): Promise<() => Promise<void> | void>;
+  getWorksheetPreview(
+    worksheetId: string,
+    options?: WorksheetPreviewOptions,
+  ): Promise<WorksheetPreviewResult>;
   createWorksheet(): Promise<void>;
   activateWorksheet(worksheetId: string): Promise<void>;
   renameWorksheet(worksheetId: string, name: string): Promise<void>;
