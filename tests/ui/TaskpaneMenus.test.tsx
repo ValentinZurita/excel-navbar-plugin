@@ -543,6 +543,26 @@ describe('TaskpaneMenus', () => {
     expect(onConfirmCreatingGroup).toHaveBeenCalledWith('Finance', 'none');
   });
 
+  it('creates group from the inline Create button with a valid name', async () => {
+    const user = userEvent.setup();
+    const onConfirmCreatingGroup = vi.fn();
+
+    renderSheetMenu({
+      isCreatingGroup: true,
+      onConfirmCreatingGroup,
+    });
+
+    const createButton = screen.getByRole('button', { name: 'Create group' });
+    expect(createButton).toBeDisabled();
+
+    await user.type(screen.getByLabelText('Name'), 'Finance');
+
+    expect(createButton).toBeEnabled();
+    await user.click(createButton);
+
+    expect(onConfirmCreatingGroup).toHaveBeenCalledWith('Finance', 'none');
+  });
+
   it('does not create group on Enter with empty name', async () => {
     const user = userEvent.setup();
     const onConfirmCreatingGroup = vi.fn();

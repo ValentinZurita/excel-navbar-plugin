@@ -13,6 +13,7 @@ describe('InlineGroupCreator', () => {
     const colorContainer = screen.getByLabelText('Color options');
     const colorButtons = colorContainer.querySelectorAll('button');
     expect(colorButtons).toHaveLength(6);
+    expect(screen.getByRole('button', { name: 'Create group' })).toBeDisabled();
   });
 
   it('focuses input on mount', async () => {
@@ -54,6 +55,35 @@ describe('InlineGroupCreator', () => {
     await user.type(screen.getByLabelText('Name'), '  Finance  {Enter}');
 
     expect(onCreate).toHaveBeenCalledWith('Finance', 'none');
+  });
+
+  it('creates group with selected color when clicking the Create button', async () => {
+    const user = userEvent.setup();
+    const onCreate = vi.fn();
+
+    render(<InlineGroupCreator onCreate={onCreate} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
+
+    await user.type(screen.getByLabelText('Name'), '  Finance  ');
+    await user.click(screen.getByLabelText('Color blue'));
+    await user.click(screen.getByRole('button', { name: 'Create group' }));
+
+    expect(onCreate).toHaveBeenCalledWith('Finance', 'blue');
+  });
+
+  it('keeps Create disabled when the name is empty or whitespace-only', async () => {
+    const user = userEvent.setup();
+    const onCreate = vi.fn();
+
+    render(<InlineGroupCreator onCreate={onCreate} onCancel={vi.fn()} onCloseMenu={vi.fn()} />);
+
+    const createButton = screen.getByRole('button', { name: 'Create group' });
+    expect(createButton).toBeDisabled();
+
+    await user.type(screen.getByLabelText('Name'), '   ');
+
+    expect(createButton).toBeDisabled();
+    await user.click(createButton);
+    expect(onCreate).not.toHaveBeenCalled();
   });
 
   it('does not call onCreate on Enter with empty name', async () => {

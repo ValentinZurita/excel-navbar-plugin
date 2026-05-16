@@ -33,6 +33,8 @@ export function InlineGroupCreator({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState('');
   const [selectedColor, setSelectedColor] = useState<GroupColorToken>(defaultColor);
+  const trimmedName = name.trim();
+  const canCreate = trimmedName.length > 0;
 
   // Focus once after mount, synchronously before paint. Avoids a deferred rAF focus
   // racing after Tab and stealing focus from color chips (flaky tests / keyboard flows).
@@ -56,10 +58,9 @@ export function InlineGroupCreator({
     }
 
     if (event.key === 'Enter') {
-      const trimmed = name.trim();
-      if (trimmed) {
+      if (canCreate) {
         event.preventDefault();
-        onCreate(trimmed, selectedColor);
+        onCreate(trimmedName, selectedColor);
       }
     }
   }
@@ -78,13 +79,20 @@ export function InlineGroupCreator({
     }
 
     if (event.key === 'Enter') {
-      const trimmed = name.trim();
-      if (trimmed) {
+      if (canCreate) {
         event.preventDefault();
         // Use the color of the focused chip, not the selectedColor state
-        onCreate(trimmed, color);
+        onCreate(trimmedName, color);
       }
     }
+  }
+
+  function handleCreateClick() {
+    if (!canCreate) {
+      return;
+    }
+
+    onCreate(trimmedName, selectedColor);
   }
 
   return (
@@ -116,6 +124,18 @@ export function InlineGroupCreator({
             onKeyDown={(event) => handleColorKeyDown(event, color)}
           />
         ))}
+      </div>
+
+      <div className="inline-group-creator-actions">
+        <button
+          type="button"
+          className="inline-group-creator-create-button"
+          disabled={!canCreate}
+          aria-label="Create group"
+          onClick={handleCreateClick}
+        >
+          Create
+        </button>
       </div>
     </div>
   );
