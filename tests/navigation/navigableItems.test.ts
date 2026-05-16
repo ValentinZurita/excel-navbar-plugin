@@ -6,6 +6,7 @@ import {
   getNextItem,
   getPrevItem,
   hasItem,
+  type NavigationSectionsState,
 } from '../../src/domain/navigation/navigableItems';
 import type {
   NavigatorGroupView,
@@ -51,6 +52,16 @@ function createGroupView(
   };
 }
 
+function createSections(overrides: Partial<NavigationSectionsState> = {}): NavigationSectionsState {
+  return {
+    pinned: { isVisible: false, isCollapsed: false },
+    groups: { isVisible: false, isCollapsed: false },
+    sheets: { isVisible: false, isCollapsed: false },
+    hidden: { isVisible: false, isCollapsed: false },
+    ...overrides,
+  };
+}
+
 describe('buildNavigableItems', () => {
   it('returns empty array for empty state', () => {
     const items = buildNavigableItems({
@@ -60,6 +71,7 @@ describe('buildNavigableItems', () => {
       groups: [],
       ungrouped: [],
       hidden: [],
+      sections: createSections(),
     });
 
     expect(items).toEqual([]);
@@ -76,6 +88,12 @@ describe('buildNavigableItems', () => {
       groups: [createGroupView('group-1', 'Finance', [createWorksheet('sheet-4', 'Budget')])],
       ungrouped: [createWorksheet('sheet-5', 'Ungrouped')],
       hidden: [createWorksheet('sheet-6', 'Hidden')],
+      sections: createSections({
+        pinned: { isVisible: true, isCollapsed: false },
+        groups: { isVisible: true, isCollapsed: false },
+        sheets: { isVisible: true, isCollapsed: false },
+        hidden: { isVisible: true, isCollapsed: false },
+      }),
     });
 
     expect(items).toHaveLength(2);
@@ -99,6 +117,7 @@ describe('buildNavigableItems', () => {
       groups: [],
       ungrouped: [],
       hidden: [],
+      sections: createSections(),
     });
 
     expect(items).toEqual([]);
@@ -112,15 +131,25 @@ describe('buildNavigableItems', () => {
       groups: [],
       ungrouped: [],
       hidden: [],
+      sections: createSections({
+        pinned: { isVisible: true, isCollapsed: false },
+      }),
     });
 
-    expect(items).toHaveLength(2);
+    expect(items).toHaveLength(3);
     expect(items[0]).toMatchObject({
+      id: 'section:pinned',
+      kind: 'section-header',
+      sectionId: 'pinned',
+      isSectionCollapsed: false,
+      name: 'Pinned',
+    });
+    expect(items[1]).toMatchObject({
       id: 'worksheet:sheet-1',
       kind: 'worksheet',
       name: 'Pinned A',
     });
-    expect(items[1]).toMatchObject({
+    expect(items[2]).toMatchObject({
       id: 'worksheet:sheet-2',
       kind: 'worksheet',
       name: 'Pinned B',
@@ -142,21 +171,31 @@ describe('buildNavigableItems', () => {
       ],
       ungrouped: [],
       hidden: [],
+      sections: createSections({
+        groups: { isVisible: true, isCollapsed: false },
+      }),
     });
 
-    expect(items).toHaveLength(3);
+    expect(items).toHaveLength(4);
     expect(items[0]).toMatchObject({
+      id: 'section:groups',
+      kind: 'section-header',
+      sectionId: 'groups',
+      isSectionCollapsed: false,
+      name: 'Groups',
+    });
+    expect(items[1]).toMatchObject({
       id: 'group-header:group-1',
       kind: 'group-header',
       name: 'Finance',
     });
-    expect(items[1]).toMatchObject({
+    expect(items[2]).toMatchObject({
       id: 'worksheet:sheet-1',
       kind: 'worksheet',
       name: 'Budget',
       groupId: 'group-1',
     });
-    expect(items[2]).toMatchObject({
+    expect(items[3]).toMatchObject({
       id: 'worksheet:sheet-2',
       kind: 'worksheet',
       name: 'Forecast',
@@ -172,10 +211,19 @@ describe('buildNavigableItems', () => {
       groups: [createGroupView('group-1', 'Finance', [createWorksheet('sheet-1', 'Budget')], true)],
       ungrouped: [],
       hidden: [],
+      sections: createSections({
+        groups: { isVisible: true, isCollapsed: false },
+      }),
     });
 
-    expect(items).toHaveLength(1);
+    expect(items).toHaveLength(2);
     expect(items[0]).toMatchObject({
+      id: 'section:groups',
+      kind: 'section-header',
+      isSectionCollapsed: false,
+      name: 'Groups',
+    });
+    expect(items[1]).toMatchObject({
       id: 'group-header:group-1',
       kind: 'group-header',
       isGroupCollapsed: true,
@@ -193,13 +241,21 @@ describe('buildNavigableItems', () => {
       ],
       ungrouped: [createWorksheet('sheet-3', 'Ungrouped')],
       hidden: [],
+      sections: createSections({
+        pinned: { isVisible: true, isCollapsed: false },
+        groups: { isVisible: true, isCollapsed: false },
+        sheets: { isVisible: true, isCollapsed: false },
+      }),
     });
 
-    expect(items).toHaveLength(4);
-    expect(items[0]).toMatchObject({ kind: 'worksheet', name: 'Pinned' });
-    expect(items[1]).toMatchObject({ kind: 'group-header', name: 'Finance' });
-    expect(items[2]).toMatchObject({ kind: 'worksheet', name: 'Budget' });
-    expect(items[3]).toMatchObject({ kind: 'worksheet', name: 'Ungrouped' });
+    expect(items).toHaveLength(7);
+    expect(items[0]).toMatchObject({ kind: 'section-header', name: 'Pinned' });
+    expect(items[1]).toMatchObject({ kind: 'worksheet', name: 'Pinned' });
+    expect(items[2]).toMatchObject({ kind: 'section-header', name: 'Groups' });
+    expect(items[3]).toMatchObject({ kind: 'group-header', name: 'Finance' });
+    expect(items[4]).toMatchObject({ kind: 'worksheet', name: 'Budget' });
+    expect(items[5]).toMatchObject({ kind: 'section-header', name: 'Sheets' });
+    expect(items[6]).toMatchObject({ kind: 'worksheet', name: 'Ungrouped' });
   });
 
   it('includes Hidden worksheets after visible sections when expanded', () => {
@@ -213,10 +269,20 @@ describe('buildNavigableItems', () => {
       groups: [],
       ungrouped: [createWorksheet('sheet-2', 'Ungrouped')],
       hidden: [hiddenWorksheet],
+      sections: createSections({
+        pinned: { isVisible: true, isCollapsed: false },
+        sheets: { isVisible: true, isCollapsed: false },
+        hidden: { isVisible: true, isCollapsed: false },
+      }),
     });
 
-    expect(items).toHaveLength(3);
-    expect(items[2]).toMatchObject({
+    expect(items).toHaveLength(6);
+    expect(items[4]).toMatchObject({
+      id: 'section:hidden',
+      kind: 'section-header',
+      name: 'Hidden',
+    });
+    expect(items[5]).toMatchObject({
       id: 'worksheet:sheet-hidden',
       kind: 'hidden-worksheet',
       name: 'Archive',
@@ -231,10 +297,40 @@ describe('buildNavigableItems', () => {
       groups: [],
       ungrouped: [],
       hidden: [],
+      sections: createSections({
+        pinned: { isVisible: true, isCollapsed: false },
+      }),
     });
 
-    expect(items).toHaveLength(1);
-    expect(items[0].kind).toBe('worksheet');
+    expect(items).toHaveLength(2);
+    expect(items[0].kind).toBe('section-header');
+    expect(items[1].kind).toBe('worksheet');
+  });
+
+  it('keeps collapsed sections in navigation while omitting their children', () => {
+    const items = buildNavigableItems({
+      query: '',
+      searchResults: [],
+      pinned: [createWorksheet('sheet-1', 'Pinned')],
+      groups: [createGroupView('group-1', 'Finance', [createWorksheet('sheet-2', 'Budget')])],
+      ungrouped: [createWorksheet('sheet-3', 'Ungrouped')],
+      hidden: [createWorksheet('sheet-4', 'Hidden')],
+      sections: createSections({
+        pinned: { isVisible: true, isCollapsed: true },
+        groups: { isVisible: true, isCollapsed: true },
+        sheets: { isVisible: true, isCollapsed: true },
+        hidden: { isVisible: true, isCollapsed: true },
+      }),
+    });
+
+    expect(items.map((item) => item.id)).toEqual([
+      'section:pinned',
+      'section:groups',
+      'section:sheets',
+      'section:hidden',
+    ]);
+    expect(items.every((item) => item.kind === 'section-header')).toBe(true);
+    expect(items.every((item) => item.isSectionCollapsed)).toBe(true);
   });
 });
 

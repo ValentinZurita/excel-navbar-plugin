@@ -21,6 +21,8 @@ function createBaseArgs(
     onActivate: vi.fn(),
     onExpandGroup: vi.fn(),
     onCollapseGroup: vi.fn(),
+    onExpandSection: vi.fn(),
+    onCollapseSection: vi.fn(),
     onFocusSearchInput: vi.fn(),
     searchInputRef: createRef<HTMLInputElement>(),
     isSearchActive: false,

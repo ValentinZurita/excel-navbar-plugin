@@ -94,6 +94,10 @@ export function useKeyboardNavigationItemKeyDown({
         case 'Enter': {
           event.preventDefault();
           event.stopPropagation();
+          if (currentItem?.kind === 'group-header' || currentItem?.kind === 'section-header') {
+            break;
+          }
+
           if (currentItem?.kind === 'hidden-worksheet') {
             const worksheetId = currentItem.worksheetId;
             if (!worksheetId || !onRequestSheetContextMenuFromKeyboard) {

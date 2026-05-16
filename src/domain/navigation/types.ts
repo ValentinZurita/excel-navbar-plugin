@@ -160,6 +160,8 @@ export interface NavigatorView {
   searchResults: SearchResultItem[];
 }
 
+export type NavigationSectionId = 'pinned' | 'groups' | 'sheets' | 'hidden';
+
 /**
  * Represents an item that can receive keyboard focus in the taskpane navigator.
  * These items form a linear list for keyboard navigation (ArrowDown/ArrowUp).
@@ -167,9 +169,11 @@ export interface NavigatorView {
  */
 export interface NavigableItem {
   id: string;
-  kind: 'search-result' | 'worksheet' | 'hidden-worksheet' | 'group-header';
+  kind: 'search-result' | 'worksheet' | 'hidden-worksheet' | 'group-header' | 'section-header';
   worksheetId?: string;
   groupId?: string;
   isGroupCollapsed?: boolean;
+  sectionId?: NavigationSectionId;
+  isSectionCollapsed?: boolean;
   name: string;
 }

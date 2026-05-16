@@ -1,7 +1,8 @@
 import { useCallback, useEffect, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import { useLeadingClusterInteraction } from '../../hooks/useLeadingClusterInteraction';
-import { ChevronDownIcon, ChevronRightIcon, EyeIcon, EyeOffIcon } from '../../icons';
+import { EyeIcon, EyeOffIcon } from '../../icons';
+import { SectionHeader } from '../Section';
 import '../SheetRow/SheetRow.css';
 import './HiddenSection.css';
 import '../Section/Section.css';
@@ -28,6 +29,10 @@ interface HiddenSectionProps {
   focusedItemId?: string | null;
   visualFocusedItemId?: string | null;
   visualExitingItemId?: string | null;
+  navigableId?: string;
+  isHeaderFocused?: boolean;
+  isHeaderVisualFocused?: boolean;
+  isHeaderVisualExiting?: boolean;
   onToggle: () => void;
   onUnhide: (worksheetId: string) => void | Promise<void>;
   onOpenContextMenu: (args: {
@@ -36,6 +41,7 @@ interface HiddenSectionProps {
     y: number;
     worksheet: WorksheetEntity;
   }) => void;
+  onHeaderKeyDown?: (event: ReactKeyboardEvent<HTMLElement>) => void;
   onItemKeyDown?: (event: ReactKeyboardEvent<HTMLElement>, itemId: string) => void;
   registerElement?: (id: string, element: HTMLElement | null) => void;
 }
@@ -219,26 +225,30 @@ export function HiddenSection({
   focusedItemId,
   visualFocusedItemId,
   visualExitingItemId,
+  navigableId,
+  isHeaderFocused = false,
+  isHeaderVisualFocused = false,
+  isHeaderVisualExiting = false,
   onToggle,
   onUnhide,
   onOpenContextMenu,
+  onHeaderKeyDown,
   onItemKeyDown,
   registerElement,
 }: HiddenSectionProps) {
   return (
     <section className="section-card hidden-section">
-      <header className="section-header section-header-clickable" onClick={onToggle}>
-        <div className="section-copy inline-header">
-          <span className="inline-chevron">
-            {isCollapsed ? (
-              <ChevronRightIcon width="12" height="12" />
-            ) : (
-              <ChevronDownIcon width="12" height="12" />
-            )}
-          </span>
-          <h2>Hidden</h2>
-        </div>
-      </header>
+      <SectionHeader
+        title="Hidden"
+        isCollapsed={isCollapsed}
+        onToggle={onToggle}
+        navigableId={navigableId}
+        isFocused={isHeaderFocused}
+        isVisualFocused={isHeaderVisualFocused}
+        isVisualExiting={isHeaderVisualExiting}
+        onHeaderKeyDown={onHeaderKeyDown}
+        registerElement={registerElement}
+      />
 
       {!isCollapsed ? (
         <div className="sheet-list section-body">

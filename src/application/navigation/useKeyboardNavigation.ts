@@ -15,8 +15,9 @@ import { useKeyboardNavigationItemKeyDown } from './useKeyboardNavigationItemKey
 import { useKeyboardNavigationItemsReconcile } from './useKeyboardNavigationItemsReconcile';
 import { useKeyboardNavigationRefSync } from './useKeyboardNavigationRefSync';
 import { useKeyboardNavigationSearchKeyDown } from './useKeyboardNavigationSearchKeyDown';
+import { useKeyboardNavigationSectionHeaderKeyDown } from './useKeyboardNavigationSectionHeaderKeyDown';
 import { useKeyboardNavigationVisualFocus } from './useKeyboardNavigationVisualFocus';
-import type { NavigableItem } from '../../domain/navigation/types';
+import type { NavigableItem, NavigationSectionId } from '../../domain/navigation/types';
 
 /** After this much time without keyboard navigation activity, transient row focus clears and the wash returns to the active worksheet. */
 export const TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS = 10_000;
@@ -36,6 +37,10 @@ export interface UseKeyboardNavigationArgs {
   onExpandGroup: (groupId: string) => void;
   /** Called when ArrowLeft is pressed on an expanded group header */
   onCollapseGroup: (groupId: string) => void;
+  /** Called when ArrowRight is pressed on a collapsed top-level section header */
+  onExpandSection: (sectionId: NavigationSectionId) => void;
+  /** Called when ArrowLeft is pressed on an expanded top-level section header */
+  onCollapseSection: (sectionId: NavigationSectionId) => void;
   /** Called to return focus to the search input (e.g., ArrowUp from first result) */
   onFocusSearchInput: () => void;
   /** Ref to the search input element */
@@ -92,6 +97,12 @@ interface UseKeyboardNavigationReturn {
     groupId: string,
     isCollapsed: boolean,
   ) => void;
+  /** Handler for keydown events on top-level section headers */
+  handleSectionHeaderKeyDown: (
+    event: React.KeyboardEvent<HTMLElement>,
+    sectionId: NavigationSectionId,
+    isCollapsed: boolean,
+  ) => void;
   /** Clear focus (e.g., when search is cleared) */
   clearFocus: () => void;
   /** Set focus to a specific item ID */
@@ -125,6 +136,8 @@ export function useKeyboardNavigation(
     onActivate,
     onExpandGroup,
     onCollapseGroup,
+    onExpandSection,
+    onCollapseSection,
     onFocusSearchInput,
     searchInputRef,
     isSearchActive,
@@ -369,6 +382,16 @@ export function useKeyboardNavigation(
     clearFocusAndExitSearchIfNeeded,
   });
 
+  const handleSectionHeaderKeyDown = useKeyboardNavigationSectionHeaderKeyDown({
+    isSuppressedRef,
+    suppressNextDomFocusRef,
+    handleItemKeyDown,
+    onExpandSection,
+    onCollapseSection,
+    markKeyboardActivity,
+    clearFocusAndExitSearchIfNeeded,
+  });
+
   useKeyboardNavigationGlobalListeners({
     items,
     activeWorksheetId,
@@ -393,6 +416,7 @@ export function useKeyboardNavigation(
     setKeyboardFocusedItem,
     handleItemKeyDown,
     handleGroupHeaderKeyDown,
+    handleSectionHeaderKeyDown,
   });
 
   return {
@@ -405,6 +429,7 @@ export function useKeyboardNavigation(
     handleSearchKeyDown,
     handleItemKeyDown,
     handleGroupHeaderKeyDown,
+    handleSectionHeaderKeyDown,
     clearFocus,
     focusItem,
     restoreFocusAfterMenuDismiss,

@@ -6,7 +6,7 @@ import {
   type RefObject,
   type SetStateAction,
 } from 'react';
-import type { NavigableItem } from '../../domain/navigation/types';
+import type { NavigableItem, NavigationSectionId } from '../../domain/navigation/types';
 import {
   getFirstItem,
   hasItem,
@@ -53,6 +53,11 @@ interface UseKeyboardNavigationGlobalListenersArgs {
     groupId: string,
     isCollapsed: boolean,
   ) => void;
+  handleSectionHeaderKeyDown: (
+    event: ReactKeyboardEvent<HTMLElement>,
+    sectionId: NavigationSectionId,
+    isCollapsed: boolean,
+  ) => void;
 }
 
 export function useKeyboardNavigationGlobalListeners({
@@ -79,6 +84,7 @@ export function useKeyboardNavigationGlobalListeners({
   setKeyboardFocusedItem,
   handleItemKeyDown,
   handleGroupHeaderKeyDown,
+  handleSectionHeaderKeyDown,
 }: UseKeyboardNavigationGlobalListenersArgs) {
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
@@ -277,6 +283,15 @@ export function useKeyboardNavigationGlobalListeners({
           return;
         }
 
+        if (logicalItem.kind === 'section-header' && logicalItem.sectionId) {
+          handleSectionHeaderKeyDown(
+            event as unknown as ReactKeyboardEvent<HTMLElement>,
+            logicalItem.sectionId,
+            Boolean(logicalItem.isSectionCollapsed),
+          );
+          return;
+        }
+
         handleItemKeyDown(event as unknown as ReactKeyboardEvent<HTMLElement>, logicalId);
       };
 
@@ -307,6 +322,7 @@ export function useKeyboardNavigationGlobalListeners({
     elementRegistryRef,
     handleGroupHeaderKeyDown,
     handleItemKeyDown,
+    handleSectionHeaderKeyDown,
     isSearchActiveRef,
     isSuppressedRef,
     items,

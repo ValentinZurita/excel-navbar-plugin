@@ -1,10 +1,11 @@
 /* Shared section primitives used by Section and HiddenSection. */
 .section-header {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 4px 2px;
+  padding: 0;
   margin-bottom: 0;
   border-bottom: none;
   -webkit-user-select: none;
@@ -13,16 +14,70 @@
   user-select: none;
 }
 
-.section-header h2 {
+.section-header-button {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: 4px 2px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.section-header-button:focus-visible {
+  outline: none;
+}
+
+.section-header-nav-highlight {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background: var(--excel-nav-resting-bg);
+  opacity: 0;
+  transition: opacity var(--excel-nav-highlight-fade-ms) var(--excel-nav-highlight-fade-ease);
+}
+
+.section-header-button:not([data-visual-exiting='true']) .section-header-nav-highlight {
+  animation: none;
+}
+
+.section-header-button[data-visual-focused='true'] .section-header-nav-highlight {
+  animation: excel-nav-highlight-enter var(--excel-nav-highlight-fade-ms)
+    var(--excel-nav-highlight-fade-ease) forwards;
+}
+
+.section-header-button[data-visual-exiting='true'] .section-header-nav-highlight {
+  animation: excel-nav-highlight-exit var(--excel-nav-highlight-fade-ms)
+    var(--excel-nav-highlight-fade-ease) forwards;
+}
+
+.section-header h2,
+.section-title {
+  position: relative;
+  z-index: 1;
   margin: 0;
   font-size: 12px;
   font-weight: 400;
   line-height: 1;
   color: var(--excel-muted);
+  transition: color 250ms cubic-bezier(0.22, 1, 0.36, 1);
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+.section-header-button[data-visual-focused='true'] .section-title,
+.section-header-button[data-focused='true'] .section-title,
+.section-header-button[data-visual-focused='true'] .inline-chevron,
+.section-header-button[data-focused='true'] .inline-chevron {
+  color: var(--excel-nav-active-fg);
 }
 
 .section-header-clickable {
@@ -36,6 +91,8 @@
 }
 
 .inline-header {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -44,12 +101,16 @@
 .section-header-accessory {
   display: inline-flex;
   align-items: center;
+  padding-right: 2px;
 }
 
 .inline-chevron {
+  position: relative;
+  z-index: 1;
   color: var(--excel-muted);
   font-size: 11px;
   line-height: 1;
+  transition: color 250ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .section-hint-button {

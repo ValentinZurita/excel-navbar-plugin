@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -22,7 +23,7 @@ import {
   type SensorDescriptor,
 } from '@dnd-kit/core';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import type { NavigatorView } from '../../../domain/navigation/types';
+import type { NavigationSectionId, NavigatorView } from '../../../domain/navigation/types';
 import { deriveActiveVisualItemId } from '../../../domain/navigation/deriveActiveVisualItemId';
 import { buildNavigableItems } from '../../../domain/navigation/navigableItems';
 import { KeyboardNavigationProvider } from '../../navigation/KeyboardNavigationProvider';
@@ -210,16 +211,29 @@ export function TaskpaneSections({
   const [isPinnedCollapsed, setIsPinnedCollapsed] = useState(false);
   const [isGroupsCollapsed, setIsGroupsCollapsed] = useState(false);
   const [isSheetsCollapsed, setIsSheetsCollapsed] = useState(false);
+  const shouldShowPinnedSection = navigatorView.pinned.length > 0;
+  const shouldShowGroupsSection = navigatorView.groups.length > 0;
+  const shouldShowUngroupedSection = shouldRenderUngroupedSection(
+    navigatorView,
+    dragConfig.isDragActive,
+  );
+  const shouldShowHiddenSection = navigatorView.hidden.length > 0;
 
   // Build the linear list of navigable items for keyboard navigation
   const navigableItems = useMemo(() => {
     return buildNavigableItems({
       query,
       searchResults,
-      pinned: isPinnedCollapsed ? [] : navigatorView.pinned,
-      groups: isGroupsCollapsed ? [] : navigatorView.groups,
-      ungrouped: isSheetsCollapsed ? [] : navigatorView.ungrouped,
-      hidden: isHiddenSectionCollapsed ? [] : navigatorView.hidden,
+      pinned: navigatorView.pinned,
+      groups: navigatorView.groups,
+      ungrouped: navigatorView.ungrouped,
+      hidden: navigatorView.hidden,
+      sections: {
+        pinned: { isVisible: shouldShowPinnedSection, isCollapsed: isPinnedCollapsed },
+        groups: { isVisible: shouldShowGroupsSection, isCollapsed: isGroupsCollapsed },
+        sheets: { isVisible: shouldShowUngroupedSection, isCollapsed: isSheetsCollapsed },
+        hidden: { isVisible: shouldShowHiddenSection, isCollapsed: isHiddenSectionCollapsed },
+      },
     });
   }, [
     query,
@@ -228,19 +242,54 @@ export function TaskpaneSections({
     navigatorView.groups,
     navigatorView.ungrouped,
     navigatorView.hidden,
+    shouldShowPinnedSection,
+    shouldShowGroupsSection,
+    shouldShowUngroupedSection,
+    shouldShowHiddenSection,
     isPinnedCollapsed,
     isGroupsCollapsed,
     isSheetsCollapsed,
     isHiddenSectionCollapsed,
   ]);
 
-  const shouldShowPinnedSection = navigatorView.pinned.length > 0;
-  const shouldShowGroupsSection = navigatorView.groups.length > 0;
-  const shouldShowUngroupedSection = shouldRenderUngroupedSection(
-    navigatorView,
-    dragConfig.isDragActive,
+  const setSectionCollapsed = useCallback(
+    (sectionId: NavigationSectionId, isCollapsed: boolean) => {
+      switch (sectionId) {
+        case 'pinned': {
+          setIsPinnedCollapsed(isCollapsed);
+          break;
+        }
+        case 'groups': {
+          setIsGroupsCollapsed(isCollapsed);
+          break;
+        }
+        case 'sheets': {
+          setIsSheetsCollapsed(isCollapsed);
+          break;
+        }
+        case 'hidden': {
+          if (isHiddenSectionCollapsed !== isCollapsed) {
+            onToggleHiddenSection();
+          }
+          break;
+        }
+      }
+    },
+    [isHiddenSectionCollapsed, onToggleHiddenSection],
   );
-  const shouldShowHiddenSection = navigatorView.hidden.length > 0;
+  const expandSection = useCallback(
+    (sectionId: NavigationSectionId) => {
+      setSectionCollapsed(sectionId, false);
+    },
+    [setSectionCollapsed],
+  );
+  const collapseSection = useCallback(
+    (sectionId: NavigationSectionId) => {
+      setSectionCollapsed(sectionId, true);
+    },
+    [setSectionCollapsed],
+  );
+
   const shouldShowSessionOnlyGroupsHint = shouldShowGroupsSection && isSessionOnlyPersistence;
   const isSearchActive = Boolean(query.trim());
   const contextMenuTargetItemId = contextMenuOpenSheetId
@@ -285,6 +334,8 @@ export function TaskpaneSections({
       }}
       onExpandGroup={onToggleGroupCollapsed}
       onCollapseGroup={onToggleGroupCollapsed}
+      onExpandSection={expandSection}
+      onCollapseSection={collapseSection}
       onFocusSearchInput={() => {
         searchInputRef.current?.focus();
       }}
@@ -424,6 +475,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     handleSearchKeyDown,
     handleItemKeyDown,
     handleGroupHeaderKeyDown,
+    handleSectionHeaderKeyDown,
     registerElement,
     restoreFocusAfterMenuDismiss,
   } = useKeyboardNavContext();
@@ -524,7 +576,19 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
           </DragOverlay>
 
           {shouldShowPinnedSection ? (
-            <Section title="Pinned" isCollapsed={isPinnedCollapsed} onToggle={setIsPinnedCollapsed}>
+            <Section
+              title="Pinned"
+              isCollapsed={isPinnedCollapsed}
+              onToggle={setIsPinnedCollapsed}
+              navigableId="section:pinned"
+              isFocused={focusedItemId === 'section:pinned'}
+              isVisualFocused={visualFocusedItemId === 'section:pinned'}
+              isVisualExiting={visualExitingItemId === 'section:pinned'}
+              onHeaderKeyDown={(event) => {
+                handleSectionHeaderKeyDown(event, 'pinned', isPinnedCollapsed);
+              }}
+              registerElement={registerElement}
+            >
               <SheetList
                 worksheets={navigatorView.pinned}
                 activeWorksheetId={activeWorksheetId}
@@ -555,6 +619,14 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
               headerAccessory={groupsSessionOnlyHint}
               isCollapsed={isGroupsCollapsed}
               onToggle={setIsGroupsCollapsed}
+              navigableId="section:groups"
+              isFocused={focusedItemId === 'section:groups'}
+              isVisualFocused={visualFocusedItemId === 'section:groups'}
+              isVisualExiting={visualExitingItemId === 'section:groups'}
+              onHeaderKeyDown={(event) => {
+                handleSectionHeaderKeyDown(event, 'groups', isGroupsCollapsed);
+              }}
+              registerElement={registerElement}
             >
               <GroupSection
                 groups={navigatorView.groups}
@@ -587,7 +659,19 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
           ) : null}
 
           {shouldShowUngroupedSection ? (
-            <Section title="Sheets" isCollapsed={isSheetsCollapsed} onToggle={setIsSheetsCollapsed}>
+            <Section
+              title="Sheets"
+              isCollapsed={isSheetsCollapsed}
+              onToggle={setIsSheetsCollapsed}
+              navigableId="section:sheets"
+              isFocused={focusedItemId === 'section:sheets'}
+              isVisualFocused={visualFocusedItemId === 'section:sheets'}
+              isVisualExiting={visualExitingItemId === 'section:sheets'}
+              onHeaderKeyDown={(event) => {
+                handleSectionHeaderKeyDown(event, 'sheets', isSheetsCollapsed);
+              }}
+              registerElement={registerElement}
+            >
               <div className="primary-tabs">
                 <SheetList
                   worksheets={navigatorView.ungrouped}
@@ -623,9 +707,16 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
             focusedItemId={focusedItemId}
             visualFocusedItemId={visualFocusedItemId}
             visualExitingItemId={visualExitingItemId}
+            navigableId="section:hidden"
+            isHeaderFocused={focusedItemId === 'section:hidden'}
+            isHeaderVisualFocused={visualFocusedItemId === 'section:hidden'}
+            isHeaderVisualExiting={visualExitingItemId === 'section:hidden'}
             onToggle={onToggleHiddenSection}
             onUnhide={onUnhideWorksheet}
             onOpenContextMenu={onOpenSheetMenu}
+            onHeaderKeyDown={(event) => {
+              handleSectionHeaderKeyDown(event, 'hidden', isHiddenSectionCollapsed);
+            }}
             onItemKeyDown={handleItemKeyDown}
             registerElement={registerElement}
           />

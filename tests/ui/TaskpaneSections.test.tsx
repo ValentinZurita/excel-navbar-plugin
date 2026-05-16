@@ -201,6 +201,9 @@ describe('TaskpaneSections', () => {
     pinnedRow.focus();
 
     await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('button', { name: 'Groups' })).toHaveFocus();
+
+    await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('button', { name: 'Finance' })).toHaveFocus();
 
     await user.keyboard('{ArrowDown}');
@@ -208,11 +211,17 @@ describe('TaskpaneSections', () => {
 
     await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('button', { name: 'Forecast' })).toHaveFocus();
+
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('button', { name: 'Sheets' })).toHaveFocus();
 
     await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('button', { name: 'Summary' })).toHaveFocus();
 
     await user.keyboard('{ArrowUp}');
+    expect(screen.getByRole('button', { name: 'Sheets' })).toHaveFocus();
+
+    await user.keyboard('{ArrowUp}');
     expect(screen.getByRole('button', { name: 'Forecast' })).toHaveFocus();
 
     await user.keyboard('{ArrowUp}');
@@ -220,6 +229,9 @@ describe('TaskpaneSections', () => {
 
     await user.keyboard('{ArrowUp}');
     expect(screen.getByRole('button', { name: 'Finance' })).toHaveFocus();
+
+    await user.keyboard('{ArrowUp}');
+    expect(screen.getByRole('button', { name: 'Groups' })).toHaveFocus();
   });
 
   it('opens sheet context menu from keyboard with ArrowRight on a worksheet row', async () => {
@@ -294,6 +306,9 @@ describe('TaskpaneSections', () => {
     revenueRow.focus();
 
     await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('button', { name: 'Hidden' })).toHaveFocus();
+
+    await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('button', { name: 'Archive' })).toHaveFocus();
 
     await user.keyboard('{ArrowDown}');
@@ -303,7 +318,7 @@ describe('TaskpaneSections', () => {
     expect(screen.getByRole('button', { name: 'Archive' })).toHaveFocus();
 
     await user.keyboard('{Home}');
-    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Sheets' })).toHaveFocus();
 
     await user.keyboard('{End}');
     expect(screen.getByRole('button', { name: 'Vault' })).toHaveFocus();
@@ -340,10 +355,136 @@ describe('TaskpaneSections', () => {
     revenueRow.focus();
 
     await user.keyboard('{End}');
-    expect(revenueRow).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Hidden' })).toHaveFocus();
 
     await user.keyboard('{ArrowDown}');
-    expect(revenueRow).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Hidden' })).toHaveFocus();
+  });
+
+  it('collapses and expands top-level section headers with ArrowLeft and ArrowRight', async () => {
+    const user = userEvent.setup();
+
+    const navigatorView: NavigatorView = {
+      pinned: [
+        createWorksheet({
+          worksheetId: 'pinned-1',
+          name: 'Pinned One',
+          isPinned: true,
+          groupId: null,
+        }),
+      ],
+      groups: [],
+      ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null })],
+      hidden: [],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+        })}
+      />,
+    );
+
+    const pinnedHeader = screen.getByRole('button', { name: 'Pinned' });
+    pinnedHeader.focus();
+
+    await user.keyboard('{ArrowLeft}');
+    expect(screen.queryByRole('button', { name: 'Pinned One' })).not.toBeInTheDocument();
+    expect(pinnedHeader).toHaveFocus();
+
+    await user.keyboard('{ArrowRight}');
+    expect(screen.getByRole('button', { name: 'Pinned One' })).toBeInTheDocument();
+    expect(pinnedHeader).toHaveFocus();
+  });
+
+  it('lands on collapsed section headers instead of skipping them', async () => {
+    const user = userEvent.setup();
+
+    const navigatorView: NavigatorView = {
+      pinned: [
+        createWorksheet({
+          worksheetId: 'pinned-1',
+          name: 'Pinned One',
+          isPinned: true,
+          groupId: null,
+        }),
+      ],
+      groups: [],
+      ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null })],
+      hidden: [],
+      searchResults: [],
+    };
+
+    const { container } = render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+        })}
+      />,
+    );
+
+    const pinnedHeader = screen.getByRole('button', { name: 'Pinned' });
+    pinnedHeader.focus();
+    await user.keyboard('{ArrowLeft}');
+
+    screen.getByRole('button', { name: 'Sheets' }).focus();
+    await user.keyboard('{ArrowUp}');
+
+    expect(pinnedHeader).toHaveFocus();
+    expect(container.querySelector('[data-navigable-id="section:pinned"]')).toHaveAttribute(
+      'data-visual-focused',
+      'true',
+    );
+  });
+
+  it('uses the existing Hidden section toggle callback from keyboard arrows', async () => {
+    const user = userEvent.setup();
+    const onToggleHiddenSection = vi.fn();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null })],
+      hidden: [
+        createWorksheet({
+          worksheetId: 'hidden-1',
+          name: 'Archive',
+          visibility: 'Hidden',
+          groupId: null,
+        }),
+      ],
+      searchResults: [],
+    };
+
+    const { rerender } = render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          isHiddenSectionCollapsed: false,
+          onToggleHiddenSection,
+        })}
+      />,
+    );
+
+    screen.getByRole('button', { name: 'Hidden' }).focus();
+    await user.keyboard('{ArrowLeft}');
+    expect(onToggleHiddenSection).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          isHiddenSectionCollapsed: true,
+          onToggleHiddenSection,
+        })}
+      />,
+    );
+
+    screen.getByRole('button', { name: 'Hidden' }).focus();
+    await user.keyboard('{ArrowRight}');
+    expect(onToggleHiddenSection).toHaveBeenCalledTimes(2);
   });
 
   it('opens sheet context menu from keyboard with ArrowRight and Enter on Hidden rows', async () => {
@@ -376,7 +517,7 @@ describe('TaskpaneSections', () => {
 
     const revenueRow = screen.getByRole('button', { name: 'Revenue' });
     revenueRow.focus();
-    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}{ArrowDown}');
 
     const archiveRow = screen.getByRole('button', { name: 'Archive' });
     expect(archiveRow).toHaveFocus();
@@ -426,7 +567,7 @@ describe('TaskpaneSections', () => {
     const archiveRow = screen.getByRole('button', { name: 'Archive' });
     revenueRow.focus();
 
-    await user.keyboard('{ArrowDown}{ArrowRight}');
+    await user.keyboard('{ArrowDown}{ArrowDown}{ArrowRight}');
 
     expect(onRequestSheetContextMenuFromKeyboard).toHaveBeenCalledTimes(1);
     expect(onRequestSheetContextMenuFromKeyboard).toHaveBeenCalledWith({
@@ -479,6 +620,9 @@ describe('TaskpaneSections', () => {
     await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('button', { name: 'Budget' })).toHaveFocus();
     expect(onToggleGroupCollapsed).not.toHaveBeenCalled();
+
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('button', { name: 'Sheets' })).toHaveFocus();
 
     await user.keyboard('{ArrowDown}');
     expect(screen.getByRole('button', { name: 'Summary' })).toHaveFocus();

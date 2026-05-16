@@ -480,7 +480,7 @@ describe('TaskpaneAppContainer', () => {
     const revenueRow = screen.getByRole('button', { name: 'Revenue' });
     revenueRow.focus();
 
-    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}{ArrowDown}');
     const archiveRow = await screen.findByRole('button', { name: 'Archive' });
     expect(archiveRow).toHaveFocus();
 
@@ -495,6 +495,9 @@ describe('TaskpaneAppContainer', () => {
     await waitFor(() => {
       expect(archiveRow).toHaveFocus();
     });
+
+    await user.keyboard('{ArrowUp}');
+    expect(screen.getByRole('button', { name: 'Hidden' })).toHaveFocus();
 
     await user.keyboard('{ArrowUp}');
     expect(revenueRow).toHaveFocus();
@@ -527,7 +530,7 @@ describe('TaskpaneAppContainer', () => {
     const revenueRow = screen.getByRole('button', { name: 'Revenue' });
     revenueRow.focus();
 
-    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{ArrowDown}{ArrowDown}');
     const archiveRow = await screen.findByRole('button', { name: 'Archive' });
     expect(archiveRow).toHaveFocus();
 
@@ -537,7 +540,7 @@ describe('TaskpaneAppContainer', () => {
       expect(screen.getByRole('button', { name: 'Unhide sheet' })).toHaveFocus();
     });
 
-    await user.keyboard('{ArrowLeft}{ArrowUp}');
+    await user.keyboard('{ArrowLeft}{ArrowUp}{ArrowUp}');
 
     await waitFor(() => {
       expect(revenueRow).toHaveFocus();
@@ -573,6 +576,13 @@ describe('TaskpaneAppContainer', () => {
 
     fireEvent.keyDown(revenueRow, { key: 'ArrowDown' });
 
+    const hiddenHeader = screen.getByRole('button', { name: 'Hidden' });
+    await waitFor(() => {
+      expect(hiddenHeader).toHaveFocus();
+    });
+
+    fireEvent.keyDown(hiddenHeader, { key: 'ArrowDown' });
+
     await waitFor(() => {
       expect(archiveRow).toHaveFocus();
     });
@@ -587,6 +597,7 @@ describe('TaskpaneAppContainer', () => {
 
     act(() => {
       fireEvent.keyDown(unhideSheetButton, { key: 'ArrowLeft' });
+      fireEvent.keyDown(document, { key: 'ArrowUp' });
       fireEvent.keyDown(document, { key: 'ArrowUp' });
     });
 

@@ -18,6 +18,8 @@ function createArgs(
     onActivate: vi.fn(),
     onExpandGroup: vi.fn(),
     onCollapseGroup: vi.fn(),
+    onExpandSection: vi.fn(),
+    onCollapseSection: vi.fn(),
     onFocusSearchInput: vi.fn(),
     searchInputRef: createRef<HTMLInputElement>(),
     isSearchActive: false,
@@ -145,5 +147,48 @@ describe('useKeyboardNavigation — DOM focus vs logical list focus', () => {
     });
 
     expect(result.current.focusedItemId).toBe('worksheet:b');
+  });
+
+  it('routes section header ArrowRight through logical focus when DOM focus is elsewhere', () => {
+    const onExpandSection = vi.fn();
+    const items: NavigableItem[] = [
+      {
+        id: 'section:pinned',
+        kind: 'section-header',
+        sectionId: 'pinned',
+        isSectionCollapsed: true,
+        name: 'Pinned',
+      },
+    ];
+
+    const shell = document.createElement('main');
+    shell.className = 'taskpane-shell';
+    shell.tabIndex = -1;
+
+    const pinnedHeader = document.createElement('button');
+    pinnedHeader.type = 'button';
+    pinnedHeader.setAttribute('data-navigable-id', 'section:pinned');
+
+    document.body.appendChild(shell);
+    shell.appendChild(pinnedHeader);
+
+    const { result } = renderHook(() =>
+      useKeyboardNavigation(createArgs(items, { onExpandSection })),
+    );
+
+    act(() => {
+      result.current.registerElement('section:pinned', pinnedHeader);
+      result.current.focusItem('section:pinned');
+    });
+
+    act(() => {
+      shell.focus();
+    });
+
+    act(() => {
+      fireEvent.keyDown(document, { key: 'ArrowRight', bubbles: true });
+    });
+
+    expect(onExpandSection).toHaveBeenCalledWith('pinned');
   });
 });

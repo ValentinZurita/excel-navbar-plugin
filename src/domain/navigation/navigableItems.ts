@@ -1,4 +1,17 @@
-import type { NavigableItem, SearchResultItem, NavigatorGroupView, WorksheetEntity } from './types';
+import type {
+  NavigableItem,
+  NavigationSectionId,
+  SearchResultItem,
+  NavigatorGroupView,
+  WorksheetEntity,
+} from './types';
+
+interface NavigationSectionState {
+  isVisible: boolean;
+  isCollapsed: boolean;
+}
+
+export type NavigationSectionsState = Record<NavigationSectionId, NavigationSectionState>;
 
 interface BuildNavigableItemsArgs {
   query: string;
@@ -7,6 +20,28 @@ interface BuildNavigableItemsArgs {
   groups: NavigatorGroupView[];
   ungrouped: WorksheetEntity[];
   hidden: WorksheetEntity[];
+  sections: NavigationSectionsState;
+}
+
+const SECTION_LABELS: Record<NavigationSectionId, string> = {
+  pinned: 'Pinned',
+  groups: 'Groups',
+  sheets: 'Sheets',
+  hidden: 'Hidden',
+};
+
+function addSectionHeader(
+  items: NavigableItem[],
+  sectionId: NavigationSectionId,
+  section: NavigationSectionState,
+) {
+  items.push({
+    id: `section:${sectionId}`,
+    kind: 'section-header',
+    sectionId,
+    isSectionCollapsed: section.isCollapsed,
+    name: SECTION_LABELS[sectionId],
+  });
 }
 
 /**
@@ -15,19 +50,23 @@ interface BuildNavigableItemsArgs {
  * with ArrowDown/ArrowUp keys.
  *
  * When a search query is active, returns only search results.
- * When no search query, returns full linear order: Pinned → Groups → Ungrouped → Hidden.
+ * When no search query, returns full linear order:
+ * Pinned section → Groups section → Sheets section → Hidden section.
  *
  * @example
  * buildNavigableItems({ query: '', ... }) returns:
  * [
+ *   { id: 'section:pinned', kind: 'section-header', ... },
  *   { id: 'worksheet:sheet-1', kind: 'worksheet', ... }, // pinned
+ *   { id: 'section:groups', kind: 'section-header', ... },
  *   { id: 'group-header:group-1', kind: 'group-header', ... },
  *   { id: 'worksheet:sheet-2', kind: 'worksheet', ... }, // inside expanded group
+ *   { id: 'section:sheets', kind: 'section-header', ... },
  *   { id: 'worksheet:sheet-3', kind: 'worksheet', ... }, // ungrouped
  * ]
  */
 export function buildNavigableItems(args: BuildNavigableItemsArgs): NavigableItem[] {
-  const { query, searchResults, pinned, groups, ungrouped, hidden } = args;
+  const { query, searchResults, pinned, groups, ungrouped, hidden, sections } = args;
   const items: NavigableItem[] = [];
 
   // When searching, only search results are navigable
@@ -44,58 +83,78 @@ export function buildNavigableItems(args: BuildNavigableItemsArgs): NavigableIte
   }
 
   // Pinned worksheets (not in a group)
-  for (const worksheet of pinned) {
-    items.push({
-      id: `worksheet:${worksheet.worksheetId}`,
-      kind: 'worksheet',
-      worksheetId: worksheet.worksheetId,
-      name: worksheet.name,
-    });
-  }
-
-  // Groups with their worksheets
-  for (const group of groups) {
-    // Group header is always navigable
-    items.push({
-      id: `group-header:${group.groupId}`,
-      kind: 'group-header',
-      groupId: group.groupId,
-      isGroupCollapsed: group.isCollapsed,
-      name: group.name,
-    });
-
-    // Worksheets inside the group (only if expanded)
-    if (!group.isCollapsed) {
-      for (const worksheet of group.worksheets) {
+  if (sections.pinned.isVisible) {
+    addSectionHeader(items, 'pinned', sections.pinned);
+    if (!sections.pinned.isCollapsed) {
+      for (const worksheet of pinned) {
         items.push({
           id: `worksheet:${worksheet.worksheetId}`,
           kind: 'worksheet',
           worksheetId: worksheet.worksheetId,
-          groupId: group.groupId,
           name: worksheet.name,
         });
       }
     }
   }
 
+  // Groups with their worksheets
+  if (sections.groups.isVisible) {
+    addSectionHeader(items, 'groups', sections.groups);
+    if (!sections.groups.isCollapsed) {
+      for (const group of groups) {
+        // Group header is always navigable while the parent Groups section is expanded.
+        items.push({
+          id: `group-header:${group.groupId}`,
+          kind: 'group-header',
+          groupId: group.groupId,
+          isGroupCollapsed: group.isCollapsed,
+          name: group.name,
+        });
+
+        // Worksheets inside the group (only if expanded)
+        if (!group.isCollapsed) {
+          for (const worksheet of group.worksheets) {
+            items.push({
+              id: `worksheet:${worksheet.worksheetId}`,
+              kind: 'worksheet',
+              worksheetId: worksheet.worksheetId,
+              groupId: group.groupId,
+              name: worksheet.name,
+            });
+          }
+        }
+      }
+    }
+  }
+
   // Ungrouped worksheets
-  for (const worksheet of ungrouped) {
-    items.push({
-      id: `worksheet:${worksheet.worksheetId}`,
-      kind: 'worksheet',
-      worksheetId: worksheet.worksheetId,
-      name: worksheet.name,
-    });
+  if (sections.sheets.isVisible) {
+    addSectionHeader(items, 'sheets', sections.sheets);
+    if (!sections.sheets.isCollapsed) {
+      for (const worksheet of ungrouped) {
+        items.push({
+          id: `worksheet:${worksheet.worksheetId}`,
+          kind: 'worksheet',
+          worksheetId: worksheet.worksheetId,
+          name: worksheet.name,
+        });
+      }
+    }
   }
 
   // Hidden worksheets, only when the Hidden section is expanded
-  for (const worksheet of hidden) {
-    items.push({
-      id: `worksheet:${worksheet.worksheetId}`,
-      kind: 'hidden-worksheet',
-      worksheetId: worksheet.worksheetId,
-      name: worksheet.name,
-    });
+  if (sections.hidden.isVisible) {
+    addSectionHeader(items, 'hidden', sections.hidden);
+    if (!sections.hidden.isCollapsed) {
+      for (const worksheet of hidden) {
+        items.push({
+          id: `worksheet:${worksheet.worksheetId}`,
+          kind: 'hidden-worksheet',
+          worksheetId: worksheet.worksheetId,
+          name: worksheet.name,
+        });
+      }
+    }
   }
 
   return items;

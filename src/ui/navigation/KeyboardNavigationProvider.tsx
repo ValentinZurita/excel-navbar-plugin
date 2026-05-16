@@ -3,6 +3,7 @@ import {
   useKeyboardNavigation,
   type UseKeyboardNavigationArgs,
 } from '../../application/navigation/useKeyboardNavigation';
+import type { NavigationSectionId } from '../../domain/navigation/types';
 
 interface KeyboardNavContextValue {
   /** Currently focused item ID, or null if no focus */
@@ -25,6 +26,12 @@ interface KeyboardNavContextValue {
   handleGroupHeaderKeyDown: (
     event: React.KeyboardEvent<HTMLElement>,
     groupId: string,
+    isCollapsed: boolean,
+  ) => void;
+  /** Handler for keydown events on top-level section headers */
+  handleSectionHeaderKeyDown: (
+    event: React.KeyboardEvent<HTMLElement>,
+    sectionId: NavigationSectionId,
     isCollapsed: boolean,
   ) => void;
   /** Clear focus */
@@ -73,6 +80,7 @@ export function KeyboardNavigationProvider(
     handleSearchKeyDown: navigation.handleSearchKeyDown,
     handleItemKeyDown: navigation.handleItemKeyDown,
     handleGroupHeaderKeyDown: navigation.handleGroupHeaderKeyDown,
+    handleSectionHeaderKeyDown: navigation.handleSectionHeaderKeyDown,
     clearFocus: navigation.clearFocus,
     focusItem: navigation.focusItem,
     restoreFocusAfterMenuDismiss: navigation.restoreFocusAfterMenuDismiss,
