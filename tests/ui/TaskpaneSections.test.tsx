@@ -439,6 +439,44 @@ describe('TaskpaneSections', () => {
     );
   });
 
+  it('clears keyboard highlight instead of pinning selection on section header pointer use', async () => {
+    const user = userEvent.setup();
+
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null })],
+      hidden: [],
+      searchResults: [],
+    };
+
+    const { container } = render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+        })}
+      />,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    revenueRow.focus();
+    await user.keyboard('{ArrowUp}');
+
+    const sheetsHeader = screen.getByRole('button', { name: 'Sheets' });
+    expect(sheetsHeader).toHaveFocus();
+    expect(container.querySelector('[data-navigable-id="section:sheets"]')).toHaveAttribute(
+      'data-visual-focused',
+      'true',
+    );
+
+    fireEvent.pointerDown(sheetsHeader);
+
+    expect(container.querySelector('[data-navigable-id="section:sheets"]')).toHaveAttribute(
+      'data-visual-focused',
+      'false',
+    );
+  });
+
   it('uses the existing Hidden section toggle callback from keyboard arrows', async () => {
     const user = userEvent.setup();
     const onToggleHiddenSection = vi.fn();
@@ -1242,7 +1280,8 @@ describe('TaskpaneSections', () => {
     expect(revenueArticle).toHaveAttribute('data-active-dimmed', 'true');
   });
 
-  it('applies visual highlight to group header on pointer selection', () => {
+  it('clears keyboard highlight instead of pinning selection on group header pointer use', async () => {
+    const user = userEvent.setup();
     const navigatorView: NavigatorView = {
       pinned: [],
       groups: [
@@ -1272,10 +1311,14 @@ describe('TaskpaneSections', () => {
     const groupButton = screen.getByRole('button', { name: 'Finance' });
     const groupHeader = groupButton.closest('[data-navigable-id="group-header:group-1"]');
 
+    groupButton.focus();
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('button', { name: 'Revenue' })).toHaveFocus();
+
     fireEvent.pointerDown(groupButton);
 
-    expect(groupHeader).toHaveAttribute('data-visual-focused', 'true');
-    expect(groupHeader).toHaveAttribute('data-focused', 'true');
+    expect(groupHeader).toHaveAttribute('data-visual-focused', 'false');
+    expect(groupHeader).toHaveAttribute('data-focused', 'false');
   });
 
   it('pins visual highlight to group header while group menu is open', () => {

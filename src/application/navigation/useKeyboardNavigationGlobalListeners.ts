@@ -111,6 +111,10 @@ export function useKeyboardNavigationGlobalListeners({
         if (hasItem(navigableId, items)) {
           clearIdleTimeout();
           contextMenuOwnedFocusRef.current = false;
+          if (navigableId.startsWith('group-header:') || navigableId.startsWith('section:')) {
+            clearFocus();
+            return;
+          }
           setFocusedItemId(navigableId);
           setNavigationInputMode('pointer');
           scheduleIdleClear();
@@ -126,6 +130,7 @@ export function useKeyboardNavigationGlobalListeners({
       document.removeEventListener('pointerdown', handlePointerDown, true);
     };
   }, [
+    clearFocus,
     clearIdleTimeout,
     contextMenuOwnedFocusRef,
     isSearchActive,
