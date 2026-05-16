@@ -241,8 +241,30 @@
   z-index: 1;
 }
 
+/* Rename uses the same visual row content, but it must be a sibling of the
+   activation button. Inputs inside buttons are invalid HTML and can leak Space
+   into button activation in host environments like Excel. */
+.sheet-row-rename-layer {
+  grid-area: content;
+  display: flex;
+  align-items: center;
+  margin: -8px -10px;
+  padding: 8px 10px;
+  min-width: 0;
+  z-index: 1;
+}
+
+.sheet-row[data-renaming='true'] .sheet-row-action {
+  pointer-events: none;
+}
+
+.sheet-row[data-renaming='true'] .sheet-row-action .sheet-title {
+  visibility: hidden;
+}
+
 /* Grouped rows use a larger left inset; expand the action area accordingly. */
-.sheet-row-grouped .sheet-row-action {
+.sheet-row-grouped .sheet-row-action,
+.sheet-row-grouped .sheet-row-rename-layer {
   margin-left: -20px;
   padding-left: 20px;
 }

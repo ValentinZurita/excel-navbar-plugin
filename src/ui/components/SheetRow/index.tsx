@@ -262,15 +262,17 @@ function SheetRowComponent({
   };
 
   // While this row's sheet menu is open, keep it out of the tab order (focus lives in the menu).
-  const tabIndex = navigableId
-    ? isContextMenuOpen
-      ? -1
-      : isFocused
+  const tabIndex = isRenaming
+    ? -1
+    : navigableId
+      ? isContextMenuOpen
+        ? -1
+        : isFocused
+          ? 0
+          : -1
+      : isInteractive
         ? 0
-        : -1
-    : isInteractive
-      ? 0
-      : -1;
+        : -1;
 
   function handleClick(event: React.MouseEvent<HTMLButtonElement>) {
     if (!isInteractive) {
@@ -361,7 +363,7 @@ function SheetRowComponent({
     }
   }
 
-  function handleContextMenu(event: React.MouseEvent<HTMLButtonElement>) {
+  function handleContextMenu(event: React.MouseEvent<HTMLElement>) {
     if (!isInteractive) {
       return;
     }
@@ -376,6 +378,23 @@ function SheetRowComponent({
       worksheet,
       interaction,
     });
+  }
+
+  function renderToplineContent(content: React.ReactNode) {
+    return (
+      <span className="row-topline">
+        <span className="sheet-row-leading" aria-hidden="true" {...clusterPointerProps}>
+          {/* Base indicator - always rendered but visually hidden when action is shown */}
+          <span
+            className={`sheet-row-base-indicator ${leadingState === 'indicator' || leadingState === 'pinned-indicator' ? 'sheet-row-base-indicator-visible' : ''}`}
+          >
+            {renderBaseIndicator()}
+          </span>
+        </span>
+
+        <span className="sheet-link">{content}</span>
+      </span>
+    );
   }
 
   function handleContainerPointerEnter(event: React.PointerEvent<HTMLElement>) {
@@ -450,6 +469,7 @@ function SheetRowComponent({
       data-visual-focused={navigableId ? isVisualFocused : undefined}
       data-visual-exiting={navigableId ? isVisualExiting : undefined}
       data-active-dimmed={isActiveDimmed ? 'true' : 'false'}
+      data-renaming={isRenaming ? 'true' : 'false'}
       style={containerStyle}
       aria-hidden={isInteractive ? undefined : true}
       onPointerEnter={handleContainerPointerEnter}
@@ -472,33 +492,24 @@ function SheetRowComponent({
         onKeyDown={handleKeyDown}
         onContextMenu={handleContextMenu}
       >
-        <span className="row-topline">
-          <span className="sheet-row-leading" aria-hidden="true" {...clusterPointerProps}>
-            {/* Base indicator - always rendered but visually hidden when action is shown */}
-            <span
-              className={`sheet-row-base-indicator ${leadingState === 'indicator' || leadingState === 'pinned-indicator' ? 'sheet-row-base-indicator-visible' : ''}`}
-            >
-              {renderBaseIndicator()}
-            </span>
-          </span>
-
-          <span className="sheet-link">
-            {isRenaming && onRenameSubmit ? (
-              <InlineRenameInput
-                initialValue={worksheet.name}
-                onSubmit={(newName) => onRenameSubmit(worksheet.worksheetId, newName)}
-                onCancel={onRenameCancel ?? (() => {})}
-                maxLength={worksheetNameMaxLength}
-                isInvalid={isRenameInvalid}
-                onValueChange={(value) => onRenameValueChange?.(worksheet.worksheetId, value)}
-                onMaxLengthReached={() => onRenameMaxLengthReached?.(worksheet.worksheetId)}
-              />
-            ) : (
-              <span className="sheet-title">{worksheet.name}</span>
-            )}
-          </span>
-        </span>
+        {renderToplineContent(<span className="sheet-title">{worksheet.name}</span>)}
       </button>
+
+      {isRenaming && onRenameSubmit ? (
+        <div className="sheet-row-rename-layer" onContextMenu={handleContextMenu}>
+          {renderToplineContent(
+            <InlineRenameInput
+              initialValue={worksheet.name}
+              onSubmit={(newName) => onRenameSubmit(worksheet.worksheetId, newName)}
+              onCancel={onRenameCancel ?? (() => {})}
+              maxLength={worksheetNameMaxLength}
+              isInvalid={isRenameInvalid}
+              onValueChange={(value) => onRenameValueChange?.(worksheet.worksheetId, value)}
+              onMaxLengthReached={() => onRenameMaxLengthReached?.(worksheet.worksheetId)}
+            />,
+          )}
+        </div>
+      ) : null}
 
       {/* Pin button - sibling of the action button, positioned over the leading area.
           This separation prevents nested-interactive a11y violations. */}

@@ -488,7 +488,28 @@ describe('SheetRow', () => {
     expect(isPinButtonVisible(container)).toBe(false);
   });
 
-  it('does not activate when Space is pressed inside the inline rename input', () => {
+  it('keeps inline rename outside the activation button', () => {
+    const { container } = render(
+      <SheetRow
+        worksheet={baseWorksheet}
+        isActive={false}
+        isRenaming
+        onActivate={vi.fn()}
+        onOpenContextMenu={vi.fn()}
+        onRenameSubmit={vi.fn()}
+        onRenameCancel={vi.fn()}
+      />,
+    );
+
+    const action = container.querySelector('.sheet-row-action');
+    const input = screen.getByRole('textbox');
+
+    expect(action).toBeInTheDocument();
+    expect(action).not.toContainElement(input);
+  });
+
+  it('does not activate when Space is typed inside the inline rename input', async () => {
+    const user = userEvent.setup();
     const onActivate = vi.fn();
 
     render(
@@ -503,9 +524,12 @@ describe('SheetRow', () => {
       />,
     );
 
-    fireEvent.keyDown(screen.getByRole('textbox'), { key: ' ' });
+    const input = screen.getByRole<HTMLInputElement>('textbox');
+    await user.click(input);
+    await user.keyboard('{End} ');
 
     expect(onActivate).not.toHaveBeenCalled();
+    expect(input.value).toContain(' ');
   });
 
   it('respects container keydown prevention before running row activation shortcuts', () => {
