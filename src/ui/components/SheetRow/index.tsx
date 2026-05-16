@@ -11,6 +11,8 @@ import { resolveLeadingState, type LeadingState } from './resolveLeadingState';
 import type { WorksheetPreviewPointerPosition } from '../../../application/navigation/useWorksheetPreview';
 import './SheetRow.css';
 
+const worksheetPreviewPointerMoveTolerancePx = 6;
+
 function hasNestedInteractiveTarget(target: EventTarget | null, currentTarget: HTMLElement) {
   if (!(target instanceof HTMLElement) || target === currentTarget) {
     return false;
@@ -41,6 +43,19 @@ function resolvePointerPosition(
     clientX: rect.left + rect.width / 2,
     clientY: rect.top + rect.height / 2,
   };
+}
+
+function hasMovedBeyondPreviewTolerance(
+  previous: WorksheetPreviewPointerPosition | null,
+  next: WorksheetPreviewPointerPosition,
+) {
+  if (!previous) {
+    return true;
+  }
+
+  const deltaX = next.clientX - previous.clientX;
+  const deltaY = next.clientY - previous.clientY;
+  return Math.hypot(deltaX, deltaY) > worksheetPreviewPointerMoveTolerancePx;
 }
 
 interface SheetRowProps {
@@ -159,6 +174,7 @@ function SheetRowComponent({
 }: SheetRowProps) {
   const lastPrimaryClickAtRef = useRef(0);
   const actionButtonRef = useRef<HTMLButtonElement | null>(null);
+  const previewPointerPositionRef = useRef<WorksheetPreviewPointerPosition | null>(null);
   const {
     onKeyDown: onContainerKeyDown,
     onPointerEnter: onContainerPointerEnter,
@@ -375,15 +391,19 @@ function SheetRowComponent({
       return;
     }
 
+    const pointerPosition = resolvePointerPosition(event);
+    previewPointerPositionRef.current = pointerPosition;
+
     onPreviewRequest?.({
       worksheet,
       anchorElement: event.currentTarget,
-      pointerPosition: resolvePointerPosition(event),
+      pointerPosition,
     });
   }
 
   function handleContainerPointerLeave(event: React.PointerEvent<HTMLElement>) {
     onContainerPointerLeave?.(event);
+    previewPointerPositionRef.current = null;
     onPreviewCancel?.(worksheet.worksheetId);
   }
 
@@ -400,10 +420,16 @@ function SheetRowComponent({
       return;
     }
 
+    const pointerPosition = resolvePointerPosition(event);
+    if (!hasMovedBeyondPreviewTolerance(previewPointerPositionRef.current, pointerPosition)) {
+      return;
+    }
+
+    previewPointerPositionRef.current = pointerPosition;
     onPreviewRequest?.({
       worksheet,
       anchorElement: event.currentTarget,
-      pointerPosition: resolvePointerPosition(event),
+      pointerPosition,
     });
   }
 

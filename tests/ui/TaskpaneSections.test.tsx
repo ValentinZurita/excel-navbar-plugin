@@ -5,7 +5,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { NavigatorView, WorksheetEntity } from '../../src/domain/navigation/types';
 import { TRANSIENT_NAVIGATION_IDLE_TIMEOUT_MS } from '../../src/application/navigation/useKeyboardNavigation';
 import { HIGHLIGHT_EXIT_MS } from '../../src/application/navigation/useHighlightLifecycle';
-import { WORKSHEET_PREVIEW_HOVER_DELAY_MS } from '../../src/application/navigation/useWorksheetPreview';
+import {
+  WORKSHEET_PREVIEW_HOVER_DELAY_MS,
+  WORKSHEET_PREVIEW_KEYBOARD_AUTO_DISMISS_MS,
+} from '../../src/application/navigation/useWorksheetPreview';
 import { TaskpaneSections } from '../../src/ui/taskpane/components/TaskpaneSections';
 
 vi.mock('@dnd-kit/core', async () => {
@@ -81,6 +84,13 @@ function createBaseProps(overrides: Partial<ComponentProps<typeof TaskpaneSectio
     searchInputRef: createRef<HTMLInputElement>(),
     ...overrides,
   };
+}
+
+function dispatchPointerMove(element: Element, clientX: number, clientY: number) {
+  const event = new Event('pointermove', { bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'clientX', { value: clientX });
+  Object.defineProperty(event, 'clientY', { value: clientY });
+  fireEvent(element, event);
 }
 
 function SearchQueryHarness(
@@ -209,7 +219,13 @@ describe('TaskpaneSections', () => {
     expect(screen.getByTestId('worksheet-preview-popover')).toBeInTheDocument();
 
     act(() => {
-      fireEvent.pointerMove(row!, { clientX: 120, clientY: 140 });
+      dispatchPointerMove(row!, 3, 2);
+    });
+
+    expect(screen.getByTestId('worksheet-preview-popover')).toBeInTheDocument();
+
+    act(() => {
+      dispatchPointerMove(row!, 120, 140);
     });
 
     expect(screen.queryByTestId('worksheet-preview-popover')).not.toBeInTheDocument();
@@ -221,6 +237,58 @@ describe('TaskpaneSections', () => {
 
     expect(getWorksheetPreview).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId('worksheet-preview-popover')).toBeInTheDocument();
+  });
+
+  it('shows a temporary worksheet preview after keyboard focus rests on a visible row', async () => {
+    vi.useFakeTimers();
+    const getWorksheetPreview = vi.fn().mockResolvedValue({
+      status: 'ready',
+      imageSrc: 'data:image/png;base64,keyboard-preview',
+      generatedAt: 1,
+    });
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue', groupId: null }),
+        createWorksheet({ worksheetId: 'sheet-2', name: 'Forecast', groupId: null }),
+      ],
+      hidden: [],
+      searchResults: [],
+    };
+
+    render(
+      <TaskpaneSections
+        {...createBaseProps({
+          navigatorView,
+          getWorksheetPreview,
+        })}
+      />,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    revenueRow.focus();
+
+    act(() => {
+      fireEvent.keyDown(revenueRow, { key: 'ArrowDown', code: 'ArrowDown' });
+    });
+
+    expect(screen.getByRole('button', { name: 'Forecast' })).toHaveFocus();
+    expect(getWorksheetPreview).not.toHaveBeenCalled();
+
+    await act(async () => {
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+      await Promise.resolve();
+    });
+
+    expect(getWorksheetPreview).toHaveBeenCalledWith('sheet-2');
+    expect(screen.getByTestId('worksheet-preview-popover')).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_KEYBOARD_AUTO_DISMISS_MS);
+    });
+
+    expect(screen.queryByTestId('worksheet-preview-popover')).not.toBeInTheDocument();
   });
 
   it('does not request worksheet preview while drag, rename, or context menu states suppress hover', () => {

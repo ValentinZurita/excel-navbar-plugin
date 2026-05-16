@@ -42,6 +42,7 @@ import type { OpenGroupMenuArgs, OpenSheetMenuArgs } from '../types/contextMenuT
 import type { WorksheetEntity } from '../../../domain/navigation/types';
 import type { WorksheetPreviewResult } from '../../../infrastructure/office/WorkbookAdapter';
 import {
+  WORKSHEET_PREVIEW_KEYBOARD_AUTO_DISMISS_MS,
   useWorksheetPreview,
   type WorksheetPreviewPointerPosition,
 } from '../../../application/navigation/useWorksheetPreview';
@@ -174,6 +175,31 @@ function buildPinnedDragConfig(
     projectedDropTarget: dragConfig.projectedDropTarget,
     isDragActive: dragConfig.isDragActive,
     shouldSuppressActivation: dragConfig.shouldSuppressActivation,
+  };
+}
+
+function findVisibleWorksheetById(navigatorView: NavigatorView, worksheetId: string) {
+  const groupedWorksheets = navigatorView.groups.flatMap((group) => group.worksheets);
+  return [...navigatorView.pinned, ...groupedWorksheets, ...navigatorView.ungrouped].find(
+    (worksheet) => worksheet.worksheetId === worksheetId && worksheet.visibility === 'Visible',
+  );
+}
+
+function findNavigableElement(itemId: string) {
+  return (
+    Array.from(document.querySelectorAll<HTMLElement>('[data-navigable-id]')).find(
+      (element) => element.dataset.navigableId === itemId,
+    ) ?? null
+  );
+}
+
+function resolveKeyboardPreviewPosition(
+  anchorElement: HTMLElement,
+): WorksheetPreviewPointerPosition {
+  const rect = anchorElement.getBoundingClientRect();
+  return {
+    clientX: rect.right,
+    clientY: rect.top + rect.height / 2,
   };
 }
 
@@ -528,6 +554,43 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
     },
     [requestWorksheetPreview],
   );
+
+  useEffect(() => {
+    if (
+      navigationInputMode !== 'keyboard' ||
+      isWorksheetPreviewSuppressed ||
+      !focusedItemId?.startsWith('worksheet:')
+    ) {
+      return undefined;
+    }
+
+    const worksheetId = focusedItemId.slice('worksheet:'.length);
+    const worksheet = findVisibleWorksheetById(navigatorView, worksheetId);
+    const anchorElement = findNavigableElement(focusedItemId);
+
+    if (!worksheet || !anchorElement) {
+      return undefined;
+    }
+
+    requestWorksheetPreview({
+      worksheetId: worksheet.worksheetId,
+      worksheetName: worksheet.name,
+      anchorElement,
+      pointerPosition: resolveKeyboardPreviewPosition(anchorElement),
+      autoDismissMs: WORKSHEET_PREVIEW_KEYBOARD_AUTO_DISMISS_MS,
+    });
+
+    return () => {
+      cancelWorksheetPreview();
+    };
+  }, [
+    cancelWorksheetPreview,
+    focusedItemId,
+    isWorksheetPreviewSuppressed,
+    navigationInputMode,
+    navigatorView,
+    requestWorksheetPreview,
+  ]);
 
   useEffect(() => {
     if (!keyboardNavigationApiRef) {

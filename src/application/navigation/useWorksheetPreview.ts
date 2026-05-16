@@ -6,6 +6,7 @@ import type {
 
 export const WORKSHEET_PREVIEW_HOVER_DELAY_MS = 650;
 export const WORKSHEET_PREVIEW_CACHE_TTL_MS = 30_000;
+export const WORKSHEET_PREVIEW_KEYBOARD_AUTO_DISMISS_MS = 4_500;
 
 export interface WorksheetPreviewPointerPosition {
   clientX: number;
@@ -44,6 +45,7 @@ interface WorksheetPreviewRequest {
   worksheetName: string;
   anchorElement: HTMLElement;
   pointerPosition: WorksheetPreviewPointerPosition;
+  autoDismissMs?: number;
 }
 
 interface CachedWorksheetPreview {
@@ -93,6 +95,7 @@ export function useWorksheetPreview({
   const [previewState, setPreviewState] = useState<WorksheetPreviewState>({ status: 'idle' });
   const cacheRef = useRef(new Map<string, CachedWorksheetPreview>());
   const delayTimerRef = useRef<number | null>(null);
+  const autoDismissTimerRef = useRef<number | null>(null);
   const requestSequenceRef = useRef(0);
 
   const clearDelayTimer = useCallback(() => {
@@ -104,11 +107,44 @@ export function useWorksheetPreview({
     delayTimerRef.current = null;
   }, []);
 
+  const clearAutoDismissTimer = useCallback(() => {
+    if (autoDismissTimerRef.current === null) {
+      return;
+    }
+
+    window.clearTimeout(autoDismissTimerRef.current);
+    autoDismissTimerRef.current = null;
+  }, []);
+
   const cancelPreview = useCallback(() => {
     requestSequenceRef.current += 1;
     clearDelayTimer();
+    clearAutoDismissTimer();
     setPreviewState({ status: 'idle' });
-  }, [clearDelayTimer]);
+  }, [clearAutoDismissTimer, clearDelayTimer]);
+
+  const scheduleAutoDismiss = useCallback(
+    (sequence: number, autoDismissMs?: number) => {
+      clearAutoDismissTimer();
+
+      if (!autoDismissMs) {
+        return;
+      }
+
+      autoDismissTimerRef.current = window.setTimeout(() => {
+        autoDismissTimerRef.current = null;
+
+        if (sequence !== requestSequenceRef.current) {
+          return;
+        }
+
+        requestSequenceRef.current += 1;
+        clearDelayTimer();
+        setPreviewState({ status: 'idle' });
+      }, autoDismissMs);
+    },
+    [clearAutoDismissTimer, clearDelayTimer],
+  );
 
   const requestPreview = useCallback(
     (request: WorksheetPreviewRequest) => {
@@ -118,6 +154,7 @@ export function useWorksheetPreview({
       }
 
       clearDelayTimer();
+      clearAutoDismissTimer();
       const sequence = requestSequenceRef.current + 1;
       requestSequenceRef.current = sequence;
       setPreviewState({ status: 'idle' });
@@ -132,6 +169,7 @@ export function useWorksheetPreview({
         const cached = cacheRef.current.get(request.worksheetId);
         if (cached && Date.now() - cached.cachedAt <= cacheTtlMs) {
           setPreviewState(toPreviewState(request, cached.result));
+          scheduleAutoDismiss(sequence, request.autoDismissMs);
           return;
         }
 
@@ -142,6 +180,7 @@ export function useWorksheetPreview({
           anchorElement: request.anchorElement,
           pointerPosition: request.pointerPosition,
         });
+        scheduleAutoDismiss(sequence, request.autoDismissMs);
 
         void getPreview(request.worksheetId)
           .then((result) => {
@@ -172,7 +211,16 @@ export function useWorksheetPreview({
           });
       }, delayMs);
     },
-    [cacheTtlMs, cancelPreview, clearDelayTimer, delayMs, getPreview, isSuppressed],
+    [
+      cacheTtlMs,
+      cancelPreview,
+      clearAutoDismissTimer,
+      clearDelayTimer,
+      delayMs,
+      getPreview,
+      isSuppressed,
+      scheduleAutoDismiss,
+    ],
   );
 
   useEffect(() => {
@@ -185,8 +233,9 @@ export function useWorksheetPreview({
     return () => {
       requestSequenceRef.current += 1;
       clearDelayTimer();
+      clearAutoDismissTimer();
     };
-  }, [clearDelayTimer]);
+  }, [clearAutoDismissTimer, clearDelayTimer]);
 
   return {
     previewState,

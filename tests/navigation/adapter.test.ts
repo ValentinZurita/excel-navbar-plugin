@@ -327,7 +327,7 @@ describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
     });
 
     expect(usedRange.load).toHaveBeenCalledWith('rowIndex,columnIndex,rowCount,columnCount');
-    expect(worksheet.getRangeByIndexes).toHaveBeenCalledWith(2, 3, 15, 8);
+    expect(worksheet.getRangeByIndexes).toHaveBeenCalledWith(2, 3, 20, 10);
     expect(previewRange.getImage).toHaveBeenCalledOnce();
     expect(sync).toHaveBeenCalledTimes(3);
   });
@@ -417,7 +417,7 @@ describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
       generatedAt: 456,
     });
 
-    expect(worksheet.getRangeByIndexes).toHaveBeenCalledWith(0, 0, 15, 8);
+    expect(worksheet.getRangeByIndexes).toHaveBeenCalledWith(0, 0, 20, 10);
     expect(previewRange.getImage).toHaveBeenCalledOnce();
   });
 
@@ -475,7 +475,7 @@ describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
       generatedAt: 789,
     });
 
-    expect(worksheet.getRangeByIndexes).toHaveBeenCalledWith(13, 7, 15, 8);
+    expect(worksheet.getRangeByIndexes).toHaveBeenCalledWith(11, 6, 20, 10);
     expect(previewRange.getImage).toHaveBeenCalledOnce();
   });
 });

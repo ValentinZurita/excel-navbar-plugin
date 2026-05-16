@@ -4,6 +4,7 @@ import {
   useWorksheetPreview,
   WORKSHEET_PREVIEW_CACHE_TTL_MS,
   WORKSHEET_PREVIEW_HOVER_DELAY_MS,
+  WORKSHEET_PREVIEW_KEYBOARD_AUTO_DISMISS_MS,
 } from '../../src/application/navigation/useWorksheetPreview';
 import type { WorksheetPreviewResult } from '../../src/infrastructure/office/WorkbookAdapter';
 
@@ -212,6 +213,42 @@ describe('useWorksheetPreview', () => {
     await act(async () => {
       await Promise.resolve();
     });
+  });
+
+  it('auto dismisses previews when the request opts into a timeout', async () => {
+    vi.useFakeTimers();
+    const getPreview = vi.fn().mockResolvedValue(readyPreview);
+    const anchor = createAnchor();
+    const { result } = renderHook(() => useWorksheetPreview({ getPreview }));
+
+    act(() => {
+      result.current.requestPreview({
+        worksheetId: 'sheet-1',
+        worksheetName: 'Revenue',
+        anchorElement: anchor,
+        pointerPosition,
+        autoDismissMs: WORKSHEET_PREVIEW_KEYBOARD_AUTO_DISMISS_MS,
+      });
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(result.current.previewState.status).toBe('ready');
+
+    act(() => {
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_KEYBOARD_AUTO_DISMISS_MS - 1);
+    });
+
+    expect(result.current.previewState.status).toBe('ready');
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+
+    expect(result.current.previewState.status).toBe('idle');
   });
 
   it('does not request previews while suppressed', () => {

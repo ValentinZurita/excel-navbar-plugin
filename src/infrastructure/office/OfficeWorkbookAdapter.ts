@@ -16,8 +16,8 @@ import { createMockWorkbookSnapshot } from './mockWorkbookSnapshot';
 import { WorksheetIdentityRepository } from './WorksheetIdentityRepository';
 
 const worksheetIdentityRepository = new WorksheetIdentityRepository();
-const defaultPreviewMaxRows = 15;
-const defaultPreviewMaxColumns = 8;
+const defaultPreviewMaxRows = 20;
+const defaultPreviewMaxColumns = 10;
 const excelWorksheetRowCount = 1_048_576;
 const excelWorksheetColumnCount = 16_384;
 
