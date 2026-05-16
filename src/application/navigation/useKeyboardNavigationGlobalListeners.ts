@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useRef,
   type Dispatch,
   type KeyboardEvent as ReactKeyboardEvent,
   type MutableRefObject,
@@ -24,6 +25,36 @@ const LIST_LOGICAL_ROUTED_KEYS = new Set([
   'Enter',
   'Escape',
 ]);
+
+interface PointerPosition {
+  clientX: number;
+  clientY: number;
+}
+
+function getPointerPosition(event: PointerEvent): PointerPosition {
+  return {
+    clientX: event.clientX,
+    clientY: event.clientY,
+  };
+}
+
+function hasPointerPositionChanged(
+  event: PointerEvent,
+  previousPosition: PointerPosition | null,
+): boolean {
+  const movementX = event.movementX ?? 0;
+  const movementY = event.movementY ?? 0;
+
+  if (movementX !== 0 || movementY !== 0) {
+    return true;
+  }
+
+  if (!previousPosition) {
+    return false;
+  }
+
+  return event.clientX !== previousPosition.clientX || event.clientY !== previousPosition.clientY;
+}
 
 interface UseKeyboardNavigationGlobalListenersArgs {
   items: NavigableItem[];
@@ -86,11 +117,17 @@ export function useKeyboardNavigationGlobalListeners({
   handleGroupHeaderKeyDown,
   handleSectionHeaderKeyDown,
 }: UseKeyboardNavigationGlobalListenersArgs) {
+  const lastPointerPositionRef = useRef<PointerPosition | null>(null);
+
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) {
         return;
+      }
+
+      if (target.closest('.taskpane-shell, [data-navigable-id]')) {
+        lastPointerPositionRef.current = getPointerPosition(event);
       }
 
       const navigableElement = target.closest<HTMLElement>('[data-navigable-id]');
@@ -134,6 +171,7 @@ export function useKeyboardNavigationGlobalListeners({
     clearIdleTimeout,
     contextMenuOwnedFocusRef,
     isSearchActive,
+    lastPointerPositionRef,
     items,
     scheduleIdleClear,
     setFocusedItemId,
@@ -152,6 +190,12 @@ export function useKeyboardNavigationGlobalListeners({
         return;
       }
       if (!event.target.closest('.taskpane-shell')) {
+        return;
+      }
+
+      const didPointerMove = hasPointerPositionChanged(event, lastPointerPositionRef.current);
+      lastPointerPositionRef.current = getPointerPosition(event);
+      if (!didPointerMove) {
         return;
       }
 
@@ -183,6 +227,7 @@ export function useKeyboardNavigationGlobalListeners({
     idleExtendPointerLastAtRef,
     isSearchActiveRef,
     isSuppressedRef,
+    lastPointerPositionRef,
     scheduleIdleClear,
     searchFocusedItemIdRef,
     clearFocus,

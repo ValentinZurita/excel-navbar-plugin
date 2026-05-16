@@ -93,6 +93,10 @@ function dispatchPointerMove(element: Element, clientX: number, clientY: number)
   fireEvent(element, event);
 }
 
+function primeTaskpanePointerPosition(target: Element) {
+  dispatchPointerMove(target, 0, 0);
+}
+
 function SearchQueryHarness(
   props: Omit<ComponentProps<typeof TaskpaneSections>, 'query' | 'onChangeQuery'>,
 ) {
@@ -1016,6 +1020,7 @@ describe('TaskpaneSections', () => {
     );
 
     const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    primeTaskpanePointerPosition(revenueRow);
     revenueRow.focus();
     fireEvent.keyDown(revenueRow, { key: 'ArrowDown', code: 'ArrowDown' });
 
@@ -1065,6 +1070,7 @@ describe('TaskpaneSections', () => {
     );
 
     const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    primeTaskpanePointerPosition(revenueRow);
     revenueRow.focus();
     fireEvent.keyDown(revenueRow, { key: 'ArrowDown', code: 'ArrowDown' });
 
@@ -1117,6 +1123,7 @@ describe('TaskpaneSections', () => {
     );
 
     const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    primeTaskpanePointerPosition(revenueRow);
     revenueRow.focus();
     fireEvent.keyDown(revenueRow, { key: 'ArrowDown', code: 'ArrowDown' });
 
@@ -1133,6 +1140,51 @@ describe('TaskpaneSections', () => {
     // Next arrow key should anchor from active worksheet (Forecast) and move to Summary.
     const activeRow = screen.getByRole('button', { name: 'Forecast' });
     fireEvent.keyDown(activeRow, { key: 'ArrowDown', code: 'ArrowDown' });
+
+    const summaryArticle = screen
+      .getByRole('button', { name: 'Summary' })
+      .closest('[data-navigable-id="worksheet:sheet-3"]');
+    expect(summaryArticle).toHaveAttribute('data-visual-focused', 'true');
+  });
+
+  it('keeps keyboard traversal when scrolling emits a zero-delta pointer move', () => {
+    const navigatorView: NavigatorView = {
+      pinned: [],
+      groups: [],
+      ungrouped: [
+        createWorksheet({ worksheetId: 'sheet-1', name: 'Revenue' }),
+        createWorksheet({ worksheetId: 'sheet-2', name: 'Forecast' }),
+        createWorksheet({ worksheetId: 'sheet-3', name: 'Summary' }),
+      ],
+      hidden: [],
+      searchResults: [],
+    };
+
+    render(
+      <main className="taskpane-shell">
+        <TaskpaneSections
+          {...createBaseProps({
+            navigatorView,
+            activeWorksheetId: 'sheet-1',
+          })}
+        />
+      </main>,
+    );
+
+    const revenueRow = screen.getByRole('button', { name: 'Revenue' });
+    primeTaskpanePointerPosition(revenueRow);
+    revenueRow.focus();
+    fireEvent.keyDown(revenueRow, { key: 'ArrowDown', code: 'ArrowDown' });
+
+    const forecastRow = screen.getByRole('button', { name: 'Forecast' });
+    const forecastArticle = forecastRow.closest('[data-navigable-id="worksheet:sheet-2"]');
+    expect(forecastArticle).toHaveAttribute('data-visual-focused', 'true');
+
+    dispatchPointerMove(revenueRow, 0, 0);
+
+    expect(forecastArticle).toHaveAttribute('data-visual-focused', 'true');
+
+    fireEvent.keyDown(forecastRow, { key: 'ArrowDown', code: 'ArrowDown' });
 
     const summaryArticle = screen
       .getByRole('button', { name: 'Summary' })
