@@ -215,6 +215,59 @@ describe('useWorksheetPreview', () => {
     });
   });
 
+  it('reuses an in-flight preview request for the same worksheet', async () => {
+    vi.useFakeTimers();
+    const deferred = createDeferred<WorksheetPreviewResult>();
+    const getPreview = vi.fn(() => deferred.promise);
+    const anchor = createAnchor();
+    const latestPointerPosition = { clientX: 120, clientY: 140 };
+    const { result } = renderHook(() => useWorksheetPreview({ getPreview }));
+
+    act(() => {
+      result.current.requestPreview({
+        worksheetId: 'sheet-1',
+        worksheetName: 'Revenue',
+        anchorElement: anchor,
+        pointerPosition,
+      });
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    expect(getPreview).toHaveBeenCalledTimes(1);
+    expect(result.current.previewState).toMatchObject({
+      status: 'loading',
+      pointerPosition,
+    });
+
+    act(() => {
+      result.current.requestPreview({
+        worksheetId: 'sheet-1',
+        worksheetName: 'Revenue',
+        anchorElement: anchor,
+        pointerPosition: latestPointerPosition,
+      });
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    expect(getPreview).toHaveBeenCalledTimes(1);
+    expect(result.current.previewState).toMatchObject({
+      status: 'loading',
+      pointerPosition: latestPointerPosition,
+    });
+
+    await act(async () => {
+      deferred.resolve(readyPreview);
+      await deferred.promise;
+    });
+
+    expect(result.current.previewState).toMatchObject({
+      status: 'ready',
+      worksheetId: 'sheet-1',
+      imageSrc: readyPreview.imageSrc,
+      pointerPosition: latestPointerPosition,
+    });
+  });
+
   it('auto dismisses previews when the request opts into a timeout', async () => {
     vi.useFakeTimers();
     const getPreview = vi.fn().mockResolvedValue(readyPreview);

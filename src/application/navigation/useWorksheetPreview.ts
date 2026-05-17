@@ -53,6 +53,10 @@ interface CachedWorksheetPreview {
   cachedAt: number;
 }
 
+interface InFlightWorksheetPreview {
+  promise: Promise<WorksheetPreviewResult>;
+}
+
 interface UseWorksheetPreviewOptions {
   getPreview: (worksheetId: string) => Promise<WorksheetPreviewResult>;
   isSuppressed?: boolean;
@@ -94,6 +98,7 @@ export function useWorksheetPreview({
 }: UseWorksheetPreviewOptions) {
   const [previewState, setPreviewState] = useState<WorksheetPreviewState>({ status: 'idle' });
   const cacheRef = useRef(new Map<string, CachedWorksheetPreview>());
+  const inFlightPreviewRef = useRef(new Map<string, InFlightWorksheetPreview>());
   const delayTimerRef = useRef<number | null>(null);
   const autoDismissTimerRef = useRef<number | null>(null);
   const requestSequenceRef = useRef(0);
@@ -182,7 +187,18 @@ export function useWorksheetPreview({
         });
         scheduleAutoDismiss(sequence, request.autoDismissMs);
 
-        void getPreview(request.worksheetId)
+        const inFlightPreview = inFlightPreviewRef.current.get(request.worksheetId);
+        const previewPromise =
+          inFlightPreview?.promise ??
+          getPreview(request.worksheetId).finally(() => {
+            inFlightPreviewRef.current.delete(request.worksheetId);
+          });
+
+        if (!inFlightPreview) {
+          inFlightPreviewRef.current.set(request.worksheetId, { promise: previewPromise });
+        }
+
+        void previewPromise
           .then((result) => {
             if (sequence !== requestSequenceRef.current || !request.anchorElement.isConnected) {
               return;
