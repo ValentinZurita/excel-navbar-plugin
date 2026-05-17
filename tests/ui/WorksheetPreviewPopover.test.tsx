@@ -21,7 +21,7 @@ function createAnchor() {
 }
 
 describe('WorksheetPreviewPopover', () => {
-  it('renders loading, ready, and unavailable states without taking focus', () => {
+  it('does not render while loading, then shows ready and unavailable without taking focus', () => {
     const anchor = createAnchor();
     const pointerPosition = { clientX: 40, clientY: 50 };
     const { rerender } = render(
@@ -36,12 +36,7 @@ describe('WorksheetPreviewPopover', () => {
       />,
     );
 
-    const popover = screen.getByTestId('worksheet-preview-popover');
-    expect(popover).toHaveAttribute('role', 'tooltip');
-    expect(popover).toHaveStyle({ left: '54px', top: '62px' });
-    expect(screen.queryByText('Preview')).not.toBeInTheDocument();
-    expect(screen.queryByText('Revenue')).not.toBeInTheDocument();
-    expect(screen.getByText('Loading…')).toBeInTheDocument();
+    expect(screen.queryByTestId('worksheet-preview-popover')).not.toBeInTheDocument();
 
     rerender(
       <WorksheetPreviewPopover

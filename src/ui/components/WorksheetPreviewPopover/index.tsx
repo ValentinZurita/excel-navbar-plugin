@@ -71,7 +71,7 @@ export function WorksheetPreviewPopover({ preview }: WorksheetPreviewPopoverProp
     };
   }, [preview]);
 
-  if (preview.status === 'idle' || !position) {
+  if (preview.status === 'idle' || preview.status === 'loading' || !position) {
     return null;
   }
 
@@ -85,10 +85,6 @@ export function WorksheetPreviewPopover({ preview }: WorksheetPreviewPopoverProp
         top: position.top,
       }}
     >
-      {preview.status === 'loading' ? (
-        <div className="worksheet-preview-placeholder">Loading…</div>
-      ) : null}
-
       {preview.status === 'ready' ? (
         <img className="worksheet-preview-image" src={preview.imageSrc} alt="" draggable={false} />
       ) : null}

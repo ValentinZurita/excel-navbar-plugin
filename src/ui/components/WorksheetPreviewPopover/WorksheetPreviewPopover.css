@@ -25,7 +25,6 @@
   background: var(--excel-control-bg);
 }
 
-.worksheet-preview-placeholder,
 .worksheet-preview-unavailable {
   display: grid;
   min-height: 72px;
@@ -48,7 +47,6 @@
 }
 
 :root[data-office-theme-mode='dark'] .worksheet-preview-image,
-:root[data-office-theme-mode='dark'] .worksheet-preview-placeholder,
 :root[data-office-theme-mode='dark'] .worksheet-preview-unavailable {
   border-color: rgba(255, 255, 255, 0.1);
   background: color-mix(in srgb, var(--excel-body-bg) 92%, white);
