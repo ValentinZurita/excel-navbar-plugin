@@ -20,7 +20,7 @@
   height: 150px;
   box-sizing: border-box;
   object-fit: contain;
-  border: 1px solid color-mix(in srgb, var(--excel-border) 25%, transparent);
+  border: 1px solid var(--excel-border);
 }
 
 .worksheet-preview-unavailable {
@@ -43,5 +43,5 @@
 }
 
 :root[data-office-theme-mode='dark'] .worksheet-preview-image {
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
 }
