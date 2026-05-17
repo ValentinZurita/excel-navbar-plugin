@@ -13,6 +13,7 @@ import type {
 } from './WorkbookAdapter';
 import { WorksheetCreateError, WorksheetDeleteError } from './WorkbookAdapter';
 import { createMockWorkbookSnapshot } from './mockWorkbookSnapshot';
+import { measureOfficeOperation } from './OfficePerformanceMetrics';
 import { WorksheetIdentityRepository } from './WorksheetIdentityRepository';
 
 const worksheetIdentityRepository = new WorksheetIdentityRepository();
@@ -158,26 +159,27 @@ async function getFilePropertiesUrl(): Promise<string | null> {
   });
 }
 
-async function loadWorksheets(
+async function resolveWorksheetIdentities(
   context: Excel.RequestContext,
+  worksheets: Excel.Worksheet[],
   supportsWorksheetCustomProperties: boolean,
+  cacheScopeKey: string,
 ): Promise<{
-  worksheets: Excel.Worksheet[];
   identityMode: NavigationIdentityMode;
   stableWorksheetIdByNativeId: Map<string, string>;
 }> {
-  const worksheetCollection = context.workbook.worksheets;
-  worksheetCollection.load('items/id,items/name,items/visibility,items/position');
-  await context.sync();
-
-  const { records, identityMode } = await worksheetIdentityRepository.resolveForWorksheets(
-    context,
-    worksheetCollection.items,
-    supportsWorksheetCustomProperties,
+  const { records, identityMode } = await measureOfficeOperation(
+    'worksheet identity resolution',
+    () =>
+      worksheetIdentityRepository.resolveForWorksheets(
+        context,
+        worksheets,
+        supportsWorksheetCustomProperties,
+        cacheScopeKey,
+      ),
   );
 
   return {
-    worksheets: worksheetCollection.items,
     identityMode,
     stableWorksheetIdByNativeId: new Map(
       records.map((record) => [record.nativeWorksheetId, record.stableWorksheetId]),
@@ -192,34 +194,42 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
     }
 
     const capabilities = getWorkbookCapabilities();
+    const cacheScopeKey = getDocumentUrl() ?? 'office-session';
 
-    return Excel.run(async (context) => {
-      const { worksheets, identityMode, stableWorksheetIdByNativeId } = await loadWorksheets(
-        context,
-        capabilities.supportsWorksheetCustomProperties,
-      );
+    return measureOfficeOperation('getWorkbookSnapshot', () =>
+      Excel.run(async (context) => {
+        const worksheetCollection = context.workbook.worksheets;
+        const activeWorksheet = context.workbook.worksheets.getActiveWorksheet();
 
-      const activeWorksheet = context.workbook.worksheets.getActiveWorksheet();
-      activeWorksheet.load('id');
-      await context.sync();
+        worksheetCollection.load('items/id,items/name,items/visibility,items/position');
+        activeWorksheet.load('id');
+        await context.sync();
 
-      return {
-        worksheets: worksheets.map((worksheet) => {
-          const stableWorksheetId = stableWorksheetIdByNativeId.get(worksheet.id) ?? worksheet.id;
-          return {
-            worksheetId: stableWorksheetId,
-            stableWorksheetId,
-            nativeWorksheetId: worksheet.id,
-            name: worksheet.name,
-            visibility: worksheet.visibility as WorksheetVisibility,
-            workbookOrder: worksheet.position,
-          };
-        }),
-        activeWorksheetId:
-          stableWorksheetIdByNativeId.get(activeWorksheet.id) ?? activeWorksheet.id,
-        identityMode,
-      };
-    });
+        const { identityMode, stableWorksheetIdByNativeId } = await resolveWorksheetIdentities(
+          context,
+          worksheetCollection.items,
+          capabilities.supportsWorksheetCustomProperties,
+          cacheScopeKey,
+        );
+
+        return {
+          worksheets: worksheetCollection.items.map((worksheet) => {
+            const stableWorksheetId = stableWorksheetIdByNativeId.get(worksheet.id) ?? worksheet.id;
+            return {
+              worksheetId: stableWorksheetId,
+              stableWorksheetId,
+              nativeWorksheetId: worksheet.id,
+              name: worksheet.name,
+              visibility: worksheet.visibility as WorksheetVisibility,
+              workbookOrder: worksheet.position,
+            };
+          }),
+          activeWorksheetId:
+            stableWorksheetIdByNativeId.get(activeWorksheet.id) ?? activeWorksheet.id,
+          identityMode,
+        };
+      }),
+    );
   }
 
   async getPersistenceContext(): Promise<WorkbookPersistenceContext> {
@@ -273,42 +283,44 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
     const maxColumns = Math.max(1, Math.floor(options.maxColumns ?? defaultPreviewMaxColumns));
 
     try {
-      const result = await this.withResolvedWorksheet(
-        worksheetId,
-        'items/id,items/visibility',
-        async (worksheet, context) => {
-          if (worksheet.visibility !== 'Visible') {
-            return createUnavailablePreview('worksheet-hidden', 'Unavailable for hidden sheets.');
-          }
+      const result = await measureOfficeOperation('getWorksheetPreview', () =>
+        this.withResolvedWorksheet(
+          worksheetId,
+          'items/id,items/visibility',
+          async (worksheet, context) => {
+            if (worksheet.visibility !== 'Visible') {
+              return createUnavailablePreview('worksheet-hidden', 'Unavailable for hidden sheets.');
+            }
 
-          const usedRange = worksheet.getUsedRangeOrNullObject(true);
-          usedRange.load('rowIndex,columnIndex,rowCount,columnCount');
-          await context.sync();
+            const usedRange = worksheet.getUsedRangeOrNullObject(true);
+            usedRange.load('rowIndex,columnIndex,rowCount,columnCount');
+            await context.sync();
 
-          const previewRangeWindow = calculateWorksheetPreviewRange({
-            usedRange,
-            maxRows,
-            maxColumns,
-          });
-          const previewRange = worksheet.getRangeByIndexes(
-            previewRangeWindow.rowIndex,
-            previewRangeWindow.columnIndex,
-            previewRangeWindow.rowCount,
-            previewRangeWindow.columnCount,
-          );
-          const previewImage = previewRange.getImage();
-          await context.sync();
+            const previewRangeWindow = calculateWorksheetPreviewRange({
+              usedRange,
+              maxRows,
+              maxColumns,
+            });
+            const previewRange = worksheet.getRangeByIndexes(
+              previewRangeWindow.rowIndex,
+              previewRangeWindow.columnIndex,
+              previewRangeWindow.rowCount,
+              previewRangeWindow.columnCount,
+            );
+            const previewImage = previewRange.getImage();
+            await context.sync();
 
-          if (!previewImage.value) {
-            return createUnavailablePreview('preview-failed', 'Could not be generated.');
-          }
+            if (!previewImage.value) {
+              return createUnavailablePreview('preview-failed', 'Could not be generated.');
+            }
 
-          return {
-            status: 'ready' as const,
-            imageSrc: `data:image/png;base64,${previewImage.value}`,
-            generatedAt: Date.now(),
-          };
-        },
+            return {
+              status: 'ready' as const,
+              imageSrc: `data:image/png;base64,${previewImage.value}`,
+              generatedAt: Date.now(),
+            };
+          },
+        ),
       );
 
       return (
@@ -386,6 +398,7 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
     }
 
     const { supportsWorksheetCustomProperties } = getWorkbookCapabilities();
+    const cacheScopeKey = getDocumentUrl() ?? 'office-session';
 
     return Excel.run(async (context) => {
       const worksheetCollection = context.workbook.worksheets;
@@ -401,6 +414,7 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
           worksheetCollection.items,
           stableWorksheetId,
           supportsWorksheetCustomProperties,
+          cacheScopeKey,
         );
 
         if (nativeWorksheetId) {
@@ -473,6 +487,7 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
     }
 
     const { supportsWorksheetCustomProperties } = getWorkbookCapabilities();
+    const cacheScopeKey = getDocumentUrl() ?? 'office-session';
 
     return Excel.run(async (context) => {
       const worksheets = context.workbook.worksheets;
@@ -488,6 +503,7 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
           worksheets.items,
           worksheetId,
           supportsWorksheetCustomProperties,
+          cacheScopeKey,
         );
 
         if (nativeWorksheetId) {

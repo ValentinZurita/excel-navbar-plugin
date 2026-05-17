@@ -16,10 +16,43 @@ interface WorksheetIdentityRecord {
 }
 
 export class WorksheetIdentityRepository {
+  private readonly stableWorksheetIdByNativeId = new Map<string, string>();
+
+  private readonly nativeWorksheetIdByStableId = new Map<string, string>();
+
+  private cacheScopeKey: string | null = null;
+
+  private useCacheScope(cacheScopeKey: string) {
+    if (this.cacheScopeKey === cacheScopeKey) {
+      return;
+    }
+
+    this.stableWorksheetIdByNativeId.clear();
+    this.nativeWorksheetIdByStableId.clear();
+    this.cacheScopeKey = cacheScopeKey;
+  }
+
+  private remember(record: WorksheetIdentityRecord) {
+    this.stableWorksheetIdByNativeId.set(record.nativeWorksheetId, record.stableWorksheetId);
+    this.nativeWorksheetIdByStableId.set(record.stableWorksheetId, record.nativeWorksheetId);
+  }
+
+  private forgetMissingNativeIds(currentNativeWorksheetIds: Set<string>) {
+    for (const [nativeWorksheetId, stableWorksheetId] of this.stableWorksheetIdByNativeId) {
+      if (currentNativeWorksheetIds.has(nativeWorksheetId)) {
+        continue;
+      }
+
+      this.stableWorksheetIdByNativeId.delete(nativeWorksheetId);
+      this.nativeWorksheetIdByStableId.delete(stableWorksheetId);
+    }
+  }
+
   async resolveForWorksheets(
     context: Excel.RequestContext,
     worksheets: Excel.Worksheet[],
     supportsWorksheetCustomProperties: boolean,
+    cacheScopeKey = 'default',
   ): Promise<{
     records: WorksheetIdentityRecord[];
     identityMode: NavigationIdentityMode;
@@ -36,7 +69,36 @@ export class WorksheetIdentityRepository {
       };
     }
 
-    const propertyRecords = worksheets.map((worksheet) => ({
+    this.useCacheScope(cacheScopeKey);
+
+    const currentNativeWorksheetIds = new Set(worksheets.map((worksheet) => worksheet.id));
+    this.forgetMissingNativeIds(currentNativeWorksheetIds);
+
+    const records: WorksheetIdentityRecord[] = [];
+    const unresolvedWorksheets: Excel.Worksheet[] = [];
+
+    for (const worksheet of worksheets) {
+      const cachedStableWorksheetId = this.stableWorksheetIdByNativeId.get(worksheet.id);
+      if (cachedStableWorksheetId) {
+        records.push({
+          nativeWorksheetId: worksheet.id,
+          stableWorksheetId: cachedStableWorksheetId,
+        });
+        continue;
+      }
+
+      unresolvedWorksheets.push(worksheet);
+    }
+
+    if (unresolvedWorksheets.length === 0) {
+      return {
+        records,
+        identityMode: 'plugin-sheet-id',
+        mutated: false,
+      };
+    }
+
+    const propertyRecords = unresolvedWorksheets.map((worksheet) => ({
       worksheet,
       customProperty: worksheet.customProperties.getItemOrNullObject(worksheetStableIdPropertyKey),
     }));
@@ -45,28 +107,33 @@ export class WorksheetIdentityRepository {
     await context.sync();
 
     let mutated = false;
-    const records = propertyRecords.map(({ worksheet, customProperty }) => {
+    for (const { worksheet, customProperty } of propertyRecords) {
       const existingValue =
         !customProperty.isNullObject && typeof customProperty.value === 'string'
           ? customProperty.value.trim()
           : '';
 
       if (existingValue.length > 0) {
-        return {
+        const record = {
           nativeWorksheetId: worksheet.id,
           stableWorksheetId: existingValue,
         };
+        this.remember(record);
+        records.push(record);
+        continue;
       }
 
       const stableWorksheetId = generateStableWorksheetId();
       worksheet.customProperties.add(worksheetStableIdPropertyKey, stableWorksheetId);
       mutated = true;
 
-      return {
+      const record = {
         nativeWorksheetId: worksheet.id,
         stableWorksheetId,
       };
-    });
+      this.remember(record);
+      records.push(record);
+    }
 
     if (mutated) {
       await context.sync();
@@ -84,11 +151,23 @@ export class WorksheetIdentityRepository {
     worksheets: Excel.Worksheet[],
     stableWorksheetId: string,
     supportsWorksheetCustomProperties: boolean,
+    cacheScopeKey = 'default',
   ): Promise<string | null> {
+    this.useCacheScope(cacheScopeKey);
+
+    const cachedNativeWorksheetId = this.nativeWorksheetIdByStableId.get(stableWorksheetId);
+    if (
+      cachedNativeWorksheetId &&
+      worksheets.some((worksheet) => worksheet.id === cachedNativeWorksheetId)
+    ) {
+      return cachedNativeWorksheetId;
+    }
+
     const { records } = await this.resolveForWorksheets(
       context,
       worksheets,
       supportsWorksheetCustomProperties,
+      cacheScopeKey,
     );
     const match = records.find((record) => record.stableWorksheetId === stableWorksheetId);
     return match?.nativeWorksheetId ?? null;

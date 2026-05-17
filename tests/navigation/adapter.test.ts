@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { OfficeWorkbookAdapter } from '../../src/infrastructure/office/OfficeWorkbookAdapter';
 import { createMockWorkbookSnapshot } from '../../src/infrastructure/office/mockWorkbookSnapshot';
 import {
@@ -9,6 +9,10 @@ import {
 // Type references for mock-drift detection:
 // Excel.RequestContext and Excel.Worksheet are used as types in the source.
 // Office.context.requirements.isSetSupported is tested below.
+
+beforeEach(() => {
+  vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+});
 
 describe('OfficeWorkbookAdapter.hideWorksheet', () => {
   afterEach(() => {
@@ -89,6 +93,100 @@ describe('OfficeWorkbookAdapter.getWorkbookSnapshot', () => {
   it('returns mock snapshot when Office runtime is unavailable', async () => {
     const adapter = new OfficeWorkbookAdapter();
     await expect(adapter.getWorkbookSnapshot()).resolves.toEqual(createMockWorkbookSnapshot());
+  });
+
+  it('returns workbook metadata with stable worksheet identities', async () => {
+    const firstCustomProperty = {
+      value: 'stable-1',
+      isNullObject: false,
+      load: vi.fn(),
+    };
+    const secondCustomProperty = {
+      value: 'stable-2',
+      isNullObject: false,
+      load: vi.fn(),
+    };
+    const firstWorksheet = {
+      id: 'native-1',
+      name: 'Overview',
+      visibility: 'Visible' as const,
+      position: 0,
+      customProperties: {
+        getItemOrNullObject: vi.fn(() => firstCustomProperty),
+        add: vi.fn(),
+      },
+    };
+    const secondWorksheet = {
+      id: 'native-2',
+      name: 'Revenue',
+      visibility: 'Hidden' as const,
+      position: 1,
+      customProperties: {
+        getItemOrNullObject: vi.fn(() => secondCustomProperty),
+        add: vi.fn(),
+      },
+    };
+    const activeWorksheet = {
+      id: 'native-2',
+      load: vi.fn(),
+    };
+    const worksheetCollection = {
+      items: [firstWorksheet, secondWorksheet],
+      load: vi.fn(),
+      getActiveWorksheet: vi.fn(() => activeWorksheet),
+    };
+    const sync = vi.fn(async () => undefined);
+
+    globalThis.Office = {
+      context: {
+        requirements: {
+          isSetSupported: vi.fn((set: string, version: string) => {
+            return set === 'ExcelApi' && version === '1.12';
+          }),
+        },
+      },
+    } as any;
+    globalThis.Excel = {
+      run: vi.fn(async (callback: (context: any) => Promise<void>) => {
+        const context = {
+          workbook: {
+            worksheets: worksheetCollection,
+          },
+          sync,
+        };
+        return callback(context);
+      }),
+    } as any;
+
+    const adapter = new OfficeWorkbookAdapter();
+
+    await expect(adapter.getWorkbookSnapshot()).resolves.toEqual({
+      worksheets: [
+        {
+          worksheetId: 'stable-1',
+          stableWorksheetId: 'stable-1',
+          nativeWorksheetId: 'native-1',
+          name: 'Overview',
+          visibility: 'Visible',
+          workbookOrder: 0,
+        },
+        {
+          worksheetId: 'stable-2',
+          stableWorksheetId: 'stable-2',
+          nativeWorksheetId: 'native-2',
+          name: 'Revenue',
+          visibility: 'Hidden',
+          workbookOrder: 1,
+        },
+      ],
+      activeWorksheetId: 'stable-2',
+      identityMode: 'plugin-sheet-id',
+    });
+    expect(worksheetCollection.load).toHaveBeenCalledWith(
+      'items/id,items/name,items/visibility,items/position',
+    );
+    expect(activeWorksheet.load).toHaveBeenCalledWith('id');
+    expect(sync).toHaveBeenCalledTimes(2);
   });
 });
 
