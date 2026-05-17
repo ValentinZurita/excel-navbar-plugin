@@ -18,8 +18,9 @@
   display: block;
   width: 100%;
   height: 150px;
+  box-sizing: border-box;
   object-fit: contain;
-  background: var(--excel-control-bg);
+  border: 1px solid color-mix(in srgb, var(--excel-border) 25%, transparent);
 }
 
 .worksheet-preview-unavailable {
@@ -42,5 +43,5 @@
 }
 
 :root[data-office-theme-mode='dark'] .worksheet-preview-image {
-  background: color-mix(in srgb, var(--excel-body-bg) 92%, white);
+  border-color: rgba(255, 255, 255, 0.08);
 }
