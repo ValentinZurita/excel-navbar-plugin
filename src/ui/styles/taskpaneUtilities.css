@@ -8,12 +8,30 @@
    These classes are used across taskpane sections and dialogs. */
 .primary-button,
 .ghost-button,
-.sheet-link,
 .search-result,
 .group-toggle {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.sheet-link {
+  border: none;
+  border-radius: 4px;
+  cursor: default;
+  background: transparent;
+  text-align: left;
+  width: 100%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 180ms ease,
+    transform 160ms ease;
 }
 
 .primary-button {
@@ -35,7 +53,6 @@
 }
 
 /* Shared row/list utilities for navigation blocks. */
-.sheet-link,
 .search-result,
 .group-toggle {
   background: transparent;
@@ -124,11 +141,6 @@
   user-select: none;
 }
 
-.sheet-link {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
 
 .sheet-link small,
 .group-toggle small,

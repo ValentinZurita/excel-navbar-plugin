@@ -5,7 +5,7 @@
   display: grid;
   grid-template-areas: 'content';
   gap: 2px;
-  padding: 8px 10px;
+  padding: 9px 10px;
   border-radius: 4px;
   background: transparent;
   border: 1px solid transparent;
@@ -233,8 +233,8 @@
   align-items: center;
   background: transparent;
   border: none;
-  margin: -8px -10px;
-  padding: 8px 10px;
+  margin: -9px -10px;
+  padding: 9px 10px;
   text-align: left;
   cursor: default;
   width: 100%;
@@ -248,8 +248,8 @@
   grid-area: content;
   display: flex;
   align-items: center;
-  margin: -8px -10px;
-  padding: 8px 10px;
+  margin: -9px -10px;
+  padding: 9px 10px;
   min-width: 0;
   z-index: 1;
 }
