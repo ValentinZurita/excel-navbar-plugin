@@ -40,7 +40,7 @@
   background: color-mix(in srgb, var(--excel-body-bg) 88%, white);
   box-shadow:
     0 8px 22px rgba(0, 0, 0, 0.32),
-    0 2px 6px rgba(0, 0, 0, 0.20);
+    0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 :root[data-office-theme-mode='dark'] .worksheet-preview-image {
