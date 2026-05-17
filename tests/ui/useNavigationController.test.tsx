@@ -368,6 +368,59 @@ describe('useNavigationController', () => {
     expect(persistenceMock.save).toHaveBeenCalledTimes(saveCallCount);
   });
 
+  it('debounces rapid structural persistence saves', async () => {
+    vi.useFakeTimers();
+    adapterMock.getWorkbookSnapshot.mockResolvedValue(createSnapshot());
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    persistenceMock.load.mockResolvedValue({
+      model: createModel(),
+      status: createStatus(),
+    });
+    persistenceMock.save.mockResolvedValue({ status: createStatus(), savedUpdatedAt: 1 });
+
+    const { result } = renderHook(() => useNavigationController(), { wrapper });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    const saveCallCount = persistenceMock.save.mock.calls.length;
+
+    act(() => {
+      result.current.createGroup('Finance', 'blue');
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+      await Promise.resolve();
+    });
+
+    act(() => {
+      result.current.createGroup('Operations', 'green');
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(499);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+    expect(persistenceMock.save).toHaveBeenCalledTimes(saveCallCount);
+
+    await act(async () => {
+      vi.advanceTimersByTime(1);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(persistenceMock.save).toHaveBeenCalledTimes(saveCallCount + 1);
+  });
+
   it('does not persist again when only the active worksheet changes', async () => {
     const initialSnapshot = createSnapshot({
       worksheets: [

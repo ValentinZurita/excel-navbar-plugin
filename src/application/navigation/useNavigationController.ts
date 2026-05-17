@@ -25,6 +25,7 @@ import { WorkbookSyncCoordinator } from './WorkbookSyncCoordinator';
 
 const adapter = new OfficeWorkbookAdapter();
 const persistence = new NavigationPersistence();
+const persistenceSaveDebounceMs = 500;
 
 export function useNavigationController() {
   const { state, dispatch, navigatorView } = useNavigationContext();
@@ -40,6 +41,8 @@ export function useNavigationController() {
   const queryRef = useRef(state.query);
   const lastOwnSavedUpdatedAtRef = useRef<number>(0);
   const isSyncReloadingRef = useRef(false);
+  const persistenceSaveTimerRef = useRef<number | null>(null);
+  const persistenceSaveSequenceRef = useRef(0);
 
   const persistedModel = useMemo(
     () => toPersistedModel(state),
@@ -77,6 +80,15 @@ export function useNavigationController() {
 
   const dismissBanner = useCallback(() => {
     setBanner(null);
+  }, []);
+
+  const clearPendingPersistenceSave = useCallback(() => {
+    if (persistenceSaveTimerRef.current === null) {
+      return;
+    }
+
+    window.clearTimeout(persistenceSaveTimerRef.current);
+    persistenceSaveTimerRef.current = null;
   }, []);
 
   const resolvePersistenceContext = useCallback(async (options?: { forceRefresh?: boolean }) => {
@@ -221,20 +233,44 @@ export function useNavigationController() {
       return;
     }
 
-    void persistence
-      .save(persistenceContext, latestPersistedModelRef.current)
-      .then(({ status, savedUpdatedAt }) => {
-        lastOwnSavedUpdatedAtRef.current = savedUpdatedAt;
-        applyPersistenceStatus(status);
-      })
-      .catch((error) => {
-        setIsSessionOnlyPersistence(false);
-        setBanner({
-          tone: 'warning',
-          message: error instanceof Error ? error.message : 'Unable to save workbook state.',
+    clearPendingPersistenceSave();
+    const sequence = persistenceSaveSequenceRef.current + 1;
+    persistenceSaveSequenceRef.current = sequence;
+
+    persistenceSaveTimerRef.current = window.setTimeout(() => {
+      persistenceSaveTimerRef.current = null;
+
+      if (sequence !== persistenceSaveSequenceRef.current) {
+        return;
+      }
+
+      void persistence
+        .save(persistenceContext, latestPersistedModelRef.current)
+        .then(({ status, savedUpdatedAt }) => {
+          if (sequence !== persistenceSaveSequenceRef.current) {
+            return;
+          }
+
+          lastOwnSavedUpdatedAtRef.current = savedUpdatedAt;
+          applyPersistenceStatus(status);
+        })
+        .catch((error) => {
+          if (sequence !== persistenceSaveSequenceRef.current) {
+            return;
+          }
+
+          setIsSessionOnlyPersistence(false);
+          setBanner({
+            tone: 'warning',
+            message: error instanceof Error ? error.message : 'Unable to save workbook state.',
+          });
         });
-      });
-  }, [applyPersistenceStatus, persistedFingerprint]);
+    }, persistenceSaveDebounceMs);
+
+    return () => {
+      clearPendingPersistenceSave();
+    };
+  }, [applyPersistenceStatus, clearPendingPersistenceSave, persistedFingerprint]);
 
   useEffect(() => {
     if (!hasLoaded.current) {
