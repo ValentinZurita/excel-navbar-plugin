@@ -789,4 +789,19 @@ describe('useNavigationController', () => {
     expect(persistenceMock.load).toHaveBeenCalledTimes(2);
     expect(result.current.state.groupsById['group-remote']).toBeUndefined();
   });
+
+  it('exposes workbookChangeToken in return object', () => {
+    adapterMock.getWorkbookSnapshot.mockResolvedValue(createSnapshot());
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    persistenceMock.load.mockResolvedValue({
+      model: createModel(),
+      status: createStatus(),
+    });
+    persistenceMock.save.mockResolvedValue({ status: createStatus(), savedUpdatedAt: 1 });
+
+    const { result } = renderHook(() => useNavigationController(), { wrapper });
+
+    // workbookChangeToken should be a number exposed on the controller return
+    expect(typeof result.current.workbookChangeToken).toBe('number');
+  });
 });

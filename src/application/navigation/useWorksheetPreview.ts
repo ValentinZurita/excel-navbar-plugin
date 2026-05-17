@@ -62,6 +62,7 @@ interface UseWorksheetPreviewOptions {
   isSuppressed?: boolean;
   delayMs?: number;
   cacheTtlMs?: number;
+  cacheInvalidationToken?: number;
 }
 
 function toPreviewState(
@@ -95,6 +96,7 @@ export function useWorksheetPreview({
   isSuppressed = false,
   delayMs = WORKSHEET_PREVIEW_HOVER_DELAY_MS,
   cacheTtlMs = WORKSHEET_PREVIEW_CACHE_TTL_MS,
+  cacheInvalidationToken,
 }: UseWorksheetPreviewOptions) {
   const [previewState, setPreviewState] = useState<WorksheetPreviewState>({ status: 'idle' });
   const cacheRef = useRef(new Map<string, CachedWorksheetPreview>());
@@ -102,6 +104,7 @@ export function useWorksheetPreview({
   const delayTimerRef = useRef<number | null>(null);
   const autoDismissTimerRef = useRef<number | null>(null);
   const requestSequenceRef = useRef(0);
+  const prevTokenRef = useRef(cacheInvalidationToken);
 
   const clearDelayTimer = useCallback(() => {
     if (delayTimerRef.current === null) {
@@ -244,6 +247,18 @@ export function useWorksheetPreview({
       cancelPreview();
     }
   }, [cancelPreview, isSuppressed]);
+
+  // Invalidate cache when cacheInvalidationToken changes.
+  // This ensures structural workbook changes (rename, add, delete) clear stale previews.
+  useEffect(() => {
+    if (prevTokenRef.current !== undefined && cacheInvalidationToken !== prevTokenRef.current) {
+      requestSequenceRef.current += 1;
+      cacheRef.current.clear();
+      inFlightPreviewRef.current.clear();
+      clearDelayTimer();
+    }
+    prevTokenRef.current = cacheInvalidationToken;
+  }, [cacheInvalidationToken, clearDelayTimer]);
 
   useEffect(() => {
     return () => {

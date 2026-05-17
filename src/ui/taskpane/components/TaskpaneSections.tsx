@@ -58,6 +58,7 @@ interface WorksheetDragConfig extends GroupDragVisualConfig {
 }
 
 interface TaskpaneSectionsProps {
+  workbookChangeToken?: number;
   query: string;
   searchResults: NavigatorView['searchResults'];
   navigatorView: NavigatorView;
@@ -204,6 +205,7 @@ function resolveKeyboardPreviewPosition(
 }
 
 export function TaskpaneSections({
+  workbookChangeToken,
   query,
   searchResults,
   navigatorView,
@@ -386,6 +388,7 @@ export function TaskpaneSections({
       sheetContextMenuOpenedVia={sheetContextMenuOpenedVia}
     >
       <TaskpaneSectionsContent
+        workbookChangeToken={workbookChangeToken}
         query={query}
         searchResults={searchResults}
         navigatorView={navigatorView}
@@ -457,6 +460,7 @@ interface TaskpaneSectionsContentProps extends Omit<
 
 function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
   const {
+    workbookChangeToken,
     query,
     searchResults,
     navigatorView,
@@ -530,6 +534,7 @@ function TaskpaneSectionsContent(props: TaskpaneSectionsContentProps) {
   } = useWorksheetPreview({
     getPreview: getWorksheetPreview,
     isSuppressed: isWorksheetPreviewSuppressed,
+    cacheInvalidationToken: workbookChangeToken,
   });
   const handleWorksheetPreviewRequest = useCallback(
     ({

@@ -323,4 +323,92 @@ describe('useWorksheetPreview', () => {
     expect(getPreview).not.toHaveBeenCalled();
     expect(result.current.previewState.status).toBe('idle');
   });
+
+  it('clears the cache when cacheInvalidationToken changes', () => {
+    vi.useFakeTimers();
+    const getPreview = vi.fn().mockResolvedValue(readyPreview);
+    const anchor = createAnchor();
+
+    const { result, rerender } = renderHook(
+      ({ token }: { token?: number }) =>
+        useWorksheetPreview({ getPreview, cacheInvalidationToken: token }),
+      { initialProps: { token: 0 } },
+    );
+
+    // First hover - caches the preview
+    act(() => {
+      result.current.requestPreview({
+        worksheetId: 'sheet-1',
+        worksheetName: 'Revenue',
+        anchorElement: anchor,
+        pointerPosition,
+      });
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    expect(getPreview).toHaveBeenCalledTimes(1);
+
+    // Token changes to 1 - cache should be cleared
+    act(() => {
+      rerender({ token: 1 });
+    });
+
+    act(() => {
+      result.current.requestPreview({
+        worksheetId: 'sheet-1',
+        worksheetName: 'Revenue',
+        anchorElement: anchor,
+        pointerPosition,
+      });
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    // getPreview should be called again because cache was invalidated
+    expect(getPreview).toHaveBeenCalledTimes(2);
+  });
+
+  it('drops in-flight preview result when cacheInvalidationToken changes before promise resolves', async () => {
+    vi.useFakeTimers();
+    const deferred = createDeferred<WorksheetPreviewResult>();
+    const getPreview = vi.fn(() => deferred.promise);
+    const anchor = createAnchor();
+
+    const { result, rerender } = renderHook(
+      ({ token }: { token?: number }) =>
+        useWorksheetPreview({ getPreview, cacheInvalidationToken: token }),
+      { initialProps: { token: 0 } },
+    );
+
+    // Start preview request
+    act(() => {
+      result.current.requestPreview({
+        worksheetId: 'sheet-1',
+        worksheetName: 'Revenue',
+        anchorElement: anchor,
+        pointerPosition,
+      });
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    expect(getPreview).toHaveBeenCalledTimes(1);
+    expect(result.current.previewState).toMatchObject({ status: 'loading' });
+
+    // Token changes before promise resolves - in-flight should be dropped
+    act(() => {
+      rerender({ token: 1 });
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    // Resolve the original promise after token already changed
+    await act(async () => {
+      deferred.resolve(readyPreview);
+      await deferred.promise;
+    });
+
+    // Status should still be 'loading' (or idle) because the result was dropped
+    expect(result.current.previewState.status).not.toBe('ready');
+  });
 });

@@ -626,6 +626,7 @@ export function TaskpaneAppContainer() {
     >
       {/* Main taskpane navigation sections (search, pinned, groups, hidden). */}
       <TaskpaneSections
+        workbookChangeToken={controller.workbookChangeToken}
         query={controller.state.query}
         searchResults={controller.navigatorView.searchResults}
         navigatorView={controller.navigatorView}

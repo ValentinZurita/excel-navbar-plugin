@@ -32,6 +32,7 @@ export function useNavigationController() {
   const [isBusy, setIsBusy] = useState(false);
   const [banner, setBanner] = useState<BannerState | null>(null);
   const [isSessionOnlyPersistence, setIsSessionOnlyPersistence] = useState(false);
+  const [workbookChangeToken, setWorkbookChangeToken] = useState(0);
   const hasLoaded = useRef(false);
   const latestStateRef = useRef(state);
   const persistenceContextRef = useRef<WorkbookPersistenceContext | null>(null);
@@ -185,6 +186,7 @@ export function useNavigationController() {
     } finally {
       syncStateRef.current.inFlight = false;
       syncStateRef.current.pendingRerun = false;
+      setWorkbookChangeToken((t) => t + 1);
     }
   }, [performWorkbookSync]);
 
@@ -473,6 +475,7 @@ export function useNavigationController() {
     banner,
     dismissBanner,
     isSessionOnlyPersistence,
+    workbookChangeToken,
     ...handlers,
   };
 }
