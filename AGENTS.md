@@ -100,15 +100,15 @@ We follow Conventional Commits enforced by commitlint.
 
 ### Type reference
 
-| Type | When to use | Example |
-|------|-------------|---------|
-| `feat` | New feature or capability | `feat(navigation): add keyboard shortcut for sheet focus` |
-| `fix` | Bug fix | `fix(ui): resolve layout shift on hover` |
-| `refactor` | Code change that neither fixes a bug nor adds a feature | `refactor(domain): simplify sheet ordering logic` |
-| `style` | Formatting, missing semicolons, etc. (no logic change) | `style(ui): format trailing commas in SortableRow` |
-| `docs` | Documentation only changes | `docs(readme): update installation steps` |
-| `test` | Adding or correcting tests | `test(navigation): add coverage for edge case in move` |
-| `chore` | Build process, tooling, dependencies, etc. | `chore(tool): bump eslint to v9` |
+| Type       | When to use                                             | Example                                                   |
+| ---------- | ------------------------------------------------------- | --------------------------------------------------------- |
+| `feat`     | New feature or capability                               | `feat(navigation): add keyboard shortcut for sheet focus` |
+| `fix`      | Bug fix                                                 | `fix(ui): resolve layout shift on hover`                  |
+| `refactor` | Code change that neither fixes a bug nor adds a feature | `refactor(domain): simplify sheet ordering logic`         |
+| `style`    | Formatting, missing semicolons, etc. (no logic change)  | `style(ui): format trailing commas in SortableRow`        |
+| `docs`     | Documentation only changes                              | `docs(readme): update installation steps`                 |
+| `test`     | Adding or correcting tests                              | `test(navigation): add coverage for edge case in move`    |
+| `chore`    | Build process, tooling, dependencies, etc.              | `chore(tool): bump eslint to v9`                          |
 
 ### What NOT to do
 
@@ -142,14 +142,14 @@ We follow Conventional Commits enforced by commitlint.
 
 ### Scripts every agent should know
 
-| Script | When to run |
-|--------|-------------|
-| `pnpm validate` | Before proposing a commit or finishing a task. Runs typecheck + lint + test. |
-| `pnpm quality` | Before opening a PR or when touching styles/docs. Runs architecture checks, CSS/MD lint, format check, and ESLint. |
-| `pnpm format` | When files look misformatted. Runs Prettier --write on the entire repo. |
-| `pnpm lint:fix` | When ESLint reports auto-fixable issues. |
-| `pnpm typecheck` | When TypeScript types may have changed. |
-| `pnpm test` | When logic or tests change. Runs Vitest. |
+| Script           | When to run                                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `pnpm validate`  | Before proposing a commit or finishing a task. Runs typecheck + lint + test.                                       |
+| `pnpm quality`   | Before opening a PR or when touching styles/docs. Runs architecture checks, CSS/MD lint, format check, and ESLint. |
+| `pnpm format`    | When files look misformatted. Runs Prettier --write on the entire repo.                                            |
+| `pnpm lint:fix`  | When ESLint reports auto-fixable issues.                                                                           |
+| `pnpm typecheck` | When TypeScript types may have changed.                                                                            |
+| `pnpm test`      | When logic or tests change. Runs Vitest.                                                                           |
 
 ### CI behavior
 
