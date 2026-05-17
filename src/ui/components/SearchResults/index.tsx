@@ -166,6 +166,13 @@ function SearchResultItemComponent({
     };
   }, [itemId, registerElement]);
 
+  // Keep the focused item visible within the scrollable search results list
+  useEffect(() => {
+    if (isFocused && buttonRef.current && typeof buttonRef.current.scrollIntoView === 'function') {
+      buttonRef.current.scrollIntoView({ block: 'nearest' });
+    }
+  }, [isFocused]);
+
   return (
     <button
       ref={buttonRef}
