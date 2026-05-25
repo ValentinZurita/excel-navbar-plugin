@@ -458,6 +458,9 @@ body {
 .bento-half {
   grid-column: span 6;
 }
+.bento-third {
+  grid-column: span 4;
+}
 .bento-full {
   grid-column: span 12;
 }
@@ -800,6 +803,134 @@ body {
   background: var(--accent);
 }
 
+/* --- Sheet Preview Demo (matches WorksheetPreviewPopover) --- */
+.preview-feature.bento-cell {
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.preview-demo-compact {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 220px;
+  margin-top: 20px;
+  overflow: visible;
+}
+
+.preview-demo-compact .taskpane-preview {
+  flex: 1;
+  margin-top: 0;
+  width: 100%;
+  min-height: 200px;
+  padding: 0;
+  gap: 0;
+  overflow: visible;
+}
+
+.preview-demo-compact .tp-sheet {
+  position: relative;
+  z-index: 0;
+  padding: 8px 10px;
+  border-radius: 0;
+}
+
+.preview-demo-compact .tp-sheet-under-preview {
+  z-index: 0;
+}
+
+.preview-taskpane-spacer {
+  flex: 1;
+  min-height: 8px;
+}
+
+.preview-hover-target {
+  position: relative;
+  flex-shrink: 0;
+  overflow: visible;
+  z-index: 2;
+}
+
+.tp-sheet-hover {
+  position: relative;
+  z-index: 1;
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+}
+
+/* Matches WorksheetPreviewPopover — scaled for landing, floated beside row */
+.preview-popover {
+  position: absolute;
+  top: 28px;
+  left: 10px;
+  width: calc(100% + 40px);
+  max-width: 220px;
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.14),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.preview-popover-image {
+  display: block;
+  width: 100%;
+  height: 92px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.preview-popover-image svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+[data-theme='dark'] .preview-popover {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, var(--bg-elevated) 88%, white);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.32),
+    0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='dark'] .preview-popover-image {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #1a1a1d;
+}
+
+[data-theme='dark'] .preview-sheet-bg {
+  fill: #1a1a1d;
+}
+
+[data-theme='dark'] .preview-sheet-header {
+  fill: #1d6b3f;
+}
+
+[data-theme='dark'] .preview-sheet-corner {
+  fill: #333338;
+}
+
+[data-theme='dark'] .preview-sheet-gutter {
+  fill: #2a2a2f;
+}
+
+[data-theme='dark'] .preview-sheet-grid {
+  stroke: #45454d;
+}
+
+[data-theme='dark'] .preview-sheet-highlight {
+  fill: rgba(45, 214, 114, 0.18);
+}
+
 /* --- Search Demo --- */
 .search-demo {
   margin-top: 20px;
@@ -1140,6 +1271,7 @@ code {
   .bento-wide,
   .bento-narrow,
   .bento-half,
+  .bento-third,
   .bento-full {
     grid-column: span 1;
   }
@@ -1187,6 +1319,25 @@ code {
   }
   .key-wide {
     min-width: 52px;
+  }
+
+  .preview-demo-compact {
+    min-height: 0;
+  }
+
+  .preview-demo-compact .taskpane-preview {
+    min-height: 0;
+  }
+
+  .preview-taskpane-spacer {
+    display: none;
+  }
+
+  .preview-popover {
+    top: 24px;
+    left: 8px;
+    width: calc(100% + 24px);
+    max-width: none;
   }
 }
 
