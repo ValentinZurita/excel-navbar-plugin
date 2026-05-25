@@ -19,143 +19,123 @@
 
 ---
 
-## Table of Contents
+## What you get
 
-- [Why this exists](#why-this-exists)
-- [Features](#features)
-- [Keyboard shortcuts](#keyboard-shortcuts)
-- [Installation](#installation)
-  - [Excel on the Web](#excel-on-the-web)
-  - [Excel for Windows](#excel-for-windows)
-  - [Excel for Mac](#excel-for-mac)
-- [Troubleshooting](#troubleshooting)
-- [Development](#development)
-- [Project status](#project-status)
-- [License](#license)
+Native Excel tabs get messy fast in large workbooks. Sheet Navigator is a task pane built for **speed, structure, and control**.
 
----
+| Feature | What you get |
+| ------- | ------------ |
+| **Sheet preview** | Hover a sheet to see a live thumbnail before you switch — no more opening the wrong tab. |
+| **Keyboard-first** | Global shortcuts from anywhere in Excel; inside the pane, navigate, activate, and drag with keys alone. |
+| **Search** | Type a few letters and jump to any sheet by name, even in workbooks with dozens of tabs. |
+| **Groups** | Collapsible, color-coded folders so related sheets stay together. |
+| **Drag & drop** | Reorder sheets and move them between groups with mouse or keyboard; drop indicators show where they'll land. |
 
-## Why this exists
+**Also built in**
 
-Native Excel tabs break down fast in workbooks with many sheets. Sheet Navigator gives you a task pane focused on **speed, structure, and control**:
-
-- **Collapsible groups** — Organize sheets into color-coded folders
-- **Fuzzy search** — Instantly jump to any sheet with real-time filtering
-- **Drag & drop** — Reorder and move sheets across groups with visual drop indicators
-- **Keyboard-first** — Navigate, rename, hide, and switch sheets entirely from your keyboard
-- **Excel-native UX** — UI aligned with Office host patterns
-
----
-
-## Features
-
-| Feature                | What you get                                                          |
-| ---------------------- | --------------------------------------------------------------------- |
-| **Collapsible Groups** | Color-coded folders to organize large workbooks logically             |
-| **Fuzzy Search**       | Real-time filtering to jump to any sheet instantly                    |
-| **Drag & Drop**        | Move sheets between groups with visual feedback                       |
-| **Keyboard-First**     | Global shortcuts + directional navigation — never reach for the mouse |
-| **Excel-Native UX**    | Task pane UI that feels like part of Office                           |
+| Feature | What you get |
+| ------- | ------------ |
+| **Pinned sheets** | Keep your most-used tabs at the top. |
+| **Context menus** | Rename, pin, hide, delete, and more from one menu. |
+| **Saved layout** | Groups and order travel with the workbook. |
+| **Hidden sheets** | Restore hidden worksheets when you need them. |
 
 ---
 
 ## Keyboard shortcuts
 
-| Action                  | macOS       | Windows          |
-| ----------------------- | ----------- | ---------------- |
-| Toggle panel            | `⌘` `⌥` `P` | `Ctrl` `Alt` `P` |
-| Focus search            | `⌘` `⌥` `O` | `Ctrl` `Alt` `O` |
-| New worksheet           | `⌘` `⌥` `N` | `Ctrl` `Alt` `N` |
-| Pick up / drop sheet    | `Space`     | `Space`          |
-| Navigate list           | `↑` `↓`     | `↑` `↓`          |
-| Open context menu       | `→`         | `→`              |
-| Expand / collapse group | `→` `←`     | `→` `←`          |
-| Activate sheet          | `⏎`         | `⏎`              |
+### Global (work anywhere in Excel)
+
+| Action        | macOS       | Windows          |
+| ------------- | ----------- | ---------------- |
+| Toggle panel  | `⌘` `⌥` `P` | `Ctrl` `Alt` `P` |
+| Focus search  | `⌘` `⌥` `O` | `Ctrl` `Alt` `O` |
+| New worksheet | `⌘` `⌥` `N` | `Ctrl` `Alt` `N` |
+
+### Inside the panel
+
+| Action                  | Key           |
+| ----------------------- | ------------- |
+| Navigate list           | `↑` `↓`       |
+| Activate sheet          | `Enter`       |
+| Open context menu       | `→`           |
+| Expand / collapse group | `→` / `←`     |
+| Pick up / drop sheet    | `Space`       |
+| Jump to first / last    | `Home` / `End` |
+| Clear focus / exit search | `Escape`    |
 
 ---
 
 ## Installation
 
-> **Prerequisite**: You need a Microsoft account (personal or work/school) to sideload add-ins.
+> You need a Microsoft account (personal or work/school) to sideload add-ins.
 
-All platforms use the same manifest file:
-**[Download `excel-navbar-plugin.xml`](https://valentinzurita.github.io/excel-navbar-plugin/excel-navbar-plugin.xml)**
+Download the manifest once for all platforms:
+**[excel-navbar-plugin.xml](https://valentinzurita.github.io/excel-navbar-plugin/excel-navbar-plugin.xml)**
 
 ### Excel on the Web
 
-1. Go to [office.com](https://office.com) and open Excel in your browser.
-2. Create or open a workbook.
-3. Click **Home → Add-ins → More Settings**.
-4. Select **Upload My Add-in**.
-5. Choose `excel-navbar-plugin.xml` and upload.
+1. Open [office.com](https://office.com) → Excel → create or open a workbook.
+2. Go to **Home → Add-ins → More Settings**.
+3. Select **Upload My Add-in** and choose `excel-navbar-plugin.xml`.
 
 ### Excel for Windows
 
-1. Open Excel Desktop and create a blank workbook.
+1. Open Excel and create a blank workbook.
 2. Go to **Home → Add-ins → My Add-ins**.
-3. Choose **Manage My Add-ins → Upload My Add-in**.
-4. Select `excel-navbar-plugin.xml` and upload.
-5. The Sheet Navigator task pane will open automatically.
+3. Choose **Manage My Add-ins → Upload My Add-in** and select `excel-navbar-plugin.xml`.
 
 ### Excel for Mac
 
 1. Open Excel and create a blank workbook.
 2. Go to **Home → Add-ins → My Add-ins**.
-3. Select **Manage My Add-ins → Upload My Add-in**.
-4. Choose `excel-navbar-plugin.xml` and upload.
+3. Choose **Manage My Add-ins → Upload My Add-in** and select `excel-navbar-plugin.xml`.
 
-> **Note for Mac users**: If the upload option does not appear, close Excel and copy `excel-navbar-plugin.xml` to:
+> **Mac fallback**: If upload is not available, close Excel and copy `excel-navbar-plugin.xml` to:
 >
 > ```
 > /Users/<username>/Library/Containers/com.microsoft.Excel/Data/Documents/wef
 > ```
 >
-> Then reopen Excel. The add-in will appear in the **Developer** section.
+> Reopen Excel — the add-in appears under **Developer**.
 
 ---
 
 ## Troubleshooting
 
-| Problem                                    | Solution                                                                                                                                   |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| "Upload My Add-in" option is missing (Mac) | Copy the manifest to the `wef` folder manually. See [Excel for Mac](#excel-for-mac) above.                                                 |
-| Add-in loads but shows a blank panel       | Check your internet connection. The task pane is a web app served from GitHub Pages.                                                       |
-| Keyboard shortcuts don't work              | Ensure the task pane is focused. Some shortcuts may conflict with system shortcuts on macOS.                                               |
-| Manifest validation fails                  | Download the manifest again from the [landing page](https://valentinzurita.github.io/excel-navbar-plugin/). Do not copy-paste the raw XML. |
+| Problem | What to try |
+| ------- | ----------- |
+| Upload option missing (Mac) | Use the `wef` folder path above. |
+| Blank panel after load | Check your internet connection — the pane loads from GitHub Pages. |
+| Shortcuts not working | Click inside the task pane first. On macOS, some combos may conflict with system shortcuts. |
+| Manifest validation fails | Re-download the file from the [landing page](https://valentinzurita.github.io/excel-navbar-plugin/). Do not copy-paste the XML. |
+| Layout not saved | Some workbook contexts only keep layout for the current session. Reopen the file and check whether groups persist. |
+| Local dev: certificate warning | Trust the dev certificate from `office-addin-dev-certs`, or run its install command when prompted. |
 
 ---
 
 ## Development
 
-### Quick start
-
 ```bash
-npm ci
-npm run dev
+pnpm install
+pnpm manifest:dev   # creates excel-navbar-plugin.xml for localhost
+pnpm dev            # serves at https://localhost:3000
 ```
 
-### Validation and quality checks
+Sideload the generated `excel-navbar-plugin.xml` in Excel to test.
 
 ```bash
-npm run test
-npm run quality
-npm run check:import-cycles
-npm run check:knip
+pnpm validate       # typecheck, lint, and tests
+pnpm package:release  # production bundle in dist/ (requires ADDIN_BASE_URL)
 ```
 
-### Production package
+For a release build, set the public URL first:
 
 ```bash
-npm run package:release
+ADDIN_BASE_URL=https://valentinzurita.github.io/excel-navbar-plugin pnpm package:release
 ```
 
-This generates the production bundle and `dist/excel-navbar-plugin.xml`.
-
----
-
-## Project status
-
-Actively evolving. Contributions, bug reports, and UX feedback are welcome.
+Bug reports and UX feedback are welcome on [GitHub Issues](https://github.com/ValentinZurita/excel-navbar-plugin/issues).
 
 ---
 
