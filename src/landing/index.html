@@ -10,6 +10,33 @@
     <meta name="theme-color" content="#107c41" />
     <title>Sheet Navigator — Excel Add-in</title>
 
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://valentinzurita.github.io/excel-navbar-plugin/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Sheet Navigator" />
+    <meta property="og:title" content="Sheet Navigator — Excel Add-in" />
+    <meta
+      property="og:description"
+      content="Hover previews, fuzzy search, groups, and keyboard-first sheet navigation for Excel."
+    />
+    <meta property="og:url" content="https://valentinzurita.github.io/excel-navbar-plugin/" />
+    <meta
+      property="og:image"
+      content="https://valentinzurita.github.io/excel-navbar-plugin/assets/icon.svg"
+    />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Sheet Navigator — Excel Add-in" />
+    <meta
+      name="twitter:description"
+      content="Hover previews, fuzzy search, groups, and keyboard-first sheet navigation for Excel."
+    />
+    <meta
+      name="twitter:image"
+      content="https://valentinzurita.github.io/excel-navbar-plugin/assets/icon.svg"
+    />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -210,11 +237,19 @@
                 </div>
                 <div class="shortcut-item">
                   <span class="key">→</span><span class="key">←</span>
-                  Expand / collapse
+                  Expand / collapse group
                 </div>
                 <div class="shortcut-item">
                   <span class="key">⏎</span>
                   Activate sheet
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">Home</span><span class="key">End</span>
+                  Jump to first / last
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">Esc</span>
+                  Clear focus / exit search
                 </div>
               </div>
             </section>
@@ -257,11 +292,19 @@
                 </div>
                 <div class="shortcut-item">
                   <span class="key">→</span><span class="key">←</span>
-                  Expand / collapse
+                  Expand / collapse group
                 </div>
                 <div class="shortcut-item">
                   <span class="key">⏎</span>
                   Activate sheet
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">Home</span><span class="key">End</span>
+                  Jump to first / last
+                </div>
+                <div class="shortcut-item">
+                  <span class="key">Esc</span>
+                  Clear focus / exit search
                 </div>
               </div>
             </section>
@@ -507,7 +550,9 @@
                     />
                   </svg>
                 </span>
-                <span>Q1 <mark>Rev</mark>enue</span>
+                <span class="search-result-copy">
+                  <span class="search-result-title">Q1 <mark>Rev</mark>enue</span>
+                </span>
               </div>
               <div class="search-result-row">
                 <span class="search-result-icon">
@@ -523,10 +568,12 @@
                     />
                   </svg>
                 </span>
-                <span>Q2 <mark>Rev</mark>enue</span>
+                <span class="search-result-copy">
+                  <span class="search-result-title">Q2 <mark>Rev</mark>enue</span>
+                </span>
               </div>
-              <div class="search-result-row search-result-group">
-                <span class="tp-folder tp-folder-green">
+              <div class="search-result-row">
+                <span class="search-result-leading group-color-green">
                   <svg
                     width="14"
                     height="14"
@@ -539,7 +586,10 @@
                     />
                   </svg>
                 </span>
-                <span><mark>Rev</mark>enue Models</span>
+                <span class="search-result-copy">
+                  <span class="search-result-title"><mark>Rev</mark>enue Models</span>
+                  <small class="search-result-meta">Financial</small>
+                </span>
               </div>
             </div>
           </div>
@@ -636,7 +686,8 @@
           </div>
           <h3>One add-in. Every Excel.</h3>
           <p class="install-intro">
-            Same workflow across Web, Windows, and Mac. Pick your platform and install in minutes.
+            Same workflow across Web, Windows, and Mac. You need a Microsoft account to sideload
+            add-ins. Pick your platform and install in minutes.
           </p>
 
           <div
@@ -815,11 +866,11 @@
                     Select <strong>Manage My Add-ins → Upload My Add-in</strong>, then upload
                     <code>excel-navbar-plugin.xml</code>.
                     <span class="install-step-note">
-                      If that option does not appear, close Excel and copy
+                      Mac fallback: if upload is not available, close Excel and copy
                       <code>excel-navbar-plugin.xml</code> to
                       <code
                         >/Users/&lt;username&gt;/Library/Containers/com.microsoft.Excel/Data/Documents/wef</code
-                      >, then reopen Excel.
+                      >. Reopen Excel — the add-in appears under <strong>Developer</strong>.
                     </span>
                   </div>
                 </li>
