@@ -830,6 +830,42 @@ body {
   overflow: visible;
 }
 
+.preview-taskpane-interactive {
+  position: relative;
+  overflow: hidden;
+  outline: none;
+}
+
+.preview-taskpane-interactive:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.preview-taskpane-live,
+.preview-taskpane-live-dark {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.50s var(--ease-out);
+}
+
+.preview-taskpane-mock,
+.bento-gif-mock {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  transition: opacity 0.50s var(--ease-out);
+}
+
 .preview-demo-compact .tp-sheet {
   position: relative;
   z-index: 0;
@@ -892,6 +928,71 @@ body {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* ============================================
+   BENTO GIF PLAYER SYSTEM
+   Reusable hover-to-play GIF with delay and smooth transition
+   ============================================ */
+
+.bento-gif-trigger {
+  position: relative;
+  overflow: hidden;
+}
+
+.bento-gif-player {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.50s var(--ease-out);
+
+  /* GPU-accelerated layer to prevent flash during first decode */
+  will-change: opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Estados del sistema — restringidos al tema activo para evitar mostrar GIFs del tema incorrecto */
+.bento-gif-trigger[data-gif-state="idle"] .bento-gif-mock,
+.bento-gif-trigger[data-gif-state="waiting"] .bento-gif-mock {
+  opacity: 1;
+}
+
+.bento-gif-trigger[data-gif-state="transitioning"] .bento-gif-mock,
+.bento-gif-trigger[data-gif-state="playing"] .bento-gif-mock {
+  opacity: 0;
+}
+
+/* Show only the active theme player when transitioning or playing */
+.bento-gif-trigger[data-active-gif-theme="light"][data-gif-state="transitioning"] .bento-gif-player[data-gif-theme="light"],
+.bento-gif-trigger[data-active-gif-theme="light"][data-gif-state="playing"] .bento-gif-player[data-gif-theme="light"],
+.bento-gif-trigger[data-active-gif-theme="dark"][data-gif-state="transitioning"] .bento-gif-player[data-gif-theme="dark"],
+.bento-gif-trigger[data-active-gif-theme="dark"][data-gif-state="playing"] .bento-gif-player[data-gif-theme="dark"] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview-taskpane-live,
+  .preview-taskpane-live-dark,
+  .bento-gif-player {
+    display: none;
+  }
+
+  .preview-taskpane-mock,
+  .bento-gif-mock,
+  .preview-taskpane-live,
+  .preview-taskpane-live-dark,
+  .bento-gif-player {
+    transition: none;
+  }
 }
 
 [data-theme='dark'] .preview-popover {

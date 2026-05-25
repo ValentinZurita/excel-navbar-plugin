@@ -116,9 +116,188 @@
     activate(activeButton.dataset.shortcutsTarget);
   }
 
+  function initBentoGifTriggers() {
+    const triggers = document.querySelectorAll('.bento-gif-trigger');
+    if (!triggers.length) return;
+
+    const triggerStates = new WeakMap();
+
+    // Preload all GIFs so they are decoded and ready before any transition
+    triggers.forEach((trigger) => {
+      trigger.querySelectorAll('.bento-gif-player').forEach((img) => {
+        const src = img.getAttribute('src');
+        if (src) {
+          const preloadImg = new Image();
+          preloadImg.src = src;
+        }
+      });
+    });
+
+    triggers.forEach((trigger) => {
+      const delay = parseInt(trigger.dataset.gifDelay, 10) || 750;
+      const transitionMs = parseInt(trigger.dataset.gifTransition, 10) || 500;
+      const duration = parseInt(trigger.dataset.gifDuration, 10) || 3000;
+
+      trigger.dataset.gifState = 'idle';
+      triggerStates.set(trigger, {
+        waitTimer: null,
+        transitionTimer: null,
+        durationTimer: null,
+        activePlayer: null,
+      });
+
+      const getActivePlayer = () => {
+        const theme = document.documentElement.getAttribute('data-theme') || 'light';
+        return (
+          trigger.querySelector(`.bento-gif-player[data-gif-theme="${theme}"]`) ||
+          trigger.querySelector('.bento-gif-player')
+        );
+      };
+
+      /**
+       * Clone-swap restart: prevents the empty-frame flash by working on a
+       * detached clone. The visible img is only replaced once the clone's
+       * first frame is fully decoded.
+       */
+      const restartGif = (img, callback) => {
+        if (!img) {
+          callback(null);
+          return;
+        }
+        const src = img.getAttribute('src');
+        if (!src) {
+          callback(null);
+          return;
+        }
+
+        let resolved = false;
+        const resolve = (clone) => {
+          if (resolved) return;
+          resolved = true;
+          callback(clone);
+        };
+
+        const clone = img.cloneNode(true);
+        clone.removeAttribute('src');
+
+        const onCloneLoad = () => {
+          clone.removeEventListener('load', onCloneLoad);
+          img.replaceWith(clone);
+          resolve(clone);
+        };
+
+        clone.addEventListener('load', onCloneLoad);
+        clone.setAttribute('src', src);
+
+        // Fallback for cached images where load may not fire
+        setTimeout(() => {
+          clone.removeEventListener('load', onCloneLoad);
+          if (img.parentNode) {
+            img.replaceWith(clone);
+          }
+          resolve(clone);
+        }, 200);
+      };
+
+      const clearAllTimers = (state) => {
+        if (state.waitTimer) {
+          clearTimeout(state.waitTimer);
+          state.waitTimer = null;
+        }
+        if (state.transitionTimer) {
+          clearTimeout(state.transitionTimer);
+          state.transitionTimer = null;
+        }
+        if (state.durationTimer) {
+          clearTimeout(state.durationTimer);
+          state.durationTimer = null;
+        }
+      };
+
+      const startCycle = () => {
+        const state = triggerStates.get(trigger);
+        if (!state) return;
+
+        // Only start from idle; prevents auto-restart if mouse never left
+        if (trigger.dataset.gifState !== 'idle') return;
+
+        clearAllTimers(state);
+        state.activePlayer = getActivePlayer();
+
+        if (!state.activePlayer) {
+          trigger.dataset.gifState = 'idle';
+          return;
+        }
+
+        // Mark which theme player is active so CSS only shows the right one
+        trigger.dataset.activeGifTheme = state.activePlayer.dataset.gifTheme || '';
+
+        // 1. Waiting phase (mock visible, user waits)
+        trigger.dataset.gifState = 'waiting';
+        state.waitTimer = setTimeout(() => {
+          state.waitTimer = null;
+
+          // 2. Restart GIF via clone swap (no empty-frame flash)
+          restartGif(state.activePlayer, (newImg) => {
+            if (newImg) {
+              state.activePlayer = newImg;
+            }
+
+            // Ensure the first decoded frame has been painted before revealing
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                // 3. Transitioning in (mock fades out, GIF fades in)
+                trigger.dataset.gifState = 'transitioning';
+
+                state.transitionTimer = setTimeout(() => {
+                  state.transitionTimer = null;
+
+                  // 4. Playing phase (GIF visible and running)
+                  trigger.dataset.gifState = 'playing';
+
+                  state.durationTimer = setTimeout(() => {
+                    state.durationTimer = null;
+
+                    // 5. Back to idle (GIF fades out, mock fades in)
+                    trigger.dataset.gifState = 'idle';
+                    trigger.removeAttribute('data-active-gif-theme');
+                  }, duration);
+                }, transitionMs);
+              });
+            });
+          });
+        }, delay);
+      };
+
+      const endCycle = () => {
+        const state = triggerStates.get(trigger);
+        if (!state) return;
+        clearAllTimers(state);
+        trigger.dataset.gifState = 'idle';
+        trigger.removeAttribute('data-active-gif-theme');
+      };
+
+      const handleFocusIn = (event) => {
+        if (trigger.contains(event.relatedTarget)) return;
+        startCycle();
+      };
+
+      const handleFocusOut = (event) => {
+        if (trigger.contains(event.relatedTarget)) return;
+        endCycle();
+      };
+
+      trigger.addEventListener('mouseenter', startCycle);
+      trigger.addEventListener('mouseleave', endCycle);
+      trigger.addEventListener('focusin', handleFocusIn);
+      trigger.addEventListener('focusout', handleFocusOut);
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     initThemeToggle();
     initInstallSelector();
     initShortcutsSelector();
+    initBentoGifTriggers();
   });
 })();
