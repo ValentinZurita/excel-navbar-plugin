@@ -27,7 +27,7 @@ Native Excel tabs get messy fast in large workbooks. Sheet Navigator is a task p
 | ------- | ------------ |
 | **Sheet preview** | Hover a sheet to see a live thumbnail before you switch — no more opening the wrong tab. |
 | **Keyboard-first** | Global shortcuts from anywhere in Excel; inside the pane, navigate, activate, and drag with keys alone. |
-| **Search** | Type a few letters and jump to any sheet by name, even in workbooks with dozens of tabs. |
+| **Search** | Fuzzy filter by name — type scattered letters and jump to the right sheet |
 | **Groups** | Collapsible, color-coded folders so related sheets stay together. |
 | **Drag & drop** | Reorder sheets and move them between groups with mouse or keyboard; drop indicators show where they'll land. |
 

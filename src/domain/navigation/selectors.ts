@@ -1,3 +1,9 @@
+import {
+  compareFuzzySearchMatches,
+  fuzzySearchMatch,
+  normalizeSearchQuery,
+  type FuzzySearchMatch,
+} from './fuzzySearch';
 import { byWorkbookOrder } from './utils';
 import type {
   NavigationState,
@@ -7,15 +13,12 @@ import type {
   WorksheetEntity,
 } from './types';
 
-function normalizeSearchValue(value: string) {
-  return value.trim().toLocaleLowerCase();
-}
-
-function matchesSearch(query: string, worksheet: WorksheetEntity) {
-  return normalizeSearchValue(worksheet.name).includes(query);
-}
-
 export type NavigatorStructureView = Omit<NavigatorView, 'searchResults'>;
+
+interface ScoredWorksheetSearchMatch {
+  worksheet: WorksheetEntity;
+  match: FuzzySearchMatch;
+}
 
 function splitWorksheets(state: NavigationState) {
   const worksheets = Object.values(state.worksheetsById);
@@ -54,6 +57,54 @@ function splitWorksheets(state: NavigationState) {
     groupedVisibleWorksheetsByGroupId,
     pinnedVisibleWorksheets,
     ungroupedVisibleWorksheets,
+  };
+}
+
+function scoreVisibleWorksheetsForSearch(
+  worksheets: WorksheetEntity[],
+  query: string,
+): ScoredWorksheetSearchMatch[] {
+  return worksheets.flatMap((worksheet) => {
+    const match = fuzzySearchMatch(worksheet.name, query);
+
+    if (!match) {
+      return [];
+    }
+
+    return [{ worksheet, match }];
+  });
+}
+
+function compareScoredWorksheetSearchMatches(
+  left: ScoredWorksheetSearchMatch,
+  right: ScoredWorksheetSearchMatch,
+): number {
+  const scoreComparison = compareFuzzySearchMatches(left.match, right.match);
+
+  if (scoreComparison !== 0) {
+    return scoreComparison;
+  }
+
+  return byWorkbookOrder(left.worksheet, right.worksheet);
+}
+
+function toSearchResultItem(
+  state: NavigationState,
+  entry: ScoredWorksheetSearchMatch,
+): SearchResultItem {
+  const { worksheet, match } = entry;
+
+  return {
+    worksheetId: worksheet.worksheetId,
+    name: worksheet.name,
+    visibility: worksheet.visibility,
+    isPinned: worksheet.isPinned,
+    isGrouped: worksheet.groupId !== null,
+    groupName: worksheet.groupId ? (state.groupsById[worksheet.groupId]?.name ?? null) : null,
+    groupColor: worksheet.groupId
+      ? (state.groupsById[worksheet.groupId]?.colorToken ?? null)
+      : null,
+    matchedIndices: match.matchedIndices,
   };
 }
 
@@ -142,7 +193,7 @@ export function buildNavigatorStructure(state: NavigationState): NavigatorStruct
 }
 
 export function buildSearchResults(state: NavigationState): SearchResultItem[] {
-  const query = normalizeSearchValue(state.query);
+  const query = normalizeSearchQuery(state.query);
 
   if (!query) {
     return [];
@@ -150,22 +201,9 @@ export function buildSearchResults(state: NavigationState): SearchResultItem[] {
 
   const { visibleWorksheets } = splitWorksheets(state);
 
-  const searchResults = visibleWorksheets
-    .filter((worksheet) => matchesSearch(query, worksheet))
-    .sort(byWorkbookOrder)
-    .map<SearchResultItem>((worksheet) => ({
-      worksheetId: worksheet.worksheetId,
-      name: worksheet.name,
-      visibility: worksheet.visibility,
-      isPinned: worksheet.isPinned,
-      isGrouped: worksheet.groupId !== null,
-      groupName: worksheet.groupId ? (state.groupsById[worksheet.groupId]?.name ?? null) : null,
-      groupColor: worksheet.groupId
-        ? (state.groupsById[worksheet.groupId]?.colorToken ?? null)
-        : null,
-    }));
-
-  return searchResults;
+  return scoreVisibleWorksheetsForSearch(visibleWorksheets, query)
+    .sort(compareScoredWorksheetSearchMatches)
+    .map((entry) => toSearchResultItem(state, entry));
 }
 
 export function buildNavigatorView(state: NavigationState): NavigatorView {

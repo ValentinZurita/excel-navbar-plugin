@@ -142,6 +142,8 @@ export interface SearchResultItem {
   isGrouped: boolean;
   groupName: string | null;
   groupColor?: GroupColorToken | null;
+  /** Character indices in `name` that matched the current query. */
+  matchedIndices: number[];
 }
 
 export interface NavigatorGroupView {

@@ -1203,6 +1203,7 @@ describe('TaskpaneSections', () => {
         isPinned: false,
         isGrouped: false,
         groupName: null,
+        matchedIndices: [0, 1],
       },
       {
         worksheetId: 'sheet-2',
@@ -1211,6 +1212,7 @@ describe('TaskpaneSections', () => {
         isPinned: false,
         isGrouped: false,
         groupName: null,
+        matchedIndices: [],
       },
       {
         worksheetId: 'sheet-3',
@@ -1219,6 +1221,7 @@ describe('TaskpaneSections', () => {
         isPinned: false,
         isGrouped: false,
         groupName: null,
+        matchedIndices: [],
       },
     ];
 
@@ -1313,6 +1316,7 @@ describe('TaskpaneSections', () => {
         isPinned: false,
         isGrouped: false,
         groupName: null,
+        matchedIndices: [0, 1, 2],
       },
       {
         worksheetId: 'sheet-2',
@@ -1321,6 +1325,7 @@ describe('TaskpaneSections', () => {
         isPinned: false,
         isGrouped: false,
         groupName: null,
+        matchedIndices: [],
       },
     ];
 

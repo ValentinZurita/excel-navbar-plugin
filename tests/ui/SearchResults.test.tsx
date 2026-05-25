@@ -18,6 +18,7 @@ describe('SearchResults', () => {
             isPinned: false,
             isGrouped: true,
             groupName: 'Finance',
+            matchedIndices: [0, 1, 2],
           },
         ]}
         onSelect={onSelect}
@@ -41,6 +42,7 @@ describe('SearchResults', () => {
             isPinned: false,
             isGrouped: true,
             groupName: 'Finance',
+            matchedIndices: [0, 1, 2],
           },
         ]}
         onSelect={() => undefined}
@@ -62,6 +64,7 @@ describe('SearchResults', () => {
             isPinned: true,
             isGrouped: false,
             groupName: null,
+            matchedIndices: [],
           },
         ]}
         onSelect={() => undefined}
@@ -83,6 +86,7 @@ describe('SearchResults', () => {
             isPinned: false,
             isGrouped: false,
             groupName: null,
+            matchedIndices: [],
           },
         ]}
         onSelect={() => undefined}
@@ -104,6 +108,7 @@ describe('SearchResults', () => {
             isPinned: false,
             isGrouped: false,
             groupName: null,
+            matchedIndices: [],
           },
           {
             worksheetId: 'sheet-b',
@@ -112,6 +117,7 @@ describe('SearchResults', () => {
             isPinned: false,
             isGrouped: false,
             groupName: null,
+            matchedIndices: [],
           },
         ]}
         onSelect={() => undefined}
@@ -137,6 +143,7 @@ describe('SearchResults', () => {
             isPinned: true,
             isGrouped: true,
             groupName: 'Finance',
+            matchedIndices: [],
           },
         ]}
         onSelect={() => undefined}
@@ -145,5 +152,28 @@ describe('SearchResults', () => {
     );
 
     expect(container.querySelector('.search-result-icon-hidden')).toBeTruthy();
+  });
+
+  it('highlights matched characters in result titles', () => {
+    const { container } = render(
+      <SearchResults
+        results={[
+          {
+            worksheetId: 'sheet-1',
+            name: 'Revenue',
+            visibility: 'Visible',
+            isPinned: false,
+            isGrouped: false,
+            groupName: null,
+            matchedIndices: [0, 1, 2],
+          },
+        ]}
+        onSelect={() => undefined}
+        focusedItemId={null}
+      />,
+    );
+
+    const mark = container.querySelector('.sheet-title mark');
+    expect(mark).toHaveTextContent('Rev');
   });
 });

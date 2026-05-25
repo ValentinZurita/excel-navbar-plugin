@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { buildSearchHighlightSegments } from '../../../domain/navigation/searchHighlight';
 import type { SearchResultItem } from '../../../domain/navigation/types';
 import { FAST_DOUBLE_CLICK_RENAME_MS } from '../../constants/interactionTiming';
 import { EyeOffIcon, GroupFolderIcon, WorksheetIcon, WorksheetPinIcon } from '../../icons';
@@ -178,6 +179,7 @@ function SearchResultItemComponent({
       ref={buttonRef}
       className="search-result"
       type="button"
+      aria-label={result.groupName ? `${result.name}, ${result.groupName}` : result.name}
       data-navigable-id={itemId}
       data-active-worksheet={isActiveWorksheet ? 'true' : undefined}
       data-focused={isFocused}
@@ -212,7 +214,15 @@ function SearchResultItemComponent({
         {renderIcon(result)}
       </span>
       <span className="search-result-copy">
-        <span className="sheet-title">{result.name}</span>
+        <span className="sheet-title">
+          {buildSearchHighlightSegments(result.name, result.matchedIndices).map((segment, index) =>
+            segment.highlighted ? (
+              <mark key={`${index}-${segment.text}`}>{segment.text}</mark>
+            ) : (
+              segment.text
+            ),
+          )}
+        </span>
         {result.groupName ? <small className="search-result-meta">{result.groupName}</small> : null}
       </span>
     </button>

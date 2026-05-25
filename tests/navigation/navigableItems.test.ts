@@ -34,6 +34,7 @@ function createSearchResult(id: string, name: string): SearchResultItem {
     isPinned: false,
     isGrouped: false,
     groupName: null,
+    matchedIndices: [],
   };
 }
 

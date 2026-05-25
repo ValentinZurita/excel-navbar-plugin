@@ -70,6 +70,32 @@ describe('buildNavigatorView', () => {
     expect(view.ungrouped.map((item) => item.worksheetId)).toEqual(['three', 'one', 'two']);
   });
 
+  it('sorts fuzzy search results by match quality before workbook order', () => {
+    const state = createDefaultNavigationState();
+    state.query = 'rev';
+    state.worksheetsById = {
+      one: worksheet({ worksheetId: 'one', name: 'Previous', workbookOrder: 0 }),
+      two: worksheet({ worksheetId: 'two', name: 'Revenue', workbookOrder: 1 }),
+    };
+
+    expect(buildSearchResults(state).map((result) => result.worksheetId)).toEqual(['two', 'one']);
+  });
+
+  it('matches fuzzy subsequence queries', () => {
+    const state = createDefaultNavigationState();
+    state.query = 'rvn';
+    state.worksheetsById = {
+      one: worksheet({ worksheetId: 'one', name: 'Revenue', workbookOrder: 0 }),
+    };
+
+    expect(buildSearchResults(state)).toEqual([
+      expect.objectContaining({
+        worksheetId: 'one',
+        matchedIndices: [0, 2, 4],
+      }),
+    ]);
+  });
+
   it('returns search results with subtle group context', () => {
     const state = createDefaultNavigationState();
     state.query = 'rev';
@@ -90,6 +116,7 @@ describe('buildNavigatorView', () => {
         isGrouped: true,
         groupName: 'Finance',
         groupColor: 'blue',
+        matchedIndices: [0, 1, 2],
       },
     ]);
   });

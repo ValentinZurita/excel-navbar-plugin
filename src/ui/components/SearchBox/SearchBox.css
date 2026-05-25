@@ -168,6 +168,12 @@
   transition: color 250ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.search-results-wrapper .search-result .sheet-title mark {
+  background: none;
+  color: var(--excel-nav-active-fg);
+  font-weight: 600;
+}
+
 /* Active workbook sheet: same Excel green as navigator rows (SheetRow). */
 .search-results-wrapper .search-result[data-active-worksheet='true'] .sheet-title {
   color: var(--excel-nav-active-fg);
