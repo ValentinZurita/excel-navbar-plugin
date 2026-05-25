@@ -18,14 +18,31 @@ import type {
   BannerState,
   GroupColorToken,
   GroupEntity,
+  PersistedNavigationModel,
   PersistenceStatus,
   WorkbookPersistenceContext,
 } from '../../domain/navigation/types';
 import { WorkbookSyncCoordinator } from './WorkbookSyncCoordinator';
+import { waitForOfficeRuntime } from '../../infrastructure/office/waitForOfficeRuntime';
+import type { PersistenceReadOutcome } from '../../domain/navigation/types';
 
 const adapter = new OfficeWorkbookAdapter();
 const persistence = new NavigationPersistence();
 const persistenceSaveDebounceMs = 500;
+const persistenceLoadMaxAttempts = 4;
+const persistenceLoadRetryBaseMs = 250;
+const persistenceRecoveryIntervalMs = 3000;
+
+const persistenceReadFailedBanner: BannerState = {
+  tone: 'warning',
+  message: 'Saved sheet layout is not available yet. Your groups are safe — we will keep retrying.',
+};
+
+function delay(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
 
 export function useNavigationController() {
   const { state, dispatch, navigatorView } = useNavigationContext();
@@ -33,7 +50,9 @@ export function useNavigationController() {
   const [banner, setBanner] = useState<BannerState | null>(null);
   const [isSessionOnlyPersistence, setIsSessionOnlyPersistence] = useState(false);
   const [workbookChangeToken, setWorkbookChangeToken] = useState(0);
+  const [persistenceReadFailed, setPersistenceReadFailed] = useState(false);
   const hasLoaded = useRef(false);
+  const persistenceWriteEnabledRef = useRef(false);
   const latestStateRef = useRef(state);
   const persistenceContextRef = useRef<WorkbookPersistenceContext | null>(null);
   const latestPersistedModelRef = useRef(toPersistedModel(state));
@@ -109,6 +128,61 @@ export function useNavigationController() {
     return nextContext;
   }, []);
 
+  const applyPersistenceLoadResult = useCallback(
+    (
+      loadedPersistedModel: PersistedNavigationModel | null,
+      status: Pick<PersistenceStatus, 'mode' | 'banner'>,
+      readOutcome: PersistenceReadOutcome,
+    ) => {
+      if (readOutcome !== 'failed') {
+        dispatch({ type: 'hydrateFromPersistence', model: loadedPersistedModel });
+        lastOwnSavedUpdatedAtRef.current = loadedPersistedModel?.updatedAt ?? 0;
+        persistenceWriteEnabledRef.current = true;
+        setPersistenceReadFailed(false);
+        applyPersistenceStatus(status);
+        return;
+      }
+
+      persistenceWriteEnabledRef.current = false;
+      setPersistenceReadFailed(true);
+      setBanner(persistenceReadFailedBanner);
+    },
+    [applyPersistenceStatus, dispatch],
+  );
+
+  const tryRecoverPersistenceLayout = useCallback(async () => {
+    if (persistenceWriteEnabledRef.current) {
+      return;
+    }
+
+    const persistenceContext = persistenceContextRef.current;
+    if (!persistenceContext || persistenceContext.mode !== 'stable') {
+      return;
+    }
+
+    try {
+      const snapshot = await adapter.getWorkbookSnapshot();
+      const {
+        model: loadedPersistedModel,
+        status,
+        readOutcome,
+      } = await persistence.load(persistenceContext, snapshot);
+
+      dispatch({ type: 'hydrateFromWorkbook', snapshot });
+
+      if (readOutcome === 'failed') {
+        return;
+      }
+
+      applyPersistenceLoadResult(loadedPersistedModel, status, readOutcome);
+      setBanner((currentBanner) =>
+        currentBanner?.message === persistenceReadFailedBanner.message ? null : currentBanner,
+      );
+    } catch {
+      // Keep retrying silently until persistence becomes readable.
+    }
+  }, [applyPersistenceLoadResult, dispatch]);
+
   const performWorkbookSync = useCallback(async () => {
     const previousContext = persistenceContextRef.current;
     const [snapshot, persistenceContext] = await Promise.all([
@@ -124,6 +198,10 @@ export function useNavigationController() {
       Boolean(persistenceContext.stableWorkbookKey);
 
     if (transitionedToStable) {
+      if (!persistenceWriteEnabledRef.current) {
+        return;
+      }
+
       const { status, savedUpdatedAt } = await persistence.save(
         persistenceContext,
         latestPersistedModelRef.current,
@@ -150,7 +228,14 @@ export function useNavigationController() {
     }
 
     try {
-      const { model: loadedModel } = await persistence.load(persistenceContext, snapshot);
+      const { model: loadedModel, readOutcome } = await persistence.load(
+        persistenceContext,
+        snapshot,
+      );
+      if (readOutcome === 'failed') {
+        return;
+      }
+
       if (
         loadedModel &&
         loadedModel.updatedAt > lastOwnSavedUpdatedAtRef.current &&
@@ -194,39 +279,78 @@ export function useNavigationController() {
     setIsBusy(true);
     isBusyRef.current = true;
     setBanner(null);
+    persistenceWriteEnabledRef.current = false;
+    setPersistenceReadFailed(false);
 
     try {
-      const [snapshot, persistenceContext] = await Promise.all([
-        adapter.getWorkbookSnapshot(),
-        resolvePersistenceContext({ forceRefresh: true }),
-      ]);
-      const { model: loadedPersistedModel, status } = await persistence.load(
-        persistenceContext,
-        snapshot,
-      );
-      dispatch({ type: 'hydrateFromWorkbook', snapshot });
-      dispatch({ type: 'hydrateFromPersistence', model: loadedPersistedModel });
-      lastOwnSavedUpdatedAtRef.current = loadedPersistedModel?.updatedAt ?? 0;
-      applyPersistenceStatus(status);
+      await waitForOfficeRuntime();
+
+      for (let attempt = 1; attempt <= persistenceLoadMaxAttempts; attempt += 1) {
+        try {
+          const [snapshot, persistenceContext] = await Promise.all([
+            adapter.getWorkbookSnapshot(),
+            resolvePersistenceContext({ forceRefresh: true }),
+          ]);
+          const {
+            model: loadedPersistedModel,
+            status,
+            readOutcome,
+          } = await persistence.load(persistenceContext, snapshot);
+
+          dispatch({ type: 'hydrateFromWorkbook', snapshot });
+          applyPersistenceLoadResult(loadedPersistedModel, status, readOutcome);
+          hasLoaded.current = true;
+
+          if (readOutcome !== 'failed') {
+            return;
+          }
+
+          if (attempt < persistenceLoadMaxAttempts) {
+            await delay(persistenceLoadRetryBaseMs * attempt);
+          }
+        } catch (error) {
+          if (attempt === persistenceLoadMaxAttempts) {
+            setIsSessionOnlyPersistence(false);
+            setBanner({
+              tone: 'error',
+              message: error instanceof Error ? error.message : 'Unable to load workbook state.',
+            });
+            return;
+          }
+
+          await delay(persistenceLoadRetryBaseMs * attempt);
+        }
+      }
+
       hasLoaded.current = true;
-    } catch (error) {
-      setIsSessionOnlyPersistence(false);
-      setBanner({
-        tone: 'error',
-        message: error instanceof Error ? error.message : 'Unable to load workbook state.',
-      });
+      setPersistenceReadFailed(true);
+      setBanner(persistenceReadFailedBanner);
     } finally {
       setIsBusy(false);
       isBusyRef.current = false;
     }
-  }, [applyPersistenceStatus, dispatch, resolvePersistenceContext]);
+  }, [applyPersistenceLoadResult, dispatch, resolvePersistenceContext]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
   useEffect(() => {
-    if (!hasLoaded.current) {
+    if (!persistenceReadFailed) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void tryRecoverPersistenceLayout();
+    }, persistenceRecoveryIntervalMs);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [persistenceReadFailed, tryRecoverPersistenceLayout]);
+
+  useEffect(() => {
+    if (!hasLoaded.current || !persistenceWriteEnabledRef.current) {
       return;
     }
 

@@ -14,6 +14,7 @@ import type {
 import { WorksheetCreateError, WorksheetDeleteError } from './WorkbookAdapter';
 import { createMockWorkbookSnapshot } from './mockWorkbookSnapshot';
 import { measureOfficeOperation } from './OfficePerformanceMetrics';
+import { isOfficeHostReady } from './waitForOfficeRuntime';
 import { WorksheetIdentityRepository } from './WorksheetIdentityRepository';
 
 const worksheetIdentityRepository = new WorksheetIdentityRepository();
@@ -23,7 +24,7 @@ const excelWorksheetRowCount = 1_048_576;
 const excelWorksheetColumnCount = 16_384;
 
 export function hasOfficeRuntime() {
-  return typeof Office !== 'undefined' && typeof Excel !== 'undefined';
+  return isOfficeHostReady();
 }
 
 function hasOfficeDocument() {

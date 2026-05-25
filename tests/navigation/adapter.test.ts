@@ -5,6 +5,7 @@ import {
   WorksheetCreateError,
   WorksheetDeleteError,
 } from '../../src/infrastructure/office/WorkbookAdapter';
+import { mockExcelOffice } from '../helpers/mockExcelOffice';
 
 // Type references for mock-drift detection:
 // Excel.RequestContext and Excel.Worksheet are used as types in the source.
@@ -28,7 +29,7 @@ describe('OfficeWorkbookAdapter.hideWorksheet', () => {
     const sync = vi.fn(async () => undefined);
 
     // hasOfficeRuntime() requires both globals to exist.
-    globalThis.Office = {} as any;
+    globalThis.Office = mockExcelOffice() as any;
     globalThis.Excel = {
       run: vi.fn(async (callback: (context: any) => Promise<void>) => {
         const context = {
@@ -56,7 +57,7 @@ describe('OfficeWorkbookAdapter.hideWorksheet', () => {
     const worksheet = { id: 'sheet-1', visibility: 'VeryHidden' as const };
     const sync = vi.fn(async () => undefined);
 
-    globalThis.Office = {} as any;
+    globalThis.Office = mockExcelOffice() as any;
     globalThis.Excel = {
       run: vi.fn(async (callback: (context: any) => Promise<void>) => {
         const context = {
@@ -137,7 +138,7 @@ describe('OfficeWorkbookAdapter.getWorkbookSnapshot', () => {
     };
     const sync = vi.fn(async () => undefined);
 
-    globalThis.Office = {
+    globalThis.Office = mockExcelOffice({
       context: {
         requirements: {
           isSetSupported: vi.fn((set: string, version: string) => {
@@ -145,7 +146,7 @@ describe('OfficeWorkbookAdapter.getWorkbookSnapshot', () => {
           }),
         },
       },
-    } as any;
+    }) as any;
     globalThis.Excel = {
       run: vi.fn(async (callback: (context: any) => Promise<void>) => {
         const context = {
@@ -201,7 +202,7 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
 
   it('returns a stable context from Office.context.document.url when available', async () => {
     // Mocks Office.context.document.url
-    globalThis.Office = {
+    globalThis.Office = mockExcelOffice({
       // Mocks Office.AsyncResultStatus.Failed
       AsyncResultStatus: { Failed: 'failed' },
       context: {
@@ -210,7 +211,7 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
           settings: {},
         },
       },
-    } as any;
+    }) as any;
 
     const adapter = new OfficeWorkbookAdapter();
 
@@ -227,7 +228,7 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
 
   it('falls back to file properties url when Office.context.document.url is missing', async () => {
     // Mocks Office.context.document.getFilePropertiesAsync and Office.AsyncResultStatus.Failed
-    globalThis.Office = {
+    globalThis.Office = mockExcelOffice({
       AsyncResultStatus: { Failed: 'failed', Succeeded: 'succeeded' },
       context: {
         document: {
@@ -241,7 +242,7 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
           }),
         },
       },
-    } as any;
+    }) as any;
 
     const adapter = new OfficeWorkbookAdapter();
 
@@ -257,7 +258,7 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
   });
 
   it('returns session-only when no stable workbook url is available', async () => {
-    globalThis.Office = {
+    globalThis.Office = mockExcelOffice({
       AsyncResultStatus: { Failed: 'failed', Succeeded: 'succeeded' },
       context: {
         document: {
@@ -271,7 +272,7 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
           }),
         },
       },
-    } as any;
+    }) as any;
 
     const adapter = new OfficeWorkbookAdapter();
 
@@ -291,7 +292,7 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
       return set === 'ExcelApi' && version === '1.17';
     });
 
-    globalThis.Office = {
+    globalThis.Office = mockExcelOffice({
       AsyncResultStatus: { Failed: 'failed' },
       context: {
         document: {
@@ -302,7 +303,7 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
           isSetSupported,
         },
       },
-    } as any;
+    }) as any;
 
     const adapter = new OfficeWorkbookAdapter();
     const context = await adapter.getPersistenceContext();
@@ -316,7 +317,7 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
   });
 
   it('returns false capabilities when Office.context.requirements is unavailable', async () => {
-    globalThis.Office = {
+    globalThis.Office = mockExcelOffice({
       AsyncResultStatus: { Failed: 'failed' },
       context: {
         document: {
@@ -325,7 +326,7 @@ describe('OfficeWorkbookAdapter.getPersistenceContext', () => {
         },
         // No requirements object
       },
-    } as any;
+    }) as any;
 
     const adapter = new OfficeWorkbookAdapter();
     const context = await adapter.getPersistenceContext();
@@ -348,13 +349,13 @@ describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
   it('returns api-unsupported when ExcelApi 1.7 is unavailable', async () => {
     const isSetSupported = vi.fn(() => false);
 
-    globalThis.Office = {
+    globalThis.Office = mockExcelOffice({
       context: {
         requirements: {
           isSetSupported,
         },
       },
-    } as any;
+    }) as any;
     globalThis.Excel = {
       run: vi.fn(),
     } as any;
@@ -391,7 +392,7 @@ describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
     };
     const sync = vi.fn(async () => undefined);
 
-    globalThis.Office = {
+    globalThis.Office = mockExcelOffice({
       context: {
         requirements: {
           isSetSupported: vi.fn((set: string, version: string) => {
@@ -399,7 +400,7 @@ describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
           }),
         },
       },
-    } as any;
+    }) as any;
     globalThis.Excel = {
       run: vi.fn(async (callback: (context: any) => Promise<void>) => {
         const context = {
@@ -433,7 +434,7 @@ describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
   it('returns worksheet-not-found when the worksheet cannot be resolved', async () => {
     const sync = vi.fn(async () => undefined);
 
-    globalThis.Office = {
+    globalThis.Office = mockExcelOffice({
       context: {
         requirements: {
           isSetSupported: vi.fn((set: string, version: string) => {
@@ -441,7 +442,7 @@ describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
           }),
         },
       },
-    } as any;
+    }) as any;
     globalThis.Excel = {
       run: vi.fn(async (callback: (context: any) => Promise<void>) => {
         const context = {
@@ -482,7 +483,7 @@ describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
     };
     const sync = vi.fn(async () => undefined);
 
-    globalThis.Office = {
+    globalThis.Office = mockExcelOffice({
       context: {
         requirements: {
           isSetSupported: vi.fn((set: string, version: string) => {
@@ -490,7 +491,7 @@ describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
           }),
         },
       },
-    } as any;
+    }) as any;
     globalThis.Excel = {
       run: vi.fn(async (callback: (context: any) => Promise<void>) => {
         const context = {
@@ -540,7 +541,7 @@ describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
     };
     const sync = vi.fn(async () => undefined);
 
-    globalThis.Office = {
+    globalThis.Office = mockExcelOffice({
       context: {
         requirements: {
           isSetSupported: vi.fn((set: string, version: string) => {
@@ -548,7 +549,7 @@ describe('OfficeWorkbookAdapter.getWorksheetPreview', () => {
           }),
         },
       },
-    } as any;
+    }) as any;
     globalThis.Excel = {
       run: vi.fn(async (callback: (context: any) => Promise<void>) => {
         const context = {
@@ -594,7 +595,7 @@ describe('OfficeWorkbookAdapter.deleteWorksheet', () => {
     ];
     const sync = vi.fn(async () => undefined);
 
-    globalThis.Office = {} as any;
+    globalThis.Office = mockExcelOffice() as any;
     globalThis.Excel = {
       run: vi.fn(async (callback: (context: any) => Promise<void>) => {
         const context = {
@@ -626,7 +627,7 @@ describe('OfficeWorkbookAdapter.deleteWorksheet', () => {
     ];
     const sync = vi.fn(async () => undefined);
 
-    globalThis.Office = {} as any;
+    globalThis.Office = mockExcelOffice() as any;
     globalThis.Excel = {
       run: vi.fn(async (callback: (context: any) => Promise<void>) => {
         const context = {
@@ -666,7 +667,7 @@ describe('OfficeWorkbookAdapter.deleteWorksheet', () => {
     ];
     const sync = vi.fn(async () => undefined);
 
-    globalThis.Office = {} as any;
+    globalThis.Office = mockExcelOffice() as any;
     globalThis.Excel = {
       run: vi.fn(async (callback: (context: any) => Promise<void>) => {
         const context = {
@@ -696,7 +697,7 @@ describe('OfficeWorkbookAdapter.deleteWorksheet', () => {
     ];
     const sync = vi.fn(async () => undefined);
 
-    globalThis.Office = {} as any;
+    globalThis.Office = mockExcelOffice() as any;
     globalThis.Excel = {
       run: vi.fn(async (callback: (context: any) => Promise<void>) => {
         const context = {
@@ -756,7 +757,7 @@ describe('OfficeWorkbookAdapter.createWorksheet', () => {
     const add = vi.fn(() => addedWorksheet);
     const sync = vi.fn(async () => undefined);
 
-    globalThis.Office = {} as any;
+    globalThis.Office = mockExcelOffice() as any;
     globalThis.Excel = {
       run: vi.fn(async (callback: (context: any) => Promise<void>) => {
         const context = {
@@ -780,7 +781,7 @@ describe('OfficeWorkbookAdapter.createWorksheet', () => {
   });
 
   it('throws WorksheetCreateError when Office creation fails', async () => {
-    globalThis.Office = {} as any;
+    globalThis.Office = mockExcelOffice() as any;
     globalThis.Excel = {
       run: vi.fn(async () => {
         throw new Error('Excel create failed');

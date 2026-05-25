@@ -4,7 +4,9 @@ import { reconcilePersistedNavigationModel } from '../../domain/navigation/recon
 import type {
   PersistedNavigationModel,
   PersistenceDiagnosticCode,
+  PersistenceLoadResult,
   PersistenceMetadata,
+  PersistenceReadOutcome,
   PersistenceStatus,
   SaveResult,
   WorkbookPersistenceContext,
@@ -111,6 +113,26 @@ function mergeDiagnostics(...diagnosticGroups: PersistenceDiagnosticCode[][]) {
   return [...new Set(diagnosticGroups.flat())];
 }
 
+function resolveReadOutcome(
+  context: WorkbookPersistenceContext,
+  model: PersistedNavigationModel | null,
+  canonicalReadFailed: boolean,
+): PersistenceReadOutcome {
+  if (model) {
+    return 'loaded';
+  }
+
+  if (context.mode === 'session-only') {
+    return 'empty';
+  }
+
+  if (canonicalReadFailed) {
+    return 'failed';
+  }
+
+  return 'empty';
+}
+
 export class NavigationPersistence {
   private readonly customXmlRepository = new CustomXmlNavigationRepository();
 
@@ -195,12 +217,13 @@ export class NavigationPersistence {
   async load(
     context: WorkbookPersistenceContext,
     snapshot: WorkbookSnapshot,
-  ): Promise<{ model: PersistedNavigationModel | null; status: PersistenceStatus }> {
+  ): Promise<PersistenceLoadResult> {
     this.localCacheRepository.cleanupLegacyGlobalCache();
 
     let model: PersistedNavigationModel | null = null;
     let lastSource: PersistenceStatus['lastSource'] = 'none';
     const diagnostics: PersistenceDiagnosticCode[] = [];
+    let canonicalReadFailed = false;
 
     if (context.supportsCustomXml) {
       try {
@@ -210,6 +233,7 @@ export class NavigationPersistence {
         }
       } catch {
         diagnostics.push('custom_xml_corrupt');
+        canonicalReadFailed = true;
       }
     } else if (context.documentSettingsAvailable) {
       model = this.settingsRepository.readFallbackModel();
@@ -249,6 +273,7 @@ export class NavigationPersistence {
     if (!model) {
       return {
         model: null,
+        readOutcome: resolveReadOutcome(context, null, canonicalReadFailed),
         status: createHealthyStatus(
           context,
           'none',
@@ -282,6 +307,7 @@ export class NavigationPersistence {
 
     return {
       model,
+      readOutcome: resolveReadOutcome(context, model, canonicalReadFailed),
       status: createHealthyStatus(context, lastSource, allDiagnostics),
     };
   }

@@ -178,6 +178,7 @@ describe('NavigationPersistence', () => {
     );
     expect(result.status.lastSource).toBe('custom-xml');
     expect(result.status.mode).toBe('custom-xml');
+    expect(result.readOutcome).toBe('loaded');
   });
 
   it('migrates legacy settings into the canonical v2 model', async () => {
@@ -326,5 +327,20 @@ describe('NavigationPersistence', () => {
 
     expect(result.model).toBeNull();
     expect(result.status.mode).toBe('session-only');
+    expect(result.readOutcome).toBe('empty');
+  });
+
+  it('marks canonical persistence read failures as failed', async () => {
+    vi.spyOn(CustomXmlNavigationRepository.prototype, 'load').mockRejectedValue(
+      new Error('RichApi unavailable'),
+    );
+    installOfficeSettings({ initialValue: null });
+    const persistence = new NavigationPersistence();
+
+    const result = await persistence.load(createStableContext(), createSnapshot());
+
+    expect(result.model).toBeNull();
+    expect(result.readOutcome).toBe('failed');
+    expect(result.status.diagnostics).toContain('custom_xml_corrupt');
   });
 });

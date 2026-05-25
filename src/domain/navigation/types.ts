@@ -120,6 +120,14 @@ export interface SaveResult {
   savedUpdatedAt: number;
 }
 
+export type PersistenceReadOutcome = 'loaded' | 'empty' | 'failed';
+
+export interface PersistenceLoadResult {
+  model: PersistedNavigationModel | null;
+  status: PersistenceStatus;
+  readOutcome: PersistenceReadOutcome;
+}
+
 export interface NavigationState {
   worksheetsById: Record<string, WorksheetEntity>;
   groupsById: Record<string, GroupEntity>;

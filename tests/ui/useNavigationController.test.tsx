@@ -85,6 +85,18 @@ function createContext(
   };
 }
 
+function createLoadResult(
+  model: PersistedNavigationModel | null,
+  statusOverrides: Partial<PersistenceStatus> = {},
+  readOutcome: 'loaded' | 'empty' | 'failed' = model ? 'loaded' : 'empty',
+) {
+  return {
+    model,
+    readOutcome,
+    status: createStatus(statusOverrides),
+  };
+}
+
 function createModel(overrides: Partial<PersistedNavigationModel> = {}): PersistedNavigationModel {
   return {
     schemaVersion: 2,
@@ -788,6 +800,25 @@ describe('useNavigationController', () => {
 
     expect(persistenceMock.load).toHaveBeenCalledTimes(2);
     expect(result.current.state.groupsById['group-remote']).toBeUndefined();
+  });
+
+  it('does not persist when canonical persistence read fails on initial load', async () => {
+    vi.useFakeTimers();
+    adapterMock.getWorkbookSnapshot.mockResolvedValue(createSnapshot());
+    adapterMock.getPersistenceContext.mockResolvedValue(createContext());
+    persistenceMock.load.mockResolvedValue(createLoadResult(null, {}, 'failed'));
+
+    renderHook(() => useNavigationController(), { wrapper });
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+      vi.advanceTimersByTime(5000);
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(persistenceMock.save).not.toHaveBeenCalled();
   });
 
   it('exposes workbookChangeToken in return object', () => {
