@@ -852,7 +852,7 @@ body {
   border-radius: inherit;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.50s var(--ease-out);
+  transition: opacity 0.5s var(--ease-out);
 }
 
 .preview-taskpane-mock,
@@ -863,7 +863,7 @@ body {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  transition: opacity 0.50s var(--ease-out);
+  transition: opacity 0.5s var(--ease-out);
 }
 
 .preview-demo-compact .tp-sheet {
@@ -951,7 +951,7 @@ body {
   border-radius: inherit;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.50s var(--ease-out);
+  transition: opacity 0.5s var(--ease-out);
 
   /* GPU-accelerated layer to prevent flash during first decode */
   will-change: opacity;
@@ -961,13 +961,13 @@ body {
 }
 
 /* Estados del sistema — restringidos al tema activo para evitar mostrar GIFs del tema incorrecto */
-.bento-gif-trigger[data-gif-state="idle"] .bento-gif-mock,
-.bento-gif-trigger[data-gif-state="waiting"] .bento-gif-mock {
+.bento-gif-trigger[data-gif-state='idle'] .bento-gif-mock,
+.bento-gif-trigger[data-gif-state='waiting'] .bento-gif-mock {
   opacity: 1;
 }
 
-.bento-gif-trigger[data-gif-state="transitioning"] .bento-gif-mock,
-.bento-gif-trigger[data-gif-state="playing"] .bento-gif-mock {
+.bento-gif-trigger[data-gif-state='transitioning'] .bento-gif-mock,
+.bento-gif-trigger[data-gif-state='playing'] .bento-gif-mock {
   opacity: 0;
 }
 
@@ -977,10 +977,14 @@ body {
 }
 
 /* Show only the active theme player when transitioning or playing */
-.bento-gif-trigger[data-active-gif-theme="light"][data-gif-state="transitioning"] .bento-gif-player[data-gif-theme="light"],
-.bento-gif-trigger[data-active-gif-theme="light"][data-gif-state="playing"] .bento-gif-player[data-gif-theme="light"],
-.bento-gif-trigger[data-active-gif-theme="dark"][data-gif-state="transitioning"] .bento-gif-player[data-gif-theme="dark"],
-.bento-gif-trigger[data-active-gif-theme="dark"][data-gif-state="playing"] .bento-gif-player[data-gif-theme="dark"] {
+.bento-gif-trigger[data-active-gif-theme='light'][data-gif-state='transitioning']
+  .bento-gif-player[data-gif-theme='light'],
+.bento-gif-trigger[data-active-gif-theme='light'][data-gif-state='playing']
+  .bento-gif-player[data-gif-theme='light'],
+.bento-gif-trigger[data-active-gif-theme='dark'][data-gif-state='transitioning']
+  .bento-gif-player[data-gif-theme='dark'],
+.bento-gif-trigger[data-active-gif-theme='dark'][data-gif-state='playing']
+  .bento-gif-player[data-gif-theme='dark'] {
   opacity: 1;
 }
 

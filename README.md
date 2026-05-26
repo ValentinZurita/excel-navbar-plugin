@@ -23,22 +23,22 @@
 
 Native Excel tabs get messy fast in large workbooks. Sheet Navigator is a task pane built for **speed, structure, and control**.
 
-| Feature | What you get |
-| ------- | ------------ |
-| **Sheet preview** | Hover a sheet to see a live thumbnail before you switch — no more opening the wrong tab. |
-| **Keyboard-first** | Global shortcuts from anywhere in Excel; inside the pane, navigate, activate, and drag with keys alone. |
-| **Search** | Fuzzy filter by name — type scattered letters and jump to the right sheet |
-| **Groups** | Collapsible, color-coded folders so related sheets stay together. |
-| **Drag & drop** | Reorder sheets and move them between groups with mouse or keyboard; drop indicators show where they'll land. |
+| Feature            | What you get                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------ |
+| **Sheet preview**  | Hover a sheet to see a live thumbnail before you switch — no more opening the wrong tab.                     |
+| **Keyboard-first** | Global shortcuts from anywhere in Excel; inside the pane, navigate, activate, and drag with keys alone.      |
+| **Search**         | Fuzzy filter by name — type scattered letters and jump to the right sheet                                    |
+| **Groups**         | Collapsible, color-coded folders so related sheets stay together.                                            |
+| **Drag & drop**    | Reorder sheets and move them between groups with mouse or keyboard; drop indicators show where they'll land. |
 
 **Also built in**
 
-| Feature | What you get |
-| ------- | ------------ |
-| **Pinned sheets** | Keep your most-used tabs at the top. |
+| Feature           | What you get                                       |
+| ----------------- | -------------------------------------------------- |
+| **Pinned sheets** | Keep your most-used tabs at the top.               |
 | **Context menus** | Rename, pin, hide, delete, and more from one menu. |
-| **Saved layout** | Groups and order travel with the workbook. |
-| **Hidden sheets** | Restore hidden worksheets when you need them. |
+| **Saved layout**  | Groups and order travel with the workbook.         |
+| **Hidden sheets** | Restore hidden worksheets when you need them.      |
 
 ---
 
@@ -54,15 +54,15 @@ Native Excel tabs get messy fast in large workbooks. Sheet Navigator is a task p
 
 ### Inside the panel
 
-| Action                  | Key           |
-| ----------------------- | ------------- |
-| Navigate list           | `↑` `↓`       |
-| Activate sheet          | `Enter`       |
-| Open context menu       | `→`           |
-| Expand / collapse group | `→` / `←`     |
-| Pick up / drop sheet    | `Space`       |
-| Jump to first / last    | `Home` / `End` |
-| Clear focus / exit search | `Escape`    |
+| Action                    | Key            |
+| ------------------------- | -------------- |
+| Navigate list             | `↑` `↓`        |
+| Activate sheet            | `Enter`        |
+| Open context menu         | `→`            |
+| Expand / collapse group   | `→` / `←`      |
+| Pick up / drop sheet      | `Space`        |
+| Jump to first / last      | `Home` / `End` |
+| Clear focus / exit search | `Escape`       |
 
 ---
 
@@ -79,38 +79,35 @@ Download the manifest once for all platforms:
 2. Go to **Home → Add-ins → More Settings**.
 3. Select **Upload My Add-in** and choose `excel-navbar-plugin.xml`.
 
-### Excel for Windows
+### Excel for Windows & Mac (Desktop)
 
-1. Open Excel and create a blank workbook.
-2. Go to **Home → Add-ins → My Add-ins**.
-3. Choose **Manage My Add-ins → Upload My Add-in** and select `excel-navbar-plugin.xml`.
+Excel Desktop does not support direct local manifest upload. The easiest way to install it on desktop is using **Cloud Sync**:
 
-### Excel for Mac
+1. Sideload the manifest first in **Excel on the Web** (following the steps above).
+2. Open Excel on your Desktop (Windows or Mac) and ensure you are signed in with the same Microsoft account.
+3. Go to **Home → Add-ins → My Add-ins**. The add-in will be listed there automatically!
 
-1. Open Excel and create a blank workbook.
-2. Go to **Home → Add-ins → My Add-ins**.
-3. Choose **Manage My Add-ins → Upload My Add-in** and select `excel-navbar-plugin.xml`.
-
-> **Mac fallback**: If upload is not available, close Excel and copy `excel-navbar-plugin.xml` to:
+> **Mac Fallback (Manual)**: If Cloud Sync is not an option, close Excel and copy `excel-navbar-plugin.xml` to:
 >
 > ```
 > /Users/<username>/Library/Containers/com.microsoft.Excel/Data/Documents/wef
 > ```
 >
-> Reopen Excel — the add-in appears under **Developer**.
+> _(create the `wef` folder if it does not exist)_.
+> Reopen Excel — the add-in appears under **Insert → Add-ins** (click the arrow next to the button) as a **Developer Add-in**.
 
 ---
 
 ## Troubleshooting
 
-| Problem | What to try |
-| ------- | ----------- |
-| Upload option missing (Mac) | Use the `wef` folder path above. |
-| Blank panel after load | Check your internet connection — the pane loads from GitHub Pages. |
-| Shortcuts not working | Click inside the task pane first. On macOS, some combos may conflict with system shortcuts. |
-| Manifest validation fails | Re-download the file from the [landing page](https://valentinzurita.github.io/excel-navbar-plugin/). Do not copy-paste the XML. |
-| Layout not saved | Some workbook contexts only keep layout for the current session. Reopen the file and check whether groups persist. |
-| Local dev: certificate warning | Trust the dev certificate from `office-addin-dev-certs`, or run its install command when prompted. |
+| Problem                        | What to try                                                                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| Upload option missing (Mac)    | Use the `wef` folder path above.                                                                                                |
+| Blank panel after load         | Check your internet connection — the pane loads from GitHub Pages.                                                              |
+| Shortcuts not working          | Click inside the task pane first. On macOS, some combos may conflict with system shortcuts.                                     |
+| Manifest validation fails      | Re-download the file from the [landing page](https://valentinzurita.github.io/excel-navbar-plugin/). Do not copy-paste the XML. |
+| Layout not saved               | Some workbook contexts only keep layout for the current session. Reopen the file and check whether groups persist.              |
+| Local dev: certificate warning | Trust the dev certificate from `office-addin-dev-certs`, or run its install command when prompted.                              |
 
 ---
 
