@@ -134,7 +134,7 @@
     });
 
     triggers.forEach((trigger) => {
-      const delay = parseInt(trigger.dataset.gifDelay, 10) || 750;
+      const delay = parseInt(trigger.dataset.gifDelay, 10) || 500;
       const transitionMs = parseInt(trigger.dataset.gifTransition, 10) || 500;
       const duration = parseInt(trigger.dataset.gifDuration, 10) || 3000;
 
