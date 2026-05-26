@@ -971,11 +971,16 @@ body {
   opacity: 0;
 }
 
-/* Show inner-box GIFs fully without cropping — the GIFs already include their own margins */
-.search-demo.bento-gif-trigger .bento-gif-player,
-.drag-demo.bento-gif-trigger .bento-gif-player {
+/* Show search GIFs fully without cropping */
+.search-demo.bento-gif-trigger .bento-gif-player {
   object-fit: contain;
   object-position: top center;
+}
+
+/* Fill drag-demo box and center the GIF so important content stays visible */
+.drag-demo.bento-gif-trigger .bento-gif-player {
+  object-fit: cover;
+  object-position: center;
 }
 
 /* Show only the active theme player when transitioning or playing */
