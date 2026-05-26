@@ -43,7 +43,7 @@ jobs:
         run: pnpm run check:lockfile-sync
 
       - name: Audit production dependencies
-        run: pnpm audit --omit=dev --audit-level=moderate
+        run: pnpm audit --prod --audit-level=moderate
 
       - name: TypeScript typecheck
         run: pnpm typecheck
