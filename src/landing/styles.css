@@ -971,6 +971,11 @@ body {
   opacity: 0;
 }
 
+/* Center search GIFs so the important content (search box + results) stays visible */
+.search-demo.bento-gif-trigger .bento-gif-player {
+  object-position: top center;
+}
+
 /* Show only the active theme player when transitioning or playing */
 .bento-gif-trigger[data-active-gif-theme="light"][data-gif-state="transitioning"] .bento-gif-player[data-gif-theme="light"],
 .bento-gif-trigger[data-active-gif-theme="light"][data-gif-state="playing"] .bento-gif-player[data-gif-theme="light"],
