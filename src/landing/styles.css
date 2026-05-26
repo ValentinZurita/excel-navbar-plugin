@@ -977,10 +977,10 @@ body {
   object-position: top center;
 }
 
-/* Fill drag-demo box and center the GIF so important content stays visible */
+/* Prioritise top-center of the drag GIF so the active drag area stays visible */
 .drag-demo.bento-gif-trigger .bento-gif-player {
   object-fit: cover;
-  object-position: center;
+  object-position: top center;
 }
 
 /* Show only the active theme player when transitioning or playing */
