@@ -44,7 +44,7 @@ for (const dep of [...pkgDeps, ...pkgDevDeps]) {
   // pnpm-lock.yaml lists each dependency under a key like:
   //   <package>@<version>:
   // We check that the package name appears as a resolved entry.
-  const pattern = new RegExp(`^  ${dep}@`, 'm');
+  const pattern = new RegExp(`^  '?${dep}@`, 'm');
   if (!pattern.test(lock)) {
     missing.push(dep);
   }
