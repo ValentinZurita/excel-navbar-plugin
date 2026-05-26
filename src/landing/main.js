@@ -157,7 +157,8 @@
       /**
        * Clone-swap restart: prevents the empty-frame flash by working on a
        * detached clone. The visible img is only replaced once the clone's
-       * first frame is fully decoded.
+       * first frame is fully decoded. A unique query param forces the browser
+       * to reload the GIF so the animation always starts from frame 0.
        */
       const restartGif = (img, callback) => {
         if (!img) {
@@ -169,6 +170,9 @@
           callback(null);
           return;
         }
+
+        // Bust cache so the GIF restarts from frame 0
+        const cacheBustedSrc = src + (src.includes('?') ? '&' : '?') + '_t=' + Date.now();
 
         let resolved = false;
         const resolve = (clone) => {
@@ -187,7 +191,7 @@
         };
 
         clone.addEventListener('load', onCloneLoad);
-        clone.setAttribute('src', src);
+        clone.setAttribute('src', cacheBustedSrc);
 
         // Fallback for cached images where load may not fire
         setTimeout(() => {
