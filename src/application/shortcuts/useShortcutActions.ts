@@ -12,6 +12,15 @@ const SHORTCUT_KEY_MAP: Record<string, string> = {
   [ShortcutActionId.CREATE_WORKSHEET]: 'n',
 };
 
+/**
+ * Layout-independent physical key codes as a robust fallback for Windows/modifier event mapping.
+ */
+const SHORTCUT_CODE_MAP: Record<string, string> = {
+  [ShortcutActionId.TOGGLE_TASKPANE]: 'KeyP',
+  [ShortcutActionId.FOCUS_SEARCH]: 'KeyO',
+  [ShortcutActionId.CREATE_WORKSHEET]: 'KeyN',
+};
+
 interface UseShortcutActionsOptions {
   /** The shortcut actions to register */
   actions: ShortcutAction[];
@@ -81,10 +90,17 @@ export function useShortcutActions({
       }
 
       const pressedKey = event.key.toLowerCase();
+      const pressedCode = event.code;
 
       for (const action of actionsRef.current) {
         const mappedKey = SHORTCUT_KEY_MAP[action.id];
-        if (mappedKey && mappedKey === pressedKey) {
+        const mappedCode = SHORTCUT_CODE_MAP[action.id];
+
+        // Match by either event.key (localized symbol) or event.code (physical key)
+        const isMatch =
+          (mappedKey && mappedKey === pressedKey) || (mappedCode && mappedCode === pressedCode);
+
+        if (isMatch) {
           event.preventDefault();
           event.stopPropagation();
           void action.handler();

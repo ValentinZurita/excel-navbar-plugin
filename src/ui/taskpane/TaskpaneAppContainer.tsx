@@ -510,14 +510,23 @@ export function TaskpaneAppContainer() {
         id: ShortcutActionId.FOCUS_SEARCH,
         description: 'Focus the search field',
         handler: async () => {
-          try {
-            await Office.addin.showAsTaskpane();
-          } catch {
-            // Ignore if unsupported on current platform
+          // If the document already has focus, do not call showAsTaskpane.
+          // This avoids causing a focus fight/reset in the host container on Windows.
+          if (!document.hasFocus()) {
+            try {
+              await Office.addin.showAsTaskpane();
+            } catch {
+              // Ignore if unsupported on current platform
+            }
           }
-          // Give the taskpane a moment to open and render before focusing
+          // Focus the search input immediately
+          searchInputRef.current?.focus();
+
+          // And also do a small fallback/retry in case the container was still gaining focus
           setTimeout(() => {
-            searchInputRef.current?.focus();
+            if (document.activeElement !== searchInputRef.current) {
+              searchInputRef.current?.focus();
+            }
           }, 100);
         },
       },
