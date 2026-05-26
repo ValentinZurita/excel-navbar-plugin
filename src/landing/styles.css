@@ -971,10 +971,9 @@ body {
   opacity: 0;
 }
 
-/* Drag-demo GIF — fill the inner box and keep central content visible */
+/* Drag-demo GIF — stretch to fill the inner box exactly */
 .drag-demo.bento-gif-trigger .bento-gif-player {
-  object-fit: cover;
-  object-position: center;
+  object-fit: fill;
 }
 
 /* Show only the active theme player when transitioning or playing */
