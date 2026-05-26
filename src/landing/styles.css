@@ -971,28 +971,10 @@ body {
   opacity: 0;
 }
 
-/* Drag-demo GIF — force the box to match the GIF ratio so it fits perfectly */
-.drag-demo.bento-gif-trigger {
-  aspect-ratio: 610 / 247;
-  padding: 4px;
-}
-
+/* Drag-demo GIF — fill the inner box and keep central content visible */
 .drag-demo.bento-gif-trigger .bento-gif-player {
   object-fit: cover;
-}
-
-/* Compact inner drag-demo mock so it fits the constrained height */
-.drag-demo.bento-gif-trigger .tp-sheet,
-.drag-demo.bento-gif-trigger .tp-group-header {
-  padding: 5px 8px;
-}
-
-.drag-demo.bento-gif-trigger .tp-insertion-line {
-  margin: 1px 0;
-}
-
-.drag-demo.bento-gif-trigger .tp-group {
-  gap: 1px;
+  object-position: center;
 }
 
 /* Show only the active theme player when transitioning or playing */
