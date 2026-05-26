@@ -971,9 +971,9 @@ body {
   opacity: 0;
 }
 
-/* Drag-demo GIF — stretch to fill the inner box exactly */
+/* Drag-demo GIF — cover the inner box (new GIFs match the box ratio) */
 .drag-demo.bento-gif-trigger .bento-gif-player {
-  object-fit: fill;
+  object-fit: cover;
 }
 
 /* Show only the active theme player when transitioning or playing */
