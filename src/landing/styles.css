@@ -971,8 +971,9 @@ body {
   opacity: 0;
 }
 
-/* Center search GIFs so the important content (search box + results) stays visible */
+/* Show search GIFs fully without cropping — the GIF already includes its own margins */
 .search-demo.bento-gif-trigger .bento-gif-player {
+  object-fit: contain;
   object-position: top center;
 }
 
