@@ -25,10 +25,24 @@ export type WorksheetPreviewResult =
       message: string;
     };
 
+/**
+ * Workbook change kinds, surfaced by `subscribeToWorkbookChanges`.
+ * - `structural`: add / delete / move / rename / visibility — needs a full snapshot.
+ * - `activation`: the user changed the active sheet — only the active id changed.
+ */
+export type WorkbookChangeKind = 'structural' | 'activation';
+
 export interface WorkbookAdapter {
   getWorkbookSnapshot(): Promise<WorkbookSnapshot>;
   getPersistenceContext(): Promise<WorkbookPersistenceContext>;
-  subscribeToWorkbookChanges?(listener: () => void): Promise<() => Promise<void> | void>;
+  subscribeToWorkbookChanges?(
+    listener: (kind: WorkbookChangeKind) => void,
+  ): Promise<() => Promise<void> | void>;
+  /**
+   * Lightweight read of just the active worksheet's stable id.
+   * Used as a fast path when only the active sheet changed.
+   */
+  getActiveWorksheetId?(): Promise<string | null>;
   getWorksheetPreview(
     worksheetId: string,
     options?: WorksheetPreviewOptions,

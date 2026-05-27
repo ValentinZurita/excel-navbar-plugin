@@ -7,6 +7,7 @@ import type {
 } from '../../domain/navigation/types';
 import type {
   WorkbookAdapter,
+  WorkbookChangeKind,
   WorksheetPreviewOptions,
   WorksheetPreviewResult,
   WorksheetPreviewUnavailableReason,
@@ -333,7 +334,9 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
     }
   }
 
-  async subscribeToWorkbookChanges(listener: () => void): Promise<() => Promise<void>> {
+  async subscribeToWorkbookChanges(
+    listener: (kind: WorkbookChangeKind) => void,
+  ): Promise<() => Promise<void>> {
     if (!hasOfficeRuntime() || !getWorkbookCapabilities().supportsWorkbookEvents) {
       return async () => undefined;
     }
@@ -342,22 +345,22 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
       const worksheets = context.workbook.worksheets;
       const handlers = [
         worksheets.onAdded.add(async () => {
-          listener();
+          listener('structural');
         }),
         worksheets.onDeleted.add(async () => {
-          listener();
+          listener('structural');
         }),
         worksheets.onActivated.add(async () => {
-          listener();
+          listener('activation');
         }),
         worksheets.onMoved.add(async () => {
-          listener();
+          listener('structural');
         }),
         worksheets.onNameChanged.add(async () => {
-          listener();
+          listener('structural');
         }),
         worksheets.onVisibilityChanged.add(async () => {
-          listener();
+          listener('structural');
         }),
       ];
       await context.sync();
@@ -367,6 +370,25 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
         await context.sync();
       };
     });
+  }
+
+  async getActiveWorksheetId(): Promise<string | null> {
+    if (!hasOfficeRuntime()) {
+      return null;
+    }
+
+    return measureOfficeOperation('getActiveWorksheetId', () =>
+      Excel.run(async (context) => {
+        const active = context.workbook.worksheets.getActiveWorksheet();
+        active.load('id');
+        await context.sync();
+
+        const nativeWorksheetId = active.id;
+        const stableWorksheetId =
+          worksheetIdentityRepository.peekStableWorksheetId(nativeWorksheetId) ?? nativeWorksheetId;
+        return stableWorksheetId;
+      }),
+    );
   }
 
   async createWorksheet(): Promise<void> {
@@ -434,6 +456,31 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
   }
 
   async activateWorksheet(worksheetId: string): Promise<void> {
+    if (!hasOfficeRuntime()) {
+      return;
+    }
+
+    // Fast path: when a previous workbook snapshot has cached the native id,
+    // we can target the worksheet directly and finish in a single context.sync()
+    // instead of loading every worksheet id, syncing, then activating + syncing.
+    const cachedNativeWorksheetId =
+      worksheetIdentityRepository.peekCachedNativeWorksheetId(worksheetId);
+    const directWorksheetId = cachedNativeWorksheetId ?? worksheetId;
+
+    try {
+      await measureOfficeOperation('activateWorksheet (fast path)', () =>
+        Excel.run(async (context) => {
+          const worksheet = context.workbook.worksheets.getItem(directWorksheetId);
+          worksheet.activate();
+          await context.sync();
+        }),
+      );
+      return;
+    } catch {
+      // Cached native id may be stale (e.g. workbook copy or sheet replaced).
+      // Fall back to full identity resolution.
+    }
+
     await this.withResolvedWorksheet(worksheetId, 'items/id', async (worksheet, context) => {
       worksheet.activate();
       await context.sync();

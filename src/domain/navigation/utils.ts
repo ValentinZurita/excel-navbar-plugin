@@ -73,5 +73,16 @@ export function reconcileSheetSectionOrder(
     .map((worksheet) => worksheet.worksheetId)
     .filter((worksheetId) => !kept.includes(worksheetId));
 
-  return [...kept, ...missing];
+  const reconciled = [...kept, ...missing];
+
+  // Preserve the input reference when contents are identical so that
+  // memoized selectors that depend on this array can skip recomputation.
+  if (
+    reconciled.length === currentOrder.length &&
+    reconciled.every((id, index) => id === currentOrder[index])
+  ) {
+    return currentOrder;
+  }
+
+  return reconciled;
 }

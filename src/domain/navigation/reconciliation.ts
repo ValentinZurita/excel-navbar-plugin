@@ -9,6 +9,38 @@ import type {
 } from './types';
 import { byWorkbookOrder, dedupeWorksheetIds, getStableWorksheetId } from './utils';
 
+interface WorksheetMembership {
+  groupId: string | null;
+  isPinned: boolean;
+  lastKnownStructuralState: StructuralState | null;
+}
+
+function stringArraysEqual(left: string[], right: string[]) {
+  if (left === right) {
+    return true;
+  }
+  if (left.length !== right.length) {
+    return false;
+  }
+  return left.every((value, index) => value === right[index]);
+}
+
+function structuralStateEquals(left: StructuralState | null, right: StructuralState | null) {
+  if (left === right) {
+    return true;
+  }
+  if (!left || !right) {
+    return false;
+  }
+  if (left.kind !== right.kind) {
+    return false;
+  }
+  if (left.kind === 'group' && right.kind === 'group') {
+    return left.groupId === right.groupId;
+  }
+  return true;
+}
+
 function cloneGroup(group: GroupEntity): GroupEntity {
   return {
     ...group,
@@ -175,85 +207,119 @@ export function reconcilePersistedNavigationModel(
 }
 
 export function normalizeNavigationState(state: NavigationState): NavigationState {
-  const worksheetsById = Object.fromEntries(
-    Object.entries(state.worksheetsById).map(([worksheetId, worksheet]) => [
-      worksheetId,
-      {
-        ...worksheet,
-        stableWorksheetId: worksheet.stableWorksheetId ?? worksheet.worksheetId,
-        nativeWorksheetId: worksheet.nativeWorksheetId ?? worksheet.worksheetId,
-      },
-    ]),
-  ) as Record<string, WorksheetEntity>;
+  const worksheetIds = new Set(Object.keys(state.worksheetsById));
 
-  const normalizedState: NavigationState = {
-    ...state,
-    worksheetsById,
-    groupsById: Object.fromEntries(
-      Object.entries(state.groupsById).map(([groupId, group]) => [groupId, cloneGroup(group)]),
-    ),
-    groupOrder: [...state.groupOrder],
-    sheetSectionOrder: [...state.sheetSectionOrder],
-    pinnedWorksheetOrder: [...state.pinnedWorksheetOrder],
-  };
+  // Phase 1: keep only groups that still exist.
+  const nextGroupOrder = state.groupOrder.filter((groupId) => Boolean(state.groupsById[groupId]));
+  const groupOrderChanged = !stringArraysEqual(nextGroupOrder, state.groupOrder);
+  const groupOrder = groupOrderChanged ? nextGroupOrder : state.groupOrder;
 
-  const worksheetIds = new Set(Object.keys(normalizedState.worksheetsById));
+  // Phase 2: compute deduped/filtered worksheetOrder per group, and which
+  // worksheets are claimed by a group (to keep them out of pinned).
   const claimedWorksheetIds = new Set<string>();
+  const groupsById: Record<string, GroupEntity> = {};
+  let groupsChanged = Object.keys(state.groupsById).length !== groupOrder.length;
 
-  normalizedState.groupOrder = normalizedState.groupOrder.filter((groupId) =>
-    Boolean(normalizedState.groupsById[groupId]),
-  );
-
-  for (const groupId of normalizedState.groupOrder) {
-    const group = normalizedState.groupsById[groupId];
-    group.worksheetOrder = dedupeWorksheetIds(group.worksheetOrder).filter((worksheetId) => {
-      if (!worksheetIds.has(worksheetId)) {
+  for (const groupId of groupOrder) {
+    const originalGroup = state.groupsById[groupId];
+    const filteredOrder = dedupeWorksheetIds(originalGroup.worksheetOrder).filter((worksheetId) => {
+      if (!worksheetIds.has(worksheetId) || claimedWorksheetIds.has(worksheetId)) {
         return false;
       }
-
-      if (claimedWorksheetIds.has(worksheetId)) {
-        return false;
-      }
-
       claimedWorksheetIds.add(worksheetId);
       return true;
     });
-  }
 
-  normalizedState.pinnedWorksheetOrder = dedupeWorksheetIds(
-    normalizedState.pinnedWorksheetOrder,
-  ).filter((worksheetId) => worksheetIds.has(worksheetId) && !claimedWorksheetIds.has(worksheetId));
-
-  for (const worksheet of Object.values(normalizedState.worksheetsById)) {
-    worksheet.groupId = null;
-    worksheet.isPinned = false;
-    worksheet.stableWorksheetId = getStableWorksheetId(worksheet);
-    worksheet.nativeWorksheetId = worksheet.nativeWorksheetId ?? worksheet.worksheetId;
-  }
-
-  for (const groupId of normalizedState.groupOrder) {
-    const group = normalizedState.groupsById[groupId];
-    for (const worksheetId of group.worksheetOrder) {
-      const worksheet = normalizedState.worksheetsById[worksheetId];
-      if (!worksheet) {
-        continue;
-      }
-
-      worksheet.groupId = groupId;
-      worksheet.isPinned = false;
-      worksheet.lastKnownStructuralState = { kind: 'group', groupId };
+    if (stringArraysEqual(filteredOrder, originalGroup.worksheetOrder)) {
+      groupsById[groupId] = originalGroup;
+    } else {
+      groupsById[groupId] = { ...originalGroup, worksheetOrder: filteredOrder };
+      groupsChanged = true;
     }
   }
 
-  for (const worksheetId of normalizedState.pinnedWorksheetOrder) {
-    const worksheet = normalizedState.worksheetsById[worksheetId];
-    if (!worksheet || worksheet.groupId) {
+  // Phase 3: pinned order, filtering live worksheets that aren't already in a group.
+  const filteredPinnedOrder = dedupeWorksheetIds(state.pinnedWorksheetOrder).filter(
+    (worksheetId) => worksheetIds.has(worksheetId) && !claimedWorksheetIds.has(worksheetId),
+  );
+  const pinnedChanged = !stringArraysEqual(filteredPinnedOrder, state.pinnedWorksheetOrder);
+  const pinnedWorksheetOrder = pinnedChanged ? filteredPinnedOrder : state.pinnedWorksheetOrder;
+
+  // Phase 4: target membership for each worksheet derived from groups + pinned.
+  const targetMembershipById = new Map<string, WorksheetMembership>();
+  for (const groupId of groupOrder) {
+    const group = groupsById[groupId];
+    for (const worksheetId of group.worksheetOrder) {
+      targetMembershipById.set(worksheetId, {
+        groupId,
+        isPinned: false,
+        lastKnownStructuralState: { kind: 'group', groupId },
+      });
+    }
+  }
+
+  // Phase 5: build worksheetsById, reusing each existing reference when the
+  // computed membership matches. This is the key to letting memoized React
+  // rows skip work when periodic syncs report no real change.
+  const worksheetsById: Record<string, WorksheetEntity> = {};
+  let worksheetsChanged = false;
+
+  for (const [worksheetId, worksheet] of Object.entries(state.worksheetsById)) {
+    const stableWorksheetId = getStableWorksheetId(worksheet);
+    const nativeWorksheetId = worksheet.nativeWorksheetId ?? worksheet.worksheetId;
+    const pinnedAssignment = pinnedWorksheetOrder.includes(worksheetId);
+    const groupAssignment = targetMembershipById.get(worksheetId);
+
+    let targetGroupId: string | null;
+    let targetIsPinned: boolean;
+    let targetStructuralState: StructuralState | null;
+
+    if (groupAssignment) {
+      targetGroupId = groupAssignment.groupId;
+      targetIsPinned = false;
+      targetStructuralState = groupAssignment.lastKnownStructuralState;
+    } else if (pinnedAssignment) {
+      targetGroupId = null;
+      targetIsPinned = true;
+      targetStructuralState = { kind: 'pinned' };
+    } else {
+      targetGroupId = null;
+      targetIsPinned = false;
+      // Preserve any historical structural state (e.g. 'ungrouped' or stale group ref).
+      targetStructuralState = worksheet.lastKnownStructuralState;
+    }
+
+    if (
+      worksheet.stableWorksheetId === stableWorksheetId &&
+      worksheet.nativeWorksheetId === nativeWorksheetId &&
+      worksheet.groupId === targetGroupId &&
+      worksheet.isPinned === targetIsPinned &&
+      structuralStateEquals(worksheet.lastKnownStructuralState, targetStructuralState)
+    ) {
+      worksheetsById[worksheetId] = worksheet;
       continue;
     }
 
-    worksheet.isPinned = true;
-    worksheet.lastKnownStructuralState = { kind: 'pinned' };
+    worksheetsById[worksheetId] = {
+      ...worksheet,
+      stableWorksheetId,
+      nativeWorksheetId,
+      groupId: targetGroupId,
+      isPinned: targetIsPinned,
+      lastKnownStructuralState: targetStructuralState,
+    };
+    worksheetsChanged = true;
   }
 
-  return normalizedState;
+  if (!worksheetsChanged && !groupsChanged && !groupOrderChanged && !pinnedChanged) {
+    return state;
+  }
+
+  return {
+    ...state,
+    worksheetsById: worksheetsChanged ? worksheetsById : state.worksheetsById,
+    groupsById: groupsChanged ? groupsById : state.groupsById,
+    groupOrder,
+    pinnedWorksheetOrder,
+  };
 }

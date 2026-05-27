@@ -146,6 +146,25 @@ export class WorksheetIdentityRepository {
     };
   }
 
+  /**
+   * Returns the cached native id for a stable worksheet id without performing
+   * any Office.js round-trip. Useful for fast-path operations that already
+   * know which worksheet to target (e.g. activate, rename) when the cache was
+   * primed by a prior workbook snapshot.
+   */
+  peekCachedNativeWorksheetId(stableWorksheetId: string): string | null {
+    return this.nativeWorksheetIdByStableId.get(stableWorksheetId) ?? null;
+  }
+
+  /**
+   * Returns the cached stable id for a given native worksheet id without any
+   * Office.js round-trip. Used when Excel reports a native id (e.g. the active
+   * worksheet) and we need to map it back to our stable identity.
+   */
+  peekStableWorksheetId(nativeWorksheetId: string): string | null {
+    return this.stableWorksheetIdByNativeId.get(nativeWorksheetId) ?? null;
+  }
+
   async resolveNativeWorksheetId(
     context: Excel.RequestContext,
     worksheets: Excel.Worksheet[],

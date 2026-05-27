@@ -32,6 +32,13 @@ const persistenceSaveDebounceMs = 500;
 const persistenceLoadMaxAttempts = 4;
 const persistenceLoadRetryBaseMs = 250;
 const persistenceRecoveryIntervalMs = 3000;
+/**
+ * Time window after a user-initiated activation during which background syncs
+ * must not overwrite the optimistic active worksheet id. Slightly larger than
+ * the typical Excel Web bridge round-trip so the intent survives until Excel
+ * confirms the change.
+ */
+const activationIntentGuardMs = 1500;
 
 const persistenceReadFailedBanner: BannerState = {
   tone: 'warning',
@@ -63,6 +70,7 @@ export function useNavigationController() {
   const isSyncReloadingRef = useRef(false);
   const persistenceSaveTimerRef = useRef<number | null>(null);
   const persistenceSaveSequenceRef = useRef(0);
+  const activationIntentRef = useRef<{ worksheetId: string; timestamp: number } | null>(null);
 
   const persistedModel = useMemo(
     () => toPersistedModel(state),
@@ -190,7 +198,18 @@ export function useNavigationController() {
       resolvePersistenceContext(),
     ]);
 
-    dispatch({ type: 'hydrateFromWorkbook', snapshot });
+    // Honor an in-flight activation: if the user just clicked a tab and Excel
+    // hasn't yet reflected the change in its snapshot, keep our optimistic
+    // active id rather than letting the stale snapshot pin it back.
+    const intent = activationIntentRef.current;
+    const intentIsFresh =
+      intent !== null && Date.now() - intent.timestamp < activationIntentGuardMs;
+    const effectiveSnapshot =
+      intentIsFresh && intent && snapshot.activeWorksheetId !== intent.worksheetId
+        ? { ...snapshot, activeWorksheetId: intent.worksheetId }
+        : snapshot;
+
+    dispatch({ type: 'hydrateFromWorkbook', snapshot: effectiveSnapshot });
 
     const transitionedToStable =
       previousContext?.mode === 'session-only' &&
@@ -274,6 +293,38 @@ export function useNavigationController() {
       setWorkbookChangeToken((t) => t + 1);
     }
   }, [performWorkbookSync]);
+
+  const syncActiveWorksheetFromWorkbook = useCallback(async () => {
+    if (typeof adapter.getActiveWorksheetId !== 'function') {
+      return;
+    }
+
+    try {
+      const activeWorksheetId = await adapter.getActiveWorksheetId();
+      if (!activeWorksheetId) {
+        return;
+      }
+
+      // Honor an in-flight user activation: skip the dispatch when Excel still
+      // reports the previous active sheet (its event hasn't propagated yet).
+      const intent = activationIntentRef.current;
+      if (
+        intent &&
+        Date.now() - intent.timestamp < activationIntentGuardMs &&
+        intent.worksheetId !== activeWorksheetId
+      ) {
+        return;
+      }
+
+      // Only dispatch when the active sheet is one we know about, otherwise
+      // a structural sync will reconcile shortly. The reducer ignores no-ops.
+      if (latestStateRef.current.worksheetsById[activeWorksheetId]) {
+        dispatch({ type: 'setActiveWorksheetLocally', worksheetId: activeWorksheetId });
+      }
+    } catch {
+      // Activation refresh is best-effort; structural sync will eventually catch up.
+    }
+  }, [dispatch]);
 
   const load = useCallback(async () => {
     setIsBusy(true);
@@ -407,6 +458,7 @@ export function useNavigationController() {
     const coordinator = new WorkbookSyncCoordinator({
       adapter,
       onSync: syncFromWorkbook,
+      onActivationSync: syncActiveWorksheetFromWorkbook,
       intervalMs,
     });
 
@@ -415,7 +467,7 @@ export function useNavigationController() {
     return () => {
       void coordinator.stop();
     };
-  }, [state.isReady, syncFromWorkbook]);
+  }, [state.isReady, syncFromWorkbook, syncActiveWorksheetFromWorkbook]);
 
   const handlers = useMemo(
     () => ({
@@ -493,8 +545,38 @@ export function useNavigationController() {
         dispatch({ type: 'unpinWorksheet', worksheetId });
       },
       async activateWorksheet(worksheetId: string) {
-        await adapter.activateWorksheet(worksheetId);
+        // Optimistic UI: move the active indicator before awaiting Excel.
+        // The bridge round-trip can take 200-500ms on the web host, so we
+        // mark the worksheet active locally first and roll back if Excel rejects.
+        const previousActiveWorksheetId = latestStateRef.current.activeWorksheetId;
+        // Record the intent so a concurrent background snapshot cannot pin
+        // the active worksheet back to the previous value before Excel's own
+        // onActivated event has propagated.
+        activationIntentRef.current = { worksheetId, timestamp: Date.now() };
+
+        if (previousActiveWorksheetId === worksheetId) {
+          try {
+            await adapter.activateWorksheet(worksheetId);
+          } finally {
+            activationIntentRef.current = null;
+          }
+          return;
+        }
+
         dispatch({ type: 'setActiveWorksheetLocally', worksheetId });
+        try {
+          await adapter.activateWorksheet(worksheetId);
+        } catch (error) {
+          if (previousActiveWorksheetId !== null) {
+            dispatch({
+              type: 'setActiveWorksheetLocally',
+              worksheetId: previousActiveWorksheetId,
+            });
+          }
+          throw error;
+        } finally {
+          activationIntentRef.current = null;
+        }
       },
       getWorksheetPreview(worksheetId: string) {
         return adapter.getWorksheetPreview(worksheetId);

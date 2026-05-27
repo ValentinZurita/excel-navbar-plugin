@@ -47,6 +47,20 @@ function toWorksheetEntity(
   const stableWorksheetId = snapshotWorksheet.stableWorksheetId ?? snapshotWorksheet.worksheetId;
   const nativeWorksheetId = snapshotWorksheet.nativeWorksheetId ?? snapshotWorksheet.worksheetId;
 
+  // Reuse the existing reference when every snapshot-derived field matches.
+  // This lets memoized list rows skip re-render across periodic workbook syncs.
+  if (
+    existing &&
+    existing.worksheetId === stableWorksheetId &&
+    existing.stableWorksheetId === stableWorksheetId &&
+    existing.nativeWorksheetId === nativeWorksheetId &&
+    existing.name === snapshotWorksheet.name &&
+    existing.visibility === snapshotWorksheet.visibility &&
+    existing.workbookOrder === snapshotWorksheet.workbookOrder
+  ) {
+    return existing;
+  }
+
   return {
     worksheetId: stableWorksheetId,
     stableWorksheetId,
