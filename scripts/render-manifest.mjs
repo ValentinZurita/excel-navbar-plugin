@@ -57,9 +57,12 @@ function main() {
 
   ensureTemplateLooksValid(templateContent);
 
-  const rendered = templateContent.replaceAll(placeholderToken, baseUrl);
-  if (rendered.includes(placeholderToken)) {
-    throw new Error(`Failed to replace all "${placeholderToken}" placeholders.`);
+  const appDomain = new URL(baseUrl).origin;
+  const rendered = templateContent
+    .replaceAll(placeholderToken, baseUrl)
+    .replaceAll('__APP_DOMAIN__', appDomain);
+  if (rendered.includes(placeholderToken) || rendered.includes('__APP_DOMAIN__')) {
+    throw new Error(`Failed to replace all placeholders.`);
   }
 
   mkdirSync(dirname(outputPath), { recursive: true });
