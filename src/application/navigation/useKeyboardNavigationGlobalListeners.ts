@@ -119,6 +119,42 @@ export function useKeyboardNavigationGlobalListeners({
 }: UseKeyboardNavigationGlobalListenersArgs) {
   const lastPointerPositionRef = useRef<PointerPosition | null>(null);
 
+  const latestRef = useRef({
+    items,
+    activeWorksheetId,
+    focusedItemId,
+    searchFocusedItemId,
+    isSearchActive,
+    handleItemKeyDown,
+    handleGroupHeaderKeyDown,
+    handleSectionHeaderKeyDown,
+    clearFocus,
+    clearIdleTimeout,
+    scheduleIdleClear,
+    markKeyboardActivity,
+    setFocusedItemId,
+    setNavigationInputMode,
+    setKeyboardFocusedItem,
+  });
+
+  latestRef.current = {
+    items,
+    activeWorksheetId,
+    focusedItemId,
+    searchFocusedItemId,
+    isSearchActive,
+    handleItemKeyDown,
+    handleGroupHeaderKeyDown,
+    handleSectionHeaderKeyDown,
+    clearFocus,
+    clearIdleTimeout,
+    scheduleIdleClear,
+    markKeyboardActivity,
+    setFocusedItemId,
+    setNavigationInputMode,
+    setKeyboardFocusedItem,
+  };
+
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target;
@@ -144,20 +180,30 @@ export function useKeyboardNavigationGlobalListeners({
         return;
       }
 
-      if (!isSearchActive) {
-        if (hasItem(navigableId, items)) {
-          clearIdleTimeout();
+      const {
+        isSearchActive: searchActive,
+        items: currentItems,
+        clearIdleTimeout: doClearIdle,
+        clearFocus: doClearFocus,
+        setFocusedItemId: setFocused,
+        setNavigationInputMode: setInputMode,
+        scheduleIdleClear: doScheduleIdle,
+      } = latestRef.current;
+
+      if (!searchActive) {
+        if (hasItem(navigableId, currentItems)) {
+          doClearIdle();
           contextMenuOwnedFocusRef.current = false;
           if (navigableId.startsWith('group-header:') || navigableId.startsWith('section:')) {
-            clearFocus();
+            doClearFocus();
             return;
           }
-          setFocusedItemId(navigableId);
-          setNavigationInputMode('pointer');
-          scheduleIdleClear();
+          setFocused(navigableId);
+          setInputMode('pointer');
+          doScheduleIdle();
         } else {
-          setFocusedItemId(null);
-          setNavigationInputMode(null);
+          setFocused(null);
+          setInputMode(null);
         }
       }
     };
@@ -166,26 +212,16 @@ export function useKeyboardNavigationGlobalListeners({
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown, true);
     };
-  }, [
-    clearFocus,
-    clearIdleTimeout,
-    contextMenuOwnedFocusRef,
-    isSearchActive,
-    lastPointerPositionRef,
-    items,
-    scheduleIdleClear,
-    setFocusedItemId,
-    setNavigationInputMode,
-  ]);
+  }, [contextMenuOwnedFocusRef]);
 
   useEffect(() => {
-    if (isSuppressedRef.current) {
-      return undefined;
-    }
-
     const POINTER_IDLE_EXTEND_THROTTLE_MS = 300;
 
     const handlePointerMove = (event: PointerEvent) => {
+      if (isSuppressedRef.current) {
+        return;
+      }
+
       if (!(event.target instanceof Element)) {
         return;
       }
@@ -212,9 +248,9 @@ export function useKeyboardNavigationGlobalListeners({
       }
       idleExtendPointerLastAtRef.current = now;
       if (navigationInputModeRef.current === 'keyboard') {
-        clearFocus();
+        latestRef.current.clearFocus();
       } else {
-        scheduleIdleClear();
+        latestRef.current.scheduleIdleClear();
       }
     };
 
@@ -227,16 +263,22 @@ export function useKeyboardNavigationGlobalListeners({
     idleExtendPointerLastAtRef,
     isSearchActiveRef,
     isSuppressedRef,
-    lastPointerPositionRef,
-    scheduleIdleClear,
-    searchFocusedItemIdRef,
-    clearFocus,
     navigationInputModeRef,
+    searchFocusedItemIdRef,
   ]);
 
   useEffect(() => {
     const handleGlobalKeyDown = (event: KeyboardEvent) => {
-      const logicalRowFocus = isSearchActive ? searchFocusedItemId : focusedItemId;
+      const {
+        activeWorksheetId: activeId,
+        items: currentItems,
+        setKeyboardFocusedItem: setKeyFocused,
+        markKeyboardActivity: markKeyActivity,
+      } = latestRef.current;
+
+      const logicalRowFocus = isSearchActiveRef.current
+        ? searchFocusedItemIdRef.current
+        : focusedItemIdRef.current;
       if (isSuppressedRef.current || logicalRowFocus) {
         return;
       }
@@ -250,19 +292,19 @@ export function useKeyboardNavigationGlobalListeners({
       }
 
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-        const activeItemId = activeWorksheetId ? `worksheet:${activeWorksheetId}` : null;
-        let targetId = activeItemId && hasItem(activeItemId, items) ? activeItemId : null;
+        const activeItemId = activeId ? `worksheet:${activeId}` : null;
+        let targetId = activeItemId && hasItem(activeItemId, currentItems) ? activeItemId : null;
 
         if (!targetId) {
-          const firstItem = getFirstItem(items);
+          const firstItem = getFirstItem(currentItems);
           targetId = firstItem?.id ?? null;
         }
 
         if (targetId) {
           event.preventDefault();
           event.stopPropagation();
-          setKeyboardFocusedItem(targetId);
-          markKeyboardActivity();
+          setKeyFocused(targetId);
+          markKeyActivity();
         }
       }
     };
@@ -271,16 +313,7 @@ export function useKeyboardNavigationGlobalListeners({
     return () => {
       document.removeEventListener('keydown', handleGlobalKeyDown);
     };
-  }, [
-    activeWorksheetId,
-    focusedItemId,
-    isSearchActive,
-    isSuppressedRef,
-    items,
-    markKeyboardActivity,
-    searchFocusedItemId,
-    setKeyboardFocusedItem,
-  ]);
+  }, [focusedItemIdRef, isSearchActiveRef, isSuppressedRef, searchFocusedItemIdRef]);
 
   useEffect(() => {
     const handleCaptureKeyDown = (event: KeyboardEvent) => {
@@ -318,14 +351,21 @@ export function useKeyboardNavigationGlobalListeners({
         return;
       }
 
-      const logicalItem = items.find((item) => item.id === logicalId);
+      const {
+        items: currentItems,
+        handleGroupHeaderKeyDown: onGroupHeaderKeyDown,
+        handleSectionHeaderKeyDown: onSectionHeaderKeyDown,
+        handleItemKeyDown: onItemKeyDown,
+      } = latestRef.current;
+
+      const logicalItem = currentItems.find((item) => item.id === logicalId);
       if (!logicalItem) {
         return;
       }
 
       const routeThroughLogicalOwner = () => {
         if (logicalItem.kind === 'group-header') {
-          handleGroupHeaderKeyDown(
+          onGroupHeaderKeyDown(
             event as unknown as ReactKeyboardEvent<HTMLElement>,
             logicalItem.groupId ?? '',
             Boolean(logicalItem.isGroupCollapsed),
@@ -334,7 +374,7 @@ export function useKeyboardNavigationGlobalListeners({
         }
 
         if (logicalItem.kind === 'section-header' && logicalItem.sectionId) {
-          handleSectionHeaderKeyDown(
+          onSectionHeaderKeyDown(
             event as unknown as ReactKeyboardEvent<HTMLElement>,
             logicalItem.sectionId,
             Boolean(logicalItem.isSectionCollapsed),
@@ -342,7 +382,7 @@ export function useKeyboardNavigationGlobalListeners({
           return;
         }
 
-        handleItemKeyDown(event as unknown as ReactKeyboardEvent<HTMLElement>, logicalId);
+        onItemKeyDown(event as unknown as ReactKeyboardEvent<HTMLElement>, logicalId);
       };
 
       if (active instanceof HTMLElement && root.contains(active)) {
@@ -368,14 +408,10 @@ export function useKeyboardNavigationGlobalListeners({
       document.removeEventListener('keydown', handleCaptureKeyDown, true);
     };
   }, [
-    focusedItemIdRef,
     elementRegistryRef,
-    handleGroupHeaderKeyDown,
-    handleItemKeyDown,
-    handleSectionHeaderKeyDown,
+    focusedItemIdRef,
     isSearchActiveRef,
     isSuppressedRef,
-    items,
     searchFocusedItemIdRef,
     searchInputRef,
   ]);
@@ -413,7 +449,7 @@ export function useKeyboardNavigationGlobalListeners({
         return;
       }
 
-      const logicalItem = items.find((item) => item.id === logicalId);
+      const logicalItem = latestRef.current.items.find((item) => item.id === logicalId);
       if (logicalItem?.kind !== 'hidden-worksheet') {
         return;
       }
@@ -430,11 +466,12 @@ export function useKeyboardNavigationGlobalListeners({
 
       event.preventDefault();
       event.stopPropagation();
+      event.stopImmediatePropagation();
     };
 
     document.addEventListener('keydown', handleSpaceOnHidden, true);
     return () => {
       document.removeEventListener('keydown', handleSpaceOnHidden, true);
     };
-  }, [elementRegistryRef, focusedItemIdRef, isSearchActiveRef, items, searchFocusedItemIdRef]);
+  }, [elementRegistryRef, focusedItemIdRef, isSearchActiveRef, searchFocusedItemIdRef]);
 }
