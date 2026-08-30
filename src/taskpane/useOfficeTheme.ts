@@ -23,24 +23,29 @@ function getPreferredDarkMode() {
 }
 
 function subscribePreferredColorSchemeChange(
-  mediaQueryList: MediaQueryList,
+  mediaQueryList: MediaQueryList | null,
   listener: (event: MediaQueryListEvent) => void,
 ) {
+  if (!mediaQueryList) {
+    return;
+  }
   if (typeof mediaQueryList.addEventListener === 'function') {
     mediaQueryList.addEventListener('change', listener);
     return;
   }
 
-  // Legacy WebView API surface (e.g. older EdgeHTML-based hosts).
   if (typeof mediaQueryList.addListener === 'function') {
     mediaQueryList.addListener(listener);
   }
 }
 
 function unsubscribePreferredColorSchemeChange(
-  mediaQueryList: MediaQueryList,
+  mediaQueryList: MediaQueryList | null,
   listener: (event: MediaQueryListEvent) => void,
 ) {
+  if (!mediaQueryList) {
+    return;
+  }
   if (typeof mediaQueryList.removeEventListener === 'function') {
     mediaQueryList.removeEventListener('change', listener);
     return;
@@ -51,30 +56,45 @@ function unsubscribePreferredColorSchemeChange(
   }
 }
 
+function parseHexColorBrightness(color: string | undefined): 'dark' | 'light' | null {
+  if (!color) {
+    return null;
+  }
+  const hex = color.replace('#', '').trim();
+  if (hex.length === 6) {
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    if (!Number.isNaN(r) && !Number.isNaN(g) && !Number.isNaN(b)) {
+      const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+      return luminance < 128 ? 'dark' : 'light';
+    }
+  }
+  return null;
+}
+
 function getResolvedTheme() {
   const officeTheme = typeof Office !== 'undefined' ? Office.context?.officeTheme : undefined;
   const preferredDarkMode = getPreferredDarkMode();
-  const officeDarkMode = Boolean(officeTheme?.isDarkTheme);
-  const modeMismatch = officeTheme !== undefined && preferredDarkMode !== officeDarkMode;
-  const isDarkTheme = modeMismatch ? preferredDarkMode : officeDarkMode;
+  const detectedBrightness = parseHexColorBrightness(officeTheme?.bodyBackgroundColor);
+  const officeDarkMode =
+    detectedBrightness !== null
+      ? detectedBrightness === 'dark'
+      : (officeTheme?.isDarkTheme ?? preferredDarkMode);
+
+  const isDarkTheme = officeTheme !== undefined ? officeDarkMode : preferredDarkMode;
   const fallbackTheme = isDarkTheme ? DEFAULT_DARK_THEME : DEFAULT_LIGHT_THEME;
 
   return {
     themeId: officeTheme?.themeId ?? null,
     preferredDarkMode,
     isDarkTheme,
-    bodyBackgroundColor: modeMismatch
-      ? fallbackTheme.bodyBackgroundColor
-      : (officeTheme?.bodyBackgroundColor ?? fallbackTheme.bodyBackgroundColor),
-    bodyForegroundColor: modeMismatch
-      ? fallbackTheme.bodyForegroundColor
-      : (officeTheme?.bodyForegroundColor ?? fallbackTheme.bodyForegroundColor),
-    controlBackgroundColor: modeMismatch
-      ? fallbackTheme.controlBackgroundColor
-      : (officeTheme?.controlBackgroundColor ?? fallbackTheme.controlBackgroundColor),
-    controlForegroundColor: modeMismatch
-      ? fallbackTheme.controlForegroundColor
-      : (officeTheme?.controlForegroundColor ?? fallbackTheme.controlForegroundColor),
+    bodyBackgroundColor: officeTheme?.bodyBackgroundColor ?? fallbackTheme.bodyBackgroundColor,
+    bodyForegroundColor: officeTheme?.bodyForegroundColor ?? fallbackTheme.bodyForegroundColor,
+    controlBackgroundColor:
+      officeTheme?.controlBackgroundColor ?? fallbackTheme.controlBackgroundColor,
+    controlForegroundColor:
+      officeTheme?.controlForegroundColor ?? fallbackTheme.controlForegroundColor,
   };
 }
 
@@ -138,6 +158,26 @@ export function useOfficeTheme() {
       return;
     }
 
+    let isReady = false;
+
+    const startPolling = () => {
+      if (
+        !isDisposed &&
+        isReady &&
+        refreshIntervalId === null &&
+        (typeof document === 'undefined' || document.visibilityState === 'visible')
+      ) {
+        refreshIntervalId = setInterval(refreshIfThemeChanged, THEME_REFRESH_INTERVAL_MS);
+      }
+    };
+
+    const stopPolling = () => {
+      if (refreshIntervalId !== null) {
+        clearInterval(refreshIntervalId);
+        refreshIntervalId = null;
+      }
+    };
+
     const onWindowFocus = () => {
       refreshIfThemeChanged();
     };
@@ -145,9 +185,15 @@ export function useOfficeTheme() {
     const onDocumentVisible = () => {
       if (document.visibilityState === 'visible') {
         refreshIfThemeChanged();
+        startPolling();
+      } else {
+        stopPolling();
       }
     };
-    const mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
+    const mediaQueryList =
+      typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+        ? window.matchMedia('(prefers-color-scheme: dark)')
+        : null;
     const onPreferredSchemeChanged = () => {
       refreshIfThemeChanged();
     };
@@ -160,9 +206,10 @@ export function useOfficeTheme() {
       if (isDisposed) {
         return;
       }
+      isReady = true;
       setThemeVariables();
       previousThemeSignature = getThemeSignature();
-      refreshIntervalId = setInterval(refreshIfThemeChanged, THEME_REFRESH_INTERVAL_MS);
+      startPolling();
     });
 
     return () => {
@@ -170,9 +217,7 @@ export function useOfficeTheme() {
       window.removeEventListener('focus', onWindowFocus);
       document.removeEventListener('visibilitychange', onDocumentVisible);
       unsubscribePreferredColorSchemeChange(mediaQueryList, onPreferredSchemeChanged);
-      if (refreshIntervalId !== null) {
-        clearInterval(refreshIntervalId);
-      }
+      stopPolling();
     };
   }, []);
 }
