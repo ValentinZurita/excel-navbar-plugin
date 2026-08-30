@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fuzzySearchMatch } from '../../src/domain/navigation/fuzzySearch';
+import { fuzzySearchMatch, precomputeSearchQuery } from '../../src/domain/navigation/fuzzySearch';
 
 describe('fuzzySearchMatch', () => {
   it('returns null for blank queries', () => {
@@ -59,5 +59,25 @@ describe('fuzzySearchMatch', () => {
 
     expect(match).not.toBeNull();
     expect(match?.matchedIndices).toEqual([2, 3, 4]);
+  });
+
+  it('produces identical matches when using precomputed search query', () => {
+    const query = '  an rev  ';
+    const precomputed = precomputeSearchQuery(query);
+
+    expect(precomputed.trimmedQuery).toBe('an rev');
+
+    const regularMatch = fuzzySearchMatch('Annual_Revenue', query);
+    const precomputedMatch = fuzzySearchMatch('Annual_Revenue', query, precomputed);
+
+    expect(precomputedMatch).toEqual(regularMatch);
+    expect(precomputedMatch).not.toBeNull();
+    expect(precomputedMatch?.score).toBe(regularMatch?.score);
+  });
+
+  it('matches when query contains unicode emoji code points', () => {
+    const match = fuzzySearchMatch('📊 Revenue', '📊');
+    expect(match).not.toBeNull();
+    expect(match?.matchedIndices).toEqual([0]);
   });
 });

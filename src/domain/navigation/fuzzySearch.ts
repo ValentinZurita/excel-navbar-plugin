@@ -57,26 +57,29 @@ function compactComparableCharacters(
   return compact;
 }
 
-function compactComparableText(text: string): string {
-  return compactComparableCharacters(toSearchableCharacters(text), isTextSkippable);
-}
-
-function compactComparableQuery(query: string): string {
-  return compactComparableCharacters(toSearchableCharacters(query.trim()), isQuerySkippable);
-}
-
 export function normalizeSearchQuery(query: string): string {
   return query.trim();
 }
 
-function hasContiguousCompactMatch(text: string, query: string): boolean {
-  const compactText = compactComparableText(text);
-  const compactQuery = compactComparableQuery(query);
+export interface PrecomputedSearchQuery {
+  trimmedQuery: string;
+  queryChars: string[];
+  compactQuery: string;
+}
 
+export function precomputeSearchQuery(query: string): PrecomputedSearchQuery {
+  const trimmedQuery = normalizeSearchQuery(query);
+  const queryChars = toSearchableCharacters(trimmedQuery);
+  const compactQuery = compactComparableCharacters(queryChars, isQuerySkippable);
+  return { trimmedQuery, queryChars, compactQuery };
+}
+
+function hasContiguousCompactMatch(textChars: string[], compactQuery: string): boolean {
   if (!compactQuery) {
     return false;
   }
 
+  const compactText = compactComparableCharacters(textChars, isTextSkippable);
   return compactText.includes(compactQuery);
 }
 
@@ -120,14 +123,19 @@ function scoreCharacterMatch(args: {
  * Indices in `matchedIndices` align with `[...text]` so highlighting stays stable
  * for unicode sheet names.
  */
-export function fuzzySearchMatch(text: string, query: string): FuzzySearchMatch | null {
-  const trimmedQuery = normalizeSearchQuery(query);
+export function fuzzySearchMatch(
+  text: string,
+  query: string,
+  precomputed?: PrecomputedSearchQuery,
+): FuzzySearchMatch | null {
+  const trimmedQuery = precomputed ? precomputed.trimmedQuery : normalizeSearchQuery(query);
 
   if (!trimmedQuery) {
     return null;
   }
 
   const textChars = toSearchableCharacters(text);
+  const queryChars = precomputed ? precomputed.queryChars : toSearchableCharacters(trimmedQuery);
   let score = 0;
   const matchedIndices: number[] = [];
   let textIndex = 0;
@@ -135,8 +143,8 @@ export function fuzzySearchMatch(text: string, query: string): FuzzySearchMatch 
   let lastMatchTextIndex = -1;
   let consecutiveMatches = 0;
 
-  while (textIndex < textChars.length && queryIndex < trimmedQuery.length) {
-    const queryChar = trimmedQuery[queryIndex];
+  while (textIndex < textChars.length && queryIndex < queryChars.length) {
+    const queryChar = queryChars[queryIndex] ?? '';
 
     if (isQuerySkippable(queryChar)) {
       queryIndex += 1;
@@ -169,11 +177,11 @@ export function fuzzySearchMatch(text: string, query: string): FuzzySearchMatch 
     textIndex += 1;
   }
 
-  while (queryIndex < trimmedQuery.length && isQuerySkippable(trimmedQuery[queryIndex] ?? '')) {
+  while (queryIndex < queryChars.length && isQuerySkippable(queryChars[queryIndex] ?? '')) {
     queryIndex += 1;
   }
 
-  if (queryIndex < trimmedQuery.length) {
+  if (queryIndex < queryChars.length) {
     return null;
   }
 
@@ -182,7 +190,10 @@ export function fuzzySearchMatch(text: string, query: string): FuzzySearchMatch 
     score -= span * SCORE.SPAN_PENALTY;
   }
 
-  if (hasContiguousCompactMatch(text, trimmedQuery)) {
+  const compactQuery = precomputed
+    ? precomputed.compactQuery
+    : compactComparableCharacters(queryChars, isQuerySkippable);
+  if (hasContiguousCompactMatch(textChars, compactQuery)) {
     score += SCORE.CONTIGUOUS_BONUS;
   }
 

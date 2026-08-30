@@ -2,6 +2,7 @@ import {
   compareFuzzySearchMatches,
   fuzzySearchMatch,
   normalizeSearchQuery,
+  precomputeSearchQuery,
   type FuzzySearchMatch,
 } from './fuzzySearch';
 import { byWorkbookOrder } from './utils';
@@ -64,15 +65,21 @@ function scoreVisibleWorksheetsForSearch(
   worksheets: WorksheetEntity[],
   query: string,
 ): ScoredWorksheetSearchMatch[] {
-  return worksheets.flatMap((worksheet) => {
-    const match = fuzzySearchMatch(worksheet.name, query);
+  const precomputed = precomputeSearchQuery(query);
+  if (!precomputed.trimmedQuery) {
+    return [];
+  }
 
-    if (!match) {
-      return [];
+  const results: ScoredWorksheetSearchMatch[] = [];
+  for (let i = 0; i < worksheets.length; i += 1) {
+    const worksheet = worksheets[i];
+    const match = fuzzySearchMatch(worksheet.name, query, precomputed);
+    if (match) {
+      results.push({ worksheet, match });
     }
+  }
 
-    return [{ worksheet, match }];
-  });
+  return results;
 }
 
 function compareScoredWorksheetSearchMatches(
