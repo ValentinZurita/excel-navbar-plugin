@@ -341,7 +341,9 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
       return async () => undefined;
     }
 
-    return Excel.run(async (context) => {
+    const context = typeof Excel.RequestContext === 'function' ? new Excel.RequestContext() : null;
+
+    if (context) {
       const worksheets = context.workbook.worksheets;
       const handlers = [
         worksheets.onAdded.add(async () => {
@@ -365,11 +367,145 @@ export class OfficeWorkbookAdapter implements WorkbookAdapter {
       ];
       await context.sync();
 
+      let isCleanedUp = false;
       return async () => {
-        handlers.forEach((handler) => handler.remove());
-        await context.sync();
+        if (isCleanedUp || !hasOfficeRuntime()) {
+          return;
+        }
+        isCleanedUp = true;
+
+        try {
+          handlers.forEach((handler) => {
+            try {
+              handler.remove();
+            } catch {
+              // Ignore if an individual handler was already invalidated
+            }
+          });
+          await context.sync();
+        } catch {
+          // Teardown errors are non-fatal during host unmount/closing
+        }
+
+        try {
+          const disposable = context as unknown as { dispose?: () => Promise<void> };
+          if (typeof disposable.dispose === 'function') {
+            await disposable.dispose();
+          }
+        } catch {
+          // Non-fatal
+        }
+      };
+    }
+
+    return Excel.run(async (batchContext) => {
+      const worksheets = batchContext.workbook.worksheets;
+      const handlers = [
+        worksheets.onAdded.add(async () => {
+          listener('structural');
+        }),
+        worksheets.onDeleted.add(async () => {
+          listener('structural');
+        }),
+        worksheets.onActivated.add(async () => {
+          listener('activation');
+        }),
+        worksheets.onMoved.add(async () => {
+          listener('structural');
+        }),
+        worksheets.onNameChanged.add(async () => {
+          listener('structural');
+        }),
+        worksheets.onVisibilityChanged.add(async () => {
+          listener('structural');
+        }),
+      ];
+      await batchContext.sync();
+
+      let isCleanedUp = false;
+      return async () => {
+        if (isCleanedUp || !hasOfficeRuntime()) {
+          return;
+        }
+        isCleanedUp = true;
+
+        try {
+          await Excel.run(async (cleanContext) => {
+            handlers.forEach((handler) => {
+              try {
+                handler.remove();
+              } catch {
+                // Ignore
+              }
+            });
+            await cleanContext.sync();
+          });
+        } catch {
+          // Teardown errors are non-fatal during host unmount/closing
+        }
       };
     });
+  }
+
+  subscribeToVisibilityChange(listener: (isVisible: boolean) => void): () => void {
+    if (!hasOfficeRuntime()) {
+      return () => undefined;
+    }
+
+    let isDisposed = false;
+    let removeOfficeListener: (() => void) | null = null;
+
+    try {
+      const officeAddin = Office.addin as
+        | {
+            onVisibilityModeChanged?: (
+              handler: (message: { visibilityMode: string }) => void,
+            ) => Promise<() => void>;
+          }
+        | undefined;
+
+      if (typeof officeAddin?.onVisibilityModeChanged === 'function') {
+        void officeAddin
+          .onVisibilityModeChanged((message) => {
+            if (isDisposed) {
+              return;
+            }
+            const isVisible =
+              message.visibilityMode === (Office.VisibilityMode?.taskpane ?? 'Taskpane');
+            listener(isVisible);
+          })
+          .then((remover) => {
+            if (isDisposed) {
+              if (typeof remover === 'function') {
+                try {
+                  remover();
+                } catch {
+                  // Ignore
+                }
+              }
+            } else {
+              removeOfficeListener = remover;
+            }
+          })
+          .catch(() => {
+            // Non-fatal if host does not allow visibility registration
+          });
+      }
+    } catch {
+      // Ignore if Office.addin is unavailable
+    }
+
+    return () => {
+      isDisposed = true;
+      if (typeof removeOfficeListener === 'function') {
+        try {
+          removeOfficeListener();
+        } catch {
+          // Ignore removal error during teardown
+        }
+        removeOfficeListener = null;
+      }
+    };
   }
 
   async getActiveWorksheetId(): Promise<string | null> {

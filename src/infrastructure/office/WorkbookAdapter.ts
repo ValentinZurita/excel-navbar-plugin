@@ -39,6 +39,11 @@ export interface WorkbookAdapter {
     listener: (kind: WorkbookChangeKind) => void,
   ): Promise<() => Promise<void> | void>;
   /**
+   * Optional observer for taskpane visibility changes.
+   * Emits true when taskpane is visible, false when hidden.
+   */
+  subscribeToVisibilityChange?(listener: (isVisible: boolean) => void): () => void;
+  /**
    * Lightweight read of just the active worksheet's stable id.
    * Used as a fast path when only the active sheet changed.
    */

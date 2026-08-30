@@ -814,3 +814,127 @@ describe('OfficeWorkbookAdapter.createWorksheet', () => {
     consoleSpy.mockRestore();
   });
 });
+
+describe('OfficeWorkbookAdapter.subscribeToWorkbookChanges', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    // @ts-expect-error test cleanup
+    delete globalThis.Office;
+    // @ts-expect-error test cleanup
+    delete globalThis.Excel;
+  });
+
+  it('subscribes handlers and deregisters them safely on unsubscribe', async () => {
+    const handlerRemoverMocks = Array.from({ length: 6 }, () => ({
+      remove: vi.fn(),
+    }));
+    const syncMock = vi.fn(async () => undefined);
+
+    globalThis.Office = mockExcelOffice({
+      context: {
+        requirements: {
+          isSetSupported: (set: string) => set === 'ExcelApi',
+        },
+      },
+    }) as any;
+
+    const disposeMock = vi.fn(async () => undefined);
+
+    globalThis.Excel = {
+      RequestContext: class {
+        workbook = {
+          worksheets: {
+            onAdded: { add: vi.fn(() => handlerRemoverMocks[0]) },
+            onDeleted: { add: vi.fn(() => handlerRemoverMocks[1]) },
+            onActivated: { add: vi.fn(() => handlerRemoverMocks[2]) },
+            onMoved: { add: vi.fn(() => handlerRemoverMocks[3]) },
+            onNameChanged: { add: vi.fn(() => handlerRemoverMocks[4]) },
+            onVisibilityChanged: { add: vi.fn(() => handlerRemoverMocks[5]) },
+          },
+        };
+        sync = syncMock;
+        dispose = disposeMock;
+      } as any,
+      run: vi.fn(async (callback: (context: any) => Promise<void>) => {
+        const context = { sync: vi.fn(async () => undefined) };
+        return callback(context);
+      }),
+    } as any;
+
+    const adapter = new OfficeWorkbookAdapter();
+    const unsubscribe = await adapter.subscribeToWorkbookChanges(vi.fn());
+
+    expect(typeof unsubscribe).toBe('function');
+    expect(syncMock).toHaveBeenCalledOnce();
+
+    // Call unsubscribe
+    await unsubscribe();
+
+    handlerRemoverMocks.forEach((mock) => {
+      expect(mock.remove).toHaveBeenCalledOnce();
+    });
+    expect(disposeMock).toHaveBeenCalledOnce();
+
+    // Idempotent: second call does not re-invoke remove
+    await unsubscribe();
+    handlerRemoverMocks.forEach((mock) => {
+      expect(mock.remove).toHaveBeenCalledOnce();
+    });
+  });
+
+  it('returns noop unsubscription when Office runtime is missing', async () => {
+    // @ts-expect-error test setup
+    delete globalThis.Office;
+    // @ts-expect-error test setup
+    delete globalThis.Excel;
+
+    const adapter = new OfficeWorkbookAdapter();
+    const unsubscribe = await adapter.subscribeToWorkbookChanges(vi.fn());
+    await expect(unsubscribe()).resolves.toBeUndefined();
+  });
+});
+
+describe('OfficeWorkbookAdapter.subscribeToVisibilityChange', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    // @ts-expect-error test cleanup
+    delete globalThis.Office;
+  });
+
+  it('registers listener with Office.addin.onVisibilityModeChanged and cleans up on unsubscribe', async () => {
+    const removeListenerMock = vi.fn();
+    let capturedHandler: ((msg: { visibilityMode: string }) => void) | null = null;
+
+    globalThis.Excel = {} as any;
+    globalThis.Office = {
+      ...mockExcelOffice(),
+      VisibilityMode: { taskpane: 'Taskpane', hidden: 'Hidden' },
+      addin: {
+        onVisibilityModeChanged: vi.fn(async (handler: any) => {
+          capturedHandler = handler;
+          return removeListenerMock;
+        }),
+      },
+    } as any;
+
+    const adapter = new OfficeWorkbookAdapter();
+    const listenerMock = vi.fn();
+    const unsubscribe = adapter.subscribeToVisibilityChange(listenerMock);
+
+    expect(globalThis.Office.addin.onVisibilityModeChanged).toHaveBeenCalledOnce();
+
+    // Wait for promise tick
+    await Promise.resolve();
+
+    // Trigger visibility events
+    const triggerVisibility = capturedHandler as ((msg: { visibilityMode: string }) => void) | null;
+    triggerVisibility?.({ visibilityMode: 'Hidden' });
+    expect(listenerMock).toHaveBeenCalledWith(false);
+
+    triggerVisibility?.({ visibilityMode: 'Taskpane' });
+    expect(listenerMock).toHaveBeenCalledWith(true);
+
+    unsubscribe();
+    expect(removeListenerMock).toHaveBeenCalledOnce();
+  });
+});
