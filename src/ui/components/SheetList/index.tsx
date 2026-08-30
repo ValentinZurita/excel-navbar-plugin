@@ -126,18 +126,18 @@ export function SheetList(props: SheetListProps) {
       <div className={sheetListClassName}>
         {props.worksheets.map((worksheet) => {
           const navigableId = `worksheet:${worksheet.worksheetId}`;
+          const isActive = worksheet.worksheetId === props.activeWorksheetId;
           const isFocused = focusedItemId === navigableId;
           const isVisualFocused = visualFocusedItemId === navigableId;
           const isVisualExiting = visualExitingItemId === navigableId;
-          const isActiveDimmed = Boolean(
-            visualFocusedItemId && visualFocusedItemId !== navigableId,
-          );
+          const isActiveDimmed =
+            isActive && Boolean(visualFocusedItemId && visualFocusedItemId !== navigableId);
 
           return (
             <SheetRow
               key={worksheet.worksheetId}
               worksheet={worksheet}
-              isActive={worksheet.worksheetId === props.activeWorksheetId}
+              isActive={isActive}
               isContextMenuOpen={worksheet.worksheetId === props.contextMenuOpenId}
               isInteractionSuppressed={false}
               isRenaming={props.renamingWorksheetId === worksheet.worksheetId}
@@ -180,12 +180,12 @@ export function SheetList(props: SheetListProps) {
       <div className={sheetListClassName}>
         {props.worksheets.map((worksheet, index) => {
           const navigableId = `worksheet:${worksheet.worksheetId}`;
+          const isActive = worksheet.worksheetId === props.activeWorksheetId;
           const isFocused = focusedItemId === navigableId;
           const isVisualFocused = visualFocusedItemId === navigableId;
           const isVisualExiting = visualExitingItemId === navigableId;
-          const isActiveDimmed = Boolean(
-            visualFocusedItemId && visualFocusedItemId !== navigableId,
-          );
+          const isActiveDimmed =
+            isActive && Boolean(visualFocusedItemId && visualFocusedItemId !== navigableId);
           const gapActive = isGapDropActive(
             dragConfig.projectedDropTarget,
             dragConfig.containerId,

@@ -152,6 +152,44 @@ function areGroupDragConfigsEqual(
   );
 }
 
+function areGroupFocusPropsEqual(left: GroupCardProps, right: GroupCardProps): boolean {
+  if (
+    left.visualFocusedItemId === right.visualFocusedItemId &&
+    left.visualExitingItemId === right.visualExitingItemId
+  ) {
+    return true;
+  }
+
+  // When collapsed, child SheetList is unmounted, so global focus changes do not alter DOM
+  if (left.group.isCollapsed && right.group.isCollapsed) {
+    return true;
+  }
+
+  const affectsGroup = (focusedId: string | null | undefined) => {
+    if (!focusedId) {
+      return false;
+    }
+    return left.group.worksheets.some((w) => `worksheet:${w.worksheetId}` === focusedId);
+  };
+
+  const affectsLeft =
+    affectsGroup(left.visualFocusedItemId) || affectsGroup(left.visualExitingItemId);
+  const affectsRight =
+    affectsGroup(right.visualFocusedItemId) || affectsGroup(right.visualExitingItemId);
+  const hasActiveSheetInGroup = left.group.worksheets.some(
+    (w) => w.worksheetId === left.activeWorksheetId,
+  );
+
+  if (hasActiveSheetInGroup) {
+    return (
+      left.visualFocusedItemId === right.visualFocusedItemId &&
+      left.visualExitingItemId === right.visualExitingItemId
+    );
+  }
+
+  return !affectsLeft && !affectsRight;
+}
+
 function areGroupCardPropsEqual(left: GroupCardProps, right: GroupCardProps) {
   return (
     areGroupViewsEqual(left.group, right.group) &&
@@ -180,8 +218,7 @@ function areGroupCardPropsEqual(left: GroupCardProps, right: GroupCardProps) {
     left.isActiveDimmed === right.isActiveDimmed &&
     left.onGroupHeaderKeyDown === right.onGroupHeaderKeyDown &&
     left.registerElement === right.registerElement &&
-    left.visualFocusedItemId === right.visualFocusedItemId &&
-    left.visualExitingItemId === right.visualExitingItemId &&
+    areGroupFocusPropsEqual(left, right) &&
     left.onItemKeyDown === right.onItemKeyDown &&
     left.onPreviewRequest === right.onPreviewRequest &&
     left.onPreviewCancel === right.onPreviewCancel

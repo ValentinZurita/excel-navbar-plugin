@@ -101,7 +101,13 @@ export function GroupSection({
         const isFocused = focusedItemId === navigableId;
         const isVisualFocused = visualFocusedItemId === navigableId;
         const isVisualExiting = visualExitingItemId === navigableId;
-        const isActiveDimmed = Boolean(visualFocusedItemId && visualFocusedItemId !== navigableId);
+        const containsActive = Boolean(
+          activeWorksheetId && group.worksheets?.some((w) => w.worksheetId === activeWorksheetId),
+        );
+        const isActiveGroupHeader = Boolean(group.isCollapsed && containsActive);
+        const isActiveDimmed =
+          isActiveGroupHeader &&
+          Boolean(visualFocusedItemId && visualFocusedItemId !== navigableId);
 
         return (
           <GroupCard

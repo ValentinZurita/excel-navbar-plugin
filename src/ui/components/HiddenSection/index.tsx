@@ -151,20 +151,6 @@ function HiddenSheetRow({
           return;
         }
 
-        const managedNavigationKey =
-          event.key === 'ArrowDown' ||
-          event.key === 'ArrowUp' ||
-          event.key === 'Enter' ||
-          event.key === 'Home' ||
-          event.key === 'End' ||
-          event.key === 'ArrowLeft' ||
-          event.key === 'ArrowRight';
-
-        if (onItemKeyDown && managedNavigationKey) {
-          onItemKeyDown(event, navigableId);
-          return;
-        }
-
         if (onItemKeyDown) {
           onItemKeyDown(event, navigableId);
         }
@@ -258,9 +244,7 @@ export function HiddenSection({
             const isFocused = focusedItemId === navigableId;
             const isVisualFocused = visualFocusedItemId === navigableId;
             const isVisualExiting = visualExitingItemId === navigableId;
-            const isActiveDimmed = Boolean(
-              visualFocusedItemId && visualFocusedItemId !== navigableId,
-            );
+            const isActiveDimmed = false;
 
             return (
               <HiddenSheetRow
