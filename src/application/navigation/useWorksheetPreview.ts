@@ -7,6 +7,7 @@ import type {
 export const WORKSHEET_PREVIEW_HOVER_DELAY_MS = 800;
 export const WORKSHEET_PREVIEW_CACHE_TTL_MS = 30_000;
 export const WORKSHEET_PREVIEW_KEYBOARD_AUTO_DISMISS_MS = 4_500;
+export const MAX_PREVIEW_CACHE_ENTRIES = 20;
 
 export interface WorksheetPreviewPointerPosition {
   clientX: number;
@@ -176,6 +177,10 @@ export function useWorksheetPreview({
 
         const cached = cacheRef.current.get(request.worksheetId);
         if (cached && Date.now() - cached.cachedAt <= cacheTtlMs) {
+          // True LRU: refresh entry position to most recently accessed
+          cacheRef.current.delete(request.worksheetId);
+          cacheRef.current.set(request.worksheetId, cached);
+
           setPreviewState(toPreviewState(request, cached.result));
           scheduleAutoDismiss(sequence, request.autoDismissMs);
           return;
@@ -203,14 +208,24 @@ export function useWorksheetPreview({
 
         void previewPromise
           .then((result) => {
+            const cache = cacheRef.current;
+            if (cache.has(request.worksheetId)) {
+              cache.delete(request.worksheetId);
+            } else if (cache.size >= MAX_PREVIEW_CACHE_ENTRIES) {
+              const oldestKey = cache.keys().next().value;
+              if (oldestKey !== undefined) {
+                cache.delete(oldestKey);
+              }
+            }
+            cache.set(request.worksheetId, {
+              result,
+              cachedAt: Date.now(),
+            });
+
             if (sequence !== requestSequenceRef.current || !request.anchorElement.isConnected) {
               return;
             }
 
-            cacheRef.current.set(request.worksheetId, {
-              result,
-              cachedAt: Date.now(),
-            });
             setPreviewState(toPreviewState(request, result));
           })
           .catch(() => {
@@ -252,13 +267,12 @@ export function useWorksheetPreview({
   // This ensures structural workbook changes (rename, add, delete) clear stale previews.
   useEffect(() => {
     if (prevTokenRef.current !== undefined && cacheInvalidationToken !== prevTokenRef.current) {
-      requestSequenceRef.current += 1;
+      cancelPreview();
       cacheRef.current.clear();
       inFlightPreviewRef.current.clear();
-      clearDelayTimer();
     }
     prevTokenRef.current = cacheInvalidationToken;
-  }, [cacheInvalidationToken, clearDelayTimer]);
+  }, [cacheInvalidationToken, cancelPreview]);
 
   useEffect(() => {
     return () => {

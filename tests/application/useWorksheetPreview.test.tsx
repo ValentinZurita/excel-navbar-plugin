@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   useWorksheetPreview,
+  MAX_PREVIEW_CACHE_ENTRIES,
   WORKSHEET_PREVIEW_CACHE_TTL_MS,
   WORKSHEET_PREVIEW_HOVER_DELAY_MS,
   WORKSHEET_PREVIEW_KEYBOARD_AUTO_DISMISS_MS,
@@ -324,7 +325,7 @@ describe('useWorksheetPreview', () => {
     expect(result.current.previewState.status).toBe('idle');
   });
 
-  it('clears the cache when cacheInvalidationToken changes', () => {
+  it('clears the cache when cacheInvalidationToken changes', async () => {
     vi.useFakeTimers();
     const getPreview = vi.fn().mockResolvedValue(readyPreview);
     const anchor = createAnchor();
@@ -336,7 +337,7 @@ describe('useWorksheetPreview', () => {
     );
 
     // First hover - caches the preview
-    act(() => {
+    await act(async () => {
       result.current.requestPreview({
         worksheetId: 'sheet-1',
         worksheetName: 'Revenue',
@@ -344,12 +345,13 @@ describe('useWorksheetPreview', () => {
         pointerPosition,
       });
       vi.advanceTimersByTime(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+      await Promise.resolve();
     });
 
     expect(getPreview).toHaveBeenCalledTimes(1);
 
     // Token changes to 1 - cache should be cleared
-    act(() => {
+    await act(async () => {
       rerender({ token: 1 });
     });
 
@@ -410,5 +412,87 @@ describe('useWorksheetPreview', () => {
 
     // Status should still be 'loading' (or idle) because the result was dropped
     expect(result.current.previewState.status).not.toBe('ready');
+  });
+
+  it('bounds preview cache with true LRU eviction policy', async () => {
+    vi.useFakeTimers();
+    const getPreview = vi.fn(async (sheetId: string) => ({
+      status: 'ready' as const,
+      imageSrc: `data:image/png;base64,${sheetId}`,
+      generatedAt: Date.now(),
+    }));
+
+    const anchor = createAnchor();
+    const { result } = renderHook(() => useWorksheetPreview({ getPreview }));
+
+    // Request previews for MAX_PREVIEW_CACHE_ENTRIES sheets (sheet-0 through sheet-19)
+    for (let i = 0; i < MAX_PREVIEW_CACHE_ENTRIES; i += 1) {
+      await act(async () => {
+        result.current.requestPreview({
+          worksheetId: `sheet-${i}`,
+          worksheetName: `Sheet ${i}`,
+          anchorElement: anchor,
+          pointerPosition,
+        });
+        await vi.advanceTimersByTimeAsync(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+      });
+    }
+
+    expect(getPreview).toHaveBeenCalledTimes(MAX_PREVIEW_CACHE_ENTRIES);
+
+    // Touch sheet-0 (reading from cache refreshes its LRU position to most recently used)
+    await act(async () => {
+      result.current.requestPreview({
+        worksheetId: 'sheet-0',
+        worksheetName: 'Sheet 0',
+        anchorElement: anchor,
+        pointerPosition,
+      });
+      await vi.advanceTimersByTimeAsync(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    // Should NOT have fetched sheet-0 again (cache hit)
+    expect(getPreview).toHaveBeenCalledTimes(MAX_PREVIEW_CACHE_ENTRIES);
+
+    // Request sheet-20 (overflows capacity of 20).
+    // The oldest entry is sheet-1 because sheet-0 was accessed and moved to MRU.
+    await act(async () => {
+      result.current.requestPreview({
+        worksheetId: 'sheet-20',
+        worksheetName: 'Sheet 20',
+        anchorElement: anchor,
+        pointerPosition,
+      });
+      await vi.advanceTimersByTimeAsync(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    expect(getPreview).toHaveBeenCalledTimes(MAX_PREVIEW_CACHE_ENTRIES + 1);
+
+    // Request sheet-0 again -> should STILL be cached!
+    await act(async () => {
+      result.current.requestPreview({
+        worksheetId: 'sheet-0',
+        worksheetName: 'Sheet 0',
+        anchorElement: anchor,
+        pointerPosition,
+      });
+      await vi.advanceTimersByTimeAsync(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    // getPreview count should NOT increment (sheet-0 was retained by LRU refresh)
+    expect(getPreview).toHaveBeenCalledTimes(MAX_PREVIEW_CACHE_ENTRIES + 1);
+
+    // Request sheet-1 -> was evicted, should trigger getPreview!
+    await act(async () => {
+      result.current.requestPreview({
+        worksheetId: 'sheet-1',
+        worksheetName: 'Sheet 1',
+        anchorElement: anchor,
+        pointerPosition,
+      });
+      await vi.advanceTimersByTimeAsync(WORKSHEET_PREVIEW_HOVER_DELAY_MS);
+    });
+
+    expect(getPreview).toHaveBeenCalledTimes(MAX_PREVIEW_CACHE_ENTRIES + 2);
   });
 });
