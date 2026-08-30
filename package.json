@@ -30,7 +30,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "validate": "pnpm typecheck && pnpm lint && pnpm test",
-    "quality": "pnpm run check:component-imports && pnpm lint:css && pnpm lint:md && pnpm format:check && pnpm lint",
+    "quality": "pnpm run check:engram-protected && pnpm run check:component-imports && pnpm lint:css && pnpm lint:md && pnpm format:check && pnpm lint",
     "manifest:dev": "node scripts/render-manifest.mjs --base-url=https://localhost:3000 --output=excel-navbar-plugin.xml",
     "manifest:prod": "node scripts/render-manifest.mjs --output=dist/excel-navbar-plugin.xml",
     "manifest:validate": "office-addin-manifest validate dist/excel-navbar-plugin.xml",

@@ -33,21 +33,30 @@ function listFilesRecursively(dir, result = []) {
   return result;
 }
 
+function stripCommentsAndStrings(content) {
+  // Remove single line comments
+  let cleaned = content.replace(/\/\/.*$/gm, '');
+  // Remove multi-line comments
+  cleaned = cleaned.replace(/\/\*[\s\S]*?\*\//g, '');
+  // Remove template and string literals (including multiline)
+  cleaned = cleaned.replace(/(['"`])(?:(?!\1|\\)[\s\S]|\\.)*\1/g, '');
+  return cleaned;
+}
+
 function extractOfficeApis(content) {
   const apis = new Set();
+  const cleaned = stripCommentsAndStrings(content);
 
-  // Match Excel.run, Office.context.document.settings, etc.
-  const patterns = [
-    /Office\.(\w+(?:\.(\w+))?(?:\.(\w+))?)/g,
-    /Excel\.(\w+(?:\.(\w+))?(?:\.(\w+))?)/g,
-  ];
+  // Match arbitrary property access chains including optional chaining (Office.context?.requirements?.isSetSupported)
+  const pattern = /(?:Office|Excel)(?:\??\.[a-zA-Z0-9_$]+)+/g;
 
-  for (const regex of patterns) {
-    let match;
-    while ((match = regex.exec(content)) !== null) {
-      // Only keep APIs that look like runtime calls (not just type references)
-      apis.add(match[0]);
-    }
+  let match;
+  while ((match = pattern.exec(cleaned)) !== null) {
+    // Normalize optional chaining (?.) to standard dot access for matching test mocks
+    let api = match[0].replace(/\?\./g, '.');
+    // Strip standard JS function prototype wrappers
+    api = api.replace(/\.(bind|call|apply)$/, '');
+    apis.add(api);
   }
 
   return Array.from(apis);
@@ -100,8 +109,7 @@ if (drift.length > 0) {
     '\nThese APIs may be untested. Update test mocks to include them,\n' +
       'or add integration tests that exercise these paths.',
   );
-  // Exit with warning code (not failure) — this is advisory until mocks are complete.
-  process.exit(0);
+  process.exit(1);
 } else {
   console.log('\nMock drift check passed — all source APIs are referenced in tests.');
 }

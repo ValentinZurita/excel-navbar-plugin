@@ -20,9 +20,9 @@ The App is designed as a local-first utility. We do not run external servers, da
 
 To provide its core functionality (worksheet listing, sheet previews, groups, and drag-and-drop reordering), the App interacts directly with your active Microsoft Excel workbook via the official Microsoft Office JavaScript API (`Office.js`).
 
-* **Spreadsheet Names & Metadata:** The App reads the names and visibility status of your sheets inside the active workbook to display them in the sidebar. This data never leaves your computer.
-* **Groups and Layout Configurations:** When you organize sheets into collapsible folders or reorder them, these settings are saved **entirely locally** using the workbook's native custom properties or local storage. No sheet content, cell data, or structure is ever transmitted outside your local Excel application environment.
-* **No Telemetry or Tracking:** The App does not contain tracking scripts, third-party analytics (like Google Analytics), or telemetry frameworks. 
+- **Spreadsheet Names & Metadata:** The App reads the names and visibility status of your sheets inside the active workbook to display them in the sidebar. This data never leaves your computer.
+- **Groups and Layout Configurations:** When you organize sheets into collapsible folders or reorder them, these settings are saved **entirely locally** using the workbook's native custom properties or local storage. No sheet content, cell data, or structure is ever transmitted outside your local Excel application environment.
+- **No Telemetry or Tracking:** The App does not contain tracking scripts, third-party analytics (like Google Analytics), or telemetry frameworks.
 
 ---
 
@@ -42,4 +42,4 @@ We may update our Privacy Policy from time to time. Any changes will be posted o
 
 If you have any questions, concerns, or feedback regarding this Privacy Policy or the privacy practices of Sheet Navigator, please contact us by opening an issue on our official support page:
 
-* **GitHub Support Page:** [https://github.com/ValentinZurita/excel-navbar-plugin](https://github.com/ValentinZurita/excel-navbar-plugin)
+- **GitHub Support Page:** [https://github.com/ValentinZurita/excel-navbar-plugin](https://github.com/ValentinZurita/excel-navbar-plugin)
