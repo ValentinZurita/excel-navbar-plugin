@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync, copyFileSync } from 'node:fs';
+import { readFileSync, copyFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
@@ -80,6 +80,7 @@ try {
 
 // Copy to WEF folder
 try {
+  mkdirSync(wefFolder, { recursive: true });
   copyFileSync(join(projectRoot, 'excel-navbar-plugin.xml'), wefPath);
   console.log(`\n✅ Manifest copied to WEF folder`);
   console.log(`   Location: ${wefPath}`);
