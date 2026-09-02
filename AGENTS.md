@@ -32,13 +32,16 @@ See full details in [Development Workflow](docs/dev/workflow.md).
 
 ## Core Scripts & Quality Pipeline
 
-| Script             | Purpose                                                            | When to Run                                   |
-| ------------------ | ------------------------------------------------------------------ | --------------------------------------------- |
-| `pnpm validate`    | Typecheck + Lint + Vitest (460+ tests)                             | Before every commit or task completion.       |
-| `pnpm quality`     | Engram check + component imports + CSS/MD lint + Prettier + ESLint | Before PR creation or touching styles/docs.   |
-| `pnpm dev`         | Start Webpack dev server (`https://localhost:3000`)                | During interactive local feature development. |
-| `pnpm switch:dev`  | Switch manifest & Excel WEF to dev (`localhost:3000`)              | When testing locally in desktop Excel.        |
-| `pnpm switch:prod` | Switch manifest to production (GitHub Pages)                       | When validating production builds.            |
+| Script             | Purpose                                                            | When to Run                                    |
+| ------------------ | ------------------------------------------------------------------ | ---------------------------------------------- |
+| `pnpm validate`    | Typecheck + Lint + Vitest (460+ tests)                             | Before every commit or task completion.        |
+| `pnpm quality`     | Engram check + component imports + CSS/MD lint + Prettier + ESLint | Before PR creation or touching styles/docs.    |
+| `pnpm dev`         | Start Webpack dev server (`https://localhost:3000`)                | During local feature development on `develop`. |
+| `pnpm switch:dev`  | Point manifest & Excel WEF to `localhost:3000` (Dev)               | When testing local changes in desktop Excel.   |
+| `pnpm switch:prod` | Point manifest & Excel WEF to GitHub Pages (Prod)                  | When validating live production builds.        |
+
+> **Note on Environment Switching**: After running `pnpm switch:dev` or `pnpm switch:prod`, fully restart Excel (`Cmd+Q` on macOS) so Excel reloads the active manifest from its WEF folder.
+
 
 ## Documentation Rules
 
