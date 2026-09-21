@@ -12,7 +12,7 @@
   <Description DefaultValue="Modern worksheet navigation for Excel."/>
   <IconUrl DefaultValue="__BASE_URL__/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="__BASE_URL__/assets/icon-64.png"/>
-  <SupportUrl DefaultValue="https://github.com/ValentinZurita/excel-navbar-plugin"/>
+  <SupportUrl DefaultValue="__BASE_URL__/support.html"/>
   <AppDomains>
     <AppDomain>__APP_DOMAIN__</AppDomain>
   </AppDomains>

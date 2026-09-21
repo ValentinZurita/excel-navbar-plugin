@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Privacy policy for Sheet Navigator, an Excel add-in that keeps workbook data local."
+    />
+    <meta name="theme-color" content="#107c41" />
+    <title>Privacy Policy — Sheet Navigator</title>
+
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+    <link
+      rel="canonical"
+      href="https://valentinzurita.github.io/excel-navbar-plugin/privacy.html"
+    />
+    <link rel="stylesheet" href="legal.css" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="legal-shell">
+      <header class="legal-header">
+        <a class="brand-link" href="index.html" aria-label="Sheet Navigator home">
+          <span class="brand-mark" aria-hidden="true">▰</span>
+          <span>Sheet Navigator</span>
+        </a>
+        <nav class="legal-nav" aria-label="Legal and support pages">
+          <a href="privacy.html" aria-current="page">Privacy</a>
+          <a href="terms.html">Terms / EULA</a>
+          <a href="support.html">Support</a>
+        </nav>
+      </header>
+
+      <main id="main-content" class="legal-card">
+        <p class="eyebrow">Privacy</p>
+        <h1>Privacy Policy</h1>
+        <p class="lede">
+          Sheet Navigator is designed as a local-first Excel add-in. It does not collect, store,
+          transmit, or share personal data, credentials, or identifying information.
+        </p>
+        <p class="meta-note">Last updated: May 26, 2026</p>
+
+        <section aria-labelledby="no-personal-data">
+          <h2 id="no-personal-data">No collection of personal information</h2>
+          <p>
+            Sheet Navigator does not run external servers, databases, analytics, telemetry, or
+            tracking scripts that collect or store your information.
+          </p>
+        </section>
+
+        <section aria-labelledby="workbook-data">
+          <h2 id="workbook-data">Workbook and spreadsheet data</h2>
+          <p>
+            To provide worksheet listing, sheet previews, groups, and drag-and-drop reordering, the
+            add-in interacts with your active Microsoft Excel workbook through the official
+            Microsoft Office JavaScript API.
+          </p>
+          <ul>
+            <li>
+              It reads sheet names and visibility status from the active workbook so they can be
+              displayed in the sidebar.
+            </li>
+            <li>
+              Groups and layout settings are saved locally using workbook custom properties or local
+              storage.
+            </li>
+            <li>
+              Worksheet previews render a bounded image locally from workbook range data so you can
+              identify sheets before switching.
+            </li>
+            <li>
+              No sheet content, cell data, preview image, or workbook structure is transmitted by
+              the add-in.
+            </li>
+          </ul>
+        </section>
+
+        <section aria-labelledby="hosting">
+          <h2 id="hosting">Static hosting and fonts</h2>
+          <p>
+            The add-in is hosted statically on GitHub Pages. When Excel loads the taskpane, it
+            fetches static HTML, CSS, JavaScript, and asset files from GitHub's servers. GitHub may
+            collect standard server logs, such as IP address and user-agent, for security and
+            operational purposes under the
+            <a
+              href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement"
+              >GitHub Privacy Statement</a
+            >. We do not have access to or control over those logs.
+          </p>
+          <p>
+            The public landing page loads the Inter font family from Google Fonts. When your browser
+            requests those font resources, Google may receive standard request metadata such as your
+            IP address, browser user-agent, referring page, and related connection details under
+            Google's own policies. The add-in itself does not send workbook data to Google.
+          </p>
+        </section>
+
+        <section aria-labelledby="updates">
+          <h2 id="updates">Updates</h2>
+          <p>
+            This policy may be updated from time to time. Changes will be posted on this page with
+            an updated date.
+          </p>
+        </section>
+
+        <section aria-labelledby="contact">
+          <h2 id="contact">Contact</h2>
+          <p>
+            For privacy questions or feedback, open an issue on the project's GitHub support page.
+          </p>
+          <div class="action-row">
+            <a class="button-link" href="support.html">Get support</a>
+            <a
+              class="button-link secondary"
+              href="https://github.com/ValentinZurita/excel-navbar-plugin/issues"
+              >Open a GitHub issue</a
+            >
+          </div>
+        </section>
+      </main>
+
+      <footer class="legal-footer">
+        <span>© Valentin Perez</span>
+        <a href="index.html">Back to home</a>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -76,6 +76,11 @@ jobs:
         env:
           ADDIN_BASE_URL: https://ci.example.com
 
+      - name: Check AppSource assets
+        run: pnpm run check:appsource-assets
+        env:
+          ADDIN_BASE_URL: https://ci.example.com
+
       - name: Verify manifest exists and is non-empty
         run: |
           if [ ! -s dist/excel-navbar-plugin.xml ]; then

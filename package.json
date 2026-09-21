@@ -47,6 +47,7 @@
     "check:lockfile-sync": "node scripts/check-lockfile-sync.mjs",
     "check:office-api-requirements": "node scripts/check-office-api-requirements.mjs",
     "check:mock-drift": "node scripts/check-mock-drift.mjs",
+    "check:appsource-assets": "node scripts/check-appsource-assets.mjs",
     "analyze:bundle": "webpack --mode production --env analyze",
     "prepare": "husky"
   },

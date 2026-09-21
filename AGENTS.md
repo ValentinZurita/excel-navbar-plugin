@@ -42,7 +42,6 @@ See full details in [Development Workflow](docs/dev/workflow.md).
 
 > **Note on Environment Switching**: After running `pnpm switch:dev` or `pnpm switch:prod`, fully restart Excel (`Cmd+Q` on macOS) so Excel reloads the active manifest from its WEF folder.
 
-
 ## Documentation Rules
 
 - Update docs when behavior changes. If code and docs disagree, the code is wrong. Fix or sync immediately.
