@@ -16,14 +16,14 @@ We follow a structured **Trunk-Based with Integration (develop) & Stable (main)*
 
 ### Branch Definitions
 
-| Branch | Purpose | Base Branch | Target Merge | CI & Deployment |
-|---|---|---|---|---|
-| `main` | Production release. Stable, deployable code. | — | — | Runs `Quality` + Deploys to GitHub Pages (`deploy-pages.yml`). |
-| `develop` | Integration branch. Active development integration. | `main` | `main` | Runs full `Quality` validation pipeline. |
-| `feat/<name>` | New feature development. | `develop` | `develop` | Runs local pre-commit & PR Quality checks. |
-| `fix/<name>` | Bug fixes and regressions. | `develop` | `develop` | Runs local pre-commit & PR Quality checks. |
-| `hotfix/<name>` | Urgent production bug fixes. | `main` | `main` & `develop` | Runs Quality + Deploys to production. |
-| `release/vX.Y.Z`| Version bump & release preparation. | `develop` | `main` & `develop` | Manifest production validation. |
+| Branch           | Purpose                                             | Base Branch | Target Merge       | CI & Deployment                                                |
+| ---------------- | --------------------------------------------------- | ----------- | ------------------ | -------------------------------------------------------------- |
+| `main`           | Production release. Stable, deployable code.        | —           | —                  | Runs `Quality` + Deploys to GitHub Pages (`deploy-pages.yml`). |
+| `develop`        | Integration branch. Active development integration. | `main`      | `main`             | Runs full `Quality` validation pipeline.                       |
+| `feat/<name>`    | New feature development.                            | `develop`   | `develop`          | Runs local pre-commit & PR Quality checks.                     |
+| `fix/<name>`     | Bug fixes and regressions.                          | `develop`   | `develop`          | Runs local pre-commit & PR Quality checks.                     |
+| `hotfix/<name>`  | Urgent production bug fixes.                        | `main`      | `main` & `develop` | Runs Quality + Deploys to production.                          |
+| `release/vX.Y.Z` | Version bump & release preparation.                 | `develop`   | `main` & `develop` | Manifest production validation.                                |
 
 ---
 
@@ -31,10 +31,10 @@ We follow a structured **Trunk-Based with Integration (develop) & Stable (main)*
 
 We support distinct development, staging, and production configurations via `addin-config.json` and `scripts/switch-env.mjs`:
 
-| Environment | Base URL | How to Activate | Use Case |
-|---|---|---|---|
-| **Development** (`dev`) | `https://localhost:3000` | `pnpm switch:dev` then `pnpm dev` | Local live-reload development with self-signed dev certs. |
-| **Production** (`prod`) | `https://valentinzurita.github.io/excel-navbar-plugin` | `pnpm switch:prod` | Production manifest pointing to hosted GitHub Pages. |
+| Environment             | Base URL                                               | How to Activate                   | Use Case                                                  |
+| ----------------------- | ------------------------------------------------------ | --------------------------------- | --------------------------------------------------------- |
+| **Development** (`dev`) | `https://localhost:3000`                               | `pnpm switch:dev` then `pnpm dev` | Local live-reload development with self-signed dev certs. |
+| **Production** (`prod`) | `https://valentinzurita.github.io/excel-navbar-plugin` | `pnpm switch:prod`                | Production manifest pointing to hosted GitHub Pages.      |
 
 ---
 
