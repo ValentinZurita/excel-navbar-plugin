@@ -46,8 +46,8 @@ Status key:
 - [x] Ready — Pricing/availability disclosure drafted around CC BY-NC 4.0 and separate commercial permission.
 - [x] Ready — Existing icon assets identified in `assets/` by repository inventory.
 - [x] Ready — Existing demo GIF assets identified in `assets/landing/` and referenced by `docs/appsource/screenshot-plan.md`.
-- [ ] Gap — Capture at least one final static screenshot from a real Excel client for Partner Center upload.
-- [ ] Gap — Confirm current Partner Center image dimensions, file types, count, and localization requirements in the live submission UI before upload.
+- [x] Ready — Minimum final static screenshot captured from a real Excel client for Partner Center upload: `docs/appsource/screenshots/sheet-navigator-overview.png` (1366 × 768 px, 73 KB).
+- [ ] Partner Center action — Confirm uploaded screenshot image validation, dimensions, file type, count, and localization requirements in the live submission UI before upload.
 - [ ] Human decision — Select final screenshots, alt text/descriptions, and any localized listing variants.
 
 ## Certification notes
