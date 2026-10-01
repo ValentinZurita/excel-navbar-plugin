@@ -45,7 +45,7 @@ Status key:
 - [x] Ready — Suggested category/industry values in `docs/appsource/listing.md`.
 - [x] Ready — Pricing/availability disclosure drafted around CC BY-NC 4.0 and separate commercial permission.
 - [x] Ready — Existing icon assets identified in `assets/` by repository inventory.
-- [x] Ready — Five static 1280 × 720 PNG Marketplace candidates are available in `docs/appsource/screenshots/`: `sheet-navigator-overview.png`, `sheet-navigator-search.png`, `sheet-navigator-groups.png`, `sheet-navigator-preview.png`, and `sheet-navigator-drag-and-drop.png`.
+- [x] Ready — Five static 1366 × 768 PNG Marketplace candidates are available in `docs/appsource/screenshots/`: `sheet-navigator-overview.png`, `sheet-navigator-search.png`, `sheet-navigator-groups.png`, `sheet-navigator-preview.png`, and `sheet-navigator-drag-and-drop.png`.
 - [x] Ready — Captions and source/feature mappings for the five candidates are documented in `docs/appsource/screenshot-plan.md`.
 - [x] Ready — Existing GIFs in `assets/landing/` remain landing/marketing assets; they are not replacements for the static Marketplace screenshots.
 - [ ] Partner Center action — Upload the static PNG candidates and confirm live image validation, dimensions, file type, count, and localization requirements before submission.

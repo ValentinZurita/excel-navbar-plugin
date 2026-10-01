@@ -2,13 +2,13 @@
 
 ## Marketplace candidate set
 
-The submission candidate set contains five static PNG files. Each file is exactly 1280 × 720 px.
+The submission candidate set contains five static PNG files. Each file is exactly 1366 × 768 px.
 Use these PNG files for the Marketplace listing; landing-page GIFs are marketing assets, not
 replacements for the static Marketplace screenshots.
 
 | Candidate                                                      | Caption                                                                                             | Source asset / feature mapping                                                                                                                            |
 | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs/appsource/screenshots/sheet-navigator-overview.png`      | Sheet Navigator shows pinned, grouped, hidden, and regular worksheets in a focused Excel task pane. | User-provided full Excel client capture, originally 3084 × 1864 px, cropped to the Excel window and normalized to 1280 × 720 px. Main navigator overview. |
+| `docs/appsource/screenshots/sheet-navigator-overview.png`      | Sheet Navigator shows pinned, grouped, hidden, and regular worksheets in a focused Excel task pane. | User-provided full Excel client capture, originally 3084 × 1864 px, cropped to the Excel window and normalized to 1366 × 768 px. Main navigator overview. |
 | `docs/appsource/screenshots/sheet-navigator-search.png`        | Search filters worksheet names so users can jump to the right sheet quickly.                        | Representative light-theme frame from `assets/landing/search-light-demo.gif`. Search.                                                                     |
 | `docs/appsource/screenshots/sheet-navigator-groups.png`        | Collapsible groups help organize related worksheets in large workbooks.                             | Representative light-theme frame from `assets/landing/groups-light-demo.gif`. Groups.                                                                     |
 | `docs/appsource/screenshots/sheet-navigator-preview.png`       | Worksheet previews help identify a sheet before switching to it.                                    | Representative light-theme frame from `assets/landing/sheet-preview-demo.gif`. Preview.                                                                   |
@@ -35,5 +35,5 @@ the public site but are not replacements for the static Marketplace screenshot c
 
 - Confirm that every selected screenshot still matches current product behavior.
 - Confirm that no candidate includes personal, customer, credential, or proprietary workbook data.
-- Confirm the final uploaded files remain valid 1280 × 720 PNGs.
+- Confirm the final uploaded files remain valid 1366 × 768 PNGs.
 - Upload or resubmit only after the publisher completes the live Partner Center review.
