@@ -45,9 +45,10 @@ Status key:
 - [x] Ready — Suggested category/industry values in `docs/appsource/listing.md`.
 - [x] Ready — Pricing/availability disclosure drafted around CC BY-NC 4.0 and separate commercial permission.
 - [x] Ready — Existing icon assets identified in `assets/` by repository inventory.
-- [x] Ready — Existing demo GIF assets identified in `assets/landing/` and referenced by `docs/appsource/screenshot-plan.md`.
-- [x] Ready — Minimum final static screenshot captured from a real Excel client for Partner Center upload: `docs/appsource/screenshots/sheet-navigator-overview.png` (1366 × 768 px, 73 KB).
-- [ ] Partner Center action — Confirm uploaded screenshot image validation, dimensions, file type, count, and localization requirements in the live submission UI before upload.
+- [x] Ready — Five static 1280 × 720 PNG Marketplace candidates are available in `docs/appsource/screenshots/`: `sheet-navigator-overview.png`, `sheet-navigator-search.png`, `sheet-navigator-groups.png`, `sheet-navigator-preview.png`, and `sheet-navigator-drag-and-drop.png`.
+- [x] Ready — Captions and source/feature mappings for the five candidates are documented in `docs/appsource/screenshot-plan.md`.
+- [x] Ready — Existing GIFs in `assets/landing/` remain landing/marketing assets; they are not replacements for the static Marketplace screenshots.
+- [ ] Partner Center action — Upload the static PNG candidates and confirm live image validation, dimensions, file type, count, and localization requirements before submission.
 - [ ] Human decision — Select final screenshots, alt text/descriptions, and any localized listing variants.
 
 ## Certification notes

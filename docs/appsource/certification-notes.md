@@ -18,11 +18,9 @@ Draft notes for Microsoft AppSource certification reviewers. Do not include priv
 
 ## Account, purchase, and sign-in disclosures
 
-- No Sheet Navigator account is required.
-- No Sheet Navigator username, password, tenant, license key, or test credential exists.
-- No purchase, subscription, in-app payment, or trial activation is required for the submitted add-in behavior.
-- No SSO flow is implemented by the add-in.
-- Excel itself may require the reviewer to use a Microsoft account or an organizational account to open Excel, install AppSource add-ins, or sync the add-in between Excel on the web and desktop clients.
+- The submitted add-in has no add-in-owned account, sign-in, sign-up, Azure AD integration, SSO flow, username, password, tenant, license key, or test credential.
+- No separate purchase, subscription, in-app payment, or trial activation is required for the submitted add-in behavior. Keep Product Setup set to **No**; do not select Product Setup **Yes**.
+- Excel itself may require the reviewer to use a Microsoft account or organizational account to open Excel, install AppSource add-ins, or sync the add-in between Excel on the web and desktop clients. That host account is not a Sheet Navigator account.
 - The project is licensed under CC BY-NC 4.0. Non-commercial use is permitted under that license; commercial use requires separate written permission from the rights holder.
 
 ## Recommended reviewer workbook

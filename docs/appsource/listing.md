@@ -101,6 +101,12 @@ Proposed public disclosure:
 
 Do not mark a paid purchase, trial, in-app purchase, or account-gated subscription unless a human publisher creates and approves a separate commercial licensing model.
 
+### Commercial and account boundary
+
+- The submitted add-in has no separate purchase, subscription, or in-app purchase flow. Keep Product Setup set to **No**; do not select Product Setup **Yes** for this add-in.
+- The add-in has no Azure AD integration and no add-in-owned sign-in, sign-up, or account system. Do not introduce login UX for the listing.
+- A Microsoft or Excel account may be required by the Excel host to install or use AppSource, but it is not an add-in account.
+
 ### Legal and support URLs
 
 Use these exact published URLs when the public site is live at the repository URL:

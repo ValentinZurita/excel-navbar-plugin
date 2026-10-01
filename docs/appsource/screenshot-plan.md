@@ -1,123 +1,39 @@
 # Sheet Navigator AppSource screenshot plan
 
-This plan identifies existing visual assets and the remaining AppSource screenshot capture gap. It does not claim final screenshots are complete.
+## Marketplace candidate set
 
-## Current asset inventory
+The submission candidate set contains five static PNG files. Each file is exactly 1280 × 720 px.
+Use these PNG files for the Marketplace listing; landing-page GIFs are marketing assets, not
+replacements for the static Marketplace screenshots.
 
-Existing repository GIF demos in `assets/landing/`:
+| Candidate                                                      | Caption                                                                                             | Source asset / feature mapping                                                                      |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `docs/appsource/screenshots/sheet-navigator-overview.png`      | Sheet Navigator shows pinned, grouped, hidden, and regular worksheets in a focused Excel task pane. | Existing real Excel client capture, normalized from 1366 × 768 px. Main navigator overview.         |
+| `docs/appsource/screenshots/sheet-navigator-search.png`        | Search filters worksheet names so users can jump to the right sheet quickly.                        | Representative light-theme frame from `assets/landing/search-light-demo.gif`. Search.               |
+| `docs/appsource/screenshots/sheet-navigator-groups.png`        | Collapsible groups help organize related worksheets in large workbooks.                             | Representative light-theme frame from `assets/landing/groups-light-demo.gif`. Groups.               |
+| `docs/appsource/screenshots/sheet-navigator-preview.png`       | Worksheet previews help identify a sheet before switching to it.                                    | Representative light-theme frame from `assets/landing/sheet-preview-demo.gif`. Preview.             |
+| `docs/appsource/screenshots/sheet-navigator-drag-and-drop.png` | Visible drop feedback helps users reorganize worksheet entries from the task pane.                  | Representative light-theme frame from `assets/landing/drag-and-drop-light-demo.gif`. Drag and drop. |
+
+## Static PNG requirement
+
+For the Marketplace submission, upload the five static PNG candidates above rather than animated
+GIFs. Confirm the live Partner Center field requirements for screenshot count, file size,
+localization, and final acceptance immediately before upload.
+
+## Landing and marketing assets
+
+The following GIFs remain unchanged landing-page and marketing assets. They demonstrate motion on
+the public site but are not replacements for the static Marketplace screenshot candidates:
 
 - `assets/landing/search-light-demo.gif`
-- `assets/landing/search-dark-demo.gif`
-- `assets/landing/fuzzy-search-light-demo.gif`
-- `assets/landing/fuzzy-search-dark-demo.gif`
-- `assets/landing/sheet-preview-demo.gif`
-- `assets/landing/sheet-preview-dark-demo.gif`
 - `assets/landing/groups-light-demo.gif`
-- `assets/landing/groups-dark-demo.gif`
+- `assets/landing/sheet-preview-demo.gif`
 - `assets/landing/drag-and-drop-light-demo.gif`
-- `assets/landing/drag-and-drop-dark-demo.gif`
 - `assets/landing/new-drag-and-drop-light-demo.gif`
-- `assets/landing/new-drag-and-drop-dark-demo.gif`
 
-Existing icon assets in `assets/`:
+## Pre-upload checks
 
-- `assets/icon.svg`
-- `assets/icon-16.png`
-- `assets/icon-32.png`
-- `assets/icon-64.png`
-- `assets/icon-80.png`
-- `assets/icon-300.png`
-
-## Screenshot requirements to confirm in Partner Center
-
-Microsoft's submission flow requires listing assets including icons and screenshots. Before final upload, confirm the live Partner Center requirements for:
-
-- Required screenshot count.
-- Required and accepted image dimensions.
-- Accepted file formats and maximum file size.
-- Whether animated GIFs are accepted for the selected Office Add-in listing field.
-- Localization requirements for screenshots and captions.
-- Whether screenshots must show the add-in running inside the actual Excel host frame.
-
-## Required final capture status
-
-The minimum final static screenshot has been captured from a real Excel client:
-
-- Path: `docs/appsource/screenshots/sheet-navigator-overview.png`
-- Dimensions: 1366 × 768 px
-- Size: 73 KB
-- Caption / alt text: "Sheet Navigator shows pinned, grouped, hidden, and regular worksheets in a focused Excel task pane."
-- Source note: User-supplied Excel client capture; no sensitive workbook data observed.
-
-Existing GIFs remain useful references and landing-page assets, but live Partner Center image validation must still confirm whether additional images, dimensions, formats, or localized variants are required.
-
-Do not create placeholder screenshot files. Capture any additional final images only from a real Excel client using the submitted production manifest or AppSource package.
-
-## Concrete capture plan
-
-### Workbook setup
-
-Create a clean, non-sensitive workbook with representative worksheet names:
-
-- `Summary`
-- `Revenue Jan`
-- `Revenue Feb`
-- `Expenses`
-- `Forecast`
-- `Archive`
-- `Hidden Notes` hidden from the normal sheet tab row
-
-Add simple sample values to a few sheets so previews are meaningful. Do not include customer, financial, personal, credential, or proprietary data.
-
-### Client setup
-
-Capture from at least one real Excel client. Preferred order:
-
-1. Excel on the web, because it is easiest to access and validates the hosted production manifest.
-2. Excel for Windows, if available, to show a desktop host.
-3. Excel for Mac, if available, to show macOS host compatibility.
-
-Use the production manifest URL: <https://valentinzurita.github.io/excel-navbar-plugin/excel-navbar-plugin.xml>
-
-### Proposed final static screenshots
-
-1. **Main navigator overview** — captured
-   - Path: `docs/appsource/screenshots/sheet-navigator-overview.png`
-   - Dimensions: 1366 × 768 px
-   - Size: 73 KB
-   - Caption / alt text: "Sheet Navigator shows pinned, grouped, hidden, and regular worksheets in a focused Excel task pane."
-   - Shows Excel with the Sheet Navigator task pane open.
-   - Goal: communicate the main value proposition in one image.
-
-2. **Search workflow** — optional gap
-   - Show the search field with a query such as `rev` and matching worksheets.
-   - Goal: demonstrate fast worksheet discovery.
-
-3. **Groups workflow** — optional gap
-   - Show at least one expanded group and one collapsed group if possible.
-   - Goal: demonstrate workbook organization.
-
-4. **Preview workflow** — optional gap
-   - Show a worksheet preview triggered from the task pane.
-   - Goal: demonstrate preview-before-switching behavior.
-
-5. **Drag-and-drop organization** — optional gap
-   - Capture a static moment with a visible drag/drop target only if the screenshot can be taken cleanly from the real host.
-   - Goal: demonstrate organization by drag and drop without relying on animated media.
-
-### Caption and alt-text draft
-
-- Main navigator overview: "Sheet Navigator shows pinned, grouped, hidden, and regular worksheets in a focused Excel task pane."
-- Search workflow: "Search filters worksheet names so users can jump to the right sheet quickly."
-- Groups workflow: "Collapsible groups help organize related worksheets in large workbooks."
-- Preview workflow: "Worksheet previews help identify a sheet before switching to it."
-- Drag-and-drop workflow: "Visible drop feedback helps users reorganize worksheets from the task pane."
-
-## Quality bar before upload
-
-- Screenshot is captured from an actual Excel client, not a mockup.
-- No private workbook data appears.
-- The task pane is legible at Partner Center's displayed size.
-- Worksheet names are the primary visual target.
-- The image does not imply unsupported services, accounts, analytics, collaboration, or automation features.
-- The screenshot matches the current product behavior and current legal/privacy claims.
+- Confirm that every selected screenshot still matches current product behavior.
+- Confirm that no candidate includes personal, customer, credential, or proprietary workbook data.
+- Confirm the final uploaded files remain valid 1280 × 720 PNGs.
+- Upload or resubmit only after the publisher completes the live Partner Center review.
