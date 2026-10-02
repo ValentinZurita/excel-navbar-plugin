@@ -60,6 +60,7 @@ Address the remaining certification observation with a real in-product first-run
 - Repository audit found no authentication/subscription gate in the task pane.
 - Implementation is complete locally; Partner Center and deployment remain intentionally out of scope.
 - Full validation is green; existing React `act(...)` warnings and Node localStorage warnings remain non-blocking.
+- Work-unit commit: `1df3a1d` (`feat(ui): add first-run value placemat`).
 
 ## Next step
 
