@@ -50,7 +50,9 @@ Address the remaining certification observation with a real in-product first-run
   - `pnpm validate` passed (40 files, 465 tests).
   - `pnpm quality` passed.
   - `git diff --check` passed.
-- [ ] Review the live hosted result and upload/deploy the approved change (requires separate deployment authorization).
+- [x] Review the live hosted result and upload/deploy the approved change.
+  - Pushed `feat/appsource-screenshot` to origin and ran GitHub Pages workflow `36947383119` successfully.
+  - Live `taskpane.html` shows the placemat; “Start navigating” hides it and the dismissal survives reload.
 - [x] Record commit and verification evidence.
   - Implementation commit: `1df3a1d` (`feat(ui): add first-run value placemat`).
   - Documentation commit: `92cd9cc` (`docs(docs): record first-run evidence`).
@@ -62,9 +64,10 @@ Address the remaining certification observation with a real in-product first-run
 - Product Setup is Complete with “No” additional purchases selected.
 - Repository audit found no authentication/subscription gate in the task pane.
 - Implementation is complete locally; Partner Center and deployment remain intentionally out of scope for this change.
+- Implementation is deployed to GitHub Pages from `feat/appsource-screenshot`; Partner Center submission remains intentionally separate.
 - Full validation is green; existing React `act(...)` warnings and Node localStorage warnings remain non-blocking.
 - Work-unit commit: `1df3a1d` (`feat(ui): add first-run value placemat`).
 
 ## Next step
 
-Deploy through the normal release path when separately authorized, review the hosted result in Excel, then decide whether to update and resubmit in Partner Center.
+Review the hosted result in Excel, then decide whether to update and resubmit in Partner Center.
