@@ -28,6 +28,8 @@ import { useShortcutActions } from '../../application/shortcuts/useShortcutActio
 import { ShortcutActionId } from '../../application/shortcuts/ShortcutRegistry';
 import type { ShortcutAction } from '../../application/shortcuts/types';
 import { worksheetNameMaxLength } from '../../domain/navigation/constants';
+import { FirstRunPlacemat } from '../components/FirstRunPlacemat';
+import { useFirstRunExperience } from './hooks/useFirstRunExperience';
 
 export function TaskpaneAppContainer() {
   // The controller owns workbook operations and domain state transitions.
@@ -41,6 +43,12 @@ export function TaskpaneAppContainer() {
 
   // Search input ref lifted here so shortcuts can focus it programmatically.
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const { isVisible: isFirstRunVisible, dismiss: dismissFirstRun } = useFirstRunExperience();
+
+  const handleFirstRunDismiss = useCallback(() => {
+    dismissFirstRun();
+    searchInputRef.current?.focus();
+  }, [dismissFirstRun]);
 
   // Inline rename state for worksheets and groups (replaces dialog-based rename).
   const [renamingWorksheetId, setRenamingWorksheetId] = useState<string | null>(null);
@@ -633,6 +641,13 @@ export function TaskpaneAppContainer() {
         ) : null
       }
     >
+      {isFirstRunVisible ? (
+        <FirstRunPlacemat
+          onStartNavigating={handleFirstRunDismiss}
+          onSkip={handleFirstRunDismiss}
+        />
+      ) : null}
+
       {/* Main taskpane navigation sections (search, pinned, groups, hidden). */}
       <TaskpaneSections
         workbookChangeToken={controller.workbookChangeToken}

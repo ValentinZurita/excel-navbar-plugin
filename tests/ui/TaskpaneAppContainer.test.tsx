@@ -107,6 +107,87 @@ describe('TaskpaneAppContainer', () => {
 
   beforeEach(() => {
     useWorksheetDnDMock.mockReturnValue(createDnDMock());
+    window.localStorage.clear();
+  });
+
+  it('shows the first-run value placemat before the navigator controls', () => {
+    useNavigationControllerMock.mockReturnValue(createControllerMock());
+
+    render(<TaskpaneAppContainer />);
+
+    expect(
+      screen.getByRole('region', { name: 'Find any worksheet in seconds' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Navigate large Excel workbooks from one focused sidebar instead of scanning crowded tabs.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start navigating' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Skip for now' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Search worksheets' })).toBeInTheDocument();
+  });
+
+  it('dismisses the placemat, focuses search, and persists the versioned marker', async () => {
+    const user = userEvent.setup();
+    useNavigationControllerMock.mockReturnValue(createControllerMock());
+
+    render(<TaskpaneAppContainer />);
+
+    await user.click(screen.getByRole('button', { name: 'Start navigating' }));
+
+    expect(
+      screen.queryByRole('region', { name: 'Find any worksheet in seconds' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Search worksheets' })).toHaveFocus();
+    expect(window.localStorage.getItem('sheetNavigator.fre.v1')).toBe('dismissed');
+  });
+
+  it('does not show the placemat after the versioned marker is present', () => {
+    window.localStorage.setItem('sheetNavigator.fre.v1', 'dismissed');
+    useNavigationControllerMock.mockReturnValue(createControllerMock());
+
+    render(<TaskpaneAppContainer />);
+
+    expect(
+      screen.queryByRole('region', { name: 'Find any worksheet in seconds' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Search worksheets' })).toBeInTheDocument();
+  });
+
+  it('keeps the navigator usable when local storage throws', async () => {
+    const user = userEvent.setup();
+    const originalStorage = window.localStorage;
+    const blockedStorage = {
+      ...originalStorage,
+      getItem: vi.fn(() => {
+        throw new Error('Storage is blocked');
+      }),
+      setItem: vi.fn(() => {
+        throw new Error('Storage is blocked');
+      }),
+    } as unknown as Storage;
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: blockedStorage,
+    });
+    useNavigationControllerMock.mockReturnValue(createControllerMock());
+
+    try {
+      render(<TaskpaneAppContainer />);
+
+      expect(screen.getByRole('button', { name: 'Revenue' })).toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: 'Skip for now' }));
+      expect(screen.getByRole('button', { name: 'Revenue' })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('region', { name: 'Find any worksheet in seconds' }),
+      ).not.toBeInTheDocument();
+    } finally {
+      Object.defineProperty(window, 'localStorage', {
+        configurable: true,
+        value: originalStorage,
+      });
+    }
   });
 
   it('starts inline rename on two quick clicks on a worksheet row', async () => {
