@@ -24,7 +24,7 @@ Address the remaining certification observation with a real in-product first-run
 
 ## Route
 
-- Direct inline implementation: the native sub-agent spawning tools were not exposed in this session.
+- Delegated direct implementation: the multi-agent worker read the UI surface, implemented the behavior, added focused coverage, and recorded the work-unit commits.
 - Verification: `pnpm validate`, `pnpm quality`, and `git diff --check`; no build.
 
 ## Acceptance criteria
@@ -50,18 +50,21 @@ Address the remaining certification observation with a real in-product first-run
   - `pnpm validate` passed (40 files, 465 tests).
   - `pnpm quality` passed.
   - `git diff --check` passed.
-- [ ] Review the live hosted result and upload/deploy the approved change.
-- [ ] Record commit and verification evidence.
+- [ ] Review the live hosted result and upload/deploy the approved change (requires separate deployment authorization).
+- [x] Record commit and verification evidence.
+  - Implementation commit: `1df3a1d` (`feat(ui): add first-run value placemat`).
+  - Documentation commit: `92cd9cc` (`docs(docs): record first-run evidence`).
+  - Independent verification: PASS; working tree clean; no build, Partner Center, or remote deployment performed.
 
 ## Progress
 
 - Initial audit complete; current Partner Center report still has Attention needed.
 - Product Setup is Complete with “No” additional purchases selected.
 - Repository audit found no authentication/subscription gate in the task pane.
-- Implementation is complete locally; Partner Center and deployment remain intentionally out of scope.
+- Implementation is complete locally; Partner Center and deployment remain intentionally out of scope for this change.
 - Full validation is green; existing React `act(...)` warnings and Node localStorage warnings remain non-blocking.
 - Work-unit commit: `1df3a1d` (`feat(ui): add first-run value placemat`).
 
 ## Next step
 
-Run focused tests and repository validation, then review the hosted result before any final Partner Center submission.
+Deploy through the normal release path when separately authorized, review the hosted result in Excel, then decide whether to update and resubmit in Partner Center.
